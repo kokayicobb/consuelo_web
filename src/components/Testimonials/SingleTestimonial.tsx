@@ -9,29 +9,29 @@ const starIcon = (
 
 const SingleTestimonial = ({ testimonial }: { testimonial: Testimonial }) => {
   const { star, name, image, content, designation } = testimonial;
-  
+
   let ratingIcons = [];
   for (let index = 0; index < star; index++) {
     ratingIcons.push(
       <span key={index} className="text-[#fbb040]">
         {starIcon}
-      </span>
+      </span>,
     );
   }
 
   return (
-    <div className="w-full px-4 md:w-1/2 lg:w-1/3 flex">
-      <div 
-        className="w-full rounded-xl bg-white px-4 py-[30px] shadow-testimonial dark:bg-dark sm:px-[30px] flex flex-col" 
+    <div className="flex w-full px-4 md:w-1/2 lg:w-1/3">
+      <div
+        className="flex w-full flex-col rounded-xl bg-white px-4 py-[30px] shadow-testimonial dark:bg-dark sm:px-[30px]"
         data-wow-delay=".1s"
       >
         <div className="mb-[18px] flex items-center gap-[2px]">
           {ratingIcons}
         </div>
-        <p className="mb-6 text-base text-body-color dark:text-dark-6 flex-grow">
-          "{content}"
+        <p className="mb-6 flex-grow text-base text-body-color dark:text-dark-6">
+          &quot;{content}&quot;
         </p>
-        <div className="flex items-center gap-4 mt-auto">
+        <div className="mt-auto flex items-center gap-4">
           <div className="h-[50px] w-[50px] overflow-hidden rounded-full">
             <Image src={image} alt={name} width={50} height={50} />
           </div>
