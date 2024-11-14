@@ -22,7 +22,7 @@ const featuresData: Feature[] = [
     title: "Fit Calculator",
     paragraph: "Tailored personal measurements ensure customer's perfect fit.",
     btn: "Learn More",
-    btnLink: "#contact",
+    btnLink: "/contact",
   },
   {
     id: 2,
@@ -47,7 +47,7 @@ const featuresData: Feature[] = [
     title: "3D & AR Product Pictures",
     paragraph: "Allow customers to visualize exactly how each item will look.",
     btn: "Learn More",
-    btnLink: "#contact",
+    btnLink: "/contact",
   },
   {
     id: 3,
@@ -69,7 +69,7 @@ const featuresData: Feature[] = [
     title: "Virtual Fitting Room",
     paragraph: "A customizable approach so you can elevate the experience.",
     btn: "Learn More",
-    btnLink: "#contact",
+    btnLink: "/contact",
   },
   {
     id: 4,
@@ -102,7 +102,7 @@ const featuresData: Feature[] = [
     title: "All Seamlessly Integrated",
     paragraph: "Reduce return rates and build loyalty with every purchase.",
     btn: "Learn More",
-    btnLink: "#contact",
+    btnLink: "/contact",
   },
 ];
 export default featuresData;

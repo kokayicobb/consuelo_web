@@ -218,7 +218,7 @@ const Footer = () => {
                 </li>
                 <li>
                   <a
-                    href="#contact"
+                    href="/contact"
                     className="mb-3 inline-block text-base text-gray-7 hover:text-primary"
                   >
                     Support
@@ -226,7 +226,7 @@ const Footer = () => {
                 </li>
                 <li>
                   <a
-                    href="#home"
+                    href="/home"
                     className="mb-3 inline-block text-base text-gray-7 hover:text-primary"
                   >
                     About
