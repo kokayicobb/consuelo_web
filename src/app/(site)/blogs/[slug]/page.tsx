@@ -204,7 +204,7 @@ export default async function Post({ params }: Props) {
                       data-wow-delay=".1s"
                     >
                       <Image
-                        src="/images/blog/bannder-ad.png"
+                        src="/images/blog/bannder-ad.png" 
                         alt="image"
                         className="w-full"
                         width={408}
