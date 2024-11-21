@@ -19,11 +19,7 @@ export default function RootLayout({
         <meta charSet="utf-8" />
       </head>
       <body>
-        <noscript>
-          <div style={{ padding: '20px', textAlign: 'center' }}>
-            Please enable JavaScript to use this application.
-          </div>
-        </noscript>
+        
         <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
