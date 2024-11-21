@@ -35,7 +35,7 @@ const Team = () => {
           <SectionTitle
             subtitle="Our Team"
             title="Meet Our Team"
-            paragraph="There are many variations of passages of Lorem Ipsum available but the majority have suffered alteration in some form."
+            paragraph="We're a dynamic startup based in Charlotte seeking a passionate co-founder. While traditional experience isn't required, we value individuals with a proven track record of leadership and success."
             width="640px"
             center
           />
