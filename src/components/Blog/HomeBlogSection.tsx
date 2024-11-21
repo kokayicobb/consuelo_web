@@ -9,7 +9,7 @@ const HomeBlogSection = ({ posts }: any) => {
           <SectionTitle
             subtitle="Our Blogs"
             title="Our Recent News"
-            paragraph="There are many variations of passages of Lorem Ipsum available but the majority have suffered alteration in some form."
+            paragraph="Building a Modern Shopping Experience: Discover how Consuelo is changing online retail with our curated selections, user-friendly design, and commitment to making fashion accessible to all."
             width="640px"
             center
           />
