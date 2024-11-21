@@ -1,51 +1,32 @@
-"use client";
 
-import Footer from "@/components/Footer";
-import Header from "@/components/Header";
-import ScrollToTop from "@/components/ScrollToTop";
-import { SessionProvider } from "next-auth/react";
-import { ThemeProvider } from "next-themes";
+// app/layout.tsx
+import { metadata } from './metadata'
 import "../styles/index.css";
 import "../styles/prism-vsc-dark-plus.css";
-import ToasterContext from "./api/contex/ToasetContex";
-import { useEffect, useState } from "react";
-import ShimmerLoader from "@/app/loading";
-import { metadata } from './metadata'
-export { metadata }
+import ClientLayout from './clientLayout';
+
+
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [loading, setLoading] = useState<boolean>(true);
-
-  useEffect(() => {
-    setTimeout(() => setLoading(false), 1000);
-  }, []);
-
   return (
     <html suppressHydrationWarning={true} className="!scroll-smooth" lang="en">
-      <head />
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta charSet="utf-8" />
+      </head>
       <body>
-        {loading ? (
-          <ShimmerLoader />
-        ) : (
-          <SessionProvider>
-            <ThemeProvider
-              attribute="class"
-              enableSystem={false}
-              defaultTheme="dark"
-            >
-              <ToasterContext />
-              <Header />
-              {children}
-              <Footer />
-              <ScrollToTop />
-            </ThemeProvider>
-          </SessionProvider>
-        )}
+        <noscript>
+          <div style={{ padding: '20px', textAlign: 'center' }}>
+            Please enable JavaScript to use this application.
+          </div>
+        </noscript>
+        <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
   );
 }
+export { metadata }
