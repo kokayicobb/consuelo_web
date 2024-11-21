@@ -37,8 +37,8 @@ const Testimonials = () => {
       <div className="container px-4">
         <SectionTitle
           subtitle="Testimonials"
-          title="What Other Experts Say"
-          paragraph="Recognized by industry experts in eCommerce and fashion for its innovative approach, our solution meets the unique demands of today's digital shopping experience."
+          title="What Experts Have Said"
+          paragraph="Recognized by industry experts in E-Commerce and Retail for its innovative approach, our solution meets the demands of today's shopping experience."
           width="640px"
           center
         />

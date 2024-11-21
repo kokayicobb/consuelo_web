@@ -11,7 +11,7 @@ const Features = () => {
         <SectionTitle
           subtitle="Products"
           title="Consuelo’s Core Products"
-          paragraph="Each tool is designed with precision, helping brands optimize their customer experience, from personalized fittings to accurate sizing recommendations."
+          paragraph="Each tool is designed with precision, helping you optimize your customer's experience, from personalized fittings to accurate sizing recommendations."
         />
 
         <div className="-mx-4 mt-12 flex flex-wrap lg:mt-20">

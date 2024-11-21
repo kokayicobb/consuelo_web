@@ -12,21 +12,20 @@ const About = () => {
             <div className="w-full px-4 lg:w-1/2">
               <div className="mb-12 max-w-[540px] lg:mb-0">
                 <h2 className="mb-5 text-3xl font-bold leading-tight text-dark dark:text-white sm:text-[40px] sm:leading-[1.2]">
-                  Brilliant Toolkit to Build Ecommerce Websites.
+                  Your Virtual Fitting Room: All-In-One Solution
                 </h2>
                 <p className="mb-10 text-base leading-relaxed text-body-color dark:text-dark-6">
-                  Become one of the increasing numbers of companies that are
-                  increasing their sales and conversion rates by giving
-                  potential customers confidence to purchase.
+                  Join the growing list of successful companies who have boosted
+                  their sales and conversion rates by instilling confidence in
+                  potential customers.
                   <br /> <br />
-                  Our suite of solutions is crafted to meet the evolving demands
-                  of the Ecommerce industry. From precise size advice to
-                  visualized fittings, every tool is expertly crafted to help
-                  brands maximize their client experience.
+                  Show them that your product holds immense value and is well
+                  worth investing in. Then watch as they transform into devoted,
+                  repeat buyers who trust in your brand.
                 </p>
 
                 <a
-                  href="#contact" 
+                  href="#contact"
                   className="inline-flex items-center justify-center rounded-md bg-primary px-7 py-3 text-center text-base font-medium text-white duration-300 hover:bg-primary/90"
                 >
                   Know More

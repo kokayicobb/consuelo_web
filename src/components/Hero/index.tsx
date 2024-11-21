@@ -16,13 +16,12 @@ const Hero = () => {
                 data-wow-delay=".2s"
               >
                 <h1 className="mb-6 text-3xl font-bold leading-snug text-white sm:text-4xl sm:leading-snug lg:text-5xl lg:leading-[1.2]">
-                  AI-Powered Size Software to Reduce Returns and Boost Sales
+                  Perfect fit. Powered by tomorrow's tech.
                 </h1>
                 <p className="mx-auto mb-9 max-w-[600px] text-base font-medium text-white sm:text-lg sm:leading-[1.44]">
-                  Empower your shoppers with AI-driven size guidance that
-                  transforms online shopping. Enhance their confidence, reduce
-                  returns, and be the brand that nails the perfect fit every
-                  time.
+                  Be the brand that nails the perfect fit every time by giving
+                  your customers AI-driven sizing recommendations that boost
+                  their confidence when they shop online.
                 </p>
                 <ul className="mb-10 flex flex-wrap items-center justify-center gap-5">
                   <li>
@@ -95,7 +94,6 @@ const Hero = () => {
                         width="45"
                         height="32"
                         viewBox="0 0 200 120"
-                        
                         fill="none"
                         xmlns="http://www.w3.org/2000/svg"
                       >
@@ -127,7 +125,6 @@ const Hero = () => {
                         />
                       </svg>
                     </a>
-
 
                     <a
                       href="https://wix.com/"

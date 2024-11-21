@@ -76,7 +76,7 @@ const PricingBox = ({ product }: { product: Price }) => {
             onClick={handleSubscription}
             className="w-full inline-block rounded-md bg-primary px-7 py-3 text-center text-base font-medium text-white transition duration-300 hover:bg-primary/90"
           >
-            Purchase Now
+            Start Free Trial
           </button>
         </div>
       </div>

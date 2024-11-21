@@ -15,7 +15,8 @@ import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Consuelo - AI-Powered Fit Technology",
-  description: "The personalized virtual fitting solution for Ecommerce retailers. Our innovative SaaS platform enables customers to try on clothes online ensuring the perfect fit and reducing returns.",
+  description:
+    "The personalized virtual fitting solution for Ecommerce retailers. Our innovative SaaS platform enables customers to try on clothes online ensuring the perfect fit and reducing returns.",
 };
 
 export default function Home() {
@@ -25,11 +26,11 @@ export default function Home() {
     <main>
       <ScrollUp />
       <Hero />
+      <Testimonials />
       <Features />
       <About />
       <CallToAction />
       <Pricing />
-      <Testimonials />
       <Faq />
       <Team />
       <HomeBlogSection posts={posts} />
