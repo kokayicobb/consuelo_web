@@ -5,8 +5,8 @@ export default function Head() {
       Consuelo - AI-Powered Fit Technology
       </title>
       <meta content="width=device-width, initial-scale=1" name="viewport" />
-      <meta name="description" content="This SaaS Boilerplate and Starter Kit for Next.js is designed specifically for SaaS startups. It's a free resource complete with all the necessary integrations, pages, and components you require to build and launch a comprehensive SaaS website with robust features." />
-      <link rel="icon" href="/images/favicon.ico" />
+      <meta name="description" content="The personalized virtual fitting solution for Ecommerce retailers. Our innovative SaaS platform enables customers to try on clothes online ensuring the perfect fit and reducing returns." />
+      <link rel="icon" href="/favicon.ico" sizes="any" />
     </>
   );
 }

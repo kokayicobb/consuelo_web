@@ -18,7 +18,7 @@ const ShimmerLoader = () => (
 					WebkitBackgroundClip: 'text',
 					WebkitTextFillColor: 'transparent',
 					backgroundSize: '200% 100%',
-					animation: 'shimmerText 4s infinite linear'
+					animation: 'shimmerText 2s infinite linear'
 				}}
       >
         CONSUELO
