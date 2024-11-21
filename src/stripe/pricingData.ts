@@ -22,7 +22,7 @@ export const pricingData: Price[] = [
     offers: [
       "Up to 1000 Fit Calculations Per Month",
       "10 Free 3D Pictures Per Month",
-      "3d Model View",
+      "3D Model View",
       "3D Model Export",
       "Web Widget Integration",
       'Widget Customization',

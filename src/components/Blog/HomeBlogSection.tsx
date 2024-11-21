@@ -9,7 +9,7 @@ const HomeBlogSection = ({ posts }: any) => {
           <SectionTitle
             subtitle="Our Blogs"
             title="Our Recent News"
-            paragraph="Building a Modern Shopping Experience: Discover how Consuelo is changing online retail with our curated selections, user-friendly design, and commitment to making fashion accessible to all."
+            paragraph="Discover how Consuelo is Building a Modern Shopping Experience with our curated selections, user-friendly design, and commitment to making fashion accessible to all."
             width="640px"
             center
           />
