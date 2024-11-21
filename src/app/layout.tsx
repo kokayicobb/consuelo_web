@@ -10,6 +10,8 @@ import "../styles/prism-vsc-dark-plus.css";
 import ToasterContext from "./api/contex/ToasetContex";
 import { useEffect, useState } from "react";
 import ShimmerLoader from "@/app/loading";
+import { metadata } from './metadata'
+export { metadata }
 
 export default function RootLayout({
   children,
