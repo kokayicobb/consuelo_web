@@ -1,27 +1,27 @@
 "use client";
 import SectionTitle from "../Common/SectionTitle";
-import PricingBox from "./PricingBox";
+import PricingCard from "./PricingCard";
 import { pricingData } from "@/stripe/pricingData";
 
 const Pricing = () => {
   return (
     <section
       id="pricing"
-      className="relative z-20 overflow-hidden bg-white pb-12 pt-20 dark:bg-dark lg:pb-[90px] lg:pt-[120px]"
+      className="relative z-20 overflow-hidden bg-gradient-to-b from-white to-gray-100 pb-0 pt-20 dark:from-dark dark:to-dark-800 lg:pb-[90px] lg:pt-[120px]"
     >
-      <div className="container">
+      <div className="container mx-auto px-4">
         <div className="mb-[60px]">
           <SectionTitle
-            subtitle="Pricing Table"
-            title="Our Pricing Plan"
-            paragraph="Choose the plan that fits your business, with flexible options designed to grow with you and keep costs manageable as you scale."
+            subtitle="Pricing Plans"
+            title="Choose Your Perfect Plan"
+            paragraph="Unlock the full potential of your business with our flexible pricing options. Scale effortlessly and manage costs as you grow."
             center
           />
         </div>
 
-        <div className="-mx-4 flex flex-wrap justify-center">
+        <div className="flex flex-wrap justify-center gap-8">
           {pricingData.map((product, i) => (
-            <PricingBox key={i} product={product} />
+            <PricingCard key={i} product={product} />
           ))}     
         </div>
       </div>
@@ -30,3 +30,4 @@ const Pricing = () => {
 };
 
 export default Pricing;
+

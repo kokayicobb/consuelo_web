@@ -1,194 +1,139 @@
-import Image from "next/image";
+"use client"
+import React from "react";
+import { Label } from "../ui/label";
+import { Input } from "../ui/input";
+import { cn } from "@/lib/utils";
+import { Shirt, Building2, Zap, SendIcon } from "lucide-react";
 
-const About = () => {
+export function Contact() {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    console.log("Demo request submitted");
+  };
+
   return (
-    <section
-      id="about"
-      className="bg-gray-1 pb-8 pt-20 dark:bg-dark-2 lg:pb-[70px] lg:pt-[120px]"
-    >
-      <div className="container">
-        <div className="wow fadeInUp" data-wow-delay=".2s">
-          <div className="-mx-4 flex flex-wrap items-center">
-            <div className="w-full px-4 lg:w-1/2">
-              <div className="mb-12 max-w-[540px] lg:mb-0">
-                <h2 className="mb-5 text-3xl font-bold leading-tight text-dark dark:text-white sm:text-[40px] sm:leading-[1.2]">
-                  Your Virtual Fitting Room: All-In-One Solution
-                </h2>
-                <p className="mb-10 text-base leading-relaxed text-body-color dark:text-dark-6">
-                  Join the growing list of successful companies who have boosted
-                  their sales and conversion rates by instilling confidence in
-                  potential customers.
-                  <br /> <br />
-                  Show them that your product holds immense value and is well
-                  worth investing in. Then watch as they transform into devoted,
-                  repeat buyers who trust in your brand.
-                </p>
+    
+    <div className="w-full bg-gradient-to-b from-background to-background/80 py-24 sm:py-32">
+    <div className="mx-auto max-w-2xl px-6 lg:px-8">
+      <div className="mx-auto text-center mb-8">
+        <div className="mb-4 inline-flex items-center rounded-full bg-muted px-3 py-1 text-sm font-medium">
+          <Zap className="mr-1 h-4 w-4 text-foreground" />
+          <span className="text-foreground">
+            Revolutionizing E-commerce Fitting
+          </span>
+        </div>
+        <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+          <span className="text-accent">Perfect fit.</span>{" "}
+          <span className="text-primary">Perfect confidence.</span>
+        </h2>
+      </div>
 
-                <a
-                  href="#contact"
-                  className="inline-flex items-center justify-center rounded-md bg-primary px-7 py-3 text-center text-base font-medium text-white duration-300 hover:bg-primary/90"
-                >
-                  Know More
-                </a>
-              </div>
-            </div>
+      <div className="max-w-xl w-full mx-auto rounded-xl p-6 md:p-8 shadow-input bg-card">
+        <div className="flex items-center gap-2 mb-4">
+          <Shirt className="w-8 h-8 text-primary" />
+          <h2 className="font-bold text-2xl text-card-foreground">
+            Transform Your Fashion Experience
+          </h2>
+        </div>
+        
+        <p className="text-muted-foreground text-base max-w-sm mt-2">
+          Ready to revolutionize your online shopping experience? Get in touch to learn how Consuelo's virtual try-on technology can boost your sales and reduce returns.
+        </p>
 
-            <div className="w-full px-4 lg:w-1/2">
-              <div className="-mx-2 flex flex-wrap sm:-mx-4 lg:-mx-2 xl:-mx-4">
-                <div className="w-full px-2 sm:w-1/2 sm:px-4 lg:px-2 xl:px-4">
-                  <div
-                    className={`relative mb-4 sm:mb-8 sm:h-[400px] md:h-[540px] lg:h-[400px] xl:h-[500px] `}
-                  >
-                    <Image
-                      src="/images/about/about-image-01.jpg"
-                      alt="about image"
-                      fill
-                      className="h-full w-full object-cover object-center"
-                    />
-                  </div>
-                </div>
+        <form className="mt-8" onSubmit={handleSubmit}>
+          <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2 mb-4">
+            <LabelInputContainer>
+              <Label htmlFor="name">Full Name</Label>
+              <Input 
+                id="name" 
+                placeholder="Jane Smith" 
+                type="text"
+                className="bg-background/50" 
+              />
+            </LabelInputContainer>
+            <LabelInputContainer>
+              <Label htmlFor="company">Company</Label>
+              <Input 
+                id="company" 
+                placeholder="Fashion Brand Inc." 
+                type="text"
+                className="bg-background/50" 
+              />
+            </LabelInputContainer>
+          </div>
 
-                <div className="w-full px-2 sm:w-1/2 sm:px-4 lg:px-2 xl:px-4">
-                  <div className="relative mb-4 sm:mb-8 sm:h-[220px] md:h-[346px] lg:mb-4 lg:h-[225px] xl:mb-8 xl:h-[310px]">
-                    <Image
-                      src="/images/about/about-image-02.jpg"
-                      alt="about image"
-                      fill
-                      className="h-full w-full object-cover object-center"
-                    />
-                  </div>
+          <LabelInputContainer className="mb-4">
+            <Label htmlFor="email">Business Email</Label>
+            <Input 
+              id="email" 
+              placeholder="jane@fashionbrand.com" 
+              type="email"
+              className="bg-background/50" 
+            />
+          </LabelInputContainer>
 
-                  <div className="relative z-10 mb-4 flex items-center justify-center overflow-hidden bg-primary px-6 py-12 sm:mb-8 sm:h-[160px] sm:p-5 lg:mb-4 xl:mb-8">
-                    <div>
-                      <span className="block text-5xl font-extrabold text-white">
-                        01
-                      </span>
-                      <span className="block text-base font-semibold text-white">
-                        We have
-                      </span>
-                      <span className="block text-base font-medium text-white text-opacity-70">
-                        Year of experience
-                      </span>
-                    </div>
-                    <div>
-                      <span className="absolute left-0 top-0 -z-10">
-                        <svg
-                          width="106"
-                          height="144"
-                          viewBox="0 0 106 144"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <rect
-                            opacity="0.1"
-                            x="-67"
-                            y="47.127"
-                            width="113.378"
-                            height="131.304"
-                            transform="rotate(-42.8643 -67 47.127)"
-                            fill="url(#paint0_linear_1416_214)"
-                          />
-                          <defs>
-                            <linearGradient
-                              id="paint0_linear_1416_214"
-                              x1="-10.3111"
-                              y1="47.127"
-                              x2="-10.3111"
-                              y2="178.431"
-                              gradientUnits="userSpaceOnUse"
-                            >
-                              <stop stopColor="white" />
-                              <stop
-                                offset="1"
-                                stopColor="white"
-                                stopOpacity="0"
-                              />
-                            </linearGradient>
-                          </defs>
-                        </svg>
-                      </span>
-                      <span className="absolute right-0 top-0 -z-10">
-                        <svg
-                          width="130"
-                          height="97"
-                          viewBox="0 0 130 97"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <rect
-                            opacity="0.1"
-                            x="0.86792"
-                            y="-6.67725"
-                            width="155.563"
-                            height="140.614"
-                            transform="rotate(-42.8643 0.86792 -6.67725)"
-                            fill="url(#paint0_linear_1416_215)"
-                          />
-                          <defs>
-                            <linearGradient
-                              id="paint0_linear_1416_215"
-                              x1="78.6495"
-                              y1="-6.67725"
-                              x2="78.6495"
-                              y2="133.937"
-                              gradientUnits="userSpaceOnUse"
-                            >
-                              <stop stopColor="white" />
-                              <stop
-                                offset="1"
-                                stopColor="white"
-                                stopOpacity="0"
-                              />
-                            </linearGradient>
-                          </defs>
-                        </svg>
-                      </span>
-                      <span className="absolute bottom-0 right-0 -z-10">
-                        <svg
-                          width="175"
-                          height="104"
-                          viewBox="0 0 175 104"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <rect
-                            opacity="0.1"
-                            x="175.011"
-                            y="108.611"
-                            width="101.246"
-                            height="148.179"
-                            transform="rotate(137.136 175.011 108.611)"
-                            fill="url(#paint0_linear_1416_216)"
-                          />
-                          <defs>
-                            <linearGradient
-                              id="paint0_linear_1416_216"
-                              x1="225.634"
-                              y1="108.611"
-                              x2="225.634"
-                              y2="256.79"
-                              gradientUnits="userSpaceOnUse"
-                            >
-                              <stop stopColor="white" />
-                              <stop
-                                offset="1"
-                                stopColor="white"
-                                stopOpacity="0"
-                              />
-                            </linearGradient>
-                          </defs>
-                        </svg>
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+          <LabelInputContainer className="mb-4">
+            <Label htmlFor="website">Company Website (Optional)</Label>
+            <Input 
+              id="website" 
+              placeholder="www.fashionbrand.com" 
+              type="url"
+              className="bg-background/50" 
+            />
+          </LabelInputContainer>
+
+          <LabelInputContainer className="mb-6">
+            <Label htmlFor="message">Tell us about your needs</Label>
+            <textarea
+              id="message"
+              placeholder="What are your main challenges with online clothing sales?"
+              className="min-h-[100px] w-full rounded-md border bg-background/50 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </LabelInputContainer>
+
+          <button
+            className="bg-primary relative group/btn w-full text-primary-foreground rounded-md h-12 font-medium transition-all hover:opacity-90 flex items-center justify-center gap-2"
+            type="submit"
+          >
+            <span>Request Demo</span>
+            <SendIcon className="h-4 w-4" />
+            <BottomGradient />
+          </button>
+
+          <div className="mt-6 text-center text-sm text-muted-foreground">
+            <div className="flex items-center justify-center gap-2">
+              <Building2 className="w-4 h-4" />
+              <span>Trusted by leading fashion retailers worldwide</span>
             </div>
           </div>
-        </div>
+        </form>
       </div>
-    </section>
+    </div>
+    </div>
+  );
+}
+
+const BottomGradient = () => {
+  return (
+    <>
+      <span className="group-hover/btn:opacity-100 block transition duration-500 opacity-0 absolute h-px w-full -bottom-px inset-x-0 bg-gradient-to-r from-transparent via-primary to-transparent" />
+      <span className="group-hover/btn:opacity-100 blur-sm block transition duration-500 opacity-0 absolute h-px w-1/2 mx-auto -bottom-px inset-x-10 bg-gradient-to-r from-transparent via-accent to-transparent" />
+    </>
   );
 };
 
-export default About;
+const LabelInputContainer = ({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) => {
+  return (
+    <div className={cn("flex flex-col space-y-2 w-full", className)}>
+      {children}
+    </div>
+  );
+};
+
+export default Contact;

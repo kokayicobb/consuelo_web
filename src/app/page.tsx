@@ -1,14 +1,12 @@
-import About from "@/components/About";
+import { WavyBackgroundDemo } from "@/components/Hero";
 import HomeBlogSection from "@/components/Blog/HomeBlogSection";
-import CallToAction from "@/components/CallToAction";
 import Clients from "@/components/Clients";
 import ScrollUp from "@/components/Common/ScrollUp";
 import Contact from "@/components/Contact";
-import Faq from "@/components/Faq";
+import FaqSection from "@/components/Faq";
 import Features from "@/components/Features";
-import Hero from "@/components/Hero";
 import Pricing from "@/components/Pricing";
-import Team from "@/components/Team";
+import TeamSection from "@/components/Team";
 import Testimonials from "@/components/Testimonials";
 import { getAllPosts } from "@/utils/markdown";
 import { Metadata } from "next";
@@ -25,17 +23,22 @@ export default function Home() {
   return (
     <main>
       <ScrollUp />
-      <Hero />
+      <WavyBackgroundDemo />
       <Testimonials />
       <Features />
-      <About />
-      <CallToAction />
+      <Contact />
       <Pricing />
-      <Faq />
-      <Team />
-      <HomeBlogSection posts={posts} />
+      <FaqSection />
+      <TeamSection />
+      <HomeBlogSection 
+        posts={posts} 
+        subtitle="Latest Updates"
+        title="News & Insights"
+        paragraph="Stay up to date with the latest developments in AI fashion technology, industry trends, and how Consuelo is revolutionizing the online shopping experience."
+      />
       <Contact />
       <Clients />
     </main>
   );
 }
+

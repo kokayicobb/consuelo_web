@@ -1,6 +1,6 @@
 const Blog = () => {
   return (
-    <section id = 'blog' className="pb-10 pt-20 lg:pb-20 lg:pt-[120px]">
+    <section id = 'blog' className="pb-10 pt-20 lg:pb-0 lg:pt-[120px]">
       <div className="container">
         <div className="-mx-4 flex flex-wrap">
           {/* {blogData.map((blog) => (
