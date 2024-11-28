@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 export const BentoGrid = ({
   className,
@@ -10,8 +11,8 @@ export const BentoGrid = ({
   return (
     <div
       className={cn(
-        "grid grid-cols-2 sm:grid-cols-3 gap-4 mx-auto",
-        "max-w-7xl lg:max-w-[85rem] xl:max-w-[95rem] 2xl:max-w-[110rem]",
+        "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mx-auto",
+        "max-w-[90%] sm:max-w-[95%] lg:max-w-7xl xl:max-w-[95rem] 2xl:max-w-[110rem]",
         className
       )}
     >
@@ -36,25 +37,30 @@ export const BentoGridItem = ({
   return (
     <div
       className={cn(
-        "row-span-1 rounded-xl group/bento hover:shadow-xl transition duration-200",
-        "shadow-input dark:shadow-none",
-        "p-4 lg:p-6 xl:p-8",
-        "dark:bg-black dark:border-white/[0.2] bg-white border border-transparent",
-        "justify-between flex flex-col space-y-4",
-        "min-h-[auto] lg:min-h-[18rem] xl:min-h-[22rem]",
+        "row-span-1 rounded-xl group/bento hover:shadow-xl transition duration-200 border border-transparent",
+        "shadow-none dark:shadow-none",
+        "overflow-hidden",
+        "justify-between flex flex-col",
+        "min-h-[12rem] sm:min-h-[15rem] lg:min-h-[20rem]",
+        "transform hover:scale-[1.02] hover:z-10 transition-all duration-200 ease-out",
         className
       )}
     >
       {header}
-      <div className="group-hover/bento:translate-x-2 transition duration-200">
-        {icon}
-        <div className="font-sans font-bold text-neutral-600 dark:text-neutral-200 mb-2 mt-2 text-sm sm:text-base lg:text-lg xl:text-xl">
-          {title}
+      <div className="relative z-10 p-3 sm:p-4 lg:p-6 xl:p-8 flex flex-col h-full">
+        <div className="bg-background/80 dark:bg-background/90 backdrop-blur-sm rounded-full p-2 sm:p-3 inline-block mb-2 sm:mb-3 self-start text-accent">
+          {icon}
         </div>
-        <div className="font-sans font-normal text-neutral-600 text-xs sm:text-sm lg:text-base xl:text-lg dark:text-neutral-300">
-          {description}
+        <div className="flex-grow">
+          <h3 className="font-bold text-foreground mb-1 sm:mb-2 mt-1 sm:mt-2 text-base sm:text-lg lg:text-xl xl:text-2xl">
+            {title}
+          </h3>
+          <p className="text-muted-foreground text-xs sm:text-sm lg:text-base">
+            {description}
+          </p>
         </div>
       </div>
     </div>
   );
 };
+

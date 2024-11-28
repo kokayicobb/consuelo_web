@@ -13,17 +13,18 @@ body {
 }
 
 .sticky-menu #navbarToggler span {
-  @apply bg-dark dark:bg-white;
+  @apply bg-primary;
 }
 
 .sticky-menu #navbarCollapse li > a {
-  @apply text-dark hover:text-primary hover:opacity-100 dark:text-white;
+  @apply text-primary hover:text-primary hover:opacity-70;
 }
+
 #navbarCollapse li .ud-menu-scroll.active {
   @apply opacity-70;
 }
 .sticky-menu #navbarCollapse li .ud-menu-scroll.active {
-  @apply text-primary opacity-100 dark:text-white;
+  @apply text-primary opacity-100 ;
 }
 .sticky-menu .loginBtn {
   @apply text-dark hover:text-primary hover:opacity-100 dark:text-white;
@@ -148,5 +149,18 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .animate-fade-in {
+    animation: fade-in 0.8s ease-out;
   }
 }

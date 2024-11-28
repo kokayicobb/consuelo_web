@@ -25,7 +25,8 @@ import {
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Laptop,
   Users,
@@ -37,6 +38,7 @@ import {
   Shirt,
   Ruler,
   Sparkles,
+  Menu,
 } from "lucide-react";
 
 const solutions: {
@@ -64,7 +66,7 @@ const solutions: {
     href: "/solutions/fit-analysis",
     description:
       "Analyze your performance against competitors with our comprehensive dashboard.",
-    icon: <IconChartBar className="h-6 w-6" />,
+    icon: <IconChartBar className="h-10 w-10" />,
   },
   {
     title: "3D Product Viewer",
@@ -132,13 +134,13 @@ export function Header() {
           : "bg-transparent",
       )}
     >
-      <div className="container flex h-20 items-center">
+      <div className="container flex h-16 items-center">
         <div className="flex items-center space-x-4">
           <Link href="/" className="flex items-center space-x-2">
             <img
               src="/images/logo/logo.svg"
               alt="Consuelo Logo"
-              className="h-16 w-auto dark:invert"
+              className="h-8 w-auto dark:invert"
             />
           </Link>
         </div>
@@ -242,7 +244,7 @@ export function Header() {
             </NavigationMenuItem>
           </NavigationMenuList>
         </NavigationMenu>
-        <div className="ml-4 flex items-center space-x-4">
+        <div className="ml-4 hidden md:flex items-center space-x-4">
           <Button
             variant="ghost"
             size="icon"
@@ -250,8 +252,9 @@ export function Header() {
             className="rounded-full"
             onClick={() => setTheme(theme === "light" ? "dark" : "light")}
           >
-            <Icons.sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-            <Icons.moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+          
+          <Icons.sun className="h-5 w-5 scale-100  dark:scale-0" />
+                 <Icons.moon className="absolute h-5 w-5 scale-0  dark:scale-100" />
             <span className="sr-only">Toggle theme</span>
           </Button>
           <Button variant="ghost" className="rounded-full">
@@ -259,6 +262,87 @@ export function Header() {
           </Button>
           <Button className="rounded-full">Sign Up</Button>
         </div>
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon" className="md:hidden">
+              <Menu className="h-5 w-5" />
+              <span className="sr-only">Toggle menu</span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+            <ScrollArea className="h-[calc(100vh-4rem)]">
+              <div className="flex flex-col space-y-4 py-4">
+                <Link
+                  href="/"
+                  className="flex items-center space-x-2 px-4"
+                >
+                  <img
+                    src="/images/logo/logo.svg"
+                    alt="Consuelo Logo"
+                    className="h-8 w-auto dark:invert"
+                  />
+                </Link>
+                <div className="space-y-1 px-4">
+                  <h4 className="font-medium">Solutions</h4>
+                  {solutions.map((item) => (
+                    <Link
+                      key={item.title}
+                      href={item.href}
+                      className="flex items-center space-x-2 py-1 text-sm"
+                    >
+                      <span>{item.icon}</span>
+                      <span>{item.title}</span>
+                    </Link>
+                  ))}
+                </div>
+                <div className="space-y-1 px-4">
+                  <h4 className="font-medium">Resources</h4>
+                  {resources.map((item) => (
+                    <Link
+                      key={item.title}
+                      href={item.href}
+                      className="flex items-center space-x-2 py-1 text-sm"
+                    >
+                      <span>{item.icon}</span>
+                      <span>{item.title}</span>
+                    </Link>
+                  ))}
+                </div>
+                <div className="space-y-1 px-4">
+                  <Link href="/pricing" className="block py-1 text-sm">
+                    Pricing
+                  </Link>
+                  <Link href="/about" className="block py-1 text-sm">
+                    About
+                  </Link>
+                  <Link href="/contact" className="block py-1 text-sm">
+                    Contact
+                  </Link>
+                </div>
+                <div className="px-4 pt-4">
+                  <Button className="w-full" variant="outline">
+                    Sign In
+                  </Button>
+                </div>
+                <div className="px-4">
+                  <Button className="w-full">Sign Up</Button>
+                </div>
+              </div>
+            </ScrollArea>
+            <div className="absolute bottom-4 left-4 right-4">
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label="Toggle theme"
+                className="w-full"
+                onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+              >
+                 
+                <span>Toggle theme</span>
+              </Button>
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
     </header>
   );

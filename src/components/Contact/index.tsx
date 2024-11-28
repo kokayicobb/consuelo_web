@@ -13,28 +13,31 @@ export function Contact() {
 
   return (
     
-    <div className="w-full bg-gradient-to-b from-background to-background/80 py-24 sm:py-20">
-    <div className="mx-auto max-w-2xl px-6 lg:px-8">
-      <div className="mx-auto text-center mb-8">
-        <div className="mb-4 inline-flex items-center rounded-full bg-muted px-3 py-1 text-sm font-medium">
-          <Zap className="mr-1 h-4 w-4 text-foreground" />
-          <span className="text-foreground">
-            Revolutionizing E-commerce Fitting
-          </span>
-        </div>
-        <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-          <span className="text-accent">Perfect fit.</span>{" "}
-          <span className="text-primary">Perfect confidence.</span>
-        </h2>
-      </div>
-
-      <div className="max-w-xl w-full mx-auto rounded-xl p-6 md:p-8 shadow-input bg-card">
-        <div className="flex items-center gap-2 mb-4">
-          <Shirt className="w-8 h-8 text-primary" />
-          <h2 className="font-bold text-2xl text-card-foreground">
-            Transform Your Fashion Experience
-          </h2>
-        </div>
+   
+      <div className="w-full bg-gradient-to-b from-background to-background/80 py-24 sm:py-20">
+        <div className="mx-auto max-w-2xl px-6 lg:px-8">
+          <div className="mx-auto text-center mb-8">
+            {/* Updated Badge */}
+            <div className="mb-4 inline-flex items-center rounded-full bg-accent/10 px-3 py-1 text-sm font-medium">
+              <Zap className="mr-1 h-4 w-4 text-accent" />
+              <span className="text-accent">Revolutionizing E-commerce Fitting</span>
+            </div>
+    
+            {/* Updated Heading */}
+            <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+              <span className="bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent">Perfect fit.</span>{" "}
+              <span className="text-primary">Perfect confidence.</span>
+            </h2>
+          </div>
+    
+          {/* Content Box */}
+          <div className="max-w-xl w-full mx-auto rounded-xl p-6 md:p-8 shadow-input bg-card">
+            <div className="flex items-center gap-2 mb-4">
+              <Shirt className="w-8 h-8 text-primary" />
+              <h2 className="font-bold text-2xl text-card-foreground">
+                Transform Your Fashion Experience
+              </h2>
+            </div>
         
         <p className="text-muted-foreground text-base max-w-sm mt-2">
           Ready to revolutionize your online shopping experience? Get in touch to learn how Consuelo's virtual try-on technology can boost your sales and reduce returns.

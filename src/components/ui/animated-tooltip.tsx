@@ -1,4 +1,5 @@
 "use client";
+
 import Image from "next/image";
 import React, { useState } from "react";
 import {
@@ -36,7 +37,7 @@ export const AnimatedTooltip = ({
   };
 
   return (
-    <div className="flex justify-center gap-24">
+    <div className="flex flex-col sm:flex-row justify-center items-center gap-8 sm:gap-12 md:gap-16 lg:gap-24">
       {items.map((item, idx) => (
         <div
           className="relative group"
@@ -64,22 +65,22 @@ export const AnimatedTooltip = ({
                   rotate: rotate,
                   whiteSpace: "nowrap",
                 }}
-                className="absolute -top-28 -left-1/2 translate-x-1/2 flex text-xs flex-col items-center justify-center rounded-md bg-black z-50 shadow-xl px-4 py-2"
+                className="absolute -top-24 sm:-top-28 left-1/2 -translate-x-1/2 flex text-xs flex-col items-center justify-center rounded-md bg-black z-50 shadow-xl px-4 py-2"
               >
                 <div className="absolute inset-x-10 z-30 w-[20%] -bottom-px bg-gradient-to-r from-transparent via-emerald-500 to-transparent h-px " />
                 <div className="absolute left-10 w-[40%] z-30 -bottom-px bg-gradient-to-r from-transparent via-sky-500 to-transparent h-px " />
-                <div className="font-bold text-white relative z-30 text-lg">
+                <div className="font-bold text-white relative z-30 text-base sm:text-lg">
                   {item.name}
                 </div>
-                <div className="text-white text-sm">{item.designation}</div>
+                <div className="text-white text-xs sm:text-sm">{item.designation}</div>
               </motion.div>
             )}
           </AnimatePresence>
-          <div className="w-300 h-[300px] rounded-2xl overflow-hidden border-4 group-hover:scale-105 group-hover:z-30 border-white relative transition duration-500">
+          <div className="w-[200px] h-[200px] sm:w-[250px] sm:h-[250px] md:w-[300px] md:h-[300px] rounded-2xl overflow-hidden border-4 group-hover:scale-105 group-hover:z-30 border-white relative transition duration-500">
             <Image
               onMouseMove={handleMouseMove}
-              height={342}
-              width={192}
+              height={300}
+              width={300}
               src={item.image}
               alt={item.name}
               className="object-cover !m-0 !p-0 object-top w-full h-full"
@@ -92,3 +93,4 @@ export const AnimatedTooltip = ({
 };
 
 export default AnimatedTooltip;
+
