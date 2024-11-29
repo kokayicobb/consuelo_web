@@ -29,7 +29,7 @@ export default function ClientLayout({
       <ThemeProvider
         attribute="class"
         enableSystem={false}
-        defaultTheme="light"
+        defaultTheme="dark"
       >
         <ToasterContext />
         <Header />
