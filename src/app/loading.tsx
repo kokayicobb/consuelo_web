@@ -24,6 +24,7 @@ const LoaderWrapper = ({
   onLoadComplete?: () => void 
 }) => {
   const [showLoader, setShowLoader] = useState(true)
+  const [windowSize, setWindowSize] = useState({ width: 0, height: 0 })
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -31,7 +32,20 @@ const LoaderWrapper = ({
       onLoadComplete?.()
     }, 2000)
 
-    return () => clearTimeout(timer)
+    const updateWindowSize = () => {
+      setWindowSize({ width: window.innerWidth, height: window.innerHeight })
+    }
+
+    // Set initial window size
+    updateWindowSize()
+
+    // Add event listener for window resize
+    window.addEventListener('resize', updateWindowSize)
+
+    return () => {
+      clearTimeout(timer)
+      window.removeEventListener('resize', updateWindowSize)
+    }
   }, [onLoadComplete])
 
   if (!showLoader) return null
@@ -43,11 +57,11 @@ const LoaderWrapper = ({
           <motion.div
             key={i}
             className="absolute text-pink-500/30"
-            initial={{ scale: 0, x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight }}
+            initial={{ scale: 0, x: Math.random() * windowSize.width, y: Math.random() * windowSize.height }}
             animate={{
               scale: [0, 1, 0],
-              x: Math.random() * window.innerWidth,
-              y: Math.random() * window.innerHeight,
+              x: Math.random() * windowSize.width,
+              y: Math.random() * windowSize.height,
               rotate: Math.random() * 360,
             }}
             transition={{
@@ -159,3 +173,4 @@ const ShimmerLoader = ({ onLoadComplete }: { onLoadComplete?: () => void }) => {
 }
 
 export default ShimmerLoader
+
