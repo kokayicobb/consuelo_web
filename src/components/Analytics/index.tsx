@@ -1,3 +1,4 @@
+"use client"
 // components/Analytics.tsx
 import Script from 'next/script'
 import { usePathname, useSearchParams } from 'next/navigation'
