@@ -140,7 +140,7 @@ export function Header() {
             <img
               src="/images/logo/logo.svg"
               alt="Consuelo Logo"
-              className="h-8 w-auto dark:invert"
+              className="h-10 w-auto dark:invert"
             />
           </Link>
         </div>

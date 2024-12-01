@@ -2,10 +2,10 @@
 // components/Analytics.tsx
 import Script from 'next/script'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, Suspense } from 'react'
 import * as gtag from '@/lib/gtag'
 
-const Analytics = (): JSX.Element => {
+const AnalyticsContent = (): JSX.Element => {
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
@@ -49,6 +49,14 @@ const Analytics = (): JSX.Element => {
         }}
       />
     </>
+  )
+}
+
+const Analytics = (): JSX.Element => {
+  return (
+    <Suspense fallback={null}>
+      <AnalyticsContent />
+    </Suspense>
   )
 }
 
