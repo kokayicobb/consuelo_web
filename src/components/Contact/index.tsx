@@ -1,107 +1,162 @@
 "use client"
-import React from "react";
+import React, { useState } from "react";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { cn } from "@/lib/utils";
 import { Shirt, Building2, Zap, SendIcon } from "lucide-react";
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import * as gtag from '@/lib/gtag'  // Import gtag for analytics
 
 export function Contact() {
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const supabase = createClientComponentClient()
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitStatus, setSubmitStatus] = useState<{
+    type: 'success' | 'error' | null;
+    message: string;
+  }>({ type: null, message: '' })
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("Demo request submitted");
+    setIsSubmitting(true)
+    setSubmitStatus({ type: null, message: '' })
+
+    // Get form data
+    const formData = new FormData(e.currentTarget)
+    const submission = {
+      full_name: formData.get('name'),
+      company: formData.get('company'),
+      email: formData.get('email'),
+      website: formData.get('website'),
+      message: formData.get('message'),
+      submitted_at: new Date().toISOString()
+    }
+
+    try {
+      // Insert into Supabase
+      const { error } = await supabase
+        .from('contact_submissions')
+        .insert([submission])
+
+      if (error) throw error
+
+      // Track successful submission
+      gtag.event({
+        action: 'form_submission',
+        category: 'engagement',
+        label: 'demo_request'
+      })
+
+      setSubmitStatus({
+        type: 'success',
+        message: 'Thank you for your interest! We\'ll be in touch soon.'
+      })
+
+      // Reset form
+      e.currentTarget.reset()
+
+    } catch (error) {
+      console.error('Submission error:', error)
+      setSubmitStatus({
+        type: 'error',
+        message: 'There was an error submitting your request. Please try again.'
+      })
+
+      // Track failed submission
+      gtag.event({
+        action: 'form_error',
+        category: 'error',
+        label: 'demo_request_failed'
+      })
+    }
+
+    setIsSubmitting(false)
   };
 
   return (
-    
-   
-      <div className="w-full bg-gradient-to-b from-background to-background/80 py-24 sm:py-20">
-        <div className="mx-auto max-w-2xl px-6 lg:px-8">
-          <div className="mx-auto text-center mb-8">
-            {/* Updated Badge */}
-            <div className="mb-4 inline-flex items-center rounded-full bg-accent/10 px-3 py-1 text-sm font-medium">
-              <Zap className="mr-1 h-4 w-4 text-accent" />
-              <span className="text-accent">Revolutionizing E-commerce Fitting</span>
-            </div>
-    
-            {/* Updated Heading */}
-            <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-              <span className="bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent">Perfect fit.</span>{" "}
-              <span className="text-primary">Perfect confidence.</span>
-            </h2>
-          </div>
-    
-          {/* Content Box */}
-          <div className="max-w-xl w-full mx-auto rounded-xl p-6 md:p-8 shadow-input bg-card">
-            <div className="flex items-center gap-2 mb-4">
-              <Shirt className="w-8 h-8 text-primary" />
-              <h2 className="font-bold text-2xl text-card-foreground">
-                Transform Your Fashion Experience
-              </h2>
-            </div>
-        
-        <p className="text-muted-foreground text-base max-w-sm mt-2">
-          Ready to revolutionize your online shopping experience? Get in touch to learn how Consuelo's virtual try-on technology can boost your sales and reduce returns.
-        </p>
+    <div className="w-full bg-gradient-to-b from-background to-background/80 py-24 sm:py-20">
+      {/* ... your existing JSX until the form ... */}
 
-        <form className="mt-8" onSubmit={handleSubmit}>
-          <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2 mb-4">
-            <LabelInputContainer>
-              <Label htmlFor="name">Full Name</Label>
-              <Input 
-                id="name" 
-                placeholder="Jane Smith" 
-                type="text"
-                className="bg-background/50" 
-              />
-            </LabelInputContainer>
-            <LabelInputContainer>
-              <Label htmlFor="company">Company</Label>
-              <Input 
-                id="company" 
-                placeholder="Fashion Brand Inc." 
-                type="text"
-                className="bg-background/50" 
-              />
-            </LabelInputContainer>
-          </div>
-
-          <LabelInputContainer className="mb-4">
-            <Label htmlFor="email">Business Email</Label>
+      <form className="mt-8" onSubmit={handleSubmit}>
+        <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2 mb-4">
+          <LabelInputContainer>
+            <Label htmlFor="name">Full Name</Label>
             <Input 
-              id="email" 
-              placeholder="jane@fashionbrand.com" 
-              type="email"
-              className="bg-background/50" 
+              id="name" 
+              name="name"  // Added name attribute
+              placeholder="Jane Smith" 
+              type="text"
+              className="bg-background/50"
+              required 
             />
           </LabelInputContainer>
-
-          <LabelInputContainer className="mb-4">
-            <Label htmlFor="website">Company Website (Optional)</Label>
+          <LabelInputContainer>
+            <Label htmlFor="company">Company</Label>
             <Input 
-              id="website" 
-              placeholder="www.fashionbrand.com" 
-              type="url"
-              className="bg-background/50" 
+              id="company"
+              name="company"  // Added name attribute
+              placeholder="Fashion Brand Inc." 
+              type="text"
+              className="bg-background/50"
+              required 
             />
           </LabelInputContainer>
+        </div>
 
-          <LabelInputContainer className="mb-6">
-            <Label htmlFor="message">Tell us about your needs</Label>
-            <textarea
-              id="message"
-              placeholder="What are your main challenges with online clothing sales?"
-              className="min-h-[100px] w-full rounded-md border bg-background/50 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-          </LabelInputContainer>
+        <LabelInputContainer className="mb-4">
+          <Label htmlFor="email">Business Email</Label>
+          <Input 
+            id="email"
+            name="email"  // Added name attribute
+            placeholder="jane@fashionbrand.com" 
+            type="email"
+            className="bg-background/50"
+            required 
+          />
+        </LabelInputContainer>
 
-          <button
-            className="bg-primary relative group/btn w-full text-primary-foreground rounded-md h-12 font-medium transition-all hover:opacity-90 flex items-center justify-center gap-2"
-            type="submit"
-          >
-            <span>Request Demo</span>
-            <SendIcon className="h-4 w-4" />
-            <BottomGradient />
-          </button>
+        <LabelInputContainer className="mb-4">
+          <Label htmlFor="website">Company Website (Optional)</Label>
+          <Input 
+            id="website"
+            name="website"  // Added name attribute
+            placeholder="www.fashionbrand.com" 
+            type="url"
+            className="bg-background/50" 
+          />
+        </LabelInputContainer>
+
+        <LabelInputContainer className="mb-6">
+          <Label htmlFor="message">Tell us about your needs</Label>
+          <textarea
+            id="message"
+            name="message"  // Added name attribute
+            placeholder="What are your main challenges with online clothing sales?"
+            className="min-h-[100px] w-full rounded-md border bg-background/50 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            required
+          />
+        </LabelInputContainer>
+
+        {submitStatus.type && (
+          <div className={cn(
+            "p-4 mb-4 rounded-md",
+            submitStatus.type === 'success' ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+          )}>
+            {submitStatus.message}
+          </div>
+        )}
+
+        <button
+          className={cn(
+            "bg-primary relative group/btn w-full text-primary-foreground rounded-md h-12 font-medium transition-all hover:opacity-90 flex items-center justify-center gap-2",
+            isSubmitting && "opacity-50 cursor-not-allowed"
+          )}
+          type="submit"
+          disabled={isSubmitting}
+        >
+          <span>{isSubmitting ? 'Submitting...' : 'Request Demo'}</span>
+          <SendIcon className="h-4 w-4" />
+          <BottomGradient />
+        </button>
 
           <div className="mt-6 text-center text-sm text-muted-foreground">
             <div className="flex items-center justify-center gap-2">
@@ -110,8 +165,7 @@ export function Contact() {
             </div>
           </div>
         </form>
-      </div>
-    </div>
+      
     </div>
   );
 }
