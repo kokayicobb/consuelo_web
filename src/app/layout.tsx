@@ -4,7 +4,7 @@ import { metadata } from './metadata'
 import "../styles/index.css";
 import "../styles/prism-vsc-dark-plus.css";
 import ClientLayout from './clientLayout';
-
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 
 export default function RootLayout({
@@ -21,6 +21,7 @@ export default function RootLayout({
       <body>
         
         <ClientLayout>{children}</ClientLayout>
+        <SpeedInsights />
       </body>
     </html>
   );
