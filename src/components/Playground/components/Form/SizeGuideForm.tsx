@@ -409,8 +409,10 @@ function SizeVisualization({
     }
   };
 
-  const getExactSize = (size: string | null): string => {
+  function getExactSize(size: string | null): string {
     switch (size) {
+      case "XXS":
+        return "49-50 cm";
       case "XS":
         return "51-52 cm";
       case "S":
@@ -421,11 +423,12 @@ function SizeVisualization({
         return "57-58 cm";
       case "XL":
         return "59-60 cm";
+      case "XXL":
+        return "61-62 cm";
       default:
         return "Unknown";
     }
-  };
-
+  }
   return (
     <div className="relative w-40 h-40">
       <div className="absolute inset-0 rounded-full border-4 border-gray-300" />
@@ -451,21 +454,63 @@ function SizeVisualization({
 }
 
 function calculateRecommendedSize(formData: FormData): string {
-  // This is a simplified example. In a real application, you'd have a more complex algorithm.
   const circumference = parseInt(formData.headCircumference);
-  let size = "M";
+  let size: string;
 
-  if (circumference < 54) {
+  // Precise size mapping based on actual circumference
+  if (circumference <= 50) {
+    size = "XXS";
+  } else if (circumference <= 52) {
+    size = "XS";
+  } else if (circumference <= 54) {
     size = "S";
-  } else if (circumference > 58) {
+  } else if (circumference <= 56) {
+    size = "M";
+  } else if (circumference <= 58) {
     size = "L";
+  } else if (circumference <= 60) {
+    size = "XL";
+  } else {
+    size = "XXL";
   }
 
-  // Adjust for fit preference
+  // Apply fit preference adjustments
   if (formData.fitPreference === "Tight Fit") {
-    size = size === "L" ? "M" : size === "M" ? "S" : "XS";
+    // If user wants tight fit, recommend one size down
+    switch (size) {
+      case "XXL":
+        return "XL";
+      case "XL":
+        return "L";
+      case "L":
+        return "M";
+      case "M":
+        return "S";
+      case "S":
+        return "XS";
+      case "XS":
+        return "XXS";
+      default:
+        return size;
+    }
   } else if (formData.fitPreference === "Loose Fit") {
-    size = size === "S" ? "M" : size === "M" ? "L" : "XL";
+    // If user wants loose fit, recommend one size up
+    switch (size) {
+      case "XXS":
+        return "XS";
+      case "XS":
+        return "S";
+      case "S":
+        return "M";
+      case "M":
+        return "L";
+      case "L":
+        return "XL";
+      case "XL":
+        return "XXL";
+      default:
+        return size;
+    }
   }
 
   return size;
