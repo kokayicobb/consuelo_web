@@ -1,20 +1,18 @@
 "use client";
 
+
 import React, { useState } from 'react';
 
+
 import { cn } from "@/lib/utils";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Info, ChevronRight, ChevronLeft, Camera, X } from 'lucide-react';
+
+import { Info, ChevronRight, ChevronLeft, Camera } from "lucide-react";
 import Image from "next/image";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import FaceDetection from "../Head Measurments/FaceDetection";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@radix-ui/react-select';
 import { Button } from '../ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface FormData {
   headCircumference: string;
@@ -45,7 +43,7 @@ const HAIRSTYLES = [
 ];
 const FIT_PREFERENCES = ["Tight Fit", "Perfect Fit", "Loose Fit"];
 
-export function SizeGuideForm({ onClose }: { onClose: () => void }) {
+export function SizeGuideForm() {
   const [step, setStep] = React.useState(1);
   const [formData, setFormData] = React.useState<FormData>(INITIAL_FORM_DATA);
   const [isLoading, setIsLoading] = React.useState(false);
@@ -134,104 +132,93 @@ export function SizeGuideForm({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-background z-50 overflow-y-auto">
-      <div className="flex flex-col min-h-screen">
-        <div className="p-4">
-          <Button variant="ghost" className="ml-auto" onClick={onClose}>
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-        <div className="flex-grow flex items-center justify-center">
-          <div className="flex flex-col space-y-6 p-4 max-w-md mx-auto">
-            <StepIndicator currentStep={step} totalSteps={4} />
-            <div className="space-y-4">
-              {step === 1 && (
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                      Head Circumference
-                    </label>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <button 
-                            onClick={() => setShowFaceDetection(true)}
-                            className="cursor-pointer hover:opacity-80 transition-opacity"
-                          >
-                            <Camera className="h-6 w-6 text-primary" />
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Try our AI camera measurement tool</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                  <Select 
-                    value={formData.headCircumference} 
-                    onValueChange={(value) => updateFormData("headCircumference", value)}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select Head Circumference" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {HEAD_CIRCUMFERENCES.map((option) => (
-                        <SelectItem key={option} value={option}>
-                          {option}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
-              {step === 2 && (
-                <FormStep
-                  label="Head Shape"
-                  value={formData.headShape}
-                  onChange={(value) => updateFormData("headShape", value)}
-                  options={HEAD_SHAPES}
-                  tooltip="Select your head shape type"
-                />
-              )}
-
-              {step === 3 && (
-                <FormStep
-                  label="Typical Hairstyle"
-                  value={formData.typicalHairstyle}
-                  onChange={(value) => updateFormData("typicalHairstyle", value)}
-                  options={HAIRSTYLES}
-                  tooltip="Select your usual hairstyle"
-                />
-              )}
-
-              {step === 4 && (
-                <FormStep
-                  label="Fit Preference"
-                  value={formData.fitPreference}
-                  onChange={(value) => updateFormData("fitPreference", value)}
-                  options={FIT_PREFERENCES}
-                  tooltip="Select how you prefer the product to fit on your head."
-                />
-              )}
+    <div className="flex flex-col space-y-6 p-4 max-w-md mx-auto">
+      <StepIndicator currentStep={step} totalSteps={4} />
+      <div className="space-y-4">
+        {step === 1 && (
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Head Circumference
+              </label>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button 
+                      onClick={() => setShowFaceDetection(true)}
+                      className="cursor-pointer hover:opacity-80 transition-opacity"
+                    >
+                      <Camera className="h-6 w-6 text-primary" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Try our AI camera measurement tool</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
-
-            <div className="flex justify-between">
-              {step > 1 && (
-                <Button variant="outline" onClick={() => setStep((prev) => prev - 1)}>
-                  Back
-                </Button>
-              )}
-              <Button
-                className={cn("ml-auto", step === 1 && "w-full")}
-                onClick={handleNext}
-                disabled={!canProceed()}
-              >
-                {step === 4 ? "Calculate Size" : "Next"}
-              </Button>
-            </div>
+            <Select 
+              value={formData.headCircumference} 
+              onValueChange={(value) => updateFormData("headCircumference", value)}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select Head Circumference" />
+              </SelectTrigger>
+              <SelectContent>
+                {HEAD_CIRCUMFERENCES.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-        </div>
+        )}
+
+{step === 2 && (
+  <FormStep
+    label="Head Shape"
+    value={formData.headShape}
+    onChange={(value) => updateFormData("headShape", value)}
+    options={HEAD_SHAPES}
+    tooltip="Select your head shape type"
+  />
+)}
+
+{step === 3 && (
+  <FormStep
+    label="Typical Hairstyle"
+    value={formData.typicalHairstyle}
+    onChange={(value) => updateFormData("typicalHairstyle", value)}
+    options={HAIRSTYLES}
+    tooltip="Select your usual hairstyle"
+  />
+)}
+
+        {step === 4 && (
+          <FormStep
+            label="Fit Preference"
+            value={formData.fitPreference}
+            onChange={(value) => updateFormData("fitPreference", value)}
+            options={FIT_PREFERENCES}
+            tooltip="Select how you prefer the product to fit on your head."
+          />
+        )}
+      </div>
+
+      <div className="flex justify-between">
+        {step > 1 && (
+          <Button variant="outline" onClick={() => setStep((prev) => prev - 1)}>
+            Back
+          </Button>
+        )}
+        <Button
+          className={cn("ml-auto", step === 1 && "w-full")}
+          onClick={handleNext}
+          disabled={!canProceed()}
+        >
+          {step === 4 ? "Calculate Size" : "Next"}
+        </Button>
       </div>
     </div>
   );
@@ -246,10 +233,10 @@ interface FormStepProps {
 }
 
 function FormStep({ label, value, onChange, options, tooltip }: FormStepProps) {
-  const [showFaceDetection, setShowFaceDetection] = useState(false);
-
-  return (
-    <div className="space-y-2">
+	const [showFaceDetection, setShowFaceDetection] = useState(false);
+	
+	return (
+		<div className="space-y-2">
       <div className="flex items-center space-x-2">
         <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
           {label}
@@ -325,6 +312,7 @@ function HeadShapeSelector({
   options,
 }: HeadShapeSelectorProps) {
   return (
+	
     <div className="space-y-4">
       <h3 className="text-sm font-medium">Select Your Head Shape</h3>
       <div className="flex justify-around">
@@ -421,7 +409,7 @@ function SizeVisualization({
     }
   };
 
-  function getExactSize(size: string | null): string {
+  const getExactSize = (size: string | null): string => {
     switch (size) {
       case "XXS":
         return "49-50 cm";
@@ -440,7 +428,8 @@ function SizeVisualization({
       default:
         return "Unknown";
     }
-  }
+  };
+
   return (
     <div className="relative w-40 h-40">
       <div className="absolute inset-0 rounded-full border-4 border-gray-300" />
@@ -469,7 +458,7 @@ function calculateRecommendedSize(formData: FormData): string {
   const circumference = parseInt(formData.headCircumference);
   let size: string;
 
-  // Precise size mapping based on actual circumference
+  // Determine base size
   if (circumference <= 50) {
     size = "XXS";
   } else if (circumference <= 52) {
@@ -486,9 +475,8 @@ function calculateRecommendedSize(formData: FormData): string {
     size = "XXL";
   }
 
-  // Apply fit preference adjustments
+  // Adjust for fit preference
   if (formData.fitPreference === "Tight Fit") {
-    // If user wants tight fit, recommend one size down
     switch (size) {
       case "XXL":
         return "XL";
@@ -506,7 +494,6 @@ function calculateRecommendedSize(formData: FormData): string {
         return size;
     }
   } else if (formData.fitPreference === "Loose Fit") {
-    // If user wants loose fit, recommend one size up
     switch (size) {
       case "XXS":
         return "XS";

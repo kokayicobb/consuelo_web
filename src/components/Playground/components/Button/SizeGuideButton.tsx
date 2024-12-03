@@ -72,7 +72,5 @@ function SizeGuideContent() {
 	  );
 	}
       
-	return <SizeGuideForm onClose={function (): void {
-    throw new Error("Function not implemented.");
-  } } />;
+	return <SizeGuideForm />;
       }
