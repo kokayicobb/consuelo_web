@@ -1,8 +1,6 @@
 "use client";
 
-
-import React, { useState } from 'react';
-
+import React, { useState } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -10,9 +8,20 @@ import { Info, ChevronRight, ChevronLeft, Camera } from "lucide-react";
 import Image from "next/image";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import FaceDetection from "../Head Measurments/FaceDetection";
-import { Button } from '../ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Button } from "../ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface FormData {
   headCircumference: string;
@@ -28,7 +37,10 @@ const INITIAL_FORM_DATA: FormData = {
   fitPreference: "",
 };
 
-const HEAD_CIRCUMFERENCES = Array.from({ length: 13 }, (_, i) => `${51 + i} cm`);
+const HEAD_CIRCUMFERENCES = Array.from(
+  { length: 13 },
+  (_, i) => `${51 + i} cm`,
+);
 const HEAD_SHAPES = ["Round Oval", "Intermediate Oval", "Long Oval"];
 const HAIRSTYLES = [
   "Short Hair",
@@ -47,7 +59,9 @@ export function SizeGuideForm() {
   const [step, setStep] = React.useState(1);
   const [formData, setFormData] = React.useState<FormData>(INITIAL_FORM_DATA);
   const [isLoading, setIsLoading] = React.useState(false);
-  const [sizeRecommendation, setSizeRecommendation] = React.useState<string | null>(null);
+  const [sizeRecommendation, setSizeRecommendation] = React.useState<
+    string | null
+  >(null);
   const [showExactSize, setShowExactSize] = React.useState(false);
   const [showFaceDetection, setShowFaceDetection] = useState(false);
 
@@ -91,7 +105,7 @@ export function SizeGuideForm() {
     return (
       <div className="w-full">
         <FaceDetection />
-        <Button 
+        <Button
           className="mt-4 w-full"
           onClick={() => setShowFaceDetection(false)}
           variant="outline"
@@ -104,27 +118,36 @@ export function SizeGuideForm() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center h-[300px] space-y-4">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-        <p className="text-sm text-muted-foreground">Calculating your size...</p>
+      <div className="flex h-[300px] flex-col items-center justify-center space-y-4">
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary" />
+        <p className="text-sm text-muted-foreground">
+          Calculating your size...
+        </p>
       </div>
     );
   }
 
   if (step === 5) {
     return (
-      <div className="flex flex-col items-center justify-center h-[300px] space-y-6 p-4">
-        <h2 className="text-xl font-semibold tracking-tight">Your Recommended Size</h2>
+      <div className="flex h-[300px] flex-col items-center justify-center space-y-6 p-4">
+        <h2 className="text-xl font-semibold tracking-tight">
+          Your Recommended Size
+        </h2>
         <div className="text-3xl font-bold">{sizeRecommendation}</div>
         <SizeVisualization
           size={sizeRecommendation}
           fitPreference={formData.fitPreference}
           showExactSize={showExactSize}
         />
-        <p className="text-sm text-center text-muted-foreground">
-          Based on your measurements and preferences, we recommend this size for the best fit.
+        <p className="text-center text-sm text-muted-foreground">
+          Based on your measurements and preferences, we recommend this size for
+          the best fit.
         </p>
-        <Button variant="outline" size="sm" onClick={() => setShowExactSize(!showExactSize)}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setShowExactSize(!showExactSize)}
+        >
           {showExactSize ? "Show Letter Size" : "Show Exact Size"}
         </Button>
       </div>
@@ -132,7 +155,7 @@ export function SizeGuideForm() {
   }
 
   return (
-    <div className="flex flex-col space-y-6 p-4 max-w-md mx-auto">
+    <div className="mx-auto flex max-w-md flex-col space-y-6 p-4">
       <StepIndicator currentStep={step} totalSteps={4} />
       <div className="space-y-4">
         {step === 1 && (
@@ -141,25 +164,21 @@ export function SizeGuideForm() {
               <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                 Head Circumference
               </label>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button 
-                      onClick={() => setShowFaceDetection(true)}
-                      className="cursor-pointer hover:opacity-80 transition-opacity"
-                    >
-                      <Camera className="h-6 w-6 text-primary" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Try our AI camera measurement tool</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <button
+                onClick={() => setShowFaceDetection(true)}
+                className="flex cursor-pointer items-center transition-opacity hover:opacity-80"
+              >
+                <Camera className="h-6 w-6 text-primary" />
+                <span className="ml-2 italic text-xs text-muted-foreground">
+                AI Tool
+                </span>
+              </button>
             </div>
-            <Select 
-              value={formData.headCircumference} 
-              onValueChange={(value) => updateFormData("headCircumference", value)}
+            <Select
+              value={formData.headCircumference}
+              onValueChange={(value) =>
+                updateFormData("headCircumference", value)
+              }
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select Head Circumference" />
@@ -175,25 +194,25 @@ export function SizeGuideForm() {
           </div>
         )}
 
-{step === 2 && (
-  <FormStep
-    label="Head Shape"
-    value={formData.headShape}
-    onChange={(value) => updateFormData("headShape", value)}
-    options={HEAD_SHAPES}
-    tooltip="Select your head shape type"
-  />
-)}
+        {step === 2 && (
+          <FormStep
+            label="Head Shape"
+            value={formData.headShape}
+            onChange={(value) => updateFormData("headShape", value)}
+            options={HEAD_SHAPES}
+            tooltip="Select your head shape type"
+          />
+        )}
 
-{step === 3 && (
-  <FormStep
-    label="Typical Hairstyle"
-    value={formData.typicalHairstyle}
-    onChange={(value) => updateFormData("typicalHairstyle", value)}
-    options={HAIRSTYLES}
-    tooltip="Select your usual hairstyle"
-  />
-)}
+        {step === 3 && (
+          <FormStep
+            label="Typical Hairstyle"
+            value={formData.typicalHairstyle}
+            onChange={(value) => updateFormData("typicalHairstyle", value)}
+            options={HAIRSTYLES}
+            tooltip="Select your usual hairstyle"
+          />
+        )}
 
         {step === 4 && (
           <FormStep
@@ -233,10 +252,10 @@ interface FormStepProps {
 }
 
 function FormStep({ label, value, onChange, options, tooltip }: FormStepProps) {
-	const [showFaceDetection, setShowFaceDetection] = useState(false);
-	
-	return (
-		<div className="space-y-2">
+  const [showFaceDetection, setShowFaceDetection] = useState(false);
+
+  return (
+    <div className="space-y-2">
       <div className="flex items-center space-x-2">
         <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
           {label}
@@ -246,9 +265,9 @@ function FormStep({ label, value, onChange, options, tooltip }: FormStepProps) {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <button 
+                  <button
                     onClick={() => setShowFaceDetection(true)}
-                    className="cursor-pointer hover:opacity-80 transition-opacity"
+                    className="cursor-pointer transition-opacity hover:opacity-80"
                   >
                     <Camera className="h-6 w-6 text-primary" />
                   </button>
@@ -286,13 +305,13 @@ function StepIndicator({
   totalSteps: number;
 }) {
   return (
-    <div className="flex justify-center items-center space-x-2">
+    <div className="flex items-center justify-center space-x-2">
       {Array.from({ length: totalSteps }).map((_, index) => (
         <div
           key={index}
           className={cn(
             "h-2 w-2 rounded-full transition-colors",
-            index < currentStep ? "bg-primary" : "bg-primary/20"
+            index < currentStep ? "bg-primary" : "bg-primary/20",
           )}
         />
       ))}
@@ -312,7 +331,6 @@ function HeadShapeSelector({
   options,
 }: HeadShapeSelectorProps) {
   return (
-	
     <div className="space-y-4">
       <h3 className="text-sm font-medium">Select Your Head Shape</h3>
       <div className="flex justify-around">
@@ -321,8 +339,8 @@ function HeadShapeSelector({
             key={shape}
             onClick={() => onChange(shape)}
             className={cn(
-              "flex flex-col items-center p-2 rounded-lg transition-colors",
-              value === shape ? "bg-primary/20" : "hover:bg-primary/10"
+              "flex flex-col items-center rounded-lg p-2 transition-colors",
+              value === shape ? "bg-primary/20" : "hover:bg-primary/10",
             )}
           >
             <Image
@@ -332,7 +350,7 @@ function HeadShapeSelector({
               height={100}
               className="rounded-full bg-muted"
             />
-            <span className="text-xs mt-1">{shape}</span>
+            <span className="mt-1 text-xs">{shape}</span>
           </button>
         ))}
       </div>
@@ -354,15 +372,15 @@ function HairstyleSelector({
   return (
     <div className="space-y-4">
       <h3 className="text-sm font-medium">Select Your Typical Hairstyle</h3>
-      <ScrollArea className="w-full max-w-[320px] mx-auto">
+      <ScrollArea className="mx-auto w-full max-w-[320px]">
         <div className="flex gap-4 pb-4">
           {options.map((style) => (
             <div key={style} className="flex-shrink-0">
               <button
                 onClick={() => onChange(style)}
                 className={cn(
-                  "flex flex-col items-center p-2 rounded-lg transition-colors min-w-[100px]",
-                  value === style ? "bg-primary/20" : "hover:bg-primary/10"
+                  "flex min-w-[100px] flex-col items-center rounded-lg p-2 transition-colors",
+                  value === style ? "bg-primary/20" : "hover:bg-primary/10",
                 )}
               >
                 <Image
@@ -372,7 +390,7 @@ function HairstyleSelector({
                   height={80}
                   className="rounded-full bg-muted"
                 />
-                <span className="text-xs mt-1 w-full text-center break-words">
+                <span className="mt-1 w-full break-words text-center text-xs">
                   {style}
                 </span>
               </button>
@@ -431,7 +449,7 @@ function SizeVisualization({
   };
 
   return (
-    <div className="relative w-40 h-40">
+    <div className="relative h-40 w-40">
       <div className="absolute inset-0 rounded-full border-4 border-gray-300" />
       <div
         className={`absolute inset-2 rounded-full ${getFitColor()} opacity-50`}
@@ -440,8 +458,8 @@ function SizeVisualization({
             fitPreference === "Loose Fit"
               ? 0.95
               : fitPreference === "Tight Fit"
-              ? 0.85
-              : 0.9
+                ? 0.85
+                : 0.9
           })`,
         }}
       />

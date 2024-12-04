@@ -3,13 +3,22 @@
 import * as React from "react";
 import { Ruler } from "lucide-react";
 import { useMediaQuery } from "../../hooks/UseMediaQuery";
-import { Dialog, DialogTrigger, DialogContent, DialogTitle } from "@radix-ui/react-dialog";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogTitle,
+} from "@radix-ui/react-dialog";
 import { SizeGuideForm } from "../Form/SizeGuideForm";
 import { Button } from "../ui/button";
 import { DialogHeader } from "../ui/dialog";
-import { Drawer, DrawerTrigger, DrawerContent, DrawerHeader, DrawerTitle } from "../ui/drawer";
-
-
+import {
+  Drawer,
+  DrawerTrigger,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "../ui/drawer";
 
 export function SizeGuideButton() {
   const [open, setOpen] = React.useState(false);
@@ -20,8 +29,12 @@ export function SizeGuideButton() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
           <Button variant="link" className="h-auto p-0">
-            <span className="text-sm">
-              Fit Calculator <span className="underline">Get exact size</span>
+          <span className="text-sm">
+              Fit Calculator <span className="underline">Get exact size</span>{" "}
+              
+              <span className="ml-2 italic text-muted-foreground bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent no-underline hover:no-underline">
+                Powered by AI
+              </span>
             </span>
           </Button>
         </DialogTrigger>
@@ -40,12 +53,16 @@ export function SizeGuideButton() {
       <DrawerTrigger asChild>
         <Button variant="link" className="h-auto p-0">
           <span className="text-sm">
-            Fit Calculator <span className="underline">Get exact size</span>
+            Fit Calculator <span className="underline">Get exact size</span>{" "}
+            
+            <span className="ml-2 italic text-muted-foreground bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent no-underline hover:no-underline">
+              Powered by AI
+            </span>
           </span>
         </Button>
       </DrawerTrigger>
       <DrawerContent>
-        <DrawerHeader className="text-left">
+        <DrawerHeader>
           <DrawerTitle>Fit Calculator predicts your size</DrawerTitle>
         </DrawerHeader>
         <SizeGuideContent />
@@ -55,22 +72,22 @@ export function SizeGuideButton() {
 }
 
 function SizeGuideContent() {
-	const [started, setStarted] = React.useState(false);
-      
-	if (!started) {
-	  return (
-	    <div className="flex flex-col items-center justify-center space-y-4 p-4">
-	      <Ruler className="h-12 w-12 text-primary" />
-	      <p className="text-center text-sm text-muted-foreground">
-		Our Fit Calculator uses advanced algorithms to predict your perfect size
-		based on your measurements and preferences.
-	      </p>
-	      <Button className="w-full" onClick={() => setStarted(true)}>
-		Start Size Calculation
-	      </Button>
-	    </div>
-	  );
-	}
-      
-	return <SizeGuideForm />;
-      }
+  const [started, setStarted] = React.useState(false);
+
+  if (!started) {
+    return (
+      <div className="flex flex-col items-center justify-center space-y-4 p-4">
+        <Ruler className="h-12 w-12 text-primary" />
+        <p className="text-center text-sm text-muted-foreground">
+          Our Fit Calculator uses advanced AI algorithms to predict your perfect
+          size based on your measurements and preferences.
+        </p>
+        <Button className="w-full" onClick={() => setStarted(true)}>
+          Start Fit Calculation
+        </Button>
+      </div>
+    );
+  }
+
+  return <SizeGuideForm />;
+}

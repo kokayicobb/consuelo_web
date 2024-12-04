@@ -1,7 +1,15 @@
 "use client";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { ChevronLeft, ChevronRight, ShoppingCart } from "lucide-react";
+import { Canvas } from "@react-three/fiber";
+import {
+  OrbitControls,
+  useGLTF,
+  Environment,
+  ContactShadows,
+} from "@react-three/drei";
+import * as THREE from "three";
 
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -11,10 +19,38 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SizeGuideButton } from "../Button/SizeGuideButton";
 import { Header } from "./header";
 
+
+function Model({
+  position,
+  rotation,
+}: {
+  position: [number, number, number];
+  rotation: [number, number, number];
+}) {
+  const { scene } = useGLTF("/kask.glb") as unknown as { scene: THREE.Group };
+
+  scene.traverse((child) => {
+    if (child instanceof THREE.Mesh) {
+      child.material.needsUpdate = true;
+    }
+  });
+
+  return (
+    <primitive
+      object={scene}
+      scale={2}
+      position={position}
+      rotation={rotation}
+    />
+  );
+}
+
 export default function EquestrianHelmetPage() {
   const [selectedSize, setSelectedSize] = useState("56");
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
+  const [showModel, setShowModel] = useState(false);
+  const modelPosition: [number, number, number] = [0, -1, 0];
+  const modelRotation: [number, number, number] = [0, 0, 0];
   const images = [
     "/MainHelmet.png?height=600&width=600",
     "/SideHelmet.PNG?height=600&width=600&text=Back+View",
@@ -30,46 +66,101 @@ export default function EquestrianHelmetPage() {
     { name: "Jumping Competition Helmet", price: "$229.99", image: "/3.jpeg" },
     { name: "Ventilated Summer Helmet", price: "$199.99", image: "/4.jpg" },
   ];
+
   return (
     <>
       <Header />
       <main className="container mx-auto px-4 py-8">
-        <div className="grid md:grid-cols-2 gap-8">
-          {/* Product Images */}
+        <div className="grid gap-8 md:grid-cols-2">
+          {/* Product Images and 3D Model */}
           <div className="space-y-4">
             <div className="relative aspect-square">
-              <Image
-                src={images[currentImageIndex]}
-                alt={`Equestrian Helmet View ${currentImageIndex + 1}`}
-                fill
-                className="object-cover rounded-lg"
-              />
-              <Button
-                variant="outline"
-                size="icon"
-                className="absolute left-2 top-1/2 -translate-y-1/2"
-                onClick={() =>
-                  setCurrentImageIndex((prev) =>
-                    prev > 0 ? prev - 1 : images.length - 1
-                  )
-                }
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                className="absolute right-2 top-1/2 -translate-y-1/2"
-                onClick={() =>
-                  setCurrentImageIndex((prev) =>
-                    prev < images.length - 1 ? prev + 1 : 0
-                  )
-                }
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
+            {showModel ? (
+  <Canvas camera={{ position: [0, 1, 8], fov: 45 }}>
+  <color attach="background" args={["#f0f0f0"]} />
+    <ambientLight intensity={0.3} />
+    <spotLight
+      position={[10, 15, 10]}
+      angle={0.25}
+      penumbra={1}
+      intensity={0.8}
+      shadow-mapSize={2048}
+      castShadow
+    />
+    <directionalLight
+      position={[-5, 5, -5]}
+      intensity={0.3}
+    />
+    <Suspense fallback={null}>
+      <Model position={modelPosition} rotation={modelRotation} />
+      <Environment preset="warehouse" />
+      <ContactShadows
+        position={[0, -1.5, 0]}
+        opacity={0.6}
+        scale={10}
+        blur={2.5}
+        far={4}
+      />
+    </Suspense>
+                 <OrbitControls
+    makeDefault
+    enableDamping
+    dampingFactor={0.1}
+    rotateSpeed={0.8}
+    minDistance={2}
+    maxDistance={10}
+    minPolarAngle={Math.PI / 10}     // Keeps vertical min constraint
+    maxPolarAngle={Math.PI / .5}   // Keeps vertical max constraint
+    enableZoom={true}
+    zoomSpeed={0.5}
+/>
+                </Canvas>
+              ) : (
+                <Image
+                  src={images[currentImageIndex]}
+                  alt={`Equestrian Helmet View ${currentImageIndex + 1}`}
+                  fill
+                  className="rounded-lg object-cover"
+                />
+              )}
+              {!showModel && (
+                <>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="absolute left-2 top-1/2 -translate-y-1/2"
+                    onClick={() =>
+                      setCurrentImageIndex((prev) =>
+                        prev > 0 ? prev - 1 : images.length - 1,
+                      )
+                    }
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="absolute right-2 top-1/2 -translate-y-1/2"
+                    onClick={() =>
+                      setCurrentImageIndex((prev) =>
+                        prev < images.length - 1 ? prev + 1 : 0,
+                      )
+                    }
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </>
+              )}
             </div>
             <div className="flex space-x-2 overflow-x-auto">
+              <div
+                className={`flex h-20 w-20 cursor-pointer items-center justify-center rounded bg-gray-200 ${
+                  showModel ? "ring-2 ring-primary" : ""
+                }`}
+                onClick={() => setShowModel(true)}
+              >
+                3D
+              </div>
               {images.map((src, index) => (
                 <Image
                   key={index}
@@ -77,10 +168,15 @@ export default function EquestrianHelmetPage() {
                   alt={`Thumbnail ${index + 1}`}
                   width={80}
                   height={80}
-                  className={`object-cover rounded cursor-pointer ${
-                    index === currentImageIndex ? "ring-2 ring-primary" : ""
+                  className={`cursor-pointer rounded object-cover ${
+                    index === currentImageIndex && !showModel
+                      ? "ring-2 ring-primary"
+                      : ""
                   }`}
-                  onClick={() => setCurrentImageIndex(index)}
+                  onClick={() => {
+                    setCurrentImageIndex(index);
+                    setShowModel(false);
+                  }}
                 />
               ))}
             </div>
@@ -98,7 +194,7 @@ export default function EquestrianHelmetPage() {
 
             {/* Size Selection */}
             <div>
-              <h3 className="text-lg font-semibold mb-2">Select Size (CM)</h3>
+              <h3 className="mb-2 text-lg font-semibold">Select Size (CM)</h3>
               <RadioGroup
                 value={selectedSize}
                 onValueChange={setSelectedSize}
@@ -143,7 +239,7 @@ export default function EquestrianHelmetPage() {
                 </p>
               </TabsContent>
               <TabsContent value="features" className="mt-4">
-                <ul className="list-disc pl-5 space-y-2">
+                <ul className="list-disc space-y-2 pl-5">
                   <li>Advanced impact-absorbing technology</li>
                   <li>Ventilation system for optimal airflow</li>
                   <li>Adjustable fit system</li>
@@ -166,16 +262,16 @@ export default function EquestrianHelmetPage() {
 
         {/* Related Products */}
         <div className="mt-16">
-          <h2 className="text-2xl font-bold mb-4">Related Products</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <h2 className="mb-4 text-2xl font-bold">Related Products</h2>
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             {relatedProducts.map((product, index) => (
-              <div key={index} className="border rounded-lg p-4">
-                <div className="aspect-square relative mb-2">
+              <div key={index} className="rounded-lg border p-4">
+                <div className="relative mb-2 aspect-square">
                   <Image
                     src={product.image}
                     alt={product.name}
                     fill
-                    className="object-cover rounded"
+                    className="rounded object-cover"
                   />
                 </div>
                 <h3 className="font-semibold">{product.name}</h3>
@@ -188,3 +284,5 @@ export default function EquestrianHelmetPage() {
     </>
   );
 }
+
+useGLTF.preload("/kask.glb");

@@ -96,7 +96,7 @@ export default function FaceDetection() {
     const templeWidth = Math.hypot(
       templeRight.x - templeLeft.x,
       templeRight.y - templeLeft.y,
-      templeRight.z - templeLeft.z
+      templeRight.z - templeLeft.z,
     );
 
     // Calculate average depth of face
@@ -113,7 +113,7 @@ export default function FaceDetection() {
     // Elliptical circumference using Ramanujan's approximation
     const h = Math.pow(
       (widthRadius - depthRadius) / (widthRadius + depthRadius),
-      2
+      2,
     );
     const circumference =
       Math.PI *
@@ -146,7 +146,7 @@ export default function FaceDetection() {
     const leftEye = points[HEAD_LANDMARKS.left_eye];
     const eyeTiltDegrees = Math.abs(
       Math.atan2(leftEye.y - rightEye.y, leftEye.x - rightEye.x) *
-        (180 / Math.PI)
+        (180 / Math.PI),
     );
 
     if (eyeTiltDegrees > 10) {
@@ -162,7 +162,7 @@ export default function FaceDetection() {
       feedback.push(
         noseTip.x < eyeMidpointX
           ? "← Look more to your left"
-          : "→ Look more to your right"
+          : "→ Look more to your right",
       );
     }
 
@@ -197,7 +197,7 @@ export default function FaceDetection() {
     const templeLeft = points[HEAD_LANDMARKS.temple_left];
     const faceWidth = Math.hypot(
       templeRight.x - templeLeft.x,
-      templeRight.y - templeLeft.y
+      templeRight.y - templeLeft.y,
     );
 
     // Different thresholds based on device type
@@ -230,7 +230,7 @@ export default function FaceDetection() {
     const eyeLevelDifference = Math.abs(rightEye.y - leftEye.y);
     if (eyeLevelDifference > 0.05) {
       feedback.push(
-        "Please level your head (eyes should be aligned horizontally)."
+        "Please level your head (eyes should be aligned horizontally).",
       );
     }
 
@@ -246,7 +246,7 @@ export default function FaceDetection() {
     const templeWidth = Math.hypot(
       templeRight.x - templeLeft.x,
       templeRight.y - templeLeft.y,
-      templeRight.z - templeLeft.z
+      templeRight.z - templeLeft.z,
     );
     if (templeWidth < 0.1) {
       feedback.push("Move closer to the camera.");
@@ -273,7 +273,7 @@ export default function FaceDetection() {
         DrawingUtils = vision.DrawingUtils;
 
         const filesetResolver = await FilesetResolver.forVisionTasks(
-          "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm"
+          "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm",
         );
 
         const landmarker = await FaceLandmarker.createFromOptions(
@@ -286,7 +286,7 @@ export default function FaceDetection() {
             outputFaceBlendshapes: true,
             runningMode: runningModeRef.current,
             numFaces: 1,
-          }
+          },
         );
 
         setFaceLandmarker(landmarker);
@@ -393,90 +393,101 @@ export default function FaceDetection() {
     const templeRight = landmarks[HEAD_LANDMARKS.temple_right];
     const templeLeft = landmarks[HEAD_LANDMARKS.temple_left];
     const chin = landmarks[HEAD_LANDMARKS.chin];
-  
+
     // Calculate vertical center between forehead and chin
     const centerY = ((foreheadMid.y + chin.y) / 2) * canvas.height;
     const centerX = ((templeLeft.x + templeRight.x) / 2) * canvas.width;
-  
+
     // Calculate distance for better head coverage
     const templeWidth = Math.sqrt(
       Math.pow((templeLeft.x - templeRight.x) * canvas.width, 2) +
-      Math.pow((templeLeft.y - templeRight.y) * canvas.height, 2)
+        Math.pow((templeLeft.y - templeRight.y) * canvas.height, 2),
     );
-    
+
     // Make circle larger to encompass whole head
     const radius = templeWidth * 0.85;
-  
+
     // Create gradient for a more delightful appearance
     const gradient = canvasCtx.createLinearGradient(
-      centerX - radius, centerY, centerX + radius, centerY
+      centerX - radius,
+      centerY,
+      centerX + radius,
+      centerY,
     );
-    gradient.addColorStop(0, 'rgba(125, 211, 252, 0.8)');
-    gradient.addColorStop(1, 'rgba(147, 197, 253, 0.8)');
-  
+    gradient.addColorStop(0, "rgba(125, 211, 252, 0.8)");
+    gradient.addColorStop(1, "rgba(147, 197, 253, 0.8)");
+
     // Draw main circle with gradient
     canvasCtx.beginPath();
     canvasCtx.strokeStyle = gradient;
     canvasCtx.lineWidth = 4;
     canvasCtx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
     canvasCtx.stroke();
-  
+
     // Add subtle glow effect
     canvasCtx.beginPath();
-    canvasCtx.strokeStyle = 'rgba(147, 197, 253, 0.2)';
+    canvasCtx.strokeStyle = "rgba(147, 197, 253, 0.2)";
     canvasCtx.lineWidth = 8;
     canvasCtx.arc(centerX, centerY, radius + 2, 0, 2 * Math.PI);
     canvasCtx.stroke();
   };
-  
+
   const predictWebcam = async () => {
-    if (!videoRef.current || !canvasRef.current || !faceLandmarker || !DrawingUtils) return;
-  
+    if (
+      !videoRef.current ||
+      !canvasRef.current ||
+      !faceLandmarker ||
+      !DrawingUtils
+    )
+      return;
+
     const video = videoRef.current;
     const canvas = canvasRef.current;
     const canvasCtx = canvas.getContext("2d");
     if (!canvasCtx) return;
-  
+
     const drawingUtils = new DrawingUtils(canvasCtx);
-  
+
     // Get the container width (parent element or viewport)
     const containerWidth = Math.min(window.innerWidth - 32, 480);
     const ratio = video.videoHeight / video.videoWidth;
-  
+
     // Set display dimensions
     video.style.width = `${containerWidth}px`;
     video.style.height = `${containerWidth * ratio}px`;
     canvas.style.width = `${containerWidth}px`;
     canvas.style.height = `${containerWidth * ratio}px`;
-  
+
     // Set actual canvas dimensions to match video
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
-  
+
     // Clear and setup canvas context
     canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
-  
+
     // Draw the video frame
     canvasCtx.drawImage(video, 0, 0, canvas.width, canvas.height);
-  
+
     let startTimeMs = performance.now();
     let results;
-  
+
     if (lastVideoTimeRef.current !== video.currentTime) {
       lastVideoTimeRef.current = video.currentTime;
       try {
         results = faceLandmarker.detectForVideo(video, startTimeMs);
-  
+
         if (results?.faceLandmarks) {
-          const newMeasurements = calculateHeadMeasurements(results.faceLandmarks);
+          const newMeasurements = calculateHeadMeasurements(
+            results.faceLandmarks,
+          );
           setMeasurements(newMeasurements);
-  
+
           if (isCollectingMeasurements && newMeasurements) {
             measurementsArrayRef.current.push(
-              parseFloat(newMeasurements.estimatedCircumference)
+              parseFloat(newMeasurements.estimatedCircumference),
             );
           }
-  
+
           const feedback = getPositionFeedback(results.faceLandmarks);
           setPositionFeedback(feedback);
         }
@@ -485,25 +496,25 @@ export default function FaceDetection() {
         return;
       }
     }
-  
+
     if (results?.faceLandmarks) {
       // Clear the canvas first
       canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
-      
+
       // Draw the video frame
       canvasCtx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
+
       // Only draw for the first detected face
       if (results.faceLandmarks.length > 0) {
         drawHeadCircle(canvasCtx, results.faceLandmarks[0], canvas);
       }
     }
-  
+
     const videoBlendShapes = document.getElementById("video-blend-shapes");
     if (videoBlendShapes && results?.faceBlendshapes) {
       drawBlendShapes(videoBlendShapes, results.faceBlendshapes);
     }
-  
+
     if (webcamRunning) {
       window.requestAnimationFrame(predictWebcam);
     }
@@ -511,48 +522,53 @@ export default function FaceDetection() {
 
   const WelcomeScreen = ({ onEnableCamera }) => {
     return (
-      <div className="h-full flex flex-col justify-between bg-white text-black">
-        <div className="text-center space-y-1">
-          <div className="inline-flex bg-blue-100 rounded-full">
-            <Camera className="w-5 h-5 text-blue-600" />
+      <div className="flex h-full flex-col justify-between bg-white text-black">
+        <div className="space-y-1 text-center">
+          <div className="inline-flex rounded-full bg-blue-100">
+            <Camera className="h-7 w-7 text-blue-600" />
           </div>
-          <h1 className="text-xl font-bold">Consuelo Fit Calculator</h1>
-          <p className="text-gray-600 text-xs">AI-powered precision fitting</p>
+          <h1 className="text-xl">
+            <span className="bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text font-bold text-transparent">
+              Consuelo
+            </span>
+            <span className="font-bold"> Fit Calculator</span>
+          </h1>
+          <p className="text-xs text-gray-600">AI-powered precision fitting</p>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 my-2">
+        <div className="my-2 grid grid-cols-2 gap-2">
           {[
             {
-              icon: <Phone className="w-4 h-4" />,
+              icon: <Phone className="h-4 w-4" />,
               title: "Device Setup",
               desc: "Eye level",
             },
             {
-              icon: <Sun className="w-4 h-4" />,
+              icon: <Sun className="h-4 w-4" />,
               title: "Lighting",
               desc: "Minimal background light",
             },
             {
-              icon: <Smile className="w-4 h-4" />,
+              icon: <Smile className="h-4 w-4" />,
               title: "Position",
               desc: "Face camera",
             },
             {
-              icon: <ArrowUpCircle className="w-4 h-4" />,
+              icon: <ArrowUpCircle className="h-4 w-4" />,
               title: "Posture",
               desc: "Sit up straight",
             },
           ].map(({ icon, title, desc }) => (
-            <div key={title} className="bg-gray-50 p-2 rounded-lg text-center">
-              <div className="flex justify-center mb-1">{icon}</div>
+            <div key={title} className="rounded-lg bg-gray-50 p-2 text-center">
+              <div className="mb-1 flex justify-center">{icon}</div>
               <div className="text-sm font-medium">{title}</div>
               <div className="text-xs text-gray-600">{desc}</div>
             </div>
           ))}
         </div>
 
-        <div className="bg-gray-50 rounded-lg p-2 text-xs">
-          <h3 className="font-semibold text-gray-800 mb-1">
+        <div className="rounded-lg bg-gray-50 p-2 text-xs">
+          <h3 className="mb-1 font-semibold text-gray-800">
             Before You Begin:
           </h3>
           <div className="grid grid-cols-2 gap-x-2 gap-y-1">
@@ -567,7 +583,7 @@ export default function FaceDetection() {
                 key={index}
                 className="flex items-center gap-1 text-gray-600"
               >
-                <Check className="w-3 h-3 text-green-500 flex-shrink-0" />
+                <Check className="h-3 w-3 flex-shrink-0 text-green-500" />
                 <span>{item}</span>
               </div>
             ))}
@@ -576,10 +592,10 @@ export default function FaceDetection() {
 
         <Button
           onClick={onEnableCamera}
-          className="mt-3 w-full text-base py-6"
+          className="mt-3 w-full py-6 text-base"
           size="default"
         >
-          <Camera className="w-4 h-4 mr-1" />
+          <Camera className="mr-1 h-4 w-4" />
           Enable Camera
         </Button>
       </div>
@@ -588,50 +604,50 @@ export default function FaceDetection() {
 
   const InstructionCard = ({ icon, title, description }) => (
     // Increased padding and font sizes
-    <div className="bg-gray-50 p-3 rounded-lg flex items-start gap-2">
-      <div className="text-blue-600 p-1.5 bg-blue-100 rounded-full">{icon}</div>
+    <div className="flex items-start gap-2 rounded-lg bg-gray-50 p-3">
+      <div className="rounded-full bg-blue-100 p-1.5 text-blue-600">{icon}</div>
       <div>
-        <h3 className="text-gray-800 text-sm font-medium">{title}</h3>
-        <p className="text-gray-600 text-xs">{description}</p>
+        <h3 className="text-sm font-medium text-gray-800">{title}</h3>
+        <p className="text-xs text-gray-600">{description}</p>
       </div>
     </div>
   );
 
   return (
-    <div className="w-full bg-white rounded-3xl overflow-hidden h-[60vh]">
-      <div className="p-4 h-full flex flex-col">
+    <div className="h-[60vh] w-full overflow-hidden rounded-3xl bg-white">
+      <div className="flex h-full flex-col p-4">
         {isCollectingMeasurements ? (
-          <div className="flex-1 flex flex-col items-center justify-center space-y-6">
+          <div className="flex flex-1 flex-col items-center justify-center space-y-6">
             <div className="flex flex-col items-center space-y-4">
-              <CheckCircle className="w-12 h-12 md:w-16 md:h-16 text-green-500" />
-              <div className="text-2xl md:text-4xl font-bold text-black text-center">
+              <CheckCircle className="h-12 w-12 text-green-500 md:h-16 md:w-16" />
+              <div className="text-center text-2xl font-bold text-black md:text-4xl">
                 Your Head Measurements
               </div>
             </div>
 
-            <div className="w-full max-w-md p-4 md:p-6 bg-gray-100 rounded-xl shadow-2xl">
+            <div className="w-full max-w-md rounded-xl bg-gray-100 p-4 shadow-2xl md:p-6">
               <div className="space-y-3">
-                <div className="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200">
-                  <span className="text-black text-sm md:text-base font-medium">
+                <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-3">
+                  <span className="text-sm font-medium text-black md:text-base">
                     Temple Width
                   </span>
-                  <span className="text-black font-bold">
+                  <span className="font-bold text-black">
                     {measurements?.templeWidth} cm
                   </span>
                 </div>
-                <div className="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200">
-                  <span className="text-black text-sm md:text-base font-medium">
+                <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-3">
+                  <span className="text-sm font-medium text-black md:text-base">
                     Face Depth
                   </span>
-                  <span className="text-black font-bold">
+                  <span className="font-bold text-black">
                     {measurements?.faceDepth} cm
                   </span>
                 </div>
-                <div className="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200">
-                  <span className="text-black text-sm md:text-base font-medium">
+                <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-3">
+                  <span className="text-sm font-medium text-black md:text-base">
                     Head Circumference
                   </span>
-                  <span className="text-black font-bold">
+                  <span className="font-bold text-black">
                     {measurements?.estimatedCircumference} cm
                   </span>
                 </div>
@@ -645,28 +661,28 @@ export default function FaceDetection() {
             ) : (
               // Active webcam state
 
-              <div className="w-full h-full flex flex-col bg-white p-4">
-                <div className="flex-grow flex flex-col">
-                  <div className="relative flex-grow mb-4">
-                    <div className="absolute inset-0 rounded-xl overflow-hidden shadow-2xl">
+              <div className="flex h-full w-full flex-col bg-white p-4">
+                <div className="flex flex-grow flex-col">
+                  <div className="relative mb-4 flex-grow">
+                    <div className="absolute inset-0 overflow-hidden rounded-xl shadow-2xl">
                       <video
                         ref={videoRef}
-                        className="absolute top-0 left-0 w-full h-full object-cover transform -scale-x-100"
+                        className="absolute left-0 top-0 h-full w-full -scale-x-100 transform object-cover"
                         autoPlay
                         playsInline
                       />
                       <canvas
                         ref={canvasRef}
-                        className="absolute top-0 left-0 w-full h-full transform -scale-x-100"
+                        className="absolute left-0 top-0 h-full w-full -scale-x-100 transform"
                       />
                     </div>
 
                     {/* Overlay for position feedback */}
-                    <div className="absolute top-4 left-4 right-4 flex flex-col items-start space-y-2">
+                    <div className="absolute left-4 right-4 top-4 flex flex-col items-start space-y-2">
                       {positionFeedback.map((feedback, index) => (
                         <div
                           key={index}
-                          className="p-2 rounded-lg bg-blue-500/80 text-white text-sm shadow-lg"
+                          className="rounded-lg bg-blue-500/80 p-2 text-sm text-white shadow-lg"
                         >
                           {feedback}
                         </div>
@@ -676,49 +692,49 @@ export default function FaceDetection() {
 
                   {/* Take Photo button */}
                   {/* Parent container */}
-<div className="flex flex-col items-center mt-2">
-  {/* Take Photo button wrapper */}
-  <div className="w-full flex justify-center">
-    <button
-      onClick={startMeasurementCollection}
-      disabled={isCollectingMeasurements}
-      className={`px-6 py-3 
-        rounded-full 
-        font-medium
-        text-white 
-        text-sm
-        transition-all
-        duration-300
-        transform
-        hover:scale-105
-        active:scale-95
-        flex 
+                  <div className="mt-2 flex flex-col items-center">
+                    {/* Take Photo button wrapper */}
+                    <div className="flex w-full justify-center">
+                      <button
+                        onClick={startMeasurementCollection}
+                        disabled={isCollectingMeasurements}
+                        className={`flex transform 
         items-center 
         gap-2
-        shadow-lg ${
-        isCollectingMeasurements
-          ? "bg-gray-400 cursor-not-allowed opacity-70"
-          : "bg-indigo-500 hover:bg-indigo-600 hover:shadow-indigo-200"
-      }`}
-    >
-      {isCollectingMeasurements ? (
-        <>
-          <Loader2 className="w-4 h-4 animate-spin" />
-          Collecting...
-        </>
-      ) : (
-        <>
-          <Camera className="w-4 h-4" />
-          Take Photo
-        </>
-      )}
-    </button>
-  </div>
-  {/* Instruction text */}
-  <span className="text-xs text-gray mt-2">
-    * Click to capture when positioning instructions disappear
-  </span>
-</div>
+        rounded-full 
+        px-6
+        py-3
+        text-sm
+        font-medium
+        text-white
+        shadow-lg
+        transition-all 
+        duration-300 
+        hover:scale-105
+        active:scale-95 ${
+          isCollectingMeasurements
+            ? "cursor-not-allowed bg-gray-400 opacity-70"
+            : "bg-indigo-500 hover:bg-indigo-600 hover:shadow-indigo-200"
+        }`}
+                      >
+                        {isCollectingMeasurements ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Collecting...
+                          </>
+                        ) : (
+                          <>
+                            <Camera className="h-4 w-4" />
+                            Take Photo
+                          </>
+                        )}
+                      </button>
+                    </div>
+                    {/* Instruction text */}
+                    <span className="mt-2 text-xs text-gray-500">
+                      * Click to capture when positioning instructions disappear
+                    </span>
+                  </div>
                 </div>
               </div>
             )}
