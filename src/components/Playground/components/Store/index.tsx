@@ -18,31 +18,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { SizeGuideButton } from "../Button/SizeGuideButton";
 import { Header } from "./header";
+import dynamic from "next/dynamic";
+const Model = dynamic(() => import('./Model3D'), { ssr: false });
 
-function Model({
-  position,
-  rotation,
-}: {
-  position: [number, number, number];
-  rotation: [number, number, number];
-}) {
-  const { scene } = useGLTF("/kask.glb") as unknown as { scene: THREE.Group };
 
-  scene.traverse((child) => {
-    if (child instanceof THREE.Mesh) {
-      child.material.needsUpdate = true;
-    }
-  });
-
-  return (
-    <primitive
-      object={scene}
-      scale={2}
-      position={position}
-      rotation={rotation}
-    />
-  );
-}
 
 export default function EquestrianHelmetPage() {
   const [selectedSize, setSelectedSize] = useState("56");
