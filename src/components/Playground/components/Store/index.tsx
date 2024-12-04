@@ -19,7 +19,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SizeGuideButton } from "../Button/SizeGuideButton";
 import { Header } from "./header";
 
-
 function Model({
   position,
   rotation,
