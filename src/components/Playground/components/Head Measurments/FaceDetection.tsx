@@ -590,13 +590,13 @@ export default function FaceDetection() {
         </div>
 
         <Button
-  onClick={onEnableCamera}
-  className="mt-4 w-full flex-1 flex items-center justify-center text-base"
-  size="default"
->
-  <Camera className="mr-1 h-4 w-4" />
-  Enable Camera
-</Button>
+        onClick={onEnableCamera}
+        className="mt-4 w-full sm:w-auto flex items-center justify-center text-sm sm:text-base"
+        size="default"
+      >
+        <Camera className="mr-2 h-4 w-4" />
+        Enable Camera
+      </Button>
       </div>
     );
   };

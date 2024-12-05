@@ -159,7 +159,7 @@ export function SizeGuideForm() {
   }
 
   return (
-    <div className="mx-auto flex max-w-md flex-col space-y-6 p-4">
+    <div className="mx-auto flex max-w-md flex-col space-y-6 p-4 sm:p-6 md:p-8">
       <StepIndicator currentStep={step} totalSteps={4} />
       <div className="space-y-4">
         {step === 1 && (
