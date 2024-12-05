@@ -22,23 +22,23 @@ import {
 
 export function SizeGuideButton() {
   const [open, setOpen] = React.useState(false);
-  const isDesktop = useMediaQuery("(min-width: 768px)");
+  const isDesktop = useMediaQuery("(min-width: 1000px)");
 
   if (isDesktop) {
     return (
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button variant="link" className="h-auto p-0">
-          <span className="text-sm">
+          <Button variant="link" className="h-auto sm:max-w-[500px] p-0 ">
+          <span className="text-sm whitespace-normal">
               Fit Calculator <span className="underline">Get exact size</span>{" "}
               
-              <span className="ml-2 italic text-muted-foreground bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent no-underline hover:no-underline">
+              <span  className="whitespace-normal text-sm italic text-muted-foreground bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent no-underline hover:no-underline">
                 Powered by AI
               </span>
             </span>
           </Button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Fit Calculator predicts your size</DialogTitle>
           </DialogHeader>
@@ -52,10 +52,10 @@ export function SizeGuideButton() {
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
         <Button variant="link" className="h-auto p-0">
-          <span className="text-sm">
-            Fit Calculator <span className="underline">Get exact size</span>{" "}
+          <span className="text-xs ">
+            Fit Calculator <span className="underline">Get exact size</span>
             
-            <span className="ml-2 italic text-muted-foreground bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent no-underline hover:no-underline">
+            <span className=" italic text-xs text-muted-foreground bg-gradient-to-r from-purple-500 to-blue-500 text-transparent">
               Powered by AI
             </span>
           </span>

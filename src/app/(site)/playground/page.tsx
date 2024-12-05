@@ -7,7 +7,7 @@ import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title:
-    "About Us | Consuelo - AI-Powered Fit Technology",
+    "Playground | Consuelo - AI-Powered Fit Technology",
   description: "This is About page description",
 };
 

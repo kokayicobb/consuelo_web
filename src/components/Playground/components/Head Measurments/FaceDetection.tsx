@@ -357,8 +357,7 @@ export default function FaceDetection() {
       const constraints = {
         video: {
           facingMode: "user", // Use front camera on mobile
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
+        
         },
       };
 
