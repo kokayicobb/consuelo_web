@@ -4,7 +4,7 @@ import React, { useState } from "react";
 
 import { cn } from "@/lib/utils";
 
-import { Info, ChevronRight, ChevronLeft, Camera } from "lucide-react";
+import { Shield, LightbulbIcon, Camera, CheckCircle, Info  } from "lucide-react";
 import Image from "next/image";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import FaceDetection from "../Head Measurments/FaceDetection";
@@ -16,12 +16,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
+import { motion } from "framer-motion"
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Checkbox } from "../ui/checkbox";
 
 interface FormData {
   headCircumference: string;
@@ -38,20 +40,22 @@ const INITIAL_FORM_DATA: FormData = {
 };
 
 const HEAD_CIRCUMFERENCES = Array.from(
-  { length: 13 },
-  (_, i) => `${51 + i} cm`,
+  { length: 14 },
+  (_, i) => `${50 + i} cm`,
 );
 const HEAD_SHAPES = ["Round Oval", "Intermediate Oval", "Long Oval"];
 const HAIRSTYLES = [
   "Short Hair",
   "Low Ponytail",
-  "Low Braided Ponytail",
-  "French Braid",
-  "Double Braids (Pigtail)",
-  "Low Bun",
-  "Braided Bun",
-  "Tucked Ponytail",
-  "Half-Up Braid",
+  "Hair Net/Hair Up"
+
+  // "Low Braided Ponytail",
+  // "French Braid",
+  // "Double Braids (Pigtail)",
+  // "Low Bun",
+  // "Braided Bun",
+  // "Tucked Ponytail",
+  // "Half-Up Braid",
 ];
 const FIT_PREFERENCES = ["Tight Fit", "Perfect Fit", "Loose Fit"];
 
@@ -62,7 +66,7 @@ export function SizeGuideForm() {
   const [sizeRecommendation, setSizeRecommendation] = React.useState<
     string | null
   >(null);
-  const [showExactSize, setShowExactSize] = React.useState(false);
+  const [showExactSize, setShowExactSize] = React.useState(true);
   const [showFaceDetection, setShowFaceDetection] = useState(false);
 
   const updateFormData = (field: keyof FormData, value: string) => {
@@ -77,7 +81,7 @@ export function SizeGuideForm() {
     setStep(5);
     setIsLoading(false);
   };
-
+  const [safetyChecked, setSafetyChecked] = useState(false)
   const canProceed = () => {
     switch (step) {
       case 1:
@@ -87,7 +91,7 @@ export function SizeGuideForm() {
       case 3:
         return !!formData.typicalHairstyle;
       case 4:
-        return !!formData.fitPreference;
+        return safetyChecked;
       default:
         return false;
     }
@@ -148,7 +152,7 @@ export function SizeGuideForm() {
           size="sm"
           onClick={() => setShowExactSize(!showExactSize)}
         >
-          {showExactSize ? "Show Letter Size" : "Show Exact Size"}
+          {showExactSize ? "Show Shell Size" : "Show Exact Size"}
         </Button>
       </div>
     );
@@ -169,8 +173,8 @@ export function SizeGuideForm() {
                 className="flex cursor-pointer items-center transition-opacity hover:opacity-80"
               >
                 <Camera className="h-6 w-6 text-primary" />
-                <span className="ml-2 italic text-xs text-muted-foreground">
-                AI Tool
+                <span className="ml-2 text-xs italic text-muted-foreground">
+                  AI Tool
                 </span>
               </button>
             </div>
@@ -214,14 +218,47 @@ export function SizeGuideForm() {
           />
         )}
 
-        {step === 4 && (
-          <FormStep
-            label="Fit Preference"
-            value={formData.fitPreference}
-            onChange={(value) => updateFormData("fitPreference", value)}
-            options={FIT_PREFERENCES}
-            tooltip="Select how you prefer the product to fit on your head."
-          />
+{step === 4 && (
+            <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="space-y-4"
+          >
+            <div className="flex items-center space-x-2">
+              <Info className="h-5 w-5 text-gray-500" />
+              <h3 className="text-lg font-semibold text-gray-900">Safety Information</h3>
+            </div>
+            
+            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <p className="text-sm text-gray-700 leading-relaxed">
+                We prioritize your safety. Our advanced algorithm uses the information you've provided to recommend a helmet that offers both optimal protection and comfort.
+              </p>
+              
+              <div className="mt-3 flex items-start space-x-2">
+                <CheckCircle className="h-5 w-5 text-gray-500 mt-0.5" />
+                <p className="text-sm text-gray-600">
+                  We always recommend selecting a helmet that fits perfectly - neither too loose nor too tight. This ensures maximum safety during your rides.
+                </p>
+              </div>
+            </div>
+          
+            <div className="flex items-center space-x-3 bg-white p-4 rounded-lg border border-gray-200">
+              <Checkbox
+                id="safety-check"
+                checked={safetyChecked}
+                onCheckedChange={(checked) => setSafetyChecked(checked as boolean)}
+                className="border-gray-300"
+              />
+              <label
+                htmlFor="safety-check"
+                className="text-sm font-medium leading-none cursor-pointer select-none text-gray-700"
+              >
+                I understand the importance of proper helmet fitting and agree to follow the safety guidelines.
+              </label>
+            </div>
+
+          </motion.div>
         )}
       </div>
 
@@ -410,8 +447,8 @@ interface SizeVisualizationProps {
 }
 
 function SizeVisualization({
-  size,
   fitPreference,
+  size,
   showExactSize,
 }: SizeVisualizationProps) {
   const getFitColor = () => {
@@ -427,27 +464,31 @@ function SizeVisualization({
     }
   };
 
-  const getExactSize = (size: string | null): string => {
-    switch (size) {
-      case "XXS":
-        return "49-50 cm";
-      case "XS":
-        return "51-52 cm";
-      case "S":
-        return "53-54 cm";
-      case "M":
-        return "55-56 cm";
-      case "L":
-        return "57-58 cm";
-      case "XL":
-        return "59-60 cm";
-      case "XXL":
-        return "61-62 cm";
+  const getSizeFromMeasurement = (measurement: string | null): string => {
+    switch (measurement) {
+      case "50 cm":
+      case "51 cm":
+      case "52 cm":
+      case "53 cm":
+      case "54 cm":
+        return "Shell 0";
+      case "55 cm":
+      case "56 cm":
+        return "Shell 1";
+      case "57 cm":
+      case "58 cm":
+      case "59 cm":
+        return "Shell 2";
+      case "60 cm":
+      case "61 cm":
+      case "62 cm":
+      case "63 cm":
+        return "Shell 3";
       default:
         return "Unknown";
     }
   };
-
+  
   return (
     <div className="relative h-40 w-40">
       <div className="absolute inset-0 rounded-full border-4 border-gray-300" />
@@ -465,33 +506,48 @@ function SizeVisualization({
       />
       <div className="absolute inset-0 flex items-center justify-center">
         <span className="text-lg font-bold">
-          {showExactSize ? getExactSize(size) : size}
+          {showExactSize ? size : getSizeFromMeasurement(size)}
         </span>
       </div>
     </div>
   );
 }
-
 function calculateRecommendedSize(formData: FormData): string {
   const circumference = parseInt(formData.headCircumference);
   let size: string;
 
   // Determine base size
-  if (circumference <= 50) {
-    size = "XXS";
-  } else if (circumference <= 52) {
-    size = "XS";
-  } else if (circumference <= 54) {
-    size = "S";
-  } else if (circumference <= 56) {
-    size = "M";
-  } else if (circumference <= 58) {
-    size = "L";
-  } else if (circumference <= 60) {
-    size = "XL";
-  } else {
-    size = "XXL";
-  }
+  if (circumference === 50) {
+    size = "50 cm";
+} else if (circumference === 51) {
+    size = "51 cm";
+} else if (circumference === 52) {
+    size = "52 cm";
+} else if (circumference === 53) {
+    size = "53 cm";
+} else if (circumference === 54) {
+    size = "54 cm";
+} else if (circumference === 55) {
+    size = "55 cm";
+} else if (circumference === 56) {
+    size = "56 cm";
+} else if (circumference === 57) {
+    size = "57 cm";
+} else if (circumference === 58) {
+    size = "58 cm";
+} else if (circumference === 59) {
+    size = "59 cm";
+} else if (circumference === 60) {
+    size = "60 cm";
+} else if (circumference === 61) {
+    size = "61 cm";
+} else if (circumference === 62) {
+    size = "62 cm";
+} else if (circumference === 63) {
+    size = "63 cm";
+} else {
+    size = "No size available";
+}
 
   // Adjust for fit preference
   if (formData.fitPreference === "Tight Fit") {
