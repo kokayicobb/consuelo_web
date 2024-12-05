@@ -524,7 +524,7 @@ export default function FaceDetection() {
       <div className="flex h-full flex-col justify-between bg-white text-black">
         <div className="space-y-1 text-center">
           <div className="inline-flex rounded-full bg-blue-100">
-            <Camera className="h-7 w-7 text-blue-600" />
+            <Camera className="h-6 w-6 text-blue-600" />
           </div>
           <h1 className="text-xl">
             <span className="bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text font-bold text-transparent">
@@ -590,13 +590,13 @@ export default function FaceDetection() {
         </div>
 
         <Button
-          onClick={onEnableCamera}
-          className="mt-3 w-full py-6 text-base"
-          size="default"
-        >
-          <Camera className="mr-1 h-4 w-4" />
-          Enable Camera
-        </Button>
+  onClick={onEnableCamera}
+  className="mt-4 w-full flex-1 flex items-center justify-center text-base"
+  size="default"
+>
+  <Camera className="mr-1 h-4 w-4" />
+  Enable Camera
+</Button>
       </div>
     );
   };

@@ -28,11 +28,11 @@ export function SizeGuideButton() {
     return (
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button variant="link" className="h-auto sm:max-w-[500px] p-0 ">
+          <Button variant="link" className="h-auto max-w-[300px] sm:max-w-[500px] p-0">
           <span className="text-sm whitespace-normal">
               Fit Calculator <span className="underline">Get exact size</span>{" "}
               
-              <span  className="whitespace-normal text-sm italic text-muted-foreground bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent no-underline hover:no-underline">
+              <span  className="whitespace-normal text-sm italic text-muted-foreground bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text [-webkit-background-clip:text] text-transparent no-underline hover:no-underline">
                 Powered by AI
               </span>
             </span>
@@ -50,17 +50,17 @@ export function SizeGuideButton() {
 
   return (
     <Drawer open={open} onOpenChange={setOpen}>
-      <DrawerTrigger asChild>
-        <Button variant="link" className="h-auto p-0">
-          <span className="text-xs ">
-            Fit Calculator <span className="underline">Get exact size</span>
-            
-            <span className=" italic text-xs text-muted-foreground bg-gradient-to-r from-purple-500 to-blue-500 text-transparent">
-              Powered by AI
-            </span>
+    <DrawerTrigger asChild>
+      <Button variant="link" className="h-auto p-0">
+        <span className="text-sm">
+          Fit Calculator <span className="underline">Get exact size</span>{" "}
+          
+          <span className="whitespace-normal italic text-xs text-muted-foreground bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text [-webkit-background-clip:text] text-transparent no-underline hover:no-underline">
+            Powered by AI
           </span>
-        </Button>
-      </DrawerTrigger>
+        </span>
+      </Button>
+    </DrawerTrigger>
       <DrawerContent>
         <DrawerHeader>
           <DrawerTitle>Fit Calculator predicts your size</DrawerTitle>
