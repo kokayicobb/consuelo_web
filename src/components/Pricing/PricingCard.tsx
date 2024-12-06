@@ -4,7 +4,8 @@ import React from "react";
 import { CardBody, CardContainer, CardItem } from "../ui/3d-card";
 import { Price } from "@/types/price";
 import OfferList from "./OfferList";
-import { Zap } from 'lucide-react';
+import { Zap } from "lucide-react";
+import Link from "next/link";
 
 const PricingCard = ({ product }: { product: Price }) => {
   const handleSubscription = async (e: React.MouseEvent) => {
@@ -14,9 +15,9 @@ const PricingCard = ({ product }: { product: Price }) => {
 
   return (
     <CardContainer className="inter-var">
-      <CardBody className="relative group/card bg-card hover:shadow-lg hover:shadow-accent/20 border-border w-full sm:w-[24rem] h-[600px] rounded-xl p-6 border transition-colors flex flex-col justify-between">
+      <CardBody className="group/card relative flex h-[600px] w-full flex-col justify-between rounded-xl border border-border bg-card p-6 transition-colors hover:shadow-lg hover:shadow-accent/20 sm:w-[24rem]">
         {product.nickname === "Premium" && (
-          <div className="absolute -top-4 -right-4 bg-violet-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+          <div className="absolute -right-4 -top-4 rounded-full bg-violet-500 px-3 py-1 text-xs font-bold text-white shadow-lg">
             Recommended
           </div>
         )}
@@ -32,13 +33,14 @@ const PricingCard = ({ product }: { product: Price }) => {
           <CardItem
             as="p"
             translateZ="60"
-            className="text-3xl font-bold mt-2 text-card-foreground"
+            className="mt-2 text-3xl font-bold text-card-foreground"
           >
             {product.id === "price_1NQk4eLtGdPVhGLeZsZDsCNz" ? (
               "Custom"
             ) : (
               <>
-                ${(product.unit_amount / 100).toLocaleString("en-US", {
+                $
+                {(product.unit_amount / 100).toLocaleString("en-US", {
                   currency: "USD",
                 })}
                 <span className="text-base font-normal text-muted-foreground">
@@ -49,37 +51,39 @@ const PricingCard = ({ product }: { product: Price }) => {
             )}
           </CardItem>
 
-          <CardItem
-            translateZ="100"
-            className="w-full mt-8 space-y-4"
-          >
+          <CardItem translateZ="100" className="mt-8 w-full space-y-4">
             {product.offers.map((offer, i) => (
               <OfferList key={i} text={offer} />
             ))}
           </CardItem>
         </div>
 
-        <CardItem translateZ="50" className="w-full mt-8">
+        <CardItem translateZ="50" className="mt-8 w-full">
           <button
             onClick={handleSubscription}
-            className="relative group/btn w-full py-3 px-4 bg-primary text-primary-foreground rounded-lg font-medium 
-                     transition-all hover:opacity-90 flex items-center justify-center overflow-hidden"
+            className="group/btn relative flex w-full items-center justify-center overflow-hidden rounded-lg bg-primary 
+                     px-4 py-3 font-medium text-primary-foreground transition-all hover:opacity-90"
           >
             <div className="relative flex items-center justify-center gap-2">
-            <img
-                          src="/apple-touch-icon.png"
-                          alt="Consuelo Logo"
-                          className="h-6 w-6 text-muted-foreground [&>path]:fill-current"
-                        />
-              <span>Start Free Trial</span>
+              <img
+                src="/apple-touch-icon.png"
+                alt="Consuelo Logo"
+                className="h-6 w-6 text-muted-foreground [&>path]:fill-current"
+              />
+              <Link
+                href="/contact"
+                className="transition-opacity hover:opacity-90"
+              >
+                <span>Start Free Trial</span>
+              </Link>
             </div>
-            
-            <span className="group-hover/btn:opacity-100 block transition duration-500 opacity-0 absolute h-px w-full -bottom-px inset-x-0 bg-gradient-to-r from-transparent via-primary to-transparent" />
-            <span className="group-hover/btn:opacity-100 blur-sm block transition duration-500 opacity-0 absolute h-px w-1/2 mx-auto -bottom-px inset-x-10 bg-gradient-to-r from-transparent via-accent to-transparent" />
+
+            <span className="absolute inset-x-0 -bottom-px block h-px w-full bg-gradient-to-r from-transparent via-primary to-transparent opacity-0 transition duration-500 group-hover/btn:opacity-100" />
+            <span className="absolute inset-x-10 -bottom-px mx-auto block h-px w-1/2 bg-gradient-to-r from-transparent via-accent to-transparent opacity-0 blur-sm transition duration-500 group-hover/btn:opacity-100" />
           </button>
         </CardItem>
 
-        <div className="absolute inset-0 group-hover/card:opacity-100 opacity-0 transition duration-500">
+        <div className="absolute inset-0 opacity-0 transition duration-500 group-hover/card:opacity-100">
           <div className="absolute inset-x-0 -bottom-px h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
           <div className="absolute inset-y-0 -right-px w-px bg-gradient-to-b from-transparent via-primary/50 to-transparent" />
         </div>
@@ -89,4 +93,3 @@ const PricingCard = ({ product }: { product: Price }) => {
 };
 
 export default PricingCard;
-

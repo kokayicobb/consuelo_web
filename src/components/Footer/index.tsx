@@ -91,19 +91,19 @@ const Footer = () => {
               <nav className="mt-4 flex flex-col space-y-2 text-sm text-muted-foreground">
                 <Link
                   className="transition-colors hover:text-accent"
-                  href="/ai-consulting"
+                  href="/playground"
                 >
                   Virtual Try-On
                 </Link>
                 <Link
                   className="transition-colors hover:text-accent"
-                  href="/machine-learning"
+                  href="/playground"
                 >
                   Fit Calculator
                 </Link>
                 <Link
                   className="transition-colors hover:text-accent"
-                  href="/data-analytics"
+                  href="/playground"
                 >
                   3D Product Viewer
                 </Link>

@@ -49,14 +49,14 @@ const solutions: {
 }[] = [
   {
     title: "Virtual Try-On",
-    href: "/solutions/virtual-try-on",
+    href: "/playground",
     description:
       "Experience clothes virtually with our advanced 3D modeling technology.",
     icon: <Shirt className="h-6 w-6" />,
   },
   {
     title: "Fit Calculator",
-    href: "/solutions/size-recommendation",
+    href: "/playground",
     description:
       "Get personalized size recommendations based on your body measurements.",
     icon: <Ruler className="h-6 w-6" />,
@@ -66,11 +66,11 @@ const solutions: {
     href: "/solutions/fit-analysis",
     description:
       "Analyze your performance against competitors with our comprehensive dashboard.",
-    icon: <IconChartBar className="h-10 w-10" />,
+    icon: <IconChartBar className="h-6 w-6" />,
   },
   {
     title: "3D Product Viewer",
-    href: "/solutions/style-personalization",
+    href: "/playground",
     description:
       "Give customers a 360-degree view of products, enhancing their online shopping experience.",
     icon: <IconCube className="h-6 w-6" />,
@@ -85,28 +85,28 @@ const resources: {
 }[] = [
   {
     title: "Blog",
-    href: "/blog",
+    href: "/blogs",
     description:
       "Read the latest news and insights about AI in fashion and e-commerce.",
     icon: <BookOpen className="h-6 w-6" />,
   },
   {
     title: "Case Studies",
-    href: "/case-studies",
+    href: "/about",
     description:
       "Explore how leading brands are using Consuelo to revolutionize online shopping.",
     icon: <BarChart className="h-6 w-6" />,
   },
   {
     title: "Documentation",
-    href: "/docs",
+    href: "/about",
     description:
       "Access detailed guides and API references for integrating Consuelo.",
     icon: <Laptop className="h-6 w-6" />,
   },
   {
     title: "Webinars",
-    href: "/webinars",
+    href: "/about",
     description:
       "Watch on-demand webinars about the future of AI in fashion retail.",
     icon: <Users className="h-6 w-6" />,
@@ -157,7 +157,7 @@ export function Header() {
                     <NavigationMenuLink asChild>
                       <a
                         className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md"
-                        href="/solutions"
+                        href="/about"
                       >
                         <img
                           src="/apple-touch-icon.png"

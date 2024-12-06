@@ -5,8 +5,7 @@ import Team from "@/components/Team";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title:
-    "About Us | Consuelo - AI-Powered Fit Technology",
+  title: "About Us | Consuelo - AI-Powered Fit Technology",
   description: "This is About page description",
 };
 
@@ -15,8 +14,8 @@ const AboutPage = () => {
     <main>
       <Breadcrumb pageName="About Us Page" />
       <Features />
-      <About />
       <Team />
+      <About />
     </main>
   );
 };

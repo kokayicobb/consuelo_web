@@ -44,20 +44,35 @@ export function Features() {
           </p>
         </div>
 
-        <Link href="/about">
-          <BentoGrid>
-            {items.map((item, i) => (
-              <BentoGridItem
-                key={i}
-                title={item.title}
-                description={item.description}
-                header={item.header}
-                icon={item.icon}
-                className={item.className}
-              />
-            ))}
-          </BentoGrid>
-        </Link>
+       
+        <BentoGrid>
+  {items.map((item, i) => (
+    <div key={i} className={item.className}>
+      <Link 
+        href={
+          item.title === "Playground" ? "/playground" :
+          item.title === "Virtual Try-On" ? "/playground" :
+          item.title === "Fit Calculator" ? "/playground" :
+          item.title === "3D Product Viewer" ? "/playground" :
+          item.title === "Competition Dashboard" ? "/dashboard" :
+          item.title === "Contact" ? "/contact" :
+          item.title === "Secure Data Handling" ? "/contact" :
+          "#"
+        }
+        className="block h-full" // This ensures the link takes full height
+      >
+        <BentoGridItem
+          title={item.title}
+          description={item.description}
+          header={item.header}
+          icon={item.icon}
+          className="h-full hover:scale-[1.02] transition-all duration-200"
+        />
+      </Link>
+    </div>
+  ))}
+</BentoGrid>
+         
       </div>
     </section>
   );
@@ -174,6 +189,7 @@ const items = [
     ),
     icon: <IconPolygon className="h-8 w-8 text-accent" />,
     className: "md:col-span-2",
+    href: "/playground"
   },
 ];
 

@@ -48,8 +48,8 @@ export function WavyBackgroundDemo() {
               size="lg"
               className="w-full sm:w-auto bg-black text-violet-400 border-black hover:bg-black hover:border-black hover:opacity-80 transform hover:scale-105 transition-transform duration-300"
             >
-              <Link href="/contact">
-                Request a Demo
+              <Link href="/playground">
+                Demo Playground
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>

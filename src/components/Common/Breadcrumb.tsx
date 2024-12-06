@@ -1,53 +1,58 @@
-import Link from "next/link";
+'use client'
 
-const Breadcrumb = ({
-  pageName,
-  pageDescription,
-}: {
-  pageName: string;
-  pageDescription?: string;
-}) => {
+import Link from "next/link"
+import { motion } from "framer-motion"
+import { ChevronRight, Home } from 'lucide-react'
+
+interface BreadcrumbProps {
+  pageName: string
+  pageDescription?: string
+}
+
+const Breadcrumb: React.FC<BreadcrumbProps> = ({ pageName, pageDescription }) => {
   return (
-    <>
-      <div className="dark:bg-dark relative z-10 overflow-hidden pb-[60px] pt-[120px] md:pt-[130px] lg:pt-[50px]">
-        <div className="from-stroke/0 via-stroke to-stroke/0 dark:via-dark-3 absolute bottom-0 left-0 h-px w-full bg-gradient-to-r"></div>
-        <div className="container">
-          <div className="-mx-4 flex flex-wrap items-center">
-            <div className="w-full px-4">
-              <div className="text-center">
-                <h1 className="text-dark mb-4 text-3xl font-bold dark:text-white sm:text-4xl md:text-[40px] md:leading-[1.2]">
-                  {pageName}
-                </h1>
-                <p className="text-body-color dark:text-dark-6 mb-5 text-base">
-                  {pageDescription}
-                </p>
+    <div className="relative z-10 overflow-hidden bg-gradient-to-b from-white to-gray-100 pb-8 pt-24 dark:from-gray-900 dark:to-gray-800">
+      <div className="container mx-auto px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="text-center"
+        >
+          <h1 className="mb-4 text-4xl font-bold text-gray-900 dark:text-white md:text-5xl">
+            {pageName}
+          </h1>
+          {pageDescription && (
+            <p className="mb-8 text-lg text-gray-600 dark:text-gray-300">
+              {pageDescription}
+            </p>
+          )}
+        </motion.div>
 
-                <ul className="flex items-center justify-center gap-[10px]">
-                  <li>
-                    <Link
-                      href="/"
-                      className="text-dark flex items-center gap-[10px] text-base font-medium dark:text-white"
-                    >
-                      Home
-                    </Link>
-                  </li>
-                  <li>
-                    <p className="text-body-color flex items-center gap-[10px] text-base font-medium">
-                      <span className="text-body-color dark:text-dark-6">
-                        {" "}
-                        /{" "}
-                      </span>
-                      {pageName}
-                    </p>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
+        <motion.nav
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="flex justify-center"
+        >
+          <ol className="flex items-center space-x-2 rounded-lg bg-white px-4 py-2 shadow-md dark:bg-gray-800">
+            <li>
+              <Link href="/" className="flex items-center text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+                <Home className="mr-1 h-4 w-4" />
+                <span>Home</span>
+              </Link>
+            </li>
+            <li className="flex items-center text-gray-500 dark:text-gray-400">
+              <ChevronRight className="h-4 w-4" />
+            </li>
+            <li className="text-gray-700 dark:text-gray-300">{pageName}</li>
+          </ol>
+        </motion.nav>
       </div>
-    </>
-  );
-};
+      
+      <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>
+    </div>
+  )
+}
 
-export default Breadcrumb;
+export default Breadcrumb
