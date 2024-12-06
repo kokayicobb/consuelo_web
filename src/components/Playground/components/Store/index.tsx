@@ -54,109 +54,111 @@ export default function EquestrianHelmetPage() {
           <div className="space-y-4">
             <div className="relative aspect-square">
             {showModel ? (
-  <Canvas camera={{ position: [0, 1, 8], fov: 45 }}>
-  <color attach="background" args={["#f0f0f0"]} />
-    <ambientLight intensity={0.3} />
-    <spotLight
-      position={[10, 15, 10]}
-      angle={0.25}
-      penumbra={1}
-      intensity={0.8}
-      shadow-mapSize={2048}
-      castShadow
-    />
-    <directionalLight
-      position={[-5, 5, -5]}
-      intensity={0.3}
-    />
-    <Suspense fallback={null}>
-      <Model position={modelPosition} rotation={modelRotation} />
-      <Environment preset="warehouse" />
-      <ContactShadows
-        position={[0, -1.5, 0]}
-        opacity={0.6}
-        scale={10}
-        blur={2.5}
-        far={4}
-      />
-    </Suspense>
-                 <OrbitControls
-    makeDefault
-    enableDamping
-    dampingFactor={0.1}
-    rotateSpeed={0.8}
-    minDistance={2}
-    maxDistance={10}
-    minPolarAngle={Math.PI / 10}     // Keeps vertical min constraint
-    maxPolarAngle={Math.PI / .5}   // Keeps vertical max constraint
-    enableZoom={true}
-    zoomSpeed={0.5}
-/>
-                </Canvas>
-              ) : (
-                <Image
-                  src={images[currentImageIndex]}
-                  alt={`Equestrian Helmet View ${currentImageIndex + 1}`}
-                  fill
-                  className="rounded-lg object-cover"
+          <Suspense fallback={<div>Loading 3D model...</div>}>
+            <Canvas camera={{ position: [0, 1, 8], fov: 45 }}>
+              <color attach="background" args={["#f0f0f0"]} />
+              <ambientLight intensity={0.3} />
+              <spotLight
+                position={[10, 15, 10]}
+                angle={0.25}
+                penumbra={1}
+                intensity={0.8}
+                shadow-mapSize={2048}
+                castShadow
+              />
+              <directionalLight
+                position={[-5, 5, -5]}
+                intensity={0.3}
+              />
+              <Suspense fallback={null}>
+                <Model position={modelPosition} rotation={modelRotation} />
+                <Environment preset="warehouse" />
+                <ContactShadows
+                  position={[0, -1.5, 0]}
+                  opacity={0.6}
+                  scale={10}
+                  blur={2.5}
+                  far={4}
                 />
-              )}
-              {!showModel && (
-                <>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="absolute left-2 top-1/2 -translate-y-1/2"
-                    onClick={() =>
-                      setCurrentImageIndex((prev) =>
-                        prev > 0 ? prev - 1 : images.length - 1,
-                      )
-                    }
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="absolute right-2 top-1/2 -translate-y-1/2"
-                    onClick={() =>
-                      setCurrentImageIndex((prev) =>
-                        prev < images.length - 1 ? prev + 1 : 0,
-                      )
-                    }
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </>
-              )}
-            </div>
-            <div className="flex space-x-2 overflow-x-auto">
-              <div
-                className={`flex h-20 w-20 cursor-pointer items-center justify-center rounded bg-gray-200 ${
-                  showModel ? "ring-2 ring-primary" : ""
-                }`}
-                onClick={() => setShowModel(true)}
-              >
-                3D
-              </div>
-              {images.map((src, index) => (
-                <Image
-                  key={index}
-                  src={src}
-                  alt={`Thumbnail ${index + 1}`}
-                  width={80}
-                  height={80}
-                  className={`cursor-pointer rounded object-cover ${
-                    index === currentImageIndex && !showModel
-                      ? "ring-2 ring-primary"
-                      : ""
-                  }`}
-                  onClick={() => {
-                    setCurrentImageIndex(index);
-                    setShowModel(false);
-                  }}
-                />
-              ))}
+              </Suspense>
+              <OrbitControls
+                makeDefault
+                enableDamping
+                dampingFactor={0.1}
+                rotateSpeed={0.8}
+                minDistance={2}
+                maxDistance={10}
+                minPolarAngle={Math.PI / 10}
+                maxPolarAngle={Math.PI / 2}
+                enableZoom={true}
+                zoomSpeed={0.5}
+              />
+            </Canvas>
+          </Suspense>
+        ) : (
+          <Image
+            src={images[currentImageIndex]}
+            alt={`Equestrian Helmet View ${currentImageIndex + 1}`}
+            fill
+            className="rounded-lg object-cover"
+          />
+        )}
+        {!showModel && (
+          <>
+            <Button
+              variant="outline"
+              size="icon"
+              className="absolute left-2 top-1/2 -translate-y-1/2"
+              onClick={() =>
+                setCurrentImageIndex((prev) =>
+                  prev > 0 ? prev - 1 : images.length - 1
+                )
+              }
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="absolute right-2 top-1/2 -translate-y-1/2"
+              onClick={() =>
+                setCurrentImageIndex((prev) =>
+                  prev < images.length - 1 ? prev + 1 : 0
+                )
+              }
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </>
+        )}
+      </div>
+      <div className="flex space-x-2 overflow-x-auto">
+        <div
+          className={`flex h-20 w-20 cursor-pointer items-center justify-center rounded bg-gray-200 ${
+            showModel ? "ring-2 ring-primary" : ""
+          }`}
+          onClick={() => setShowModel(true)}
+        >
+          3D
+        </div>
+        {images.map((src, index) => (
+          <Image
+            key={index}
+            src={src}
+            alt={`Thumbnail ${index + 1}`}
+            width={80}
+            height={80}
+            className={`cursor-pointer rounded object-cover ${
+              index === currentImageIndex && !showModel
+                ? "ring-2 ring-primary"
+                : ""
+            }`}
+            onClick={() => {
+              setCurrentImageIndex(index)
+              setShowModel(false)
+            }}
+          />
+        ))}
             </div>
           </div>
 
