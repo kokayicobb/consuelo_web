@@ -131,14 +131,14 @@ export default function EquestrianHelmetPage() {
               )}
             </div>
             <div className="flex space-x-2 overflow-x-auto">
-              {/* <div
+              <div
                 className={`flex h-20 w-20 cursor-pointer items-center justify-center rounded bg-gray-200 ${
                   showModel ? "ring-2 ring-primary" : ""
                 }`}
                 onClick={() => setShowModel(true)}
               >
                 3D
-              </div> */}
+              </div>
               {images.map((src, index) => (
                 <Image
                   key={index}
