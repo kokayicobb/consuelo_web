@@ -27,8 +27,8 @@ export default function EquestrianHelmetPage() {
   const [selectedSize, setSelectedSize] = useState("56");
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showModel, setShowModel] = useState(false);
-  const modelPosition: [number, number, number] = [0, -1, 0];
-  const modelRotation: [number, number, number] = [0, 0, 0];
+  const modelPosition: [0, -1, 0] = [0, -1, 0];
+  const modelRotation: [0, 0, 0] = [0, 0, 0];
   const images = [
     "/MainHelmet.png?height=600&width=600",
     "/SideHelmet.PNG?height=600&width=600&text=Back+View",
