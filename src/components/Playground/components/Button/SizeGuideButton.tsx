@@ -28,17 +28,16 @@ export function SizeGuideButton() {
     return (
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button variant="link" className="h-auto max-w-[300px] sm:max-w-[500px] p-0">
-          <span className="text-sm whitespace-normal">
+          <Button variant="link" className="w=auto h-auto justify-start p-0">
+            <span className="whitespace-normal text-sm">
               Fit Calculator <span className="underline">Get exact size</span>{" "}
-              
-              <span  className="whitespace-normal text-sm italic text-muted-foreground bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text [-webkit-background-clip:text] text-transparent no-underline hover:no-underline">
-                Powered by AI
-              </span>
+              <span className="bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text px-[2px] text-sm italic text-transparent hover:no-underline">
+  Powered by AI
+</span>
             </span>
           </Button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Fit Calculator predicts your size</DialogTitle>
           </DialogHeader>
@@ -49,25 +48,24 @@ export function SizeGuideButton() {
   }
 
   return (
-    <Drawer open={open} onOpenChange={setOpen}>
-    <DrawerTrigger asChild>
-      <Button variant="link" className="h-auto p-0">
-        <span className="text-sm">
-          Fit Calculator <span className="underline">Get exact size</span>{" "}
-          
-          <span className="whitespace-normal italic text-xs text-muted-foreground bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text [-webkit-background-clip:text] text-transparent no-underline hover:no-underline">
-            Powered by AI
-          </span>
+    <Dialog open={open} onOpenChange={setOpen}>
+  <DialogTrigger asChild>
+    <Button variant="link" className="w=auto h-auto justify-start p-0">
+      <span className="whitespace-normal text-sm">
+        Fit Calculator <span className="underline">Get exact size</span>{" "}
+        <span className="bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text px-[2px] text-sm italic text-transparent hover:no-underline">
+          Powered by AI
         </span>
-      </Button>
-    </DrawerTrigger>
-      <DrawerContent>
-        <DrawerHeader>
-          <DrawerTitle>Fit Calculator predicts your size</DrawerTitle>
-        </DrawerHeader>
-        <SizeGuideContent />
-      </DrawerContent>
-    </Drawer>
+      </span>
+    </Button>
+  </DialogTrigger>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>Fit Calculator predicts your size</DialogTitle>
+    </DialogHeader>
+    <SizeGuideContent />
+  </DialogContent>
+</Dialog>
   );
 }
 

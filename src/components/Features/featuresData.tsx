@@ -41,7 +41,7 @@ const featuresData: Feature[] = [
         />
       </svg>
     ),
-    title: "Virtual Fitting Room",
+    title: "Virtual Try-On",
     paragraph: "Visualize Your Perfect Size Before You Buy.",
     btn: "Learn More",
     btnLink: "/contact",

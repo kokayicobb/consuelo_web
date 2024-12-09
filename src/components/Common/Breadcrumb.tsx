@@ -11,7 +11,8 @@ interface BreadcrumbProps {
 
 const Breadcrumb: React.FC<BreadcrumbProps> = ({ pageName, pageDescription }) => {
   return (
-    <div className="relative z-10 overflow-hidden bg-gradient-to-b from-white to-gray-100 pb-8 pt-24 dark:from-gray-900 dark:to-gray-800">
+    <div className="relative z-10 overflow-hidden bg-gradient-to-b from-white to-white pb-12 pt-16 
+    dark:from-[hsl(240,3.7%,15.9%)] dark:to-[hsl(240,10%,3.9%)]">
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -37,7 +38,7 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ pageName, pageDescription }) =>
         >
           <ol className="flex items-center space-x-2 rounded-lg bg-white px-4 py-2 shadow-md dark:bg-gray-800">
             <li>
-              <Link href="/" className="flex items-center text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+            <Link href="/" className="flex items-center text-violet-500 hover:text-violet-700 dark:text-violet-400 dark:hover:text-violet-300">
                 <Home className="mr-1 h-4 w-4" />
                 <span>Home</span>
               </Link>

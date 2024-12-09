@@ -19,6 +19,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SizeGuideButton } from "../Button/SizeGuideButton";
 import { Header } from "./header";
 import dynamic from "next/dynamic";
+import VirtualTryOnButton from "../Button/TryOnButton";
+
 const Model = dynamic(() => import('./Model3D'), { ssr: false });
 
 
@@ -207,8 +209,10 @@ export default function EquestrianHelmetPage() {
                 ))}
               </RadioGroup>
             </div>
-
+            <div className="flex flex-col gap-2">
             <SizeGuideButton/>
+            {/* <VirtualTryOnButton /> */}
+            </div>
             <Button className="w-full">
               <ShoppingCart className="mr-2 h-4 w-4" /> Add to Cart
             </Button>
