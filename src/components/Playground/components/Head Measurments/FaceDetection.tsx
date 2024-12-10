@@ -461,7 +461,7 @@ export default function FaceDetection() {
             hasAutoTriggered.current = true; // Prevent multiple triggers
             setTimeout(() => {
               startMeasurementCollection();
-            }, 2500); // 2.5 second delay for stability
+            }, 10500); // 2.5 second delay for stability
           } else if (feedback.length > 0) {
             // Reset the trigger if position is lost
             hasAutoTriggered.current = false;
