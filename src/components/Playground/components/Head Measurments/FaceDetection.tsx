@@ -38,7 +38,7 @@ export default function FaceDetection() {
   const streamRef = useRef<MediaStream | null>(null);
   const [isCollectingMeasurements, setIsCollectingMeasurements] =
     useState(false);
-    const hasAutoTriggered = useRef(false);
+  const hasAutoTriggered = useRef(false);
   const [finalAverage, setFinalAverage] = useState<string | null>(null);
   const measurementsArrayRef = useRef<number[]>([]);
   const collectionTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -152,10 +152,9 @@ export default function FaceDetection() {
 
     if (eyeTiltDegrees > 10) {
       feedback.push(eyeTiltDegrees > 0 ? "Look Straight" : "Look Straight");
-     
-  return feedback;
-};
 
+      return feedback;
+    }
 
     // Check if looking straight ahead (using nose and eyes)
     const noseTip = points[HEAD_LANDMARKS.nose_tip];
@@ -206,9 +205,9 @@ export default function FaceDetection() {
 
     // Different thresholds based on device type
     if (isMobile) {
-      if (faceWidth < 0.6) {
+      if (faceWidth < 0.22) {
         feedback.push("👤 Move closer to the camera");
-      } else if (faceWidth > 0.7) {
+      } else if (faceWidth > 0.23) {
         feedback.push("👤 Move further from the camera");
       }
     } else {
@@ -222,44 +221,6 @@ export default function FaceDetection() {
 
     return feedback;
   };
-  const getFeedback = (landmarks) => {
-    const rightEye = landmarks[33];
-    const leftEye = landmarks[263];
-    const chin = landmarks[152];
-    const forehead = landmarks[10];
-
-    let feedback = [];
-
-    // Check head tilt (vertical alignment of eyes)
-    const eyeLevelDifference = Math.abs(rightEye.y - leftEye.y);
-    if (eyeLevelDifference > 0.05) {
-      feedback.push(
-        "Please level your head (eyes should be aligned horizontally).",
-      );
-    }
-
-    // Check jaw position (chin-to-forehead z-axis alignment)
-    const jawAlignment = Math.abs(chin.z - forehead.z);
-    if (jawAlignment < 0.2) {
-      feedback.push("Please slightly lower your jaw to a neutral position.");
-    }
-
-    // Check distance from camera (size of face bounding box)
-    const templeRight = landmarks[HEAD_LANDMARKS.temple_right];
-    const templeLeft = landmarks[HEAD_LANDMARKS.temple_left];
-    const templeWidth = Math.hypot(
-      templeRight.x - templeLeft.x,
-      templeRight.y - templeLeft.y,
-      templeRight.z - templeLeft.z,
-    );
-    if (templeWidth < 0.1) {
-      feedback.push("Move closer to the camera.");
-    } else if (templeWidth > 0.3) {
-      feedback.push("Move farther away from the camera.");
-    }
-
-    return feedback;
-  };
 
   // Calibration based on temple width
   const dynamicPixelToCm = (templeWidth) => {
@@ -267,7 +228,6 @@ export default function FaceDetection() {
     return knownTempleWidthCm / templeWidth;
   };
 
- 
   const drawBlendShapes = (el: HTMLElement, blendShapes: any[]) => {
     if (!blendShapes.length) return;
 
@@ -312,7 +272,6 @@ export default function FaceDetection() {
       const constraints = {
         video: {
           facingMode: "user", // Use front camera on mobile
-        
         },
       };
 
@@ -494,9 +453,13 @@ export default function FaceDetection() {
 
           const feedback = getPositionFeedback(results.faceLandmarks);
           setPositionFeedback(feedback);
-  
+
           // Auto-capture logic
-          if (feedback.length === 0 && !isCollectingMeasurements && !hasAutoTriggered.current) {
+          if (
+            feedback.length === 0 &&
+            !isCollectingMeasurements &&
+            !hasAutoTriggered.current
+          ) {
             hasAutoTriggered.current = true; // Prevent multiple triggers
             setTimeout(() => {
               startMeasurementCollection();
@@ -606,13 +569,13 @@ export default function FaceDetection() {
         </div>
 
         <Button
-        onClick={onEnableCamera}
-        className="mt-4 w-full sm:w-auto flex items-center justify-center text-sm sm:text-base"
-        size="default"
-      >
-        <Camera className="mr-2 h-4 w-4" />
-        Enable Camera
-      </Button>
+          onClick={onEnableCamera}
+          className="mt-4 flex w-full items-center justify-center text-sm sm:w-auto sm:text-base"
+          size="default"
+        >
+          <Camera className="mr-2 h-4 w-4" />
+          Enable Camera
+        </Button>
       </div>
     );
   };
@@ -662,13 +625,16 @@ export default function FaceDetection() {
                   <span className="text-sm font-medium text-black md:text-base">
                     Head Circumference
                   </span>
-                 <span className="font-bold text-black">
-  {measurements?.estimatedCircumference 
-    ? (Math.floor(measurements.estimatedCircumference * 10) % 10 >= 6)
-      ? Math.ceil(measurements.estimatedCircumference)
-      : Math.floor(measurements.estimatedCircumference)
-    : null} cm
-</span>
+                  <span className="font-bold text-black">
+                    {measurements?.estimatedCircumference
+                      ? Math.floor(measurements.estimatedCircumference * 10) %
+                          10 >=
+                        6
+                        ? Math.ceil(measurements.estimatedCircumference)
+                        : Math.floor(measurements.estimatedCircumference)
+                      : null}{" "}
+                    cm
+                  </span>
                 </div>
               </div>
             </div>
@@ -709,74 +675,20 @@ export default function FaceDetection() {
                     </div>
                   </div>
 
-                  {/* Take Photo button */}
-                  {/* Parent container */}
-                  <div className="mt-2 flex flex-col items-center">
-                    {/* Take Photo button wrapper */}
-                    <div className="flex w-full justify-center">
-                      <button
-                        onClick={startMeasurementCollection}
-                        disabled={isCollectingMeasurements}
-                        className={`flex transform 
-        items-center 
-        gap-2
-        rounded-full 
-        px-6
-        py-3
-        text-sm
-        font-medium
-        text-white
-        shadow-lg
-        transition-all 
-        duration-300 
-        hover:scale-105
-        active:scale-95 ${
-          isCollectingMeasurements
-            ? "cursor-not-allowed bg-gray-400 opacity-70"
-            : "bg-indigo-500 hover:bg-indigo-600 hover:shadow-indigo-200"
-        }`}
-                      >
-                        {isCollectingMeasurements ? (
-                          <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Collecting...
-                          </>
-                        ) : (
-                          <>
-                            <Camera className="h-4 w-4" />
-                            Take Photo
-                          </>
-                        )}
-                      </button>
-                    </div>
-                    {/* Instruction text */}
-                    <span className="mt-2 text-xs text-gray-500">
-                      * Click to capture when positioning instructions disappear
-                    </span>
-                  </div>
+                 <div className="mt-2 flex flex-col items-center">
+  <div className="flex w-full justify-center">
+    <div className="flex transform items-center gap-2 rounded-full bg-gray-100 px-6 py-3 text-sm text-gray-600">
+      <Camera className="h-4 w-4" />
+      Scanning will begin automatically
+    </div>
+  </div>
+  <span className="mt-2 text-xs text-gray-500">
+    * Hold still when positioning instructions disappear
+  </span>
+</div>
                 </div>
               </div>
             )}
-
-            {/* {measurements && (
-                  <div className="mt-4 md:mt-6 p-4 md:p-6 bg-gray-800 rounded-xl shadow-2xl">
-                    <h2 className="text-xl md:text-2xl font-bold mb-4 text-blue-400">Real-time Measurements</h2>
-                    <div className="grid gap-3 md:gap-4">
-                      <div className="flex justify-between items-center p-3 bg-gray-700/50 rounded-lg">
-                        <span className="text-green-400 text-sm md:text-base font-medium">Temple Width</span>
-                        <span className="text-white font-bold">{measurements.templeWidth} cm</span>
-                      </div>
-                      <div className="flex justify-between items-center p-3 bg-gray-700/50 rounded-lg">
-                        <span className="text-purple-400 text-sm md:text-base font-medium">Face Depth</span>
-                        <span className="text-white font-bold">{measurements.faceDepth} cm</span>
-                      </div>
-                      <div className="flex justify-between items-center p-3 bg-gray-700/50 rounded-lg">
-                        <span className="text-orange-400 text-sm md:text-base font-medium">Current Circumference</span>
-                        <span className="text-white font-bold">{measurements.estimatedCircumference} cm</span>
-                      </div>
-                    </div>
-                  </div>
-                )} */}
 
             <div />
           </>
