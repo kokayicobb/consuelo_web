@@ -452,24 +452,22 @@ export default function FaceDetection() {
           const feedback = getPositionFeedback(results.faceLandmarks);
           setPositionFeedback(feedback);
 
-          // Auto-capture logic
-          if (
-            feedback.length === 0 &&
-            !isCollectingMeasurements &&
-            !hasAutoTriggered.current
-          ) {
-            hasAutoTriggered.current = true; // Prevent multiple triggers
-            setTimeout(() => {
-              startMeasurementCollection();
-            }, 10500); // 2.5 second delay for stability
-          } else if (feedback.length > 0) {
-            // Reset the trigger if position is lost
-            hasAutoTriggered.current = false;
-          }
+         // Auto-capture logic
+         if (
+          feedback.length === 0 &&
+          !isCollectingMeasurements &&
+          !hasAutoTriggered.current
+        ) {
+          hasAutoTriggered.current = true; // Prevent multiple triggers
+          startMeasurementCollection(); // Trigger immediately, no setTimeout
+        } else if (feedback.length > 0) {
+          // Reset the trigger if position is lost
+          hasAutoTriggered.current = false;
         }
-      } catch (error) {
-        console.error("Error detecting faces:", error);
-        return;
+      }
+    } catch (error) {
+      console.error("Error detecting faces:", error);
+      return;
       }
     }
 
