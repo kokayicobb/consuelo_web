@@ -38,6 +38,7 @@ export default function FaceDetection() {
   const streamRef = useRef<MediaStream | null>(null);
   const [isCollectingMeasurements, setIsCollectingMeasurements] =
     useState(false);
+    const hasAutoTriggered = useRef(false);
   const [finalAverage, setFinalAverage] = useState<string | null>(null);
   const measurementsArrayRef = useRef<number[]>([]);
   const collectionTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -151,7 +152,10 @@ export default function FaceDetection() {
 
     if (eyeTiltDegrees > 10) {
       feedback.push(eyeTiltDegrees > 0 ? "Look Straight" : "Look Straight");
-    }
+     
+  return feedback;
+};
+
 
     // Check if looking straight ahead (using nose and eyes)
     const noseTip = points[HEAD_LANDMARKS.nose_tip];
@@ -263,56 +267,7 @@ export default function FaceDetection() {
     return knownTempleWidthCm / templeWidth;
   };
 
-  useEffect(() => {
-    const initializeVision = async () => {
-      try {
-        const vision = await import("@mediapipe/tasks-vision");
-
-        FaceLandmarker = vision.FaceLandmarker;
-        FilesetResolver = vision.FilesetResolver;
-        DrawingUtils = vision.DrawingUtils;
-
-        const filesetResolver = await FilesetResolver.forVisionTasks(
-          "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm",
-        );
-
-        const landmarker = await FaceLandmarker.createFromOptions(
-          filesetResolver,
-          {
-            baseOptions: {
-              modelAssetPath: `https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task`,
-              delegate: "GPU",
-            },
-            outputFaceBlendshapes: true,
-            runningMode: runningModeRef.current,
-            numFaces: 1,
-          },
-        );
-
-        setFaceLandmarker(landmarker);
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Error initializing vision:", error);
-        setIsLoading(false);
-      }
-    };
-
-    initializeVision();
-
-    // Cleanup function
-    return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => track.stop());
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (webcamRunning && videoRef.current && !videoRef.current.srcObject) {
-      enableCam();
-    }
-  }, [webcamRunning]);
-
+ 
   const drawBlendShapes = (el: HTMLElement, blendShapes: any[]) => {
     if (!blendShapes.length) return;
 
@@ -386,6 +341,56 @@ export default function FaceDetection() {
       setWebcamRunning(false);
     }
   };
+  useEffect(() => {
+    const initializeVision = async () => {
+      try {
+        const vision = await import("@mediapipe/tasks-vision");
+
+        FaceLandmarker = vision.FaceLandmarker;
+        FilesetResolver = vision.FilesetResolver;
+        DrawingUtils = vision.DrawingUtils;
+
+        const filesetResolver = await FilesetResolver.forVisionTasks(
+          "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm",
+        );
+
+        const landmarker = await FaceLandmarker.createFromOptions(
+          filesetResolver,
+          {
+            baseOptions: {
+              modelAssetPath: `https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task`,
+              delegate: "GPU",
+            },
+            outputFaceBlendshapes: true,
+            runningMode: runningModeRef.current,
+            numFaces: 1,
+          },
+        );
+
+        setFaceLandmarker(landmarker);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error initializing vision:", error);
+        setIsLoading(false);
+      }
+    };
+
+    initializeVision();
+
+    // Cleanup function
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (webcamRunning && videoRef.current && !videoRef.current.srcObject) {
+      enableCam();
+    }
+  }, [enableCam, webcamRunning]);
+
   const drawHeadCircle = (canvasCtx, landmarks, canvas) => {
     // Get relevant landmarks
     const foreheadMid = landmarks[HEAD_LANDMARKS.forehead_mid];
@@ -489,6 +494,17 @@ export default function FaceDetection() {
 
           const feedback = getPositionFeedback(results.faceLandmarks);
           setPositionFeedback(feedback);
+  
+          // Auto-capture logic
+          if (feedback.length === 0 && !isCollectingMeasurements && !hasAutoTriggered.current) {
+            hasAutoTriggered.current = true; // Prevent multiple triggers
+            setTimeout(() => {
+              startMeasurementCollection();
+            }, 1500); // 1.5 second delay for stability
+          } else if (feedback.length > 0) {
+            // Reset the trigger if position is lost
+            hasAutoTriggered.current = false;
+          }
         }
       } catch (error) {
         console.error("Error detecting faces:", error);
