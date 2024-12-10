@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Ruler } from "lucide-react";
+import { Ruler, X } from "lucide-react";
 import { useMediaQuery } from "../../hooks/UseMediaQuery";
 import {
   Dialog,
@@ -27,45 +27,67 @@ export function SizeGuideButton() {
   if (isDesktop) {
     return (
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-          <Button variant="link" className="w=auto h-auto justify-start p-0">
-            <span className="whitespace-normal text-sm">
-              Fit Calculator <span className="underline">Get exact size</span>{" "}
-              <span className="bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text px-[2px] text-sm italic text-transparent hover:no-underline">
-  Powered by AI
-</span>
+      <DialogTrigger asChild>
+        <Button variant="link" className="w=auto h-auto justify-start p-0">
+          <span className="whitespace-normal text-sm">
+            Fit Calculator <span className="underline">Get exact size</span>{" "}
+            <span className="bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text px-[2px] text-sm italic text-transparent hover:no-underline">
+              Powered by AI
             </span>
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
+          </span>
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[600px]">
+        <div className="rounded-lg border border-gray-200 p-3">
+          <DialogHeader className="flex flex-row items-center justify-between">
             <DialogTitle>Fit Calculator predicts your size</DialogTitle>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8 rounded-full hover:bg-gray-100"
+              onClick={() => setOpen(false)}
+            >
+              <X className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </Button>
           </DialogHeader>
           <SizeGuideContent />
-        </DialogContent>
-      </Dialog>
+        </div>
+      </DialogContent>
+    </Dialog>
     );
   }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-  <DialogTrigger asChild>
-    <Button variant="link" className="w=auto h-auto justify-start p-0">
-      <span className="whitespace-normal text-sm">
-        Fit Calculator <span className="underline">Get exact size</span>{" "}
-        <span className="bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text px-[2px] text-sm italic text-transparent hover:no-underline">
-          Powered by AI
-        </span>
-      </span>
-    </Button>
-  </DialogTrigger>
-  <DialogContent>
-    <DialogHeader>
-      <DialogTitle>Fit Calculator predicts your size</DialogTitle>
-    </DialogHeader>
-    <SizeGuideContent />
-  </DialogContent>
-</Dialog>
+      <DialogTrigger asChild>
+        <Button variant="link" className="w=auto h-auto justify-start p-0">
+          <span className="whitespace-normal text-sm">
+            Fit Calculator <span className="underline">Get exact size</span>{" "}
+            <span className="bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text px-[2px] text-sm italic text-transparent hover:no-underline">
+              Powered by AI
+            </span>
+          </span>
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[600px]">
+        <div className="rounded-lg border border-gray-200 p-3">
+          <DialogHeader className="flex flex-row items-center justify-between">
+            <DialogTitle>Fit Calculator predicts your size</DialogTitle>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8 rounded-full hover:bg-gray-100"
+              onClick={() => setOpen(false)}
+            >
+              <X className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </Button>
+          </DialogHeader>
+          <SizeGuideContent />
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

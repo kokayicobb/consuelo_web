@@ -626,7 +626,7 @@ export default function FaceDetection() {
 
             <div className="w-full max-w-md rounded-xl bg-gray-100 p-4 shadow-2xl md:p-6">
               <div className="space-y-3">
-                <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-3">
+                {/* <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-3">
                   <span className="text-sm font-medium text-black md:text-base">
                     Temple Width
                   </span>
@@ -641,14 +641,18 @@ export default function FaceDetection() {
                   <span className="font-bold text-black">
                     {measurements?.faceDepth} cm
                   </span>
-                </div>
+                </div> */}
                 <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-3">
                   <span className="text-sm font-medium text-black md:text-base">
                     Head Circumference
                   </span>
-                  <span className="font-bold text-black">
-                    {measurements?.estimatedCircumference} cm
-                  </span>
+                 <span className="font-bold text-black">
+  {measurements?.estimatedCircumference 
+    ? (Math.floor(measurements.estimatedCircumference * 10) % 10 >= 6)
+      ? Math.ceil(measurements.estimatedCircumference)
+      : Math.floor(measurements.estimatedCircumference)
+    : null} cm
+</span>
                 </div>
               </div>
             </div>

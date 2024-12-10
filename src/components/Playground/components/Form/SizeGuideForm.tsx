@@ -78,7 +78,7 @@ export function SizeGuideForm() {
     await new Promise((resolve) => setTimeout(resolve, 2000));
     const recommendedSize = calculateRecommendedSize(formData);
     setSizeRecommendation(recommendedSize);
-    setStep(5);
+    setStep(4);
     setIsLoading(false);
   };
   const [safetyChecked, setSafetyChecked] = useState(false)
@@ -86,11 +86,10 @@ export function SizeGuideForm() {
     switch (step) {
       case 1:
         return !!formData.headCircumference;
+    
       case 2:
-        return !!formData.headShape;
-      case 3:
         return !!formData.typicalHairstyle;
-      case 4:
+      case 3:
         return safetyChecked;
       default:
         return false;
@@ -98,7 +97,7 @@ export function SizeGuideForm() {
   };
 
   const handleNext = () => {
-    if (step === 4) {
+    if (step === 3) {
       handleSubmit();
     } else {
       setStep((prev) => prev + 1);
@@ -131,7 +130,7 @@ export function SizeGuideForm() {
     );
   }
 
-  if (step === 5) {
+  if (step === 4) {
     return (
       <div className="flex h-[300px] flex-col items-center justify-center space-y-6 p-4">
         <h2 className="text-xl font-semibold tracking-tight">
@@ -160,7 +159,7 @@ export function SizeGuideForm() {
 
   return (
     <div className="mx-auto flex max-w-md flex-col space-y-6 p-4 sm:p-6 md:p-8">
-      <StepIndicator currentStep={step} totalSteps={4} />
+      <StepIndicator currentStep={step} totalSteps={3} />
       <div className="space-y-4">
         {step === 1 && (
           <div className="space-y-2">
@@ -198,7 +197,7 @@ export function SizeGuideForm() {
           </div>
         )}
 
-        {step === 2 && (
+        {/* {step === 2 && (
           <FormStep
             label="Head Shape"
             value={formData.headShape}
@@ -206,9 +205,9 @@ export function SizeGuideForm() {
             options={HEAD_SHAPES}
             tooltip="Select your head shape type"
           />
-        )}
+        )} */}
 
-        {step === 3 && (
+        {step === 2 && (
           <FormStep
             label="Typical Hairstyle"
             value={formData.typicalHairstyle}
@@ -218,7 +217,7 @@ export function SizeGuideForm() {
           />
         )}
 
-{step === 4 && (
+{step === 3 && (
             <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -273,7 +272,7 @@ export function SizeGuideForm() {
           onClick={handleNext}
           disabled={!canProceed()}
         >
-          {step === 4 ? "Calculate Size" : "Next"}
+          {step === 3 ? "Calculate Size" : "Next"}
         </Button>
       </div>
     </div>
@@ -362,83 +361,8 @@ interface HeadShapeSelectorProps {
   options: string[];
 }
 
-function HeadShapeSelector({
-  value,
-  onChange,
-  options,
-}: HeadShapeSelectorProps) {
-  return (
-    <div className="space-y-4">
-      <h3 className="text-sm font-medium">Select Your Head Shape</h3>
-      <div className="flex justify-around">
-        {options.map((shape) => (
-          <button
-            key={shape}
-            onClick={() => onChange(shape)}
-            className={cn(
-              "flex flex-col items-center rounded-lg p-2 transition-colors",
-              value === shape ? "bg-primary/20" : "hover:bg-primary/10",
-            )}
-          >
-            <Image
-              src={`/placeholder.svg?height=100&width=100&text=${shape}`}
-              alt={shape}
-              width={100}
-              height={100}
-              className="rounded-full bg-muted"
-            />
-            <span className="mt-1 text-xs">{shape}</span>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
 
-interface HairstyleSelectorProps {
-  value: string;
-  onChange: (value: string) => void;
-  options: string[];
-}
 
-function HairstyleSelector({
-  value,
-  onChange,
-  options,
-}: HairstyleSelectorProps) {
-  return (
-    <div className="space-y-4">
-      <h3 className="text-sm font-medium">Select Your Typical Hairstyle</h3>
-      <ScrollArea className="mx-auto w-full max-w-[320px]">
-        <div className="flex gap-4 pb-4">
-          {options.map((style) => (
-            <div key={style} className="flex-shrink-0">
-              <button
-                onClick={() => onChange(style)}
-                className={cn(
-                  "flex min-w-[100px] flex-col items-center rounded-lg p-2 transition-colors",
-                  value === style ? "bg-primary/20" : "hover:bg-primary/10",
-                )}
-              >
-                <Image
-                  src={`/placeholder.svg?height=80&width=80&text=${style}`}
-                  alt={style}
-                  width={80}
-                  height={80}
-                  className="rounded-full bg-muted"
-                />
-                <span className="mt-1 w-full break-words text-center text-xs">
-                  {style}
-                </span>
-              </button>
-            </div>
-          ))}
-        </div>
-        <ScrollBar orientation="horizontal" />
-      </ScrollArea>
-    </div>
-  );
-}
 
 interface SizeVisualizationProps {
   size: string | null;
