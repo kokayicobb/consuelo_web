@@ -461,7 +461,7 @@ export default function FaceDetection() {
             hasAutoTriggered.current = true; // Prevent multiple triggers
             setTimeout(() => {
               startMeasurementCollection();
-            }, 10500); // 2.5 second delay for stability
+            }, 1500); // 2.5 second delay for stability
           } else if (feedback.length > 0) {
             // Reset the trigger if position is lost
             hasAutoTriggered.current = false;
@@ -668,43 +668,17 @@ export default function FaceDetection() {
                     </div>
                   </div>
 
-                  <div className="flex h-screen items-center justify-center bg-gray-100">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: isVisible ? 1 : 0, scale: isVisible ? 1 : 0.9 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="relative flex flex-col items-center space-y-6 rounded-lg bg-white p-8 shadow-lg"
-      >
-        <motion.div
-          animate={{
-            boxShadow: [
-              "0 0 0 0 rgba(59, 130, 246, 0)",
-              "0 0 0 20px rgba(59, 130, 246, 0.2)",
-              "0 0 0 0 rgba(59, 130, 246, 0)"
-            ]
-          }}
-          transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-          className="rounded-full bg-blue-500 p-4"
-        >
-          <Camera className="h-8 w-8 text-white" />
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-          className="text-center"
-        >
-          <h2 className="mb-2 text-2xl font-semibold text-gray-800">Scanning will begin automatically</h2>
-          <p className="text-sm text-gray-600">Please remain still and face the camera</p>
-        </motion.div>
-        <motion.div
-          initial={{ scaleX: 0 }}
-          animate={{ scaleX: 1 }}
-          transition={{ delay: 0.5, duration: 1.5, ease: "easeInOut" }}
-          className="absolute bottom-0 left-0 h-1 w-full origin-left bg-blue-500"
-        />
-      </motion.div>
+                   <div className="mt-2 flex flex-col items-center">
+  <div className="flex w-full justify-center">
+    <div className="flex transform items-center gap-2 rounded-full bg-gray-100 px-6 py-3 text-sm text-gray-600">
+      <Camera className="h-4 w-4" />
+      Scanning will begin automatically
     </div>
+  </div>
+  <span className="mt-2 text-xs text-gray-500">
+    * Hold still when positioning instructions disappear
+  </span>
+</div>
                 </div>
               </div>
             )}
