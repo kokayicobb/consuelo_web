@@ -463,7 +463,7 @@ if (feedback.length === 0 && !isCollectingMeasurements && !hasAutoTriggered.curr
       hasAutoTriggered.current = true;
       startMeasurementCollection();
     }
-  }, 2500);
+  }, 200500);
 } else {
   // Clear timer if position is lost
   if (stablePositionTimer) {
