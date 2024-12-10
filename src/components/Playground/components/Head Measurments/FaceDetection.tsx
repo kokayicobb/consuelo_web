@@ -152,8 +152,6 @@ export default function FaceDetection() {
 
     if (eyeTiltDegrees > 10) {
       feedback.push(eyeTiltDegrees > 0 ? "Look Straight" : "Look Straight");
-
-      return feedback;
     }
 
     // Check if looking straight ahead (using nose and eyes)
