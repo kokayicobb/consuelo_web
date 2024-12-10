@@ -453,25 +453,19 @@ export default function FaceDetection() {
           setPositionFeedback(feedback);
 
           // Auto-capture logic
-          let stablePositionTimer: NodeJS.Timeout | null = null;
-
-if (feedback.length === 0 && !isCollectingMeasurements && !hasAutoTriggered.current) {
-  stablePositionTimer = setTimeout(() => {
-    // Double check position is still good before capturing
-    const currentFeedback = getPositionFeedback(results.faceLandmarks);
-    if (currentFeedback.length === 0) {
-      hasAutoTriggered.current = true;
-      startMeasurementCollection();
-    }
-  }, 200500);
-} else {
-  // Clear timer if position is lost
-  if (stablePositionTimer) {
-    clearTimeout(stablePositionTimer);
-    stablePositionTimer = null;
-  }
-  hasAutoTriggered.current = false;
-}
+          if (
+            feedback.length === 0 &&
+            !isCollectingMeasurements &&
+            !hasAutoTriggered.current
+          ) {
+            hasAutoTriggered.current = true; // Prevent multiple triggers
+            setTimeout(() => {
+              startMeasurementCollection();
+            }, 10500); // 2.5 second delay for stability
+          } else if (feedback.length > 0) {
+            // Reset the trigger if position is lost
+            hasAutoTriggered.current = false;
+          }
         }
       } catch (error) {
         console.error("Error detecting faces:", error);
