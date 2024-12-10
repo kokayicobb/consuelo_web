@@ -205,9 +205,9 @@ export default function FaceDetection() {
 
     // Different thresholds based on device type
     if (isMobile) {
-      if (faceWidth < 0.22) {
+      if (faceWidth < 0.34) {
         feedback.push("👤 Move closer to the camera");
-      } else if (faceWidth > 0.23) {
+      } else if (faceWidth > 0.35) {
         feedback.push("👤 Move further from the camera");
       }
     } else {
@@ -463,7 +463,7 @@ export default function FaceDetection() {
             hasAutoTriggered.current = true; // Prevent multiple triggers
             setTimeout(() => {
               startMeasurementCollection();
-            }, 1500); // 1.5 second delay for stability
+            }, 2500); // 2.5 second delay for stability
           } else if (feedback.length > 0) {
             // Reset the trigger if position is lost
             hasAutoTriggered.current = false;
