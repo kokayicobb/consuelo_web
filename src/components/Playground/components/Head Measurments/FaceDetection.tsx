@@ -518,38 +518,18 @@ if (
           <p className="text-xs text-gray-600">AI-powered precision fitting</p>
         </div>
 
-        <div className="my-2 grid grid-cols-2 gap-2">
-          {[
-            {
-              icon: <Phone className="h-4 w-4" />,
-              title: "Device Setup",
-              desc: "Eye level",
-            },
-            {
-              icon: <Sun className="h-4 w-4" />,
-              title: "Lighting",
-              desc: "Minimal background light",
-            },
-            {
-              icon: <Smile className="h-4 w-4" />,
-              title: "Position",
-              desc: "Face camera",
-            },
-            {
-              icon: <ArrowUpCircle className="h-4 w-4" />,
-              title: "Posture",
-              desc: "Sit up straight",
-            },
-          ].map(({ icon, title, desc }) => (
-            <div key={title} className="rounded-lg bg-gray-50 p-2 text-center">
-              <div className="mb-1 flex justify-center">{icon}</div>
-              <div className="text-sm font-medium">{title}</div>
-              <div className="text-xs text-gray-600">{desc}</div>
-            </div>
-          ))}
-        </div>
+        <div className="flex h-full flex-col  p-5 justify-between bg-white text-black">
+      <div className="rounded-lg bg-blue-50 p-5 text-center">
+        <h2 className="text-sm font-medium text-blue-900">
+          Let's Get the Perfect Shot!
+        </h2>
+        <p className="text-xl text-blue-800">
+          Hold your device at eye level or slightly above
+        </p>
+      </div>
+    </div>
 
-        <div className="rounded-lg bg-gray-50 p-2 text-xs">
+        <div className="rounded-lg bg-gray-50 p-5 text-xs">
           <h3 className="mb-1 font-semibold text-gray-800">
             Before You Begin:
           </h3>
@@ -559,11 +539,10 @@ if (
               "Hair out of face",
               "Face fully visible",
               "Good lighting",
-              "2-3 feet from camera",
             ].map((item, index) => (
               <div
                 key={index}
-                className="flex items-center gap-1 text-gray-600"
+                className="flex items-center gap-2 text-gray-600"
               >
                 <Check className="h-3 w-3 flex-shrink-0 text-green-500" />
                 <span>{item}</span>
