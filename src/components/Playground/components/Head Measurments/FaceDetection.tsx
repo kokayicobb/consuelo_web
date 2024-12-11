@@ -267,29 +267,12 @@ export default function FaceDetection() {
     }
   
     try {
-      const isMobile = window.innerWidth < 768;
-      
-      // Common resolution for iPhone/Samsung (1080 x 1920)
-      const mobileConstraints = {
+      const constraints = {
         video: {
           facingMode: "user",
-          width: { exact: 1080 },    // Common mobile width
-          height: { exact: 1920 },   // Common mobile height
-          aspectRatio: { exact: 9/16 }  // Mobile portrait aspect ratio
-        }
+        },
       };
   
-      // Desktop/Laptop resolution (1920 x 1080)
-      const desktopConstraints = {
-        video: {
-          facingMode: "user",
-          width: { exact: 1920 },
-          height: { exact: 1080 },
-          aspectRatio: { exact: 16/9 }
-        }
-      };
-  
-      const constraints = isMobile ? mobileConstraints : desktopConstraints;
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       streamRef.current = stream;
   
@@ -314,37 +297,7 @@ export default function FaceDetection() {
       }
     } catch (err) {
       console.error("Error accessing webcam:", err);
-      // If exact constraints fail, fall back to more flexible constraints
-      try {
-        const fallbackConstraints = {
-          video: {
-            facingMode: "user",
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
-          }
-        };
-        const stream = await navigator.mediaDevices.getUserMedia(fallbackConstraints);
-        streamRef.current = stream;
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          // ... rest of the initialization code
-          await new Promise((resolve) => {
-            if (videoRef.current) {
-              videoRef.current.onloadedmetadata = resolve;
-            }
-          });
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          cameraInitializedRef.current = true;
-          if (runningModeRef.current === "IMAGE") {
-            runningModeRef.current = "VIDEO";
-            await faceLandmarker.setOptions({ runningMode: "VIDEO" });
-          }
-          predictWebcam();
-        }
-      } catch (fallbackErr) {
-        console.error("Error with fallback constraints:", fallbackErr);
-        setWebcamRunning(false);
-      }
+      setWebcamRunning(false);
     }
   };
   useEffect(() => {
