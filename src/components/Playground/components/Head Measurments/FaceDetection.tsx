@@ -33,7 +33,7 @@ export default function FaceDetection() {
   const [measurements, setMeasurements] = useState<any>(null);
   const [positionFeedback, setPositionFeedback] = useState<string[]>([]);
   const [stableFrames, setStableFrames] = useState(0);
-  const REQUIRED_STABLE_FRAMES = 45; // About 1.5 seconds at 30fps
+  const REQUIRED_STABLE_FRAMES = 5; // About 1.5 seconds at 30fps
 
   const runningModeRef = useRef<"IMAGE" | "VIDEO">("IMAGE");
   const lastVideoTimeRef = useRef<number>(-1);
