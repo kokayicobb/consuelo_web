@@ -42,6 +42,7 @@ export default function FaceDetection() {
   const [finalAverage, setFinalAverage] = useState<string | null>(null);
   const measurementsArrayRef = useRef<number[]>([]);
   const collectionTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const cameraInitializedRef = useRef(false);
   const [showResults, setShowResults] = useState(false);
   const [measurementStage, setMeasurementStage] = useState("initial"); // "initial", "collecting", "complete"
   const startMeasurementCollection = () => {
@@ -253,9 +254,8 @@ export default function FaceDetection() {
       console.log("Wait! faceLandmarker not loaded yet.");
       return;
     }
-
+  
     if (!webcamRunning) {
-      // Stop previous stream if it exists
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
         streamRef.current = null;
@@ -265,32 +265,34 @@ export default function FaceDetection() {
       }
       return;
     }
-
+  
     try {
       const constraints = {
         video: {
-          facingMode: "user", // Use front camera on mobile
+          facingMode: "user",
         },
       };
-
+  
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       streamRef.current = stream;
-
+  
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        // Wait for video to be ready
         await new Promise((resolve) => {
           if (videoRef.current) {
             videoRef.current.onloadedmetadata = resolve;
           }
         });
-
-        // Ensure running mode is set before starting detection
+  
+        // Add initialization delay
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        cameraInitializedRef.current = true;
+  
         if (runningModeRef.current === "IMAGE") {
           runningModeRef.current = "VIDEO";
           await faceLandmarker.setOptions({ runningMode: "VIDEO" });
         }
-
+  
         predictWebcam();
       }
     } catch (err) {
@@ -453,19 +455,23 @@ export default function FaceDetection() {
           setPositionFeedback(feedback);
 
           // Auto-capture logic
-          if (
-            feedback.length === 0 &&
-            !isCollectingMeasurements &&
-            !hasAutoTriggered.current
-          ) {
-            hasAutoTriggered.current = true; // Prevent multiple triggers
-            setTimeout(() => {
-              startMeasurementCollection();
-            }, 1500); // 2.5 second delay for stability
-          } else if (feedback.length > 0) {
-            // Reset the trigger if position is lost
-            hasAutoTriggered.current = false;
-          }
+         
+if (
+  feedback.length === 0 &&
+  !isCollectingMeasurements &&
+  !hasAutoTriggered.current &&
+  cameraInitializedRef.current // Add this check
+) {
+  // Add a small debounce
+  setTimeout(() => {
+    if (feedback.length === 0) { // Recheck feedback after delay
+      hasAutoTriggered.current = true;
+      startMeasurementCollection();
+    }
+  }, 1500);
+} else if (feedback.length > 0) {
+  hasAutoTriggered.current = false;
+}
         }
       } catch (error) {
         console.error("Error detecting faces:", error);
