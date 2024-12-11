@@ -187,9 +187,9 @@ export default function FaceDetection() {
       }
     } else {
       // Desktop thresholds - slightly more lenient
-      if (jawAngle > 82) {
+      if (jawAngle > 80) {
         feedback.push("↓ Lower your chin slightly");
-      } else if (jawAngle < 78) {
+      } else if (jawAngle < 76.5) {
         feedback.push("↑ Raise your chin slightly");
       }
     }
