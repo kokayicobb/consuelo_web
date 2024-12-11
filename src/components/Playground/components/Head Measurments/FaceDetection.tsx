@@ -33,7 +33,7 @@ export default function FaceDetection() {
   const [measurements, setMeasurements] = useState<any>(null);
   const [positionFeedback, setPositionFeedback] = useState<string[]>([]);
   const [stableFrames, setStableFrames] = useState(0);
-  const REQUIRED_STABLE_FRAMES = 5; // About 1.5 seconds at 30fps
+  const REQUIRED_STABLE_FRAMES = 45; // About 1.5 seconds at 30fps
 
   const runningModeRef = useRef<"IMAGE" | "VIDEO">("IMAGE");
   const lastVideoTimeRef = useRef<number>(-1);
@@ -453,24 +453,29 @@ export default function FaceDetection() {
 
           const feedback = getPositionFeedback(results.faceLandmarks);
           setPositionFeedback(feedback);
-
+          
+          // Add console logs to see what's happening
+          console.log('Feedback:', feedback);
+          console.log('Stable Frames:', stableFrames);
+          console.log('Has Auto Triggered:', hasAutoTriggered.current);
+          console.log('Is Collecting:', isCollectingMeasurements);
+          
           // Auto-capture logic
-          if (
-            feedback.length === 0 &&
-            !isCollectingMeasurements &&
-            !hasAutoTriggered.current
-          ) {
-            setStableFrames((prev) => prev + 1);
-
-            if (stableFrames >= REQUIRED_STABLE_FRAMES) {
-              hasAutoTriggered.current = true; // Prevent multiple triggers
-              setStableFrames(0); // Reset stable frames
-              setTimeout(() => {
-                startMeasurementCollection();
-              }, 1500);
+          if (feedback.length === 0 && !isCollectingMeasurements && !hasAutoTriggered.current) {
+            // Increment stable frames
+            const newStableFrames = stableFrames + 1;
+            setStableFrames(newStableFrames);
+            
+            console.log('New Stable Frames:', newStableFrames);
+            
+            if (newStableFrames >= REQUIRED_STABLE_FRAMES) {
+              console.log('Triggering measurement collection');
+              hasAutoTriggered.current = true;
+              setStableFrames(0);
+              startMeasurementCollection(); // Remove the setTimeout
             }
-          } else {
-            // Reset if any feedback appears
+          } else if (feedback.length > 0) {
+            // Only reset if there's actual feedback
             setStableFrames(0);
             hasAutoTriggered.current = false;
           }
