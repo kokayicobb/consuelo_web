@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { motion } from "framer-motion"
 let FaceLandmarker: any, FilesetResolver: any, DrawingUtils: any;
 import { Camera, Loader2 } from "lucide-react";
 import { CheckCircle } from "lucide-react";
@@ -32,8 +32,6 @@ export default function FaceDetection() {
   const [isLoading, setIsLoading] = useState(true);
   const [measurements, setMeasurements] = useState<any>(null);
   const [positionFeedback, setPositionFeedback] = useState<string[]>([]);
-  const [stableFrames, setStableFrames] = useState(0);
-  const REQUIRED_STABLE_FRAMES = 45; // About 1.5 seconds at 30fps
 
   const runningModeRef = useRef<"IMAGE" | "VIDEO">("IMAGE");
   const lastVideoTimeRef = useRef<number>(-1);
@@ -181,16 +179,16 @@ export default function FaceDetection() {
 
     if (isMobile) {
       // Mobile thresholds
-      if (jawAngle > 80) {
+      if (jawAngle > 73) {
         feedback.push("↓ Lower your chin slightly");
       } else if (jawAngle < 71) {
         feedback.push("↑ Raise your chin slightly");
       }
     } else {
       // Desktop thresholds - slightly more lenient
-      if (jawAngle > 75) {
+      if (jawAngle > 82) {
         feedback.push("↓ Lower your chin slightly");
-      } else if (jawAngle < 70) {
+      } else if (jawAngle < 78) {
         feedback.push("↑ Raise your chin slightly");
       }
     }
@@ -205,9 +203,9 @@ export default function FaceDetection() {
 
     // Different thresholds based on device type
     if (isMobile) {
-      if (faceWidth < 0.345) {
+      if (faceWidth < 0.34) {
         feedback.push("👤 Move closer to the camera");
-      } else if (faceWidth > 0.355) {
+      } else if (faceWidth > 0.35) {
         feedback.push("👤 Move further from the camera");
       }
     } else {
@@ -453,30 +451,19 @@ export default function FaceDetection() {
 
           const feedback = getPositionFeedback(results.faceLandmarks);
           setPositionFeedback(feedback);
-          
-          // Add console logs to see what's happening
-          console.log('Feedback:', feedback);
-          console.log('Stable Frames:', stableFrames);
-          console.log('Has Auto Triggered:', hasAutoTriggered.current);
-          console.log('Is Collecting:', isCollectingMeasurements);
-          
+
           // Auto-capture logic
-          if (feedback.length === 0 && !isCollectingMeasurements && !hasAutoTriggered.current) {
-            // Increment stable frames
-            const newStableFrames = stableFrames + 1;
-            setStableFrames(newStableFrames);
-            
-            console.log('New Stable Frames:', newStableFrames);
-            
-            if (newStableFrames >= REQUIRED_STABLE_FRAMES) {
-              console.log('Triggering measurement collection');
-              hasAutoTriggered.current = true;
-              setStableFrames(0);
-              startMeasurementCollection(); // Remove the setTimeout
-            }
+          if (
+            feedback.length === 0 &&
+            !isCollectingMeasurements &&
+            !hasAutoTriggered.current
+          ) {
+            hasAutoTriggered.current = true; // Prevent multiple triggers
+            setTimeout(() => {
+              startMeasurementCollection();
+            }, 1500); // 2.5 second delay for stability
           } else if (feedback.length > 0) {
-            // Only reset if there's actual feedback
-            setStableFrames(0);
+            // Reset the trigger if position is lost
             hasAutoTriggered.current = false;
           }
         }
@@ -591,11 +578,11 @@ export default function FaceDetection() {
     );
   };
 
-  const [isVisible, setIsVisible] = useState(false);
+  const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
-    setIsVisible(true);
-  }, []);
+    setIsVisible(true)
+  }, [])
 
   return (
     <div className="h-[60vh] w-full overflow-hidden rounded-3xl bg-white">
@@ -681,17 +668,17 @@ export default function FaceDetection() {
                     </div>
                   </div>
 
-                  <div className="mt-2 flex flex-col items-center">
-                    <div className="flex w-full justify-center">
-                      <div className="flex transform items-center gap-2 rounded-full bg-gray-100 px-6 py-3 text-sm text-gray-600">
-                        <Camera className="h-4 w-4" />
-                        Scanning will begin automatically
-                      </div>
-                    </div>
-                    <span className="mt-2 text-xs text-gray-500">
-                      * Hold still when positioning instructions disappear
-                    </span>
-                  </div>
+                   <div className="mt-2 flex flex-col items-center">
+  <div className="flex w-full justify-center">
+    <div className="flex transform items-center gap-2 rounded-full bg-gray-100 px-6 py-3 text-sm text-gray-600">
+      <Camera className="h-4 w-4" />
+      Scanning will begin automatically
+    </div>
+  </div>
+  <span className="mt-2 text-xs text-gray-500">
+    * Hold still when positioning instructions disappear
+  </span>
+</div>
                 </div>
               </div>
             )}
