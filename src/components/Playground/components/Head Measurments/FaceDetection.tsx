@@ -267,10 +267,19 @@ export default function FaceDetection() {
     }
   
     try {
+      const isMobile = window.innerWidth < 768;
+      
       const constraints = {
         video: {
           facingMode: "user",
-        },
+          width: { ideal: isMobile ? 1280 : 1920 },
+          height: { ideal: isMobile ? 720 : 1080 },
+          // Standard constraints that are TypeScript safe
+          aspectRatio: { ideal: 16/9 },
+          resizeMode: "none",
+          focusMode: "manual",
+          autoFocus: false
+        }
       };
   
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
