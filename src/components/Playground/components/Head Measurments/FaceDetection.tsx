@@ -211,9 +211,9 @@ export default function FaceDetection() {
       }
     } else {
       // Desktop/tablet thresholds
-      if (faceWidth < 0.25) {
+      if (faceWidth < 0.28) {
         feedback.push("👤 Move closer to the camera");
-      } else if (faceWidth > 0.26) {
+      } else if (faceWidth > 0.29) {
         feedback.push("👤 Move further from the camera");
       }
     }
