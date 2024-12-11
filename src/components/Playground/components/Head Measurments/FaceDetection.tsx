@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion"
+import { motion } from "framer-motion";
 let FaceLandmarker: any, FilesetResolver: any, DrawingUtils: any;
 import { Camera, Loader2 } from "lucide-react";
 import { CheckCircle } from "lucide-react";
@@ -32,6 +32,8 @@ export default function FaceDetection() {
   const [isLoading, setIsLoading] = useState(true);
   const [measurements, setMeasurements] = useState<any>(null);
   const [positionFeedback, setPositionFeedback] = useState<string[]>([]);
+  const [stableFrames, setStableFrames] = useState(0);
+  const REQUIRED_STABLE_FRAMES = 45; // About 1.5 seconds at 30fps
 
   const runningModeRef = useRef<"IMAGE" | "VIDEO">("IMAGE");
   const lastVideoTimeRef = useRef<number>(-1);
@@ -458,12 +460,18 @@ export default function FaceDetection() {
             !isCollectingMeasurements &&
             !hasAutoTriggered.current
           ) {
-            hasAutoTriggered.current = true; // Prevent multiple triggers
-            setTimeout(() => {
-              startMeasurementCollection();
-            }, 1500); // 2.5 second delay for stability
-          } else if (feedback.length > 0) {
-            // Reset the trigger if position is lost
+            setStableFrames((prev) => prev + 1);
+
+            if (stableFrames >= REQUIRED_STABLE_FRAMES) {
+              hasAutoTriggered.current = true; // Prevent multiple triggers
+              setStableFrames(0); // Reset stable frames
+              setTimeout(() => {
+                startMeasurementCollection();
+              }, 1500);
+            }
+          } else {
+            // Reset if any feedback appears
+            setStableFrames(0);
             hasAutoTriggered.current = false;
           }
         }
@@ -578,11 +586,11 @@ export default function FaceDetection() {
     );
   };
 
-  const [isVisible, setIsVisible] = useState(false)
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    setIsVisible(true)
-  }, [])
+    setIsVisible(true);
+  }, []);
 
   return (
     <div className="h-[60vh] w-full overflow-hidden rounded-3xl bg-white">
@@ -668,17 +676,17 @@ export default function FaceDetection() {
                     </div>
                   </div>
 
-                   <div className="mt-2 flex flex-col items-center">
-  <div className="flex w-full justify-center">
-    <div className="flex transform items-center gap-2 rounded-full bg-gray-100 px-6 py-3 text-sm text-gray-600">
-      <Camera className="h-4 w-4" />
-      Scanning will begin automatically
-    </div>
-  </div>
-  <span className="mt-2 text-xs text-gray-500">
-    * Hold still when positioning instructions disappear
-  </span>
-</div>
+                  <div className="mt-2 flex flex-col items-center">
+                    <div className="flex w-full justify-center">
+                      <div className="flex transform items-center gap-2 rounded-full bg-gray-100 px-6 py-3 text-sm text-gray-600">
+                        <Camera className="h-4 w-4" />
+                        Scanning will begin automatically
+                      </div>
+                    </div>
+                    <span className="mt-2 text-xs text-gray-500">
+                      * Hold still when positioning instructions disappear
+                    </span>
+                  </div>
                 </div>
               </div>
             )}
