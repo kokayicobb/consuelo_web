@@ -186,9 +186,9 @@ export default function FaceDetection() {
       }
     } else {
       // Desktop thresholds - slightly more lenient
-      if (jawAngle > 82) {
+      if (jawAngle > 75) {
         feedback.push("↓ Lower your chin slightly");
-      } else if (jawAngle < 78) {
+      } else if (jawAngle < 70) {
         feedback.push("↑ Raise your chin slightly");
       }
     }
@@ -203,9 +203,9 @@ export default function FaceDetection() {
 
     // Different thresholds based on device type
     if (isMobile) {
-      if (faceWidth < 0.34) {
+      if (faceWidth < 0.345) {
         feedback.push("👤 Move closer to the camera");
-      } else if (faceWidth > 0.35) {
+      } else if (faceWidth > 0.355) {
         feedback.push("👤 Move further from the camera");
       }
     } else {
