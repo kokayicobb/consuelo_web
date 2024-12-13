@@ -1,11 +1,12 @@
 "use client"
 
-import React, { useState, useEffect, useRef, Suspense } from 'react'
+import React, { useState, useEffect, useRef, Suspense, useCallback } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { useGLTF, Environment, OrbitControls, useProgress, Html } from '@react-three/drei'
 import { Button } from '@/components/ui/button'
 import { Camera, ZoomIn, ZoomOut, ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from 'lucide-react'
 import * as THREE from 'three'
+import { ErrorBoundary } from 'react-error-boundary';
 
 interface HeadPosition {
   x: number
@@ -87,6 +88,7 @@ const Helmet: React.FC<HelmetProps> = ({ headPosition }) => {
   const [verticalOffset, setVerticalOffset] = useState(0)
 
   useEffect(() => {
+    if (!scene) return
     // Initial model setup
     scene.scale.set(1, 1, 1)
     scene.position.set(0, 0.5, -110.2)
@@ -193,44 +195,58 @@ const VirtualTryOnButton = () => {
   })
   const streamRef = useRef<MediaStream | null>(null)
   const lastVideoTimeRef = useRef<number>(-1)
+  const [isLoading, setIsLoading] = useState(true);
 
-  const predictWebcam = async () => {
-    if (!videoRef.current || !canvasRef.current || !faceLandmarker) return
+  const predictWebcam = useCallback(() => {
+    if (!videoRef.current || !canvasRef.current || !faceLandmarker) return;
 
-    if (lastVideoTimeRef.current !== videoRef.current.currentTime) {
-      lastVideoTimeRef.current = videoRef.current.currentTime
-      const predictions = await faceLandmarker.detectForVideo(videoRef.current, performance.now())
-
-      if (predictions.faceLandmarks?.length > 0) {
-        const landmarks = predictions.faceLandmarks[0]
-        const newPosition = calculateHeadPosition(landmarks)
-        setHeadPosition(newPosition)
+    const detectAndUpdate = async () => {
+      if (lastVideoTimeRef.current !== videoRef.current.currentTime) {
+        lastVideoTimeRef.current = videoRef.current.currentTime;
+        try {
+          const predictions = await faceLandmarker.detectForVideo(videoRef.current, performance.now());
+          if (predictions.faceLandmarks?.length > 0) {
+            const landmarks = predictions.faceLandmarks[0];
+            const newPosition = calculateHeadPosition(landmarks);
+            setHeadPosition(newPosition);
+          }
+        } catch (error) {
+          console.error('Error in face detection:', error);
+        }
       }
-    }
 
-    if (webcamRunning) {
-      requestAnimationFrame(predictWebcam)
-    }
-  }
+      if (webcamRunning) {
+        requestAnimationFrame(detectAndUpdate);
+      }
+    };
+
+    detectAndUpdate();
+  }, [faceLandmarker, webcamRunning]);
 
   useEffect(() => {
     const setupFaceLandmarker = async () => {
-      const { FaceLandmarker, FilesetResolver } = await import('@mediapipe/tasks-vision')
-      const vision = await FilesetResolver.forVisionTasks(
-        'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm'
-      )
-      const landmarker = await FaceLandmarker.createFromOptions(vision, {
-        baseOptions: {
-          modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',
-          delegate: 'GPU'
-        },
-        outputFaceBlendshapes: true,
-        runningMode: 'VIDEO',
-        numFaces: 1,
-        outputFacialTransformationMatrixes: true  // Enable 3D transforms
-      })
-      
-      setFaceLandmarker(landmarker)
+      setIsLoading(true);
+      try {
+        const { FaceLandmarker, FilesetResolver } = await import('@mediapipe/tasks-vision')
+        const vision = await FilesetResolver.forVisionTasks(
+          'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm'
+        );
+        const landmarker = await FaceLandmarker.createFromOptions(vision, {
+          baseOptions: {
+            modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task',
+            delegate: 'GPU'
+          },
+          outputFaceBlendshapes: true,
+          runningMode: 'VIDEO',
+          numFaces: 1
+        });
+        setFaceLandmarker(landmarker);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error setting up FaceLandmarker:', error);
+        setIsLoading(false);
+        // Handle the error appropriately, e.g., show an error message to the user
+      }
     }
 
     setupFaceLandmarker()
@@ -243,13 +259,19 @@ const VirtualTryOnButton = () => {
           videoRef.current.srcObject = streamRef.current
           videoRef.current.addEventListener('loadeddata', predictWebcam)
         } else {
-          navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
-            streamRef.current = stream
-            if (videoRef.current) {
-              videoRef.current.srcObject = stream
-              videoRef.current.addEventListener('loadeddata', predictWebcam)
-            }
-          })
+          navigator.mediaDevices.getUserMedia({ video: true })
+            .then((stream) => {
+              streamRef.current = stream;
+              if (videoRef.current) {
+                videoRef.current.srcObject = stream;
+                videoRef.current.addEventListener('loadeddata', predictWebcam);
+              }
+            })
+            .catch((error) => {
+              console.error('Error accessing webcam:', error);
+              setWebcamRunning(false);
+              // Show an error message to the user
+            });
         }
       }
     } else {
@@ -260,9 +282,12 @@ const VirtualTryOnButton = () => {
 
     return () => {
       if (videoRef.current) {
-        videoRef.current.removeEventListener('loadeddata', predictWebcam)
+        videoRef.current.removeEventListener('loadeddata', predictWebcam);
       }
-    }
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+    };
   }, [webcamRunning, faceLandmarker, predictWebcam])
 
   const adjustPosition = (axis: 'x' | 'y' | 'z', delta: number) => {
@@ -275,6 +300,7 @@ const VirtualTryOnButton = () => {
 
   return (
     <div className="relative h-[60vh] w-full overflow-hidden rounded-3xl bg-white">
+      {isLoading && <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75">Loading...</div>}
       {!webcamRunning ? (
         <div className="flex h-full flex-col items-center justify-center space-y-4 p-4">
           <Button onClick={() => setWebcamRunning(true)} className="flex items-center gap-2">
@@ -295,22 +321,24 @@ const VirtualTryOnButton = () => {
             className="absolute left-0 top-0 h-full w-full"
           />
           <div className="absolute inset-0">
-            <Canvas shadows camera={{ position: [0, 0, 5], fov: 60 }}>
-              <ambientLight intensity={0.7} />
-              <spotLight
-              position={[10, 15, 10]}
-              angle={0.25}
-              penumbra={1}
-              intensity={0.8}
-              shadow-mapSize={2048}
-              castShadow
-            />
-              <Suspense fallback={<Loader />}>
-                <Helmet headPosition={headPosition} />
-                <Environment preset="studio" />
-              </Suspense>
-              <OrbitControls enableZoom={true}  zoomSpeed={0.5} enablePan={false} />
-            </Canvas>
+            <ErrorBoundary fallback={<div>Error loading 3D content</div>}>
+              <Canvas shadows camera={{ position: [0, 0, 5], fov: 60 }}>
+                <ambientLight intensity={0.7} />
+                <spotLight
+                position={[10, 15, 10]}
+                angle={0.25}
+                penumbra={1}
+                intensity={0.8}
+                shadow-mapSize={2048}
+                castShadow
+              />
+                <Suspense fallback={<Loader />}>
+                  <Helmet headPosition={headPosition} />
+                  <Environment preset="studio" />
+                </Suspense>
+                <OrbitControls enableZoom={true}  zoomSpeed={0.5} enablePan={false} />
+              </Canvas>
+            </ErrorBoundary>
           </div>
           <div className="absolute bottom-4 left-4 flex flex-col gap-2">
             <Button onClick={() => adjustPosition('y', 0.1)}><ArrowUp className="h-4 w-4" /></Button>
