@@ -48,7 +48,7 @@ const calculateHeadPosition = (landmarks: any): HeadPosition => {
   }
 
   // Calculate central head position
-  const x = (estimatedTopOfHead.x - 0.5) * 2
+  const x = (estimatedTopOfHead.x - 0.5) * 1.75
   const y = -(estimatedTopOfHead.y - 0.5) * 2 + 0.8 // Adjusted for true head top
   const z = -estimatedTopOfHead.z * 80
 
@@ -261,18 +261,19 @@ const VirtualTryOnButton = () => {
           <div className="absolute inset-0">
             <Canvas shadows camera={{ position: [0, 0, 5], fov: 60 }}>
               <ambientLight intensity={0.7} />
-              <spotLight 
-                position={[10, 10, 10]} 
-                angle={0.3} 
-                penumbra={1} 
-                intensity={1}
-                castShadow
-              />
+              <spotLight
+              position={[10, 15, 10]}
+              angle={0.25}
+              penumbra={1}
+              intensity={0.8}
+              shadow-mapSize={2048}
+              castShadow
+            />
               <Suspense fallback={<Loader />}>
                 <Helmet headPosition={headPosition} />
                 <Environment preset="studio" />
               </Suspense>
-              <OrbitControls enableZoom={false} enablePan={false} />
+              <OrbitControls enableZoom={true}  zoomSpeed={0.5} enablePan={false} />
             </Canvas>
           </div>
           <div className="absolute bottom-4 left-4 flex flex-col gap-2">
