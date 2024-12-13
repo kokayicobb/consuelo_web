@@ -1,57 +1,77 @@
-"use client"
+"use client";
 
-import React, { useState, useEffect, useRef, Suspense, useCallback } from 'react'
-import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { useGLTF, Environment, OrbitControls, useProgress, Html } from '@react-three/drei'
-import { Button } from '@/components/ui/button'
-import { Camera, ZoomIn, ZoomOut, ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from 'lucide-react'
-import * as THREE from 'three'
-import { ErrorBoundary } from 'react-error-boundary';
+import React, { useState, useEffect, useRef, Suspense } from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import {
+  useGLTF,
+  Environment,
+  OrbitControls,
+  useProgress,
+  Html,
+  ContactShadows,
+} from "@react-three/drei";
+import { Button } from "@/components/ui/button";
+import {
+  Camera,
+  ZoomIn,
+  ZoomOut,
+  ArrowUp,
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+} from "lucide-react";
+import * as THREE from "three";
 
 interface HeadPosition {
-  x: number
-  y: number
-  z: number
-  rotation: [number, number, number]
-  scale: number
+  x: number;
+  y: number;
+  z: number;
+  rotation: [number, number, number];
+  scale: number;
 }
 
 interface HelmetProps {
-  headPosition: HeadPosition
+  headPosition: HeadPosition;
+  adjustments: PositionAdjustments;
+}
+
+interface PositionAdjustments {
+  x: number;
+  y: number;
+  z: number;
+  scale: number;
 }
 
 const calculateHeadPosition = (landmarks: any): HeadPosition => {
   // Key landmark points for better head mapping
-  const topHead = landmarks[10]      // Top of forehead
-  const nose = landmarks[1]          // Nose tip
-  const leftTemple = landmarks[162]  // Left temple
-  const rightTemple = landmarks[389] // Right temple
-  const leftEar = landmarks[234]     // Left ear
-  const rightEar = landmarks[454]    // Right ear
-  const chin = landmarks[152]        // Chin point
-  
+  const topHead = landmarks[10]; // Top of forehead
+  const nose = landmarks[1]; // Nose tip
+  const leftTemple = landmarks[162]; // Left temple
+  const rightTemple = landmarks[389]; // Right temple
+  const leftEar = landmarks[234]; // Left ear
+  const rightEar = landmarks[454]; // Right ear
+  const chin = landmarks[152]; // Chin point
+
   // Calculate head dimensions
   const headWidth = Math.sqrt(
-    Math.pow(rightEar.x - leftEar.x, 2) +
-    Math.pow(rightEar.y - leftEar.y, 2)
-  )
+    Math.pow(rightEar.x - leftEar.x, 2) + Math.pow(rightEar.y - leftEar.y, 2),
+  );
 
   const headHeight = Math.sqrt(
-    Math.pow(topHead.y - chin.y, 2) +
-    Math.pow(topHead.z - chin.z, 2)
-  )
+    Math.pow(topHead.y - chin.y, 2) + Math.pow(topHead.z - chin.z, 2),
+  );
 
   // Estimate true top of head (about 1/3 more above highest visible point)
   const estimatedTopOfHead = {
     x: topHead.x,
-    y: topHead.y - (headHeight * 0.3), // Adjust Y upward
-    z: topHead.z 
-  }
+    y: topHead.y - headHeight * 0.3, // Adjust Y upward
+    z: topHead.z,
+  };
 
   // Calculate central head position
-  const x = (estimatedTopOfHead.x - 0.5) * 1.75
-  const y = -(estimatedTopOfHead.y - 0.5) * 2 + 0.8 // Adjusted for true head top
-  const z = -estimatedTopOfHead.z * 80
+  const x = (estimatedTopOfHead.x - 0.5) * 1.75;
+  const y = -(estimatedTopOfHead.y - 0.5) * 2 + 0.8; // Adjusted for true head top
+  const z = -estimatedTopOfHead.z * 80;
 
   // Enhanced rotation calculations using multiple reference points
   const rotation: [number, number, number] = [
@@ -60,250 +80,237 @@ const calculateHeadPosition = (landmarks: any): HeadPosition => {
     // Yaw (left/right) - using ear to ear angle
     Math.atan2(rightEar.x - leftEar.x, rightEar.z - leftEar.z),
     // Roll (tilt) - using temple to temple angle
-    Math.atan2(rightTemple.y - leftTemple.y, rightTemple.x - leftTemple.x)
-  ]
+    Math.atan2(rightTemple.y - leftTemple.y, rightTemple.x - leftTemple.x),
+  ];
 
   // Calculate scale based on head width and height
-  const scale = (headWidth + headHeight) * 4
-  const zDepth = -nose.z / 1000  // Adjust multiplier as needed
+  const scale = (headWidth + headHeight) * 4;
+  const zDepth = -nose.z / 1000; // Adjust multiplier as needed
   return {
     x,
     y,
     z: zDepth,
     rotation,
-    scale
-  }
-}
+    scale,
+  };
+};
 
-const Helmet: React.FC<HelmetProps> = ({ headPosition }) => {
-  const { scene } = useGLTF("/Kask2.glb")
-  const helmetRef = useRef<THREE.Group>(null)
-  const { camera, gl } = useThree()
-  const [isDragging, setIsDragging] = useState(false)
-  const [dragOffset, setDragOffset] = useState(0)
-  const smoothedPosition = useRef({...headPosition})
-  const smoothingFactor = 0.1
-  
-  // Store vertical offset separately from head position
-  const [verticalOffset, setVerticalOffset] = useState(0)
+const Helmet: React.FC<HelmetProps> = ({ headPosition, adjustments }) => {
+  const { scene } = useGLTF("/Kask2.glb");
+  const helmetRef = useRef<THREE.Group>(null);
+  const smoothedPosition = useRef({ ...headPosition });
+  const smoothingFactor = 0.1; // Adjust for more/less smoothing
 
   useEffect(() => {
-    if (!scene) return
     // Initial model setup
-    scene.scale.set(1, 1, 1)
-    scene.position.set(0, 0.5, -110.2)
+    scene.scale.set(1, 1, 1); // Ensure the model starts with uniform scaling)  // Making z-scale match x-scale for more depth
+    scene.position.set(0, 0.5, -110.2);
     scene.rotation.set(
-      Math.PI / 2,
-      Math.PI / 2 - Math.PI/2,
-      0
-    )
-    
+      Math.PI / 2, // X rotation (90 degrees)
+      Math.PI / 2 - Math.PI / 2, // Y rotation (now 0 degrees, rotated 90° counterclockwise)
+      0, // Z rotation
+    );
+
+    // Enhance material properties
     scene.traverse((child: THREE.Object3D) => {
       if (child instanceof THREE.Mesh) {
         if (child.material instanceof THREE.MeshStandardMaterial) {
-          child.material.roughness = 0.7
-          child.material.metalness = 0.3
-          child.castShadow = true
-          child.receiveShadow = true
+          child.material.roughness = 0.7;
+          child.material.metalness = 0.3;
+          child.castShadow = true;
+          child.receiveShadow = true;
         }
       }
-    })
-
-    // Add event listeners for dragging
-    const handlePointerDown = (event: PointerEvent) => {
-      event.preventDefault()
-      setIsDragging(true)
-      const y = event.clientY
-      setDragOffset(y - (verticalOffset * 100)) // Scale the offset for better control
-    }
-
-    const handlePointerMove = (event: PointerEvent) => {
-      if (isDragging) {
-        const y = event.clientY
-        const newOffset = (y - dragOffset) / 100 // Scale down the movement
-        setVerticalOffset(newOffset)
-      }
-    }
-
-    const handlePointerUp = () => {
-      setIsDragging(false)
-    }
-
-    const domElement = gl.domElement
-    domElement.addEventListener('pointerdown', handlePointerDown)
-    domElement.addEventListener('pointermove', handlePointerMove)
-    domElement.addEventListener('pointerup', handlePointerUp)
-    domElement.addEventListener('pointerleave', handlePointerUp)
-
-    return () => {
-      domElement.removeEventListener('pointerdown', handlePointerDown)
-      domElement.removeEventListener('pointermove', handlePointerMove)
-      domElement.removeEventListener('pointerup', handlePointerUp)
-      domElement.removeEventListener('pointerleave', handlePointerUp)
-    }
-  }, [scene, gl.domElement, isDragging, dragOffset])
+    });
+  }, [scene]);
 
   useFrame(() => {
     if (helmetRef.current) {
       // Smooth position updates
       smoothedPosition.current = {
-        x: smoothedPosition.current.x + (headPosition.x - smoothedPosition.current.x) * smoothingFactor,
-        y: smoothedPosition.current.y + (headPosition.y - smoothedPosition.current.y) * smoothingFactor,
-        z: smoothedPosition.current.z + (headPosition.z - smoothedPosition.current.z) * smoothingFactor,
+        x:
+          smoothedPosition.current.x +
+          (headPosition.x - smoothedPosition.current.x) * smoothingFactor,
+        y:
+          smoothedPosition.current.y +
+          (headPosition.y - smoothedPosition.current.y) * smoothingFactor,
+        z:
+          smoothedPosition.current.z +
+          (headPosition.z - smoothedPosition.current.z) * smoothingFactor,
         rotation: [
-          smoothedPosition.current.rotation[0] + (headPosition.rotation[0] - smoothedPosition.current.rotation[0]) * smoothingFactor,
-          smoothedPosition.current.rotation[1] + (headPosition.rotation[1] - smoothedPosition.current.rotation[1]) * smoothingFactor,
-          smoothedPosition.current.rotation[2] + (headPosition.rotation[2] - smoothedPosition.current.rotation[2]) * smoothingFactor
+          smoothedPosition.current.rotation[0] +
+            (headPosition.rotation[0] - smoothedPosition.current.rotation[0]) *
+              smoothingFactor,
+          smoothedPosition.current.rotation[1] +
+            (headPosition.rotation[1] - smoothedPosition.current.rotation[1]) *
+              smoothingFactor,
+          smoothedPosition.current.rotation[2] +
+            (headPosition.rotation[2] - smoothedPosition.current.rotation[2]) *
+              smoothingFactor,
         ],
-        scale: smoothedPosition.current.scale + (headPosition.scale - smoothedPosition.current.scale) * smoothingFactor
-      }
+        scale:
+          smoothedPosition.current.scale +
+          (headPosition.scale - smoothedPosition.current.scale) *
+            smoothingFactor,
+      };
 
-      // Apply smoothed position with vertical offset
+      // Apply smoothed position
       helmetRef.current.position.set(
         smoothedPosition.current.x,
-        smoothedPosition.current.y - 2 + verticalOffset, // Add vertical offset here
-        smoothedPosition.current.z - 2
-      )
-      
+        smoothedPosition.current.y - 2 + adjustments.y,
+        smoothedPosition.current.z - 2,
+      );
+
+      // Apply smoothed rotation with adjusted values
       helmetRef.current.rotation.set(
         smoothedPosition.current.rotation[0] + Math.PI * 2,
         smoothedPosition.current.rotation[1] - Math.PI,
-        smoothedPosition.current.rotation[2] + Math.PI / 2
-      )
-      
-      helmetRef.current.scale.setScalar(smoothedPosition.current.scale)
-    }
-  })
+        smoothedPosition.current.rotation[2] + Math.PI / 2,
+      );
 
-  return <primitive ref={helmetRef} object={scene} />
-}
+      // Apply smoothed scale
+      helmetRef.current.scale.setScalar(smoothedPosition.current.scale);
+    }
+  });
+
+  return <primitive ref={helmetRef} object={scene} />;
+};
 function Loader() {
-  const { progress } = useProgress()
-  return <Html center>{progress.toFixed(0)} % loaded</Html>
+  const { progress } = useProgress();
+  return <Html center>{progress.toFixed(0)} % loaded</Html>;
 }
 const VirtualTryOnButton = () => {
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [faceLandmarker, setFaceLandmarker] = useState<any>(null)
-  const [webcamRunning, setWebcamRunning] = useState(false)
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [faceLandmarker, setFaceLandmarker] = useState<any>(null);
+  const [webcamRunning, setWebcamRunning] = useState(false);
   const [headPosition, setHeadPosition] = useState<HeadPosition>({
     x: 0,
     y: 0,
     z: -2,
     rotation: [0, 0, 10],
-    scale: 1
-  })
-  const streamRef = useRef<MediaStream | null>(null)
-  const lastVideoTimeRef = useRef<number>(-1)
-  const [isLoading, setIsLoading] = useState(true);
+    scale: 1,
+  });
+  const streamRef = useRef<MediaStream | null>(null);
+  const lastVideoTimeRef = useRef<number>(-1);
 
-  const predictWebcam = useCallback(() => {
+  const predictWebcam = async () => {
     if (!videoRef.current || !canvasRef.current || !faceLandmarker) return;
 
-    const detectAndUpdate = async () => {
-      if (lastVideoTimeRef.current !== videoRef.current.currentTime) {
-        lastVideoTimeRef.current = videoRef.current.currentTime;
-        try {
-          const predictions = await faceLandmarker.detectForVideo(videoRef.current, performance.now());
-          if (predictions.faceLandmarks?.length > 0) {
-            const landmarks = predictions.faceLandmarks[0];
-            const newPosition = calculateHeadPosition(landmarks);
-            setHeadPosition(newPosition);
-          }
-        } catch (error) {
-          console.error('Error in face detection:', error);
-        }
-      }
+    if (lastVideoTimeRef.current !== videoRef.current.currentTime) {
+      lastVideoTimeRef.current = videoRef.current.currentTime;
+      const predictions = await faceLandmarker.detectForVideo(
+        videoRef.current,
+        performance.now(),
+      );
 
-      if (webcamRunning) {
-        requestAnimationFrame(detectAndUpdate);
-      }
-    };
-
-    detectAndUpdate();
-  }, [faceLandmarker, webcamRunning]);
-
-  useEffect(() => {
-    const setupFaceLandmarker = async () => {
-      setIsLoading(true);
-      try {
-        const { FaceLandmarker, FilesetResolver } = await import('@mediapipe/tasks-vision')
-        const vision = await FilesetResolver.forVisionTasks(
-          'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm'
-        );
-        const landmarker = await FaceLandmarker.createFromOptions(vision, {
-          baseOptions: {
-            modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task',
-            delegate: 'GPU'
-          },
-          outputFaceBlendshapes: true,
-          runningMode: 'VIDEO',
-          numFaces: 1
-        });
-        setFaceLandmarker(landmarker);
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Error setting up FaceLandmarker:', error);
-        setIsLoading(false);
-        // Handle the error appropriately, e.g., show an error message to the user
+      if (predictions.faceLandmarks?.length > 0) {
+        const landmarks = predictions.faceLandmarks[0];
+        const newPosition = calculateHeadPosition(landmarks);
+        setHeadPosition(newPosition);
       }
     }
 
-    setupFaceLandmarker()
-  }, [])
+    if (webcamRunning) {
+      requestAnimationFrame(predictWebcam);
+    }
+  };
+
+  useEffect(() => {
+    const setupFaceLandmarker = async () => {
+      const { FaceLandmarker, FilesetResolver } = await import(
+        "@mediapipe/tasks-vision"
+      );
+      const vision = await FilesetResolver.forVisionTasks(
+        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm",
+      );
+      const landmarker = await FaceLandmarker.createFromOptions(vision, {
+        baseOptions: {
+          modelAssetPath:
+            "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
+          delegate: "GPU",
+        },
+        outputFaceBlendshapes: true,
+        runningMode: "VIDEO",
+        numFaces: 1,
+        outputFacialTransformationMatrixes: true, // Enable 3D transforms
+      });
+
+      setFaceLandmarker(landmarker);
+    };
+
+    setupFaceLandmarker();
+  }, []);
 
   useEffect(() => {
     if (webcamRunning) {
       if (videoRef.current && faceLandmarker) {
         if (streamRef.current) {
-          videoRef.current.srcObject = streamRef.current
-          videoRef.current.addEventListener('loadeddata', predictWebcam)
+          videoRef.current.srcObject = streamRef.current;
+          videoRef.current.addEventListener("loadeddata", predictWebcam);
         } else {
-          navigator.mediaDevices.getUserMedia({ video: true })
+          navigator.mediaDevices
+            .getUserMedia({ video: true })
             .then((stream) => {
               streamRef.current = stream;
               if (videoRef.current) {
                 videoRef.current.srcObject = stream;
-                videoRef.current.addEventListener('loadeddata', predictWebcam);
+                videoRef.current.addEventListener("loadeddata", predictWebcam);
               }
-            })
-            .catch((error) => {
-              console.error('Error accessing webcam:', error);
-              setWebcamRunning(false);
-              // Show an error message to the user
             });
         }
       }
     } else {
       if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop())
+        streamRef.current.getTracks().forEach((track) => track.stop());
       }
     }
 
     return () => {
       if (videoRef.current) {
-        videoRef.current.removeEventListener('loadeddata', predictWebcam);
-      }
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
+        videoRef.current.removeEventListener("loadeddata", predictWebcam);
       }
     };
-  }, [webcamRunning, faceLandmarker, predictWebcam])
+  }, [webcamRunning, faceLandmarker]);
 
-  const adjustPosition = (axis: 'x' | 'y' | 'z', delta: number) => {
-    setHeadPosition(prev => ({ ...prev, [axis]: prev[axis] + delta }))
-  }
+  const [adjustments, setAdjustments] = useState<PositionAdjustments>({
+    x: 0,
+    y: 0,
+    z: 0,
+    scale: 0,
+  });
+  const adjustPosition = (axis: keyof PositionAdjustments, delta: number) => {
+    setAdjustments((prev) => {
+      const newAdjustments = {
+        ...prev,
+        [axis]: prev[axis] + delta,
+      };
+      // Apply the adjustment immediately
+      if (axis === "y") {
+        setHeadPosition((prevPosition) => ({
+          ...prevPosition,
+          y: prevPosition.y + delta,
+        }));
+      }
+      return newAdjustments;
+    });
+  };
 
   const adjustScale = (delta: number) => {
-    setHeadPosition(prev => ({ ...prev, scale: Math.max(0.1, prev.scale + delta) }))
-  }
+    setHeadPosition((prev) => ({
+      ...prev,
+      scale: Math.max(0.1, prev.scale + delta),
+    }));
+  };
 
   return (
     <div className="relative h-[60vh] w-full overflow-hidden rounded-3xl bg-white">
-      {isLoading && <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75">Loading...</div>}
       {!webcamRunning ? (
         <div className="flex h-full flex-col items-center justify-center space-y-4 p-4">
-          <Button onClick={() => setWebcamRunning(true)} className="flex items-center gap-2">
+          <Button
+            onClick={() => setWebcamRunning(true)}
+            className="flex items-center gap-2"
+          >
             <Camera className="h-4 w-4" />
             Try On Helmet
           </Button>
@@ -321,32 +328,57 @@ const VirtualTryOnButton = () => {
             className="absolute left-0 top-0 h-full w-full"
           />
           <div className="absolute inset-0">
-            <ErrorBoundary fallback={<div>Error loading 3D content</div>}>
-              <Canvas shadows camera={{ position: [0, 0, 5], fov: 60 }}>
-                <ambientLight intensity={0.7} />
-                <spotLight
-                position={[10, 15, 10]}
-                angle={0.25}
-                penumbra={1}
-                intensity={0.8}
-                shadow-mapSize={2048}
-                castShadow
+          <Canvas camera={{ position: [0, 1, 8], fov: 45 }}>
+           
+          <ambientLight intensity={0.3} />
+            <spotLight
+              position={[10, 15, 10]}
+              angle={0.25}
+              penumbra={1}
+              intensity={0.8}
+              shadow-mapSize={2048}
+              castShadow
+            />
+             <directionalLight position={[-5, 5, -5]}  intensity={0.15}  />
+              <Suspense fallback={<Loader />}>
+
+                <Helmet headPosition={headPosition} adjustments={adjustments} />
+                <Environment preset="warehouse" />
+            <ContactShadows
+              position={[0, -1.5, 0]}
+              opacity={0}
+              scale={10}
+              blur={2.5}
+              far={4}
+            />
+              </Suspense>
+              <OrbitControls
+               enableZoom={true}
+               zoomSpeed={0.5}
+               enablePan={false}
+               enableRotate={true}
+               // Limit vertical rotation
+              
+               maxPolarAngle={Math.PI / 2}
+               // Control rotation speed
+               rotateSpeed={0.5}
+               // Set zoom limits
+               minDistance={3}
+               maxDistance={7}
               />
-                <Suspense fallback={<Loader />}>
-                  <Helmet headPosition={headPosition} />
-                  <Environment preset="studio" />
-                </Suspense>
-                <OrbitControls enableZoom={true}  zoomSpeed={0.5} enablePan={false} />
-              </Canvas>
-            </ErrorBoundary>
+            </Canvas>
           </div>
           <div className="absolute bottom-4 left-4 flex flex-col gap-2">
-            <Button onClick={() => adjustPosition('y', 0.1)}><ArrowUp className="h-4 w-4" /></Button>
-            <Button onClick={() => adjustPosition('y', -0.1)}><ArrowDown className="h-4 w-4" /></Button>
-            <Button onClick={() => adjustPosition('x', -0.1)}><ArrowLeft className="h-4 w-4" /></Button>
+            <Button onClick={() => adjustPosition("y", 0.1)}>
+              <ArrowUp className="h-4 w-4" />
+            </Button>
+            <Button onClick={() => adjustPosition("y", -0.1)}>
+              <ArrowDown className="h-4 w-4" />
+            </Button>
+            {/* <Button onClick={() => adjustPosition('x', -0.1)}><ArrowLeft className="h-4 w-4" /></Button>
             <Button onClick={() => adjustPosition('x', 0.1)}><ArrowRight className="h-4 w-4" /></Button>
             <Button onClick={() => adjustScale(10)}><ZoomIn className="h-4 w-4" /></Button>
-            <Button onClick={() => adjustScale(-10)}><ZoomOut className="h-4 w-4" /></Button>
+            <Button onClick={() => adjustScale(-10)}><ZoomOut className="h-4 w-4" /></Button> */}
           </div>
           <Button
             onClick={() => setWebcamRunning(false)}
@@ -358,8 +390,7 @@ const VirtualTryOnButton = () => {
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default VirtualTryOnButton
-
+export default VirtualTryOnButton;
