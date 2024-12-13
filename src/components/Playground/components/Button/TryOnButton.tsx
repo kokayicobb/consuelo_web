@@ -77,31 +77,69 @@ const calculateHeadPosition = (landmarks: any): HeadPosition => {
 const Helmet: React.FC<HelmetProps> = ({ headPosition }) => {
   const { scene } = useGLTF("/Kask2.glb")
   const helmetRef = useRef<THREE.Group>(null)
+  const { camera, gl } = useThree()
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragOffset, setDragOffset] = useState(0)
   const smoothedPosition = useRef({...headPosition})
-  const smoothingFactor = 0.1 // Adjust for more/less smoothing
+  const smoothingFactor = 0.1
+  
+  // Store vertical offset separately from head position
+  const [verticalOffset, setVerticalOffset] = useState(0)
 
   useEffect(() => {
     // Initial model setup
-    scene.scale.set(1, 1, 1); // Ensure the model starts with uniform scaling)  // Making z-scale match x-scale for more depth
+    scene.scale.set(1, 1, 1)
     scene.position.set(0, 0.5, -110.2)
     scene.rotation.set(
-        Math.PI / 2,         // X rotation (90 degrees)
-        Math.PI / 2 - Math.PI/2,  // Y rotation (now 0 degrees, rotated 90° counterclockwise)
-        0                    // Z rotation
+      Math.PI / 2,
+      Math.PI / 2 - Math.PI/2,
+      0
     )
     
-    // Enhance material properties
     scene.traverse((child: THREE.Object3D) => {
-        if (child instanceof THREE.Mesh) {
-            if (child.material instanceof THREE.MeshStandardMaterial) {
-                child.material.roughness = 0.7
-                child.material.metalness = 0.3
-                child.castShadow = true
-                child.receiveShadow = true
-            }
+      if (child instanceof THREE.Mesh) {
+        if (child.material instanceof THREE.MeshStandardMaterial) {
+          child.material.roughness = 0.7
+          child.material.metalness = 0.3
+          child.castShadow = true
+          child.receiveShadow = true
         }
+      }
     })
-}, [scene])
+
+    // Add event listeners for dragging
+    const handlePointerDown = (event: PointerEvent) => {
+      event.preventDefault()
+      setIsDragging(true)
+      const y = event.clientY
+      setDragOffset(y - (verticalOffset * 100)) // Scale the offset for better control
+    }
+
+    const handlePointerMove = (event: PointerEvent) => {
+      if (isDragging) {
+        const y = event.clientY
+        const newOffset = (y - dragOffset) / 100 // Scale down the movement
+        setVerticalOffset(newOffset)
+      }
+    }
+
+    const handlePointerUp = () => {
+      setIsDragging(false)
+    }
+
+    const domElement = gl.domElement
+    domElement.addEventListener('pointerdown', handlePointerDown)
+    domElement.addEventListener('pointermove', handlePointerMove)
+    domElement.addEventListener('pointerup', handlePointerUp)
+    domElement.addEventListener('pointerleave', handlePointerUp)
+
+    return () => {
+      domElement.removeEventListener('pointerdown', handlePointerDown)
+      domElement.removeEventListener('pointermove', handlePointerMove)
+      domElement.removeEventListener('pointerup', handlePointerUp)
+      domElement.removeEventListener('pointerleave', handlePointerUp)
+    }
+  }, [scene, gl.domElement, isDragging, dragOffset])
 
   useFrame(() => {
     if (helmetRef.current) {
@@ -118,21 +156,19 @@ const Helmet: React.FC<HelmetProps> = ({ headPosition }) => {
         scale: smoothedPosition.current.scale + (headPosition.scale - smoothedPosition.current.scale) * smoothingFactor
       }
 
-      // Apply smoothed position
+      // Apply smoothed position with vertical offset
       helmetRef.current.position.set(
         smoothedPosition.current.x,
-        smoothedPosition.current.y - 2,
+        smoothedPosition.current.y - 2 + verticalOffset, // Add vertical offset here
         smoothedPosition.current.z - 2
       )
       
-      // Apply smoothed rotation with adjusted values
       helmetRef.current.rotation.set(
         smoothedPosition.current.rotation[0] + Math.PI * 2,
-        smoothedPosition.current.rotation[1] - Math.PI ,
+        smoothedPosition.current.rotation[1] - Math.PI,
         smoothedPosition.current.rotation[2] + Math.PI / 2
       )
       
-      // Apply smoothed scale
       helmetRef.current.scale.setScalar(smoothedPosition.current.scale)
     }
   })
