@@ -21,6 +21,9 @@ import {
   ArrowRight,
 } from "lucide-react";
 import * as THREE from "three";
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@radix-ui/react-tooltip";
+import { motion } from "framer-motion";
+import EquestrianHelmet from "./EquestrianHelmet";
 
 interface HeadPosition {
   x: number;
@@ -305,16 +308,35 @@ const VirtualTryOnButton = () => {
 
   return (
     <div className="relative h-[60vh] w-full overflow-hidden rounded-3xl bg-white">
-      {!webcamRunning ? (
-        <div className="flex h-full flex-col items-center justify-center space-y-4 p-4">
-          <Button
-            onClick={() => setWebcamRunning(true)}
-            className="flex items-center gap-2"
-          >
-            <Camera className="h-4 w-4" />
-            Try On Helmet
-          </Button>
-        </div>
+    {!webcamRunning ? (
+      <div className="flex h-full flex-col items-center justify-center space-y-4 p-4">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Button
+                  onClick={() => setWebcamRunning(true)}
+                  className="h-16 w-16 rounded-xl bg-gray-200 p-0 shadow-lg transition-all duration-300 hover:bg-gray-300"
+                  aria-label="Try on helmet"
+                >
+                  <motion.div
+                    animate={{ rotate: [0, 10, -10, 0] }}
+                    transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                  >
+                  <EquestrianHelmet className="h-16 w-16 text-gray-700" />
+                  </motion.div>
+                </Button>
+              </motion.div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Try on helmet</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
       ) : (
         <div className="relative h-full">
           <video
