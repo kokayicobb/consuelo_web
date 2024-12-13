@@ -227,7 +227,7 @@ const VirtualTryOnButton = () => {
         videoRef.current.removeEventListener('loadeddata', predictWebcam)
       }
     }
-  }, [webcamRunning, faceLandmarker])
+  }, [webcamRunning, faceLandmarker, predictWebcam])
 
   const adjustPosition = (axis: 'x' | 'y' | 'z', delta: number) => {
     setHeadPosition(prev => ({ ...prev, [axis]: prev[axis] + delta }))
