@@ -211,7 +211,7 @@ export default function EquestrianHelmetPage() {
             </div>
             <div className="flex flex-col gap-2">
             <SizeGuideButton/>
-            {/* <VirtualTryOnButton /> */}
+            <VirtualTryOnButton />
             </div>
             <Button className="w-full">
               <ShoppingCart className="mr-2 h-4 w-4" /> Add to Cart

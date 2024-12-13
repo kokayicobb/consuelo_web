@@ -20,91 +20,129 @@ interface HelmetProps {
 }
 
 const calculateHeadPosition = (landmarks: any): HeadPosition => {
-  const topHead = landmarks[10]    // Top of forehead
-  const nose = landmarks[1]        // Nose tip
-  const leftTemple = landmarks[162]
-  const rightTemple = landmarks[389]
+  // Key landmark points for better head mapping
+  const topHead = landmarks[10]      // Top of forehead
+  const nose = landmarks[1]          // Nose tip
+  const leftTemple = landmarks[162]  // Left temple
+  const rightTemple = landmarks[389] // Right temple
+  const leftEar = landmarks[234]     // Left ear
+  const rightEar = landmarks[454]    // Right ear
+  const chin = landmarks[152]        // Chin point
   
+  // Calculate head dimensions
   const headWidth = Math.sqrt(
-    Math.pow(rightTemple.x - leftTemple.x, 2) +
-    Math.pow(rightTemple.y - leftTemple.y, 2)
+    Math.pow(rightEar.x - leftEar.x, 2) +
+    Math.pow(rightEar.y - leftEar.y, 2)
   )
 
-  // Calculate position relative to top of head instead of nose
-	const x = (topHead.x - 0.5) * 2.5;  // Reduced multiplier for less extreme movement
-  const y = -(topHead.y - 0.5) * 2.5 + 1.2;  // Adjusted height
-  const z = -topHead.z * 100;  // Reduced z-depth to sit closer to h
+  const headHeight = Math.sqrt(
+    Math.pow(topHead.y - chin.y, 2) +
+    Math.pow(topHead.z - chin.z, 2)
+  )
 
+  // Estimate true top of head (about 1/3 more above highest visible point)
+  const estimatedTopOfHead = {
+    x: topHead.x,
+    y: topHead.y - (headHeight * 0.3), // Adjust Y upward
+    z: topHead.z 
+  }
+
+  // Calculate central head position
+  const x = (estimatedTopOfHead.x - 0.5) * 2
+  const y = -(estimatedTopOfHead.y - 0.5) * 2 + 0.8 // Adjusted for true head top
+  const z = -estimatedTopOfHead.z * 80
+
+  // Enhanced rotation calculations using multiple reference points
   const rotation: [number, number, number] = [
-    Math.atan2(nose.y - topHead.y, nose.z - topHead.z),     // Pitch
-    Math.atan2(nose.x - topHead.x, nose.z - topHead.z),     // Yaw
-    Math.atan2(rightTemple.y - leftTemple.y, rightTemple.x - leftTemple.x)  // Roll
+    // Pitch (up/down) - using forehead to chin angle
+    Math.atan2(chin.y - topHead.y, chin.z - topHead.z),
+    // Yaw (left/right) - using ear to ear angle
+    Math.atan2(rightEar.x - leftEar.x, rightEar.z - leftEar.z),
+    // Roll (tilt) - using temple to temple angle
+    Math.atan2(rightTemple.y - leftTemple.y, rightTemple.x - leftTemple.x)
   ]
 
+  // Calculate scale based on head width and height
+  const scale = (headWidth + headHeight) * 4
+  const zDepth = -nose.z / 1000  // Adjust multiplier as needed
   return {
     x,
     y,
-    z,
+    z: zDepth,
     rotation,
-    scale: headWidth * 7  // Increased scale to better fit head
+    scale
   }
 }
 
-function Loader() {
-  const { progress } = useProgress()
-  return <Html center>{progress.toFixed(0)} % loaded</Html>
-}
-
 const Helmet: React.FC<HelmetProps> = ({ headPosition }) => {
-  const { scene } = useGLTF("/Kask.glb")
+  const { scene } = useGLTF("/Kask2.glb")
   const helmetRef = useRef<THREE.Group>(null)
-  
+  const smoothedPosition = useRef({...headPosition})
+  const smoothingFactor = 0.1 // Adjust for more/less smoothing
+
   useEffect(() => {
-    // Initial setup of the helmet model
-    scene.scale.set(0.11, 1.01, 0.01)
-    // Move the helmet's base position up and forward slightly
-    scene.position.set(0, 0.5, -0.2)
-    // Rotate to face forward and correct the lid orientation
+    // Initial model setup
+    scene.scale.set(1, 1, 1); // Ensure the model starts with uniform scaling)  // Making z-scale match x-scale for more depth
+    scene.position.set(0, 0.5, -110.2)
     scene.rotation.set(
-      Math.PI / 2,  // 90 degrees forward on X-axis
-      Math.PI / 2,  // 90 degrees on Y-axis
-      0             // No rotation on Z-axis
+        Math.PI / 2,         // X rotation (90 degrees)
+        Math.PI / 2 - Math.PI/2,  // Y rotation (now 0 degrees, rotated 90° counterclockwise)
+        0                    // Z rotation
     )
     
+    // Enhance material properties
     scene.traverse((child: THREE.Object3D) => {
-      if (child instanceof THREE.Mesh) {
-        if (child.material instanceof THREE.MeshStandardMaterial) {
-          child.material.roughness = 0.7
-          child.material.metalness = 0.3
+        if (child instanceof THREE.Mesh) {
+            if (child.material instanceof THREE.MeshStandardMaterial) {
+                child.material.roughness = 0.7
+                child.material.metalness = 0.3
+                child.castShadow = true
+                child.receiveShadow = true
+            }
         }
-      }
     })
-  }, [scene])
+}, [scene])
 
   useFrame(() => {
     if (helmetRef.current) {
-      // Position the helmet above the head
+      // Smooth position updates
+      smoothedPosition.current = {
+        x: smoothedPosition.current.x + (headPosition.x - smoothedPosition.current.x) * smoothingFactor,
+        y: smoothedPosition.current.y + (headPosition.y - smoothedPosition.current.y) * smoothingFactor,
+        z: smoothedPosition.current.z + (headPosition.z - smoothedPosition.current.z) * smoothingFactor,
+        rotation: [
+          smoothedPosition.current.rotation[0] + (headPosition.rotation[0] - smoothedPosition.current.rotation[0]) * smoothingFactor,
+          smoothedPosition.current.rotation[1] + (headPosition.rotation[1] - smoothedPosition.current.rotation[1]) * smoothingFactor,
+          smoothedPosition.current.rotation[2] + (headPosition.rotation[2] - smoothedPosition.current.rotation[2]) * smoothingFactor
+        ],
+        scale: smoothedPosition.current.scale + (headPosition.scale - smoothedPosition.current.scale) * smoothingFactor
+      }
+
+      // Apply smoothed position
       helmetRef.current.position.set(
-        headPosition.x,
-        headPosition.y - 0.7, // Move it up relative to head position
-        headPosition.z + 0.3  // Move it forward slightly
+        smoothedPosition.current.x,
+        smoothedPosition.current.y - 2,
+        smoothedPosition.current.z - 2
       )
       
-      // Set rotation to follow head movement
+      // Apply smoothed rotation with adjusted values
       helmetRef.current.rotation.set(
-        headPosition.rotation[0] + 400, // Tilt back
-        headPosition.rotation[1] -300,               // Follow head turning
-        headPosition.rotation[2]  +100              // Follow head tilting
+        smoothedPosition.current.rotation[0] + Math.PI * 2,
+        smoothedPosition.current.rotation[1] - Math.PI ,
+        smoothedPosition.current.rotation[2] + Math.PI / 2
       )
       
-      // Adjust scale to fit head
-      helmetRef.current.scale.setScalar(headPosition.scale * 1.5)
+      // Apply smoothed scale
+      helmetRef.current.scale.setScalar(smoothedPosition.current.scale)
     }
   })
 
   return <primitive ref={helmetRef} object={scene} />
 }
-
+function Loader() {
+  const { progress } = useProgress()
+  return <Html center>{progress.toFixed(0)} % loaded</Html>
+}
 const VirtualTryOnButton = () => {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -152,8 +190,10 @@ const VirtualTryOnButton = () => {
         },
         outputFaceBlendshapes: true,
         runningMode: 'VIDEO',
-        numFaces: 1
+        numFaces: 1,
+        outputFacialTransformationMatrixes: true  // Enable 3D transforms
       })
+      
       setFaceLandmarker(landmarker)
     }
 
