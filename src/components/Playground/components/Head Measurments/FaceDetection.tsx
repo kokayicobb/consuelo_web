@@ -57,7 +57,7 @@ export default function FaceDetection() {
           measurementsArrayRef.current.reduce((a, b) => a + b, 0) /
           measurementsArrayRef.current.length
         ).toFixed(1);
-        setFinalAverage("58.3"); // Hardcoded for demo
+        setFinalAverage("60.3"); // Hardcoded for demo
       }
     }, 300000);
   };

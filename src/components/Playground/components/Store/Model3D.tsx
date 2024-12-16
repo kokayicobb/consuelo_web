@@ -11,7 +11,7 @@ export default function Model({
   position: [number, number, number]
   rotation: [number, number, number]
 }) {
-  const { scene } = useGLTF("/Kask.glb") as unknown as { scene: THREE.Group }
+  const { scene } = useGLTF("/kask3.glb") as unknown as { scene: THREE.Group }
 
   useEffect(() => {
     scene.traverse((child) => {
@@ -31,5 +31,5 @@ export default function Model({
   )
 }
 
-useGLTF.preload("/Kask.glb")
+useGLTF.preload("/kask3.glb")
 
