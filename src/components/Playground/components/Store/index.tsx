@@ -67,38 +67,44 @@ export default function EquestrianHelmetPage() {
                       </div>
                     }
                   >
-                 <Canvas
-  camera={{ position: [0, 1, 8], fov: 45 }}
- 
->
-  {/* Neutral Background */}
-  <color attach="background" args={["#fefefe"]} />
+             <Canvas camera={{ position: [0, 1, 8], fov: 45 }}>
+  {/* Slightly warmer background to counter any cool tints */}
+  <color attach="background" args={["#f8f8f6"]} />
 
-  {/* Ambient Light with Subtle Warmth */}
-  <ambientLight intensity={0.4} color={"#121212FF"} /> {/* Slightly warm neutral */}
+  {/* Warmer ambient light to neutralize the blue */}
+  <ambientLight intensity={0.35} color={"#faf9f7"} />
 
-  {/* Key Directional Light */}
+  {/* Key Directional Light with warm neutral color */}
   <directionalLight
     position={[5, 5, 5]}
-    intensity={1.0} // Boosted slightly to balance environment map
-    color={"#0C0C0CFF"} // Pure white
+    intensity={0.9}
+    color={"#fff9f5"}
     castShadow
     shadow-mapSize={2048}
     shadow-bias={-0.001}
   />
 
-  {/* Neutral Fill Light */}
+  {/* Warmer Fill Light */}
   <pointLight 
     position={[-5, 3, 5]} 
-    intensity={0.2} 
-    color={"#393838FF"} // Neutral but less warm
+    intensity={0.15} 
+    color={"#fff5eb"}
   />
 
-  {/* Environment Lighting (City Preset) */}
+  {/* Environment without intensity property */}
   <Environment 
     preset="city" 
-    background={false} 
-   
+    background={false}
+  />
+
+  <Model position={modelPosition} rotation={modelRotation} />
+
+  <ContactShadows
+    position={[0, -1.5, 0]}
+    opacity={0.5}
+    scale={10}
+    blur={3.5}
+    far={5}
   />
 
   {/* Model */}
