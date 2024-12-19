@@ -329,8 +329,9 @@ export default function FaceDetection() {
       const constraints = {
         video: {
           facingMode: "user",
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
+          width: { ideal: 720 }, // Reduce ideal resolution
+          height: { ideal: 720 }, // Equalize width and height
+          advanced: [{ width: 720, height: 720 }], // Suggest fixed aspect ratio
         },
       };
   
