@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion"
+import { motion } from "framer-motion";
 let FaceLandmarker: any, FilesetResolver: any, DrawingUtils: any;
 import { Camera, Loader2 } from "lucide-react";
 import { CheckCircle } from "lucide-react";
@@ -53,7 +53,6 @@ export default function FaceDetection() {
     collectionTimerRef.current = setTimeout(() => {
       setIsCollectingMeasurements(false);
       if (measurementsArrayRef.current.length > 0) {
-       
       }
     }, 300000);
   };
@@ -185,7 +184,7 @@ export default function FaceDetection() {
       // Desktop thresholds - slightly more lenient
       if (jawAngle > 80) {
         feedback.push("↓ Lower your chin slightly");
-      } else if (jawAngle < 76.5) {
+      } else if (jawAngle < 79.0) {
         feedback.push("↑ Raise your chin slightly");
       }
     }
@@ -219,71 +218,75 @@ export default function FaceDetection() {
 
   const calculateCalibrationFactor = (landmarks) => {
     if (!landmarks || landmarks.length === 0) return null;
-    
+
     const points = landmarks[0];
-    
+
     // Get key facial measurements
     const getDistance = (point1, point2) => {
       return Math.hypot(
         point1.x - point2.x,
         point1.y - point2.y,
-        point1.z - point2.z
+        point1.z - point2.z,
       );
     };
-  
+
     // Known average facial proportions (in cm)
     const AVERAGE_PROPORTIONS = {
       INTERPUPILLARY: 6.3, // Average distance between pupils
-      BITEMPORAL: 14.5,    // Average width between temples
-      EYE_TO_CHIN: 11.5,   // Average distance from eye level to chin
-      NOSE_LENGTH: 5.0     // Average nose length
+      BITEMPORAL: 14.5, // Average width between temples
+      EYE_TO_CHIN: 11.5, // Average distance from eye level to chin
+      NOSE_LENGTH: 5.0, // Average nose length
     };
-  
+
     // Extract relevant facial points
-    const leftEye = points[33];  // Left eye center
+    const leftEye = points[33]; // Left eye center
     const rightEye = points[263]; // Right eye center
-    const chin = points[152];     // Chin point
-    const noseTip = points[1];    // Nose tip
+    const chin = points[152]; // Chin point
+    const noseTip = points[1]; // Nose tip
     const noseBottom = points[2]; // Nose bottom
     const templeRight = points[162];
     const templeLeft = points[389];
-  
+
     // Calculate actual distances in pixel space
     const interpupillaryDist = getDistance(leftEye, rightEye);
     const bitemporalDist = getDistance(templeRight, templeLeft);
     const eyeToChinDist = getDistance(leftEye, chin);
     const noseLength = getDistance(noseTip, noseBottom);
-  
+
     // Calculate individual scaling factors
     const scales = [
       AVERAGE_PROPORTIONS.INTERPUPILLARY / interpupillaryDist,
       AVERAGE_PROPORTIONS.BITEMPORAL / bitemporalDist,
       AVERAGE_PROPORTIONS.EYE_TO_CHIN / eyeToChinDist,
-      AVERAGE_PROPORTIONS.NOSE_LENGTH / noseLength
+      AVERAGE_PROPORTIONS.NOSE_LENGTH / noseLength,
     ];
-  
+
     // Remove outliers (values that are too far from median)
     const median = scales.sort((a, b) => a - b)[Math.floor(scales.length / 2)];
-    const validScales = scales.filter(scale => 
-      Math.abs(scale - median) / median < 0.3
+    const validScales = scales.filter(
+      (scale) => Math.abs(scale - median) / median < 0.3,
     );
-  
+
     // Calculate final scaling factor as weighted average
     const weights = [0.3, 0.3, 0.2, 0.2]; // Higher weight to more reliable measurements
-    const finalScale = validScales.reduce((sum, scale, i) => sum + scale * weights[i], 0) 
-                      / weights.reduce((sum, weight) => sum + weight, 0);
-  
+    const finalScale =
+      validScales.reduce((sum, scale, i) => sum + scale * weights[i], 0) /
+      weights.reduce((sum, weight) => sum + weight, 0);
+
     // Apply a small correction factor based on head tilt
-    const tiltAngle = Math.atan2(rightEye.y - leftEye.y, rightEye.x - leftEye.x);
+    const tiltAngle = Math.atan2(
+      rightEye.y - leftEye.y,
+      rightEye.x - leftEye.x,
+    );
     const tiltCorrection = 1 + Math.abs(tiltAngle) * 0.1; // Up to 10% correction for tilt
-  
+
     return finalScale * tiltCorrection;
   };
-  
+
   const dynamicPixelToCm = (templeWidth, landmarks) => {
     const calibrationFactor = calculateCalibrationFactor(landmarks);
     if (!calibrationFactor) return 16.0 / templeWidth; // Fallback to original method
-    
+
     return calibrationFactor;
   };
   const drawBlendShapes = (el: HTMLElement, blendShapes: any[]) => {
@@ -313,7 +316,7 @@ export default function FaceDetection() {
       console.log("Wait! faceLandmarker not loaded yet.");
       return;
     }
-  
+
     if (!webcamRunning) {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
@@ -324,7 +327,7 @@ export default function FaceDetection() {
       }
       return;
     }
-  
+
     try {
       const constraints = {
         video: {
@@ -334,10 +337,10 @@ export default function FaceDetection() {
           advanced: [{ width: 720, height: 720 }], // Suggest fixed aspect ratio
         },
       };
-  
+
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       streamRef.current = stream;
-  
+
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         await new Promise((resolve) => {
@@ -345,9 +348,9 @@ export default function FaceDetection() {
             videoRef.current.onloadedmetadata = resolve;
           }
         });
-  
+
         // Reduced delay for camera stabilization
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, 100));
         cameraInitializedRef.current = true;
         predictWebcam();
       }
@@ -377,7 +380,7 @@ export default function FaceDetection() {
               delegate: "GPU",
             },
             outputFaceBlendshapes: true,
-            runningMode:"VIDEO",
+            runningMode: "VIDEO",
             numFaces: 1,
           },
         );
@@ -489,44 +492,54 @@ export default function FaceDetection() {
 
     let startTimeMs = performance.now();
     let results;
-    
+
     try {
       results = faceLandmarker.detectForVideo(video, startTimeMs);
-    
+
       if (results?.faceLandmarks) {
-        const newMeasurements = calculateHeadMeasurements(results.faceLandmarks);
+        const newMeasurements = calculateHeadMeasurements(
+          results.faceLandmarks,
+        );
         setMeasurements(newMeasurements);
-    
+
         if (isCollectingMeasurements && newMeasurements) {
           measurementsArrayRef.current.push(
-            parseFloat(newMeasurements.estimatedCircumference)
+            parseFloat(newMeasurements.estimatedCircumference),
           );
         }
-    
+
+        // Auto-capture logic with position check
         const feedback = getPositionFeedback(results.faceLandmarks);
         setPositionFeedback(feedback);
-    
-        // Auto-capture logic with reduced debounce time
+
+        // Auto-capture logic with validation checks
         if (
-          feedback.length === 0 &&
-          !isCollectingMeasurements &&
-          !hasAutoTriggered.current &&
-          cameraInitializedRef.current
+          feedback.length === 0 && // No positioning issues
+          !isCollectingMeasurements && // Not already collecting
+          !hasAutoTriggered.current && // Haven't triggered yet
+          cameraInitializedRef.current && // Camera is initialized
+          results.faceLandmarks?.length > 0 && // We have valid face landmarks
+          newMeasurements?.estimatedCircumference // We have valid measurements
         ) {
           setTimeout(() => {
-            if (feedback.length === 0) {
+            // Recheck all conditions after delay
+            if (
+              feedback.length === 0 &&
+              results.faceLandmarks?.length > 0 &&
+              newMeasurements?.estimatedCircumference
+            ) {
               hasAutoTriggered.current = true;
               startMeasurementCollection();
             }
-          }, 750); // Reduced from 1500ms to 750ms for faster response
+          }, 1550);
         } else if (feedback.length > 0) {
           hasAutoTriggered.current = false;
         }
-    
+
         // Clear and redraw canvas
         canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
         canvasCtx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
+
         if (results.faceLandmarks.length > 0) {
           drawHeadCircle(canvasCtx, results.faceLandmarks[0], canvas);
         }
@@ -535,7 +548,6 @@ export default function FaceDetection() {
       console.error("Error detecting faces:", error);
       return;
     }
-    
 
     if (results?.faceLandmarks) {
       // Clear the canvas first
@@ -576,16 +588,16 @@ export default function FaceDetection() {
           <p className="text-xs text-gray-600">AI-powered precision fitting</p>
         </div>
 
-        <div className="flex h-full flex-col  p-5 justify-between bg-white text-black">
-      <div className="rounded-lg bg-blue-50 p-5 text-center">
-        <h2 className="text-sm font-medium text-blue-900">
-          Let's Get the Perfect Shot!
-        </h2>
-        <p className="text-xl text-blue-800">
-          Hold your device at eye level or slightly above
-        </p>
-      </div>
-    </div>
+        <div className="flex h-full flex-col  justify-between bg-white p-5 text-black">
+          <div className="rounded-lg bg-blue-50 p-5 text-center">
+            <h2 className="text-sm font-medium text-blue-900">
+              Let's Get the Perfect Shot!
+            </h2>
+            <p className="text-xl text-blue-800">
+              Hold your device at eye level or slightly above
+            </p>
+          </div>
+        </div>
 
         <div className="rounded-lg bg-gray-50 p-5 text-xs">
           <h3 className="mb-1 font-semibold text-gray-800">
@@ -621,11 +633,11 @@ export default function FaceDetection() {
     );
   };
 
-  const [isVisible, setIsVisible] = useState(false)
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    setIsVisible(true)
-  }, [])
+    setIsVisible(true);
+  }, []);
 
   return (
     <div className="h-[60vh] w-full overflow-hidden rounded-3xl bg-white">
@@ -700,28 +712,75 @@ export default function FaceDetection() {
 
                     {/* Overlay for position feedback */}
                     <div className="absolute left-4 right-4 top-4 flex flex-col items-start space-y-2">
-                      {positionFeedback.map((feedback, index) => (
-                        <div
-                          key={index}
-                          className="rounded-lg bg-blue-500/80 p-2 text-sm text-white shadow-lg"
-                        >
-                          {feedback}
-                        </div>
-                      ))}
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{
+                          opacity: positionFeedback.includes("Look Straight")
+                            ? 1
+                            : 0,
+                        }}
+                        className="rounded-lg bg-blue-500/80 p-2 text-sm text-white shadow-lg"
+                      >
+                        Look Straight
+                      </motion.div>
+
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{
+                          opacity: positionFeedback.some((f) =>
+                            f.includes("Look more to"),
+                          )
+                            ? 1
+                            : 0,
+                        }}
+                        className="rounded-lg bg-blue-500/80 p-2 text-sm text-white shadow-lg"
+                      >
+                        {positionFeedback.find((f) =>
+                          f.includes("Look more to"),
+                        ) || ""}
+                      </motion.div>
+
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{
+                          opacity: positionFeedback.some((f) =>
+                            f.includes("chin"),
+                          )
+                            ? 1
+                            : 0,
+                        }}
+                        className="rounded-lg bg-blue-500/80 p-2 text-sm text-white shadow-lg"
+                      >
+                        {positionFeedback.find((f) => f.includes("chin")) || ""}
+                      </motion.div>
+
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{
+                          opacity: positionFeedback.some((f) =>
+                            f.includes("Move"),
+                          )
+                            ? 1
+                            : 0,
+                        }}
+                        className="rounded-lg bg-blue-500/80 p-2 text-sm text-white shadow-lg"
+                      >
+                        {positionFeedback.find((f) => f.includes("Move")) || ""}
+                      </motion.div>
                     </div>
                   </div>
 
-                   <div className="mt-2 flex flex-col items-center">
-  <div className="flex w-full justify-center">
-    <div className="flex transform items-center gap-2 rounded-full bg-gray-100 px-6 py-3 text-sm text-gray-600">
-      <Camera className="h-4 w-4" />
-      Scanning will begin automatically
-    </div>
-  </div>
-  <span className="mt-2 text-xs text-gray-500">
-    * Hold still when positioning instructions disappear
-  </span>
-</div>
+                  <div className="mt-2 flex flex-col items-center">
+                    <div className="flex w-full justify-center">
+                      <div className="flex transform items-center gap-2 rounded-full bg-gray-100 px-6 py-3 text-sm text-gray-600">
+                        <Camera className="h-4 w-4" />
+                        Scanning will begin automatically
+                      </div>
+                    </div>
+                    <span className="mt-2 text-xs text-gray-500">
+                      * Hold still when positioning instructions disappear
+                    </span>
+                  </div>
                 </div>
               </div>
             )}
