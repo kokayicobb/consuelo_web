@@ -329,6 +329,8 @@ export default function FaceDetection() {
       const constraints = {
         video: {
           facingMode: "user",
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
         },
       };
   
@@ -343,15 +345,9 @@ export default function FaceDetection() {
           }
         });
   
-        // Add initialization delay
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // Reduced delay for camera stabilization
+        await new Promise(resolve => setTimeout(resolve, 500));
         cameraInitializedRef.current = true;
-  
-        if (runningModeRef.current === "IMAGE") {
-          runningModeRef.current = "VIDEO";
-          await faceLandmarker.setOptions({ runningMode: "VIDEO" });
-        }
-  
         predictWebcam();
       }
     } catch (err) {
@@ -380,7 +376,7 @@ export default function FaceDetection() {
               delegate: "GPU",
             },
             outputFaceBlendshapes: true,
-            runningMode: runningModeRef.current,
+            runningMode:"VIDEO",
             numFaces: 1,
           },
         );
@@ -492,51 +488,53 @@ export default function FaceDetection() {
 
     let startTimeMs = performance.now();
     let results;
-
-    if (lastVideoTimeRef.current !== video.currentTime) {
-      lastVideoTimeRef.current = video.currentTime;
-      try {
-        results = faceLandmarker.detectForVideo(video, startTimeMs);
-
-        if (results?.faceLandmarks) {
-          const newMeasurements = calculateHeadMeasurements(
-            results.faceLandmarks,
+    
+    try {
+      results = faceLandmarker.detectForVideo(video, startTimeMs);
+    
+      if (results?.faceLandmarks) {
+        const newMeasurements = calculateHeadMeasurements(results.faceLandmarks);
+        setMeasurements(newMeasurements);
+    
+        if (isCollectingMeasurements && newMeasurements) {
+          measurementsArrayRef.current.push(
+            parseFloat(newMeasurements.estimatedCircumference)
           );
-          setMeasurements(newMeasurements);
-
-          if (isCollectingMeasurements && newMeasurements) {
-            measurementsArrayRef.current.push(
-              parseFloat(newMeasurements.estimatedCircumference),
-            );
-          }
-
-          const feedback = getPositionFeedback(results.faceLandmarks);
-          setPositionFeedback(feedback);
-
-          // Auto-capture logic
-         
-if (
-  feedback.length === 0 &&
-  !isCollectingMeasurements &&
-  !hasAutoTriggered.current &&
-  cameraInitializedRef.current // Add this check
-) {
-  // Add a small debounce
-  setTimeout(() => {
-    if (feedback.length === 0) { // Recheck feedback after delay
-      hasAutoTriggered.current = true;
-      startMeasurementCollection();
-    }
-  }, 1500);
-} else if (feedback.length > 0) {
-  hasAutoTriggered.current = false;
-}
         }
-      } catch (error) {
-        console.error("Error detecting faces:", error);
-        return;
+    
+        const feedback = getPositionFeedback(results.faceLandmarks);
+        setPositionFeedback(feedback);
+    
+        // Auto-capture logic with reduced debounce time
+        if (
+          feedback.length === 0 &&
+          !isCollectingMeasurements &&
+          !hasAutoTriggered.current &&
+          cameraInitializedRef.current
+        ) {
+          setTimeout(() => {
+            if (feedback.length === 0) {
+              hasAutoTriggered.current = true;
+              startMeasurementCollection();
+            }
+          }, 750); // Reduced from 1500ms to 750ms for faster response
+        } else if (feedback.length > 0) {
+          hasAutoTriggered.current = false;
+        }
+    
+        // Clear and redraw canvas
+        canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+        canvasCtx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+        if (results.faceLandmarks.length > 0) {
+          drawHeadCircle(canvasCtx, results.faceLandmarks[0], canvas);
+        }
       }
+    } catch (error) {
+      console.error("Error detecting faces:", error);
+      return;
     }
+    
 
     if (results?.faceLandmarks) {
       // Clear the canvas first
