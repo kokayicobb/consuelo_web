@@ -53,11 +53,7 @@ export default function FaceDetection() {
     collectionTimerRef.current = setTimeout(() => {
       setIsCollectingMeasurements(false);
       if (measurementsArrayRef.current.length > 0) {
-        const average = (
-          measurementsArrayRef.current.reduce((a, b) => a + b, 0) /
-          measurementsArrayRef.current.length
-        ).toFixed(1);
-        setFinalAverage("60.3"); // Hardcoded for demo
+       
       }
     }, 300000);
   };
@@ -123,8 +119,8 @@ export default function FaceDetection() {
       (1 + (3 * h) / (10 + Math.sqrt(4 - 3 * h)));
 
     // Dynamic pixel-to-cm conversion factor
-    const PIXEL_TO_CM = dynamicPixelToCm(templeWidth);
-    const CALIBRATION_FACTOR = 0.9;
+    const PIXEL_TO_CM = dynamicPixelToCm(templeWidth, landmarks);
+    const CALIBRATION_FACTOR = 1.9;
 
     // Final measurements
     return {
@@ -221,12 +217,75 @@ export default function FaceDetection() {
     return feedback;
   };
 
-  // Calibration based on temple width
-  const dynamicPixelToCm = (templeWidth) => {
-    const knownTempleWidthCm = 16.0; // Average width between temples in cm could be changed to male and female
-    return knownTempleWidthCm / templeWidth;
+  const calculateCalibrationFactor = (landmarks) => {
+    if (!landmarks || landmarks.length === 0) return null;
+    
+    const points = landmarks[0];
+    
+    // Get key facial measurements
+    const getDistance = (point1, point2) => {
+      return Math.hypot(
+        point1.x - point2.x,
+        point1.y - point2.y,
+        point1.z - point2.z
+      );
+    };
+  
+    // Known average facial proportions (in cm)
+    const AVERAGE_PROPORTIONS = {
+      INTERPUPILLARY: 6.3, // Average distance between pupils
+      BITEMPORAL: 14.5,    // Average width between temples
+      EYE_TO_CHIN: 11.5,   // Average distance from eye level to chin
+      NOSE_LENGTH: 5.0     // Average nose length
+    };
+  
+    // Extract relevant facial points
+    const leftEye = points[33];  // Left eye center
+    const rightEye = points[263]; // Right eye center
+    const chin = points[152];     // Chin point
+    const noseTip = points[1];    // Nose tip
+    const noseBottom = points[2]; // Nose bottom
+    const templeRight = points[162];
+    const templeLeft = points[389];
+  
+    // Calculate actual distances in pixel space
+    const interpupillaryDist = getDistance(leftEye, rightEye);
+    const bitemporalDist = getDistance(templeRight, templeLeft);
+    const eyeToChinDist = getDistance(leftEye, chin);
+    const noseLength = getDistance(noseTip, noseBottom);
+  
+    // Calculate individual scaling factors
+    const scales = [
+      AVERAGE_PROPORTIONS.INTERPUPILLARY / interpupillaryDist,
+      AVERAGE_PROPORTIONS.BITEMPORAL / bitemporalDist,
+      AVERAGE_PROPORTIONS.EYE_TO_CHIN / eyeToChinDist,
+      AVERAGE_PROPORTIONS.NOSE_LENGTH / noseLength
+    ];
+  
+    // Remove outliers (values that are too far from median)
+    const median = scales.sort((a, b) => a - b)[Math.floor(scales.length / 2)];
+    const validScales = scales.filter(scale => 
+      Math.abs(scale - median) / median < 0.3
+    );
+  
+    // Calculate final scaling factor as weighted average
+    const weights = [0.3, 0.3, 0.2, 0.2]; // Higher weight to more reliable measurements
+    const finalScale = validScales.reduce((sum, scale, i) => sum + scale * weights[i], 0) 
+                      / weights.reduce((sum, weight) => sum + weight, 0);
+  
+    // Apply a small correction factor based on head tilt
+    const tiltAngle = Math.atan2(rightEye.y - leftEye.y, rightEye.x - leftEye.x);
+    const tiltCorrection = 1 + Math.abs(tiltAngle) * 0.1; // Up to 10% correction for tilt
+  
+    return finalScale * tiltCorrection;
   };
-
+  
+  const dynamicPixelToCm = (templeWidth, landmarks) => {
+    const calibrationFactor = calculateCalibrationFactor(landmarks);
+    if (!calibrationFactor) return 16.0 / templeWidth; // Fallback to original method
+    
+    return calibrationFactor;
+  };
   const drawBlendShapes = (el: HTMLElement, blendShapes: any[]) => {
     if (!blendShapes.length) return;
 

@@ -26,7 +26,7 @@ const Model = dynamic(() => import("./Model3D"), { ssr: false });
 export default function EquestrianHelmetPage() {
   const [selectedSize, setSelectedSize] = useState("56");
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [showModel, setShowModel] = useState(true);
+  const [showModel, setShowModel] = useState(false);
   const modelPosition: [0, -1, 0] = [0, -1, 0];
   const modelRotation: [0, 5.2, 0] = [0, 5.2, 0];
   const images = [
