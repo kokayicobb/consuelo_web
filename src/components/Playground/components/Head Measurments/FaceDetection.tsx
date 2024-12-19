@@ -167,27 +167,7 @@ export default function FaceDetection() {
     // Simple check for mobile
     const isMobile = window.innerWidth < 768;
 
-    // Check jaw position
-    const chin = points[HEAD_LANDMARKS.chin];
-    const forehead = points[HEAD_LANDMARKS.forehead_mid];
-    const jawAngle =
-      Math.atan2(chin.y - forehead.y, chin.z - forehead.z) * (180 / Math.PI);
-
-    if (isMobile) {
-      // Mobile thresholds
-      if (jawAngle > 73) {
-        feedback.push("↓ Lower your chin slightly");
-      } else if (jawAngle < 71) {
-        feedback.push("↑ Raise your chin slightly");
-      }
-    } else {
-      // Desktop thresholds - slightly more lenient
-      if (jawAngle > 85) {
-        feedback.push("↓ Lower your chin slightly");
-      } else if (jawAngle < 83.0) {
-        feedback.push("↑ Raise your chin slightly");
-      }
-    }
+  
 
     // Check distance from camera
     const templeRight = points[HEAD_LANDMARKS.temple_right];
@@ -212,7 +192,27 @@ export default function FaceDetection() {
         feedback.push("👤 Move further from the camera");
       }
     }
+  // Check jaw position
+    const chin = points[HEAD_LANDMARKS.chin];
+    const forehead = points[HEAD_LANDMARKS.forehead_mid];
+    const jawAngle =
+      Math.atan2(chin.y - forehead.y, chin.z - forehead.z) * (180 / Math.PI);
 
+    if (isMobile) {
+      // Mobile thresholds
+      if (jawAngle > 73) {
+        feedback.push("↓ Lower your chin slightly");
+      } else if (jawAngle < 71) {
+        feedback.push("↑ Raise your chin slightly");
+      }
+    } else {
+      // Desktop thresholds - slightly more lenient
+      if (jawAngle > 83.5) {
+        feedback.push("↓ Lower your chin slightly");
+      } else if (jawAngle < 82.0) {
+        feedback.push("↑ Raise your chin slightly");
+      }
+    }
     return feedback;
   };
 
