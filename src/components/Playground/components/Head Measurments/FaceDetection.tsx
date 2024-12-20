@@ -201,9 +201,9 @@ export default function FaceDetection() {
 
     if (isMobile) {
       // Mobile thresholds
-      if (jawAngle > 77) {
+      if (jawAngle > 83.5) {
         feedback.push("↓ Lower your chin slightly");
-      } else if (jawAngle < 75) {
+      } else if (jawAngle < 82.0) {
         feedback.push("↑ Raise your chin slightly");
       }
     } else {
