@@ -32,7 +32,8 @@ export default function FaceDetection() {
   const [isLoading, setIsLoading] = useState(true);
   const [measurements, setMeasurements] = useState<any>(null);
   const [positionFeedback, setPositionFeedback] = useState<string[]>([]);
-
+  const [selectedGender, setSelectedGender] = useState(null);
+  const [userGender, setUserGender] = useState('male'); // default to male
   const runningModeRef = useRef<"IMAGE" | "VIDEO">("IMAGE");
   const lastVideoTimeRef = useRef<number>(-1);
   const streamRef = useRef<MediaStream | null>(null);
@@ -119,7 +120,7 @@ export default function FaceDetection() {
 
     // Dynamic pixel-to-cm conversion factor
     const PIXEL_TO_CM = dynamicPixelToCm(templeWidth, landmarks);
-    const CALIBRATION_FACTOR = 1.9;
+    const CALIBRATION_FACTOR = userGender === 'male' ? 1.85 : 1.75; // Adjust calibration based on gender
 
     // Final measurements
     return {
@@ -216,27 +217,35 @@ export default function FaceDetection() {
     return feedback;
   };
 
-  const calculateCalibrationFactor = (landmarks) => {
+  const calculateCalibrationFactor = (landmarks, gender = 'male') => {
     if (!landmarks || landmarks.length === 0) return null;
-
+    
     const points = landmarks[0];
-
-    // Get key facial measurements
+    
     const getDistance = (point1, point2) => {
       return Math.hypot(
         point1.x - point2.x,
         point1.y - point2.y,
-        point1.z - point2.z,
+        point1.z - point2.z
       );
     };
 
     // Known average facial proportions (in cm)
     const AVERAGE_PROPORTIONS = {
-      INTERPUPILLARY: 6.3, // Average distance between pupils
-      BITEMPORAL: 14.5, // Average width between temples
-      EYE_TO_CHIN: 11.5, // Average distance from eye level to chin
-      NOSE_LENGTH: 5.0, // Average nose length
+      male: {
+        INTERPUPILLARY: 6.5,    // Male average
+        BITEMPORAL: 15.0,       // Male average
+        EYE_TO_CHIN: 12.0,      // Male average
+        NOSE_LENGTH: 5.2        // Male average
+      },
+      female: {
+        INTERPUPILLARY: 6.2,    // Female average
+        BITEMPORAL: 13.0,       // Female average
+        EYE_TO_CHIN: 11.0,      // Female average
+        NOSE_LENGTH: 4.8        // Female average
+      }
     };
+    
 
     // Extract relevant facial points
     const leftEye = points[33]; // Left eye center
@@ -253,13 +262,16 @@ export default function FaceDetection() {
     const eyeToChinDist = getDistance(leftEye, chin);
     const noseLength = getDistance(noseTip, noseBottom);
 
-    // Calculate individual scaling factors
-    const scales = [
-      AVERAGE_PROPORTIONS.INTERPUPILLARY / interpupillaryDist,
-      AVERAGE_PROPORTIONS.BITEMPORAL / bitemporalDist,
-      AVERAGE_PROPORTIONS.EYE_TO_CHIN / eyeToChinDist,
-      AVERAGE_PROPORTIONS.NOSE_LENGTH / noseLength,
-    ];
+   // Use gender-specific proportions
+  const proportions = AVERAGE_PROPORTIONS[gender];
+
+  // Rest of the calculation using proportions...
+  const scales = [
+    proportions.INTERPUPILLARY / interpupillaryDist,
+    proportions.BITEMPORAL / bitemporalDist,
+    proportions.EYE_TO_CHIN / eyeToChinDist,
+    proportions.NOSE_LENGTH / noseLength
+  ];
 
     // Remove outliers (values that are too far from median)
     const median = scales.sort((a, b) => a - b)[Math.floor(scales.length / 2)];
@@ -573,6 +585,7 @@ export default function FaceDetection() {
   };
 
   const WelcomeScreen = ({ onEnableCamera }) => {
+   
     return (
       <div className="flex h-full flex-col justify-between bg-white text-black">
         <div className="space-y-1 text-center">
@@ -588,7 +601,8 @@ export default function FaceDetection() {
           <p className="text-xs text-gray-600">AI-powered precision fitting</p>
         </div>
 
-        <div className="flex h-full flex-col  justify-between bg-white p-5 text-black">
+        <div className="flex h-full flex-col justify-between bg-white p-5 text-black">
+        <div className="space-y-4">
           <div className="rounded-lg bg-blue-50 p-5 text-center">
             <h2 className="text-sm font-medium text-blue-900">
               Let's Get the Perfect Shot!
@@ -597,9 +611,38 @@ export default function FaceDetection() {
               Hold your device at eye level or slightly above
             </p>
           </div>
+
+          <div className="rounded-lg bg-blue-50 p-5">
+            <h2 className="mb-3 text-sm font-medium text-blue-900">
+              Select your gender for more accurate measurements:
+            </h2>
+            <div className="flex justify-center gap-3">
+              <button
+                onClick={() => setSelectedGender('male')}
+                className={`rounded-lg px-4 py-2 ${
+                  selectedGender === 'male'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-white text-blue-500'
+                }`}
+              >
+                Male
+              </button>
+              <button
+                onClick={() => setSelectedGender('female')}
+                className={`rounded-lg px-4 py-2 ${
+                  selectedGender === 'female'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-white text-blue-500'
+                }`}
+              >
+                Female
+              </button>
+            </div>
+          </div>
+        </div>
         </div>
 
-        <div className="rounded-lg bg-gray-50 p-5 text-xs">
+        {/* <div className="rounded-lg bg-gray-50 p-5 text-xs">
           <h3 className="mb-1 font-semibold text-gray-800">
             Before You Begin:
           </h3>
@@ -619,10 +662,11 @@ export default function FaceDetection() {
               </div>
             ))}
           </div>
-        </div>
+        </div> */}
 
         <Button
-          onClick={onEnableCamera}
+           onClick={() => onEnableCamera(selectedGender)}
+           disabled={!selectedGender}
           className="mt-4 flex w-full items-center justify-center text-sm sm:w-auto sm:text-base"
           size="default"
         >
@@ -689,8 +733,14 @@ export default function FaceDetection() {
           </div>
         ) : (
           <>
+          
             {!webcamRunning ? (
-              <WelcomeScreen onEnableCamera={() => setWebcamRunning(true)} />
+  <WelcomeScreen 
+    onEnableCamera={(gender) => {
+      setUserGender(gender);
+      setWebcamRunning(true);
+    }} 
+  />
             ) : (
               // Active webcam state
 
