@@ -69,7 +69,8 @@ const NavigationMenuContent = React.forwardRef<
   <NavigationMenuPrimitive.Content
     ref={ref}
     className={cn(
-      "left-0 top-0 w-full data-[motion^=from-]:animate-in data-[motion^=to-]:animate-out data-[motion^=from-]:fade-in data-[motion^=to-]:fade-out data-[motion=from-end]:slide-in-from-right-52 data-[motion=from-start]:slide-in-from-left-52 data-[motion=to-end]:slide-out-to-right-52 data-[motion=to-start]:slide-out-to-left-52 md:absolute md:w-auto ",
+      "left-0 top-0 w-full data-[motion^=from-]:animate-in data-[motion^=to-]:animate-out data-[motion^=from-]:fade-in data-[motion^=to-]:fade-out data-[motion=from-end]:slide-in-from-right-52 data-[motion=from-start]:slide-in-from-left-52 data-[motion=to-end]:slide-out-to-right-52 data-[motion=to-start]:slide-out-to-left-52 md:absolute md:w-auto",
+      "bg-background/90 backdrop-blur-md shadow-lg border border-accent/20 rounded-lg p-2",
       className
     )}
     {...props}
@@ -77,7 +78,26 @@ const NavigationMenuContent = React.forwardRef<
 ))
 NavigationMenuContent.displayName = NavigationMenuPrimitive.Content.displayName
 
-const NavigationMenuLink = NavigationMenuPrimitive.Link
+const NavigationMenuLink = React.forwardRef<
+  React.ElementRef<typeof NavigationMenuPrimitive.Link>,
+  React.ComponentPropsWithoutRef<typeof NavigationMenuPrimitive.Link>
+>(({ className, children, ...props }, ref) => (
+  <NavigationMenuPrimitive.Link
+    ref={ref}
+    className={cn(
+      "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none " +
+      "transition-colors hover:bg-accent/30 focus:bg-accent/50 " +
+      "hover:text-accent-foreground focus:text-accent-foreground " +
+      "hover:shadow-sm focus:shadow-md " +
+      "group",
+      className
+    )}
+    {...props}
+  >
+    {children}
+  </NavigationMenuPrimitive.Link>
+))
+NavigationMenuLink.displayName = NavigationMenuPrimitive.Link.displayName
 
 const NavigationMenuViewport = React.forwardRef<
   React.ElementRef<typeof NavigationMenuPrimitive.Viewport>,

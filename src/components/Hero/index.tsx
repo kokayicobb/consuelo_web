@@ -48,7 +48,21 @@ export function WavyBackgroundDemo() {
               {/* Text and icon */}
               <span className="relative z-[3] flex items-center text-sm font-medium text-white">
                 Get Started
-                <ArrowRight strokeWidth={2} className="ml-2 h-4 w-4" />
+                <svg 
+  width="16" 
+  height="16" 
+  viewBox="0 0 24 24" 
+  fill="none" 
+  className="ml-2 h-4 w-4"
+>
+  <path 
+    d="M9 6L15 12L9 18" 
+    stroke="currentColor" 
+    strokeWidth={2} 
+    strokeLinecap="round" 
+    strokeLinejoin="round"
+  />
+</svg>
               </span>
             </Link>
             <Link 
