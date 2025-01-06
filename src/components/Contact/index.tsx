@@ -114,7 +114,7 @@ export function Contact() {
                 id="message"
                 name="message"
                 placeholder="What are your main challenges with online clothing sales?"
-                className="min-h-[100px] w-full rounded-md border bg-background/50 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary text-base"
+                className="min-h-[100px] w-full rounded-md border bg-background/50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary text-base"
                 required
               />
             </LabelInputContainer>
