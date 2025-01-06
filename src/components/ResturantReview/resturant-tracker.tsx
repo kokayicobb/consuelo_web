@@ -128,7 +128,7 @@ const RestaurantTracker = () => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Your Name</label>
+              <label className="block text-base font-medium mb-1">Your Name</label>
               <Input
                 required
                 name="name"
@@ -139,7 +139,7 @@ const RestaurantTracker = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Restaurant Name</label>
+              <label className="block text-base font-medium mb-1">Restaurant Name</label>
               <Input
                 required
                 name="restaurant"
@@ -150,7 +150,7 @@ const RestaurantTracker = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Rating (1-5)</label>
+              <label className="block text-base font-medium mb-1">Rating (1-5)</label>
               <Input
                 required
                 type="number"
@@ -164,7 +164,7 @@ const RestaurantTracker = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Comments</label>
+              <label className="block text-base font-medium mb-1">Comments</label>
               <Textarea
                 name="comments"
                 value={formData.comments}
