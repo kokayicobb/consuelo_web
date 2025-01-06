@@ -59,7 +59,7 @@ const TryOnButton = ({ garmentImage, category, onResult }) => {
     loadGarmentImage();
   }, [garmentImage]);
  // Update the pollStatus function too:
-const pollStatus = async (id) => {
+ const pollStatus = async (id) => {
   pollingRef.current = true;
   attemptCountRef.current = 0;
 
@@ -67,18 +67,10 @@ const pollStatus = async (id) => {
     attemptCountRef.current++;
     console.log(`Polling attempt ${attemptCountRef.current} for ID: ${id}`);
 
-    if (attemptCountRef.current > MAX_POLL_ATTEMPTS) {
-      console.error("Maximum polling attempts reached");
-      setError("Processing is taking too long. Please try again later.");
-      setIsLoading(false);
-      pollingRef.current = false;
-      return;
-    }
-
     try {
-      const response = await fetch(`https://api.fashn.ai/v1/status/${id}`, { // Changed to direct FASHN API endpoint
+      const response = await fetch(`https://api.fashn.ai/v1/status/${id}`, {
         headers: {
-          'Authorization': 'Bearer fa-u5Z4R9wIqa6R-kfW6TOb7KXllTSG1PB278ZiB' // Replace with your actual FASHN API key
+          'Authorization': 'Bearer YOUR_API_KEY_HERE'
         }
       });
 
@@ -87,7 +79,37 @@ const pollStatus = async (id) => {
       }
 
       const data = await response.json();
-      // Rest of your polling logic...
+      console.log("Status response:", data); // Add this log
+
+      switch(data.status) {
+        case "completed":
+          if (data.output && data.output.length > 0) {
+            console.log("Processing completed successfully. Result:", data.output[0]);
+            setResult(data.output[0]);
+            if (onResult) onResult(data.output[0]);
+            setIsLoading(false);
+            pollingRef.current = false;
+          } else {
+            throw new Error("Processing completed, but no output was provided.");
+          }
+          break;
+
+        case "failed":
+          throw new Error(data.error?.message || "Processing failed on the server.");
+          
+        case "processing":
+        case "in_queue":
+        case "starting":
+          console.log(`Status: ${data.status}. Retrying in 2 seconds...`);
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          await poll(); // Recursive call to continue polling
+          break;
+
+        default:
+          console.log(`Unknown status: ${data.status}`);
+          throw new Error(`Unknown status: ${data.status}`);
+      }
+
     } catch (err) {
       console.error("Error during polling:", err);
       setError(err.message || "An unexpected error occurred during polling.");
@@ -96,7 +118,14 @@ const pollStatus = async (id) => {
     }
   };
 
-  poll();
+  try {
+    await poll();
+  } catch (error) {
+    console.error("Polling failed:", error);
+    setError("Failed to get processing status");
+    setIsLoading(false);
+    pollingRef.current = false;
+  }
 };
   
   
