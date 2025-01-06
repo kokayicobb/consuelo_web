@@ -1,240 +1,287 @@
-"use client"
+import React, { useState, useRef, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Camera, X } from 'lucide-react';
 
-import React, { useEffect, useRef, useState, Suspense } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
-import { useGLTF, Environment, OrbitControls, useProgress, Html } from '@react-three/drei'
-import { Button } from '@/components/ui/button'
-import { Camera, ZoomIn, ZoomOut, ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from 'lucide-react'
-import * as THREE from 'three'
+const TryOnButton = ({ garmentImage, category, onResult }) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [result, setResult] = useState(null);
+  const [userImage, setUserImage] = useState(null);
+  const [userImagePreview, setUserImagePreview] = useState(null);
+  const [garmentBase64, setGarmentBase64] = useState(null);
+  const fileInputRef = useRef(null);
+  const pollingRef = useRef(false);
+  const attemptCountRef = useRef(0);
 
-interface HeadPosition {
-  x: number
-  y: number
-  z: number
-  rotation: [number, number, number] // Explicitly typed as tuple
-  scale: number
-}
+  // Constants for polling
+  const MAX_POLL_ATTEMPTS = 60;
+  const POLL_INTERVAL = 2000;
+  const POLL_TIMEOUT = 120000;
 
-function Loader() {
-  const { progress } = useProgress()
-  return <Html center>{progress.toFixed(0)} % loaded</Html>
-}
+  useEffect(() => {
+    const loadGarmentImage = async () => {
+      try {
+        if (!garmentImage) {
+          console.error('No garment image provided');
+          return;
+        }
 
-const VirtualTryOn = () => {
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [faceLandmarker, setFaceLandmarker] = useState<any>(null)
-  const [webcamRunning, setWebcamRunning] = useState(false)
-  const [headPosition, setHeadPosition] = useState<HeadPosition>({
-    x: 0,
-    y: 0,
-    z: -2,
-    rotation: [0, 0, 0],
-    scale: 1
-  })
-  const streamRef = useRef<MediaStream | null>(null)
-  const lastVideoTimeRef = useRef<number>(-1)
+        if (garmentImage.startsWith('data:') || garmentImage.startsWith('http')) {
+          setGarmentBase64(garmentImage);
+          return;
+        }
 
-  const predictWebcam = async () => {
-    if (!videoRef.current || !canvasRef.current || !faceLandmarker) return
-
-    if (lastVideoTimeRef.current !== videoRef.current.currentTime) {
-      lastVideoTimeRef.current = videoRef.current.currentTime
-      const predictions = await faceLandmarker.detectForVideo(videoRef.current, performance.now())
-
-      if (predictions.faceLandmarks?.length > 0) {
-        const landmarks = predictions.faceLandmarks[0]
-        
-        const nose = landmarks[1]
-        const leftTemple = landmarks[162]
-        const rightTemple = landmarks[389]
-        const topHead = landmarks[10]
-        
-        const headWidth = Math.sqrt(
-          Math.pow(rightTemple.x - leftTemple.x, 2) +
-          Math.pow(rightTemple.y - leftTemple.y, 2)
-        )
-
-        const x = (nose.x - 0.5) * 3
-        const y = -(nose.y - 0.5) * 3 + 0.5
-        const z = -nose.z * 3 - 2
-        
-        const forwardVector = {
-          x: nose.x - topHead.x,
-          y: nose.y - topHead.y,
-          z: nose.z - topHead.z
+        const response = await fetch(garmentImage);
+        if (!response.ok) {
+          throw new Error(`Failed to load garment image: ${response.statusText}`);
         }
         
-        const rotation = [
-          Math.atan2(forwardVector.y, forwardVector.z),
-          Math.atan2(forwardVector.x, forwardVector.z),
-          Math.atan2(rightTemple.y - leftTemple.y, rightTemple.x - leftTemple.x)
-        ]
-
-        setHeadPosition({ 
-          x, 
-          y, 
-          z, 
-					rotation: [0, 0, 0], // Initialize as tuple
-          scale: headWidth * 4
-        })
+        const blob = await response.blob();
+        const reader = new FileReader();
+        
+        reader.onloadend = () => {
+          setGarmentBase64(reader.result);
+        };
+        
+        reader.onerror = (error) => {
+          console.error('Error reading garment image:', error);
+          setError('Error loading garment image');
+        };
+        
+        reader.readAsDataURL(blob);
+      } catch (err) {
+        console.error('Error loading garment image:', err);
+        setError('Error loading garment image. Please try again.');
       }
-    }
+    };
 
-    if (webcamRunning) {
-      requestAnimationFrame(predictWebcam)
-    }
-  }
+    loadGarmentImage();
+  }, [garmentImage]);
 
-  useEffect(() => {
-    const setupFaceLandmarker = async () => {
-      const { FaceLandmarker, FilesetResolver } = await import('@mediapipe/tasks-vision')
-      const vision = await FilesetResolver.forVisionTasks(
-        'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm'
-      )
-      const landmarker = await FaceLandmarker.createFromOptions(vision, {
-        baseOptions: {
-          modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',
-          delegate: 'GPU'
-        },
-        outputFaceBlendshapes: true,
-        runningMode: 'VIDEO',
-        numFaces: 1
-      })
-      setFaceLandmarker(landmarker)
-    }
-
-    setupFaceLandmarker()
-  }, [])
-
-  useEffect(() => {
-    if (webcamRunning) {
-      if (videoRef.current && faceLandmarker) {
-        if (streamRef.current) {
-          videoRef.current.srcObject = streamRef.current
-          videoRef.current.addEventListener('loadeddata', predictWebcam)
+  const pollStatus = async (id: string) => {
+    pollingRef.current = true; // Start polling
+    attemptCountRef.current = 0;
+  
+    const poll = async () => {
+      attemptCountRef.current++;
+      if (attemptCountRef.current > MAX_POLL_ATTEMPTS) {
+        setError("Maximum polling attempts reached. Please try again later.");
+        setIsLoading(false);
+        pollingRef.current = false;
+        return;
+      }
+  
+      try {
+        const response = await fetch(`/api/try-on/status/${id}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error: ${response.status}`);
+        }
+  
+        const data = await response.json();
+        console.log("Polling Response:", data);
+  
+        if (data.status === "completed" && data.output && data.output.length > 0) {
+          setResult(data.output[0]);
+          if (onResult) onResult(data.output[0]);
+          setIsLoading(false);
+          pollingRef.current = false;
+        } else if (data.status === "failed") {
+          throw new Error(data.error?.message || "Processing failed on the server.");
         } else {
-          navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
-            streamRef.current = stream
-            if (videoRef.current) {
-              videoRef.current.srcObject = stream
-              videoRef.current.addEventListener('loadeddata', predictWebcam)
-            }
-          })
+          // Continue polling if still processing
+          setTimeout(poll, POLL_INTERVAL);
         }
+      } catch (err) {
+        console.error("Error during polling:", err);
+        setError(err.message || "An unexpected error occurred.");
+        setIsLoading(false);
+        pollingRef.current = false;
       }
-    } else {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop())
-      }
+    };
+  
+    poll();
+  };
+  
+
+  const handleTryOn = async () => {
+    if (!userImage || !garmentBase64) {
+      setError('Please ensure both your photo and garment image are loaded');
+      return;
     }
 
-    return () => {
-      if (videoRef.current) {
-        videoRef.current.removeEventListener('loadeddata', predictWebcam)
+    setIsLoading(true);
+    setError(null);
+    setResult(null);
+    pollingRef.current = true;
+
+    try {
+      const base64Image = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(userImage);
+      });
+
+      console.log('Initiating try-on request');
+      const response = await fetch('/api/try-on', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model_image: base64Image,
+          garment_image: garmentBase64,
+          category: category,
+          mode: 'balanced',
+          num_samples: 1
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
       }
+
+      const data = await response.json();
+      console.log('Try-on API response:', data);
+
+      if (data.error) {
+        throw new Error(data.error.message || 'API Error');
+      }
+
+      if (!data.id) {
+        throw new Error('No prediction ID received');
+      }
+
+      await pollStatus(data.id);
+    } catch (err) {
+      console.error('Try-on error:', err);
+      setError(`Error: ${err.message}`);
+      setIsLoading(false);
+      pollingRef.current = false;
     }
-  }, [webcamRunning, faceLandmarker])
+  };
 
-  const Helmet = () => {
-    const { scene } = useGLTF("/Kask.glb")
-    const helmetRef = useRef<THREE.Group>(null)
-    
-    useEffect(() => {
-      scene.scale.set(0.01, 0.01, 0.01)
-      scene.position.set(0, -0.1, 0)
-      
-      scene.traverse((child: THREE.Object3D) => {
-        if (child instanceof THREE.Mesh) {
-          if (child.material instanceof THREE.MeshStandardMaterial) {
-            child.material.roughness = 0.7
-            child.material.metalness = 0.3
-          }
-        }
-      })
-    }, [scene])
+  const handleImageUpload = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
 
-    useFrame(() => {
-      if (helmetRef.current) {
-        helmetRef.current.position.set(
-          headPosition.x,
-          headPosition.y + 0.1,
-          headPosition.z
-        )
-        helmetRef.current.rotation.set(...headPosition.rotation)
-        helmetRef.current.scale.setScalar(headPosition.scale)
-      }
-    })
+    if (!file.type.startsWith('image/')) {
+      setError('Please upload an image file');
+      return;
+    }
 
-    return <primitive ref={helmetRef} object={scene} />
-  }
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image size should be less than 5MB');
+      return;
+    }
 
-  const adjustPosition = (axis: 'x' | 'y' | 'z', delta: number) => {
-    setHeadPosition(prev => ({ ...prev, [axis]: prev[axis] + delta }))
-  }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setUserImagePreview(reader.result);
+      setUserImage(file);
+      setError(null);
+    };
+    reader.onerror = () => {
+      setError('Error reading file');
+    };
+    reader.readAsDataURL(file);
+  };
 
-  const adjustScale = (delta: number) => {
-    setHeadPosition(prev => ({ ...prev, scale: Math.max(0.1, prev.scale + delta) }))
-  }
+  const removeImage = () => {
+    setUserImage(null);
+    setUserImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   return (
-    <div className="relative h-[60vh] w-full overflow-hidden rounded-3xl bg-white">
-      {!webcamRunning ? (
-        <div className="flex h-full flex-col items-center justify-center space-y-4 p-4">
-          <Button onClick={() => setWebcamRunning(true)} className="flex items-center gap-2">
-            <Camera className="h-4 w-4" />
-            Try On Helmet
-          </Button>
-        </div>
-      ) : (
-        <div className="relative h-full">
-          <video
-            ref={videoRef}
-            className="h-full w-full object-cover"
-            autoPlay
-            playsInline
-          />
-          <canvas
-            ref={canvasRef}
-            className="absolute left-0 top-0 h-full w-full"
-          />
-          <div className="absolute inset-0">
-            <Canvas shadows camera={{ position: [0, 0, 5], fov: 60 }}>
-              <ambientLight intensity={0.7} />
-              <spotLight 
-                position={[10, 10, 10]} 
-                angle={0.3} 
-                penumbra={1} 
-                intensity={1}
-                castShadow
-              />
-              <Suspense fallback={<Loader />}>
-                <Helmet />
-                <Environment preset="studio" />
-              </Suspense>
-              <OrbitControls enableZoom={false} enablePan={false} />
-            </Canvas>
-          </div>
-          <div className="absolute bottom-4 left-4 flex flex-col gap-2">
-            <Button onClick={() => adjustPosition('y', 0.1)}><ArrowUp className="h-4 w-4" /></Button>
-            <Button onClick={() => adjustPosition('y', -0.1)}><ArrowDown className="h-4 w-4" /></Button>
-            <Button onClick={() => adjustPosition('x', -0.1)}><ArrowLeft className="h-4 w-4" /></Button>
-            <Button onClick={() => adjustPosition('x', 0.1)}><ArrowRight className="h-4 w-4" /></Button>
-            <Button onClick={() => adjustScale(0.1)}><ZoomIn className="h-4 w-4" /></Button>
-            <Button onClick={() => adjustScale(-0.1)}><ZoomOut className="h-4 w-4" /></Button>
-          </div>
-          <Button
-            onClick={() => setWebcamRunning(false)}
-            className="absolute right-4 top-4"
+    <div className="space-y-4">
+      <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleImageUpload}
+          className="hidden"
+          ref={fileInputRef}
+          disabled={isLoading}
+        />
+        
+        {!userImagePreview ? (
+          <Button 
+            onClick={() => fileInputRef.current?.click()}
+            className="w-full h-40 flex flex-col items-center justify-center gap-2"
             variant="outline"
+            disabled={isLoading}
           >
-            Exit Try On
+            <Camera className="w-8 h-8" />
+            <span>Upload Your Photo</span>
+            <span className="text-sm text-gray-500">Click to browse</span>
           </Button>
+        ) : (
+          <div className="relative">
+            <img 
+              src={userImagePreview} 
+              alt="Preview" 
+              className="w-full h-64 object-cover rounded-lg"
+            />
+            <Button
+              onClick={removeImage}
+              className="absolute top-2 right-2 p-2 rounded-full"
+              size="icon"
+              variant="destructive"
+              disabled={isLoading}
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+        )}
+      </div>
+
+      <Button 
+        onClick={handleTryOn} 
+        disabled={isLoading || !userImage || !garmentBase64}
+        className="w-full"
+      >
+        {isLoading ? 'Processing...' : 'Try On Now'}
+      </Button>
+
+      {isLoading && (
+        <div className="mt-4 text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-sm text-gray-600">
+            Processing your image... Attempt {attemptCountRef.current} of {MAX_POLL_ATTEMPTS}
+          </p>
+        </div>
+      )}
+
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      {result && (
+        <div className="mt-4">
+          <img 
+            src={result} 
+            alt="Try-on result preview" 
+            className="w-full rounded-lg shadow-lg"
+            onLoad={() => {
+              console.log('Result image loaded successfully');
+              setIsLoading(false);
+            }}
+            onError={(e) => {
+              console.error('Error loading result image');
+              setError('Error loading result image');
+              setIsLoading(false);
+            }}
+          />
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default VirtualTryOn
-
+export default TryOnButton;

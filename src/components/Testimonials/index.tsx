@@ -37,20 +37,7 @@ const testimonials = [
     avatar: "/images/testimonials/Shopify Logo Green Bag.png",
     rating: 5,
   },
-  {
-    name: "Sarah Johnson",
-    role: "Fashion Blogger",
-    content: "Virtual try-on technology has revolutionized the way I shop online. It's like having a personal fitting room at home!",
-    avatar: "/images/testimonials/fashion-blogger.png",
-    rating: 5,
-  },
-  {
-    name: "David Chen",
-    role: "E-commerce Consultant",
-    content: "Brands implementing virtual try-on solutions have seen a significant decrease in return rates and an increase in customer satisfaction.",
-    avatar: "/images/testimonials/consultant.png",
-    rating: 5,
-  },
+
 ];
 
 const TestimonialCard: React.FC<{ testimonial: Testimonial }> = ({ testimonial }) => {

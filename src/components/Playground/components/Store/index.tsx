@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { useState, Suspense } from "react";
+import { useState, Suspense, useCallback } from "react";
 import { ChevronLeft, ChevronRight, ShoppingCart, Loader2 } from "lucide-react";
 import { Canvas } from "@react-three/fiber";
 import {
@@ -9,7 +9,6 @@ import {
   Environment,
   ContactShadows,
 } from "@react-three/drei";
-import * as THREE from "three";
 
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -18,17 +17,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { SizeGuideButton } from "../Button/SizeGuideButton";
 import { Header } from "./header";
+
 import dynamic from "next/dynamic";
-import VirtualTryOnButton from "../Button/TryOnButton";
+import TryOnButton from "../Virtual Try On";
+import { TryOnResult } from "./TryOnResults";
 
 const Model = dynamic(() => import("./Model3D"), { ssr: false });
 
 export default function EquestrianHelmetPage() {
+  const [tryOnResult, setTryOnResult] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [selectedSize, setSelectedSize] = useState("56");
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [showModel, setShowModel] = useState(true);
-  const modelPosition: [0, -1, 0] = [0, -1, 0];
-  const modelRotation: [0, 5.2, 0] = [0, 5.2, 0];
+  const [showModel, setShowModel] = useState(false);
+  
+  const modelPosition: [number, number, number] = [0, -1, 0];
+  const modelRotation: [number, number, number] = [0, 5.2, 0];
   const images = [
     "/MainHelmet.png?height=600&width=600",
     "/SideHelmet.PNG?height=600&width=600&text=Back+View",
@@ -37,6 +41,48 @@ export default function EquestrianHelmetPage() {
   ];
 
   const sizes = ["54", "55", "56", "57", "58", "59", "60", "61"];
+// Modify your page component (EquestrianHelmetPage)
+const [tryOnState, setTryOnState] = useState({
+  isProcessing: false,
+  attemptCount: 0,
+  maxAttempts: 60,
+  resultUrl: null as string | null,
+  error: null as string | null
+});
+
+// Update your handleTryOnResult function
+const handleTryOnResult = useCallback((resultUrl: string) => {
+  console.log("Received try-on result URL:", resultUrl);
+  setTryOnState(prev => ({
+    ...prev,
+    isProcessing: false,
+    resultUrl,
+    error: null
+  }));
+}, []);
+
+// Add a function to handle processing updates
+const handleProcessingUpdate = useCallback((attemptCount: number) => {
+  setTryOnState(prev => ({
+    ...prev,
+    isProcessing: true,
+    attemptCount
+  }));
+}, []);
+
+// Add clear function
+const handleClearTryOn = useCallback(() => {
+  setTryOnState({
+    isProcessing: false,
+    attemptCount: 0,
+    maxAttempts: 60,
+    resultUrl: null,
+    error: null
+  });
+}, []);
+  
+
+  
 
   const relatedProducts = [
     { name: "Classic Riding Helmet", price: "$189.99", image: "/1.jpeg" },
@@ -67,57 +113,34 @@ export default function EquestrianHelmetPage() {
                       </div>
                     }
                   >
-             <Canvas camera={{ position: [0, 1, 8], fov: 45 }}>
-  {/* Slightly warmer background to counter any cool tints */}
-  <color attach="background" args={["#f8f8f6"]} />
-
-  {/* Warmer ambient light to neutralize the blue */}
-  <ambientLight intensity={0.35} color={"#faf9f7"} />
-
-  {/* Key Directional Light with warm neutral color */}
-  <directionalLight
-    position={[5, 5, 5]}
-    intensity={0.9}
-    color={"#fff9f5"}
-    castShadow
-    shadow-mapSize={2048}
-    shadow-bias={-0.001}
-  />
-
-  {/* Warmer Fill Light */}
-  <pointLight 
-    position={[-5, 3, 5]} 
-    intensity={0.15} 
-    color={"#fff5eb"}
-  />
-
-  {/* Environment without intensity property */}
-  <Environment 
-    preset="city" 
-    background={false}
-  />
-
-  <Model position={modelPosition} rotation={modelRotation} />
-
-  <ContactShadows
-    position={[0, -1.5, 0]}
-    opacity={0.5}
-    scale={10}
-    blur={3.5}
-    far={5}
-  />
-
-  {/* Model */}
-  <Model position={modelPosition} rotation={modelRotation} />
-
-  {/* Contact Shadows */}
-  <ContactShadows
-    position={[0, -1.5, 0]}
-    opacity={0.6}
-    scale={10}
-    blur={3.5}
-    far={5}
-  />
+                    <Canvas camera={{ position: [0, 1, 8], fov: 45 }}>
+                      <color attach="background" args={["#f8f8f6"]} />
+                      <ambientLight intensity={0.35} color={"#faf9f7"} />
+                      <directionalLight
+                        position={[5, 5, 5]}
+                        intensity={0.9}
+                        color={"#fff9f5"}
+                        castShadow
+                        shadow-mapSize={2048}
+                        shadow-bias={-0.001}
+                      />
+                      <pointLight
+                        position={[-5, 3, 5]}
+                        intensity={0.15}
+                        color={"#fff5eb"}
+                      />
+                      <Environment preset="city" background={false} />
+                      <Model
+                        position={modelPosition}
+                        rotation={modelRotation}
+                      />
+                      <ContactShadows
+                        position={[0, -1.5, 0]}
+                        opacity={0.5}
+                        scale={10}
+                        blur={3.5}
+                        far={5}
+                      />
                       <OrbitControls
                         makeDefault
                         enableDamping
@@ -146,7 +169,9 @@ export default function EquestrianHelmetPage() {
                     src={images[currentImageIndex]}
                     alt={`Equestrian Helmet View ${currentImageIndex + 1}`}
                     fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
                     className="rounded-lg object-cover"
+                    priority
                   />
                   <Button
                     variant="outline"
@@ -161,7 +186,7 @@ export default function EquestrianHelmetPage() {
                     className="absolute left-2 top-1/2 -translate-y-1/2"
                     onClick={() =>
                       setCurrentImageIndex((prev) =>
-                        prev > 0 ? prev - 1 : images.length - 1,
+                        prev > 0 ? prev - 1 : images.length - 1
                       )
                     }
                   >
@@ -173,7 +198,7 @@ export default function EquestrianHelmetPage() {
                     className="absolute right-2 top-1/2 -translate-y-1/2"
                     onClick={() =>
                       setCurrentImageIndex((prev) =>
-                        prev < images.length - 1 ? prev + 1 : 0,
+                        prev < images.length - 1 ? prev + 1 : 0
                       )
                     }
                   >
@@ -184,13 +209,9 @@ export default function EquestrianHelmetPage() {
             </div>
             <div className="flex space-x-2 overflow-x-auto">
               {images.map((src, index) => (
-                <Image
+                <div
                   key={index}
-                  src={src}
-                  alt={`Thumbnail ${index + 1}`}
-                  width={80}
-                  height={80}
-                  className={`cursor-pointer rounded object-cover ${
+                  className={`cursor-pointer ${
                     index === currentImageIndex && !showModel
                       ? "ring-2 ring-primary"
                       : ""
@@ -199,7 +220,15 @@ export default function EquestrianHelmetPage() {
                     setCurrentImageIndex(index);
                     setShowModel(false);
                   }}
-                />
+                >
+                  <Image
+                    src={src}
+                    alt={`Thumbnail ${index + 1}`}
+                    width={80}
+                    height={80}
+                    className="rounded object-cover"
+                  />
+                </div>
               ))}
             </div>
           </div>
@@ -214,7 +243,6 @@ export default function EquestrianHelmetPage() {
             </p>
             <div className="text-2xl font-bold">$249.99</div>
 
-            {/* Size Selection */}
             <div>
               <h3 className="mb-2 text-lg font-semibold">Select Size (CM)</h3>
               <RadioGroup
@@ -239,15 +267,47 @@ export default function EquestrianHelmetPage() {
                 ))}
               </RadioGroup>
             </div>
+
             <div className="flex flex-col gap-2">
               <SizeGuideButton />
-              {/* <VirtualTryOnButton /> */}
+              <TryOnButton
+                garmentImage="/showcoat.jpg"
+                category="tops"
+                onResult={handleTryOnResult}
+              />
             </div>
+
+            {/* Display Try-On Results */}
+            {tryOnResult && (
+              <div className="mt-8 space-y-4">
+                <div className="relative aspect-square w-full overflow-hidden rounded-lg border bg-gray-50">
+                  <Image
+                    src={tryOnResult}
+                    alt="Virtual Try-On Result"
+                    fill
+                    className="object-contain"
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    priority
+                  />
+        <Button
+          variant="outline"
+          className="absolute right-4 top-4 z-10 bg-white/80 backdrop-blur-sm hover:bg-white"
+          onClick={handleClearTryOn}
+        >
+          Clear Try-On
+        </Button>
+      </div>
+      <p className="text-sm text-gray-600">
+        Virtual try-on result. Click 'Clear Try-On' to remove.
+      </p>
+    </div>
+  )}
+
+ 
             <Button className="w-full">
               <ShoppingCart className="mr-2 h-4 w-4" /> Add to Cart
             </Button>
 
-            {/* Product Information Tabs */}
             <Tabs defaultValue="description" className="w-full">
               <TabsList>
                 <TabsTrigger value="description">Description</TabsTrigger>
@@ -275,7 +335,7 @@ export default function EquestrianHelmetPage() {
                 <p>
                   To find your perfect fit, measure the circumference of your
                   head about 1 inch above your eyebrows. Use this measurement to
-                  select the appropriate size from our range. If you&apos;re
+                  select the appropriate size from our range. If you're
                   between sizes, we recommend choosing the larger size for a
                   more comfortable fit.
                 </p>
@@ -283,6 +343,12 @@ export default function EquestrianHelmetPage() {
             </Tabs>
           </div>
         </div>
+
+        {/* Virtual Try-On Results */}
+        <TryOnResult 
+          resultUrl={tryOnResult} 
+          onClear={handleClearTryOn}
+        />
 
         {/* Related Products */}
         <div className="mt-16">
@@ -295,6 +361,7 @@ export default function EquestrianHelmetPage() {
                     src={product.image}
                     alt={product.name}
                     fill
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw"
                     className="rounded object-cover"
                   />
                 </div>
