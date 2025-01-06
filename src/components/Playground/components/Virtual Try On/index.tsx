@@ -58,15 +58,17 @@ const TryOnButton = ({ garmentImage, category, onResult }) => {
 
     loadGarmentImage();
   }, [garmentImage]);
-
   const pollStatus = async (id: string) => {
     pollingRef.current = true; // Start polling
     attemptCountRef.current = 0;
   
     const poll = async () => {
       attemptCountRef.current++;
+      console.log(`Polling attempt ${attemptCountRef.current} for ID: ${id}`);
+  
       if (attemptCountRef.current > MAX_POLL_ATTEMPTS) {
-        setError("Maximum polling attempts reached. Please try again later.");
+        console.error("Maximum polling attempts reached");
+        setError("Processing is taking too long. Please try again later.");
         setIsLoading(false);
         pollingRef.current = false;
         return;
@@ -81,20 +83,29 @@ const TryOnButton = ({ garmentImage, category, onResult }) => {
         const data = await response.json();
         console.log("Polling Response:", data);
   
-        if (data.status === "completed" && data.output && data.output.length > 0) {
-          setResult(data.output[0]);
-          if (onResult) onResult(data.output[0]);
-          setIsLoading(false);
-          pollingRef.current = false;
+        if (data.status === "completed") {
+          if (data.output && data.output.length > 0) {
+            console.log("Processing completed successfully. Result:", data.output[0]);
+            setResult(data.output[0]);
+            if (onResult) onResult(data.output[0]);
+            setIsLoading(false);
+            pollingRef.current = false;
+          } else {
+            console.error("No output provided in completed response:", data);
+            throw new Error("Processing completed, but no output was provided.");
+          }
         } else if (data.status === "failed") {
+          console.error("Processing failed. Error:", data.error);
           throw new Error(data.error?.message || "Processing failed on the server.");
         } else {
-          // Continue polling if still processing
-          setTimeout(poll, POLL_INTERVAL);
+          // Continue polling if still processing or in queue
+          console.log(`Status: ${data.status}. Retrying...`);
+          await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL));
+          poll(); // Recursive call to continue polling
         }
       } catch (err) {
         console.error("Error during polling:", err);
-        setError(err.message || "An unexpected error occurred.");
+        setError(err.message || "An unexpected error occurred during polling.");
         setIsLoading(false);
         pollingRef.current = false;
       }
@@ -102,6 +113,7 @@ const TryOnButton = ({ garmentImage, category, onResult }) => {
   
     poll();
   };
+  
   
 
   const handleTryOn = async () => {
