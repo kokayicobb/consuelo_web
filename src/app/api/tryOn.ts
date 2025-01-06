@@ -20,10 +20,13 @@ export const initiateTryOn = async (body: any) => {
   return retryRequest(
     async () => {
       const response = await fetch('/api/try-on', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'Authorization': `Bearer ${process.env.FASHN_API_KEY}`, // Use environment variable for security
+				},
+				body: JSON.stringify(body),
+			});
 
       if (!response.ok) {
         throw new Error(`Failed to initiate try-on: ${response.status} ${response.statusText}`);

@@ -3,13 +3,13 @@ import { Metadata } from 'next'
 export const metadata: Metadata = {
   title: 'Consuelo',
   description: 'AI-Powered Fit Technology',
-  metadataBase: new URL('https://www.consuelo.shop/'),
+  metadataBase: new URL('https://www.consuelohq.com/'),
   applicationName: 'Consuelo',
   keywords: ['AI','Virtual Fitting Room', 'Fashion', 'Fit Technology' ],
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://www.consuelo.shop/',
+    url: 'https://www.consuelohq.com/',
     siteName: 'Consuelo',
     title: 'Consuelo',
     description: 'AI-Powered Fit Technology',
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 		}],
     // Added fields for better social sharing
     countryName: 'United States',
-    emails: ['Info@consuelo.shop'],
+    emails: ['Info@consuelohq.com'],
    
   },
   twitter: {
@@ -58,7 +58,7 @@ export const metadata: Metadata = {
   manifest: '/site.webmanifest',
 
   other: {
-    'apple-mobile-web-app-capable': 'yes',
+    'mobile-web-app-capable': 'yes',
     'apple-mobile-web-app-status-bar-style': 'black-translucent',
     'apple-mobile-web-app-title': 'Consuelo',
   }
