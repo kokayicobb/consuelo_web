@@ -1,7 +1,19 @@
 "use client";
+
 import { cn } from "@/lib/utils";
 import { useEffect, useRef } from "react";
 import { createNoise3D } from "simplex-noise";
+
+const getPixelRatio = (context: CanvasRenderingContext2D) => {
+  const backingStore =
+    context.backingStorePixelRatio ||
+    context.webkitBackingStorePixelRatio ||
+    context.mozBackingStorePixelRatio ||
+    context.msBackingStorePixelRatio ||
+    context.oBackingStorePixelRatio ||
+    1;
+  return (window.devicePixelRatio || 1) / backingStore;
+};
 
 export const WavyBackground = ({
   children,
@@ -49,15 +61,30 @@ export const WavyBackground = ({
   const init = () => {
     canvas = canvasRef.current;
     ctx = canvas.getContext("2d");
-    w = ctx.canvas.width = window.innerWidth;
-    h = ctx.canvas.height = window.innerHeight;
+    w = window.innerWidth;
+    h = window.innerHeight;
+
+    const pixelRatio = getPixelRatio(ctx);
+    canvas.width = w * pixelRatio;
+    canvas.height = h * pixelRatio;
+    canvas.style.width = `${w}px`;
+    canvas.style.height = `${h}px`;
+    ctx.scale(pixelRatio, pixelRatio);
+
     ctx.filter = `blur(${blur}px)`;
     nt = 0;
+
     window.onresize = function () {
-      w = ctx.canvas.width = window.innerWidth;
-      h = ctx.canvas.height = window.innerHeight;
+      w = window.innerWidth;
+      h = window.innerHeight;
+      canvas.width = w * pixelRatio;
+      canvas.height = h * pixelRatio;
+      canvas.style.width = `${w}px`;
+      canvas.style.height = `${h}px`;
+      ctx.scale(pixelRatio, pixelRatio);
       ctx.filter = `blur(${blur}px)`;
     };
+
     render();
   };
 
@@ -73,7 +100,8 @@ export const WavyBackground = ({
     ctx.beginPath();
     ctx.lineWidth = waveWidth || 50;
     ctx.strokeStyle = waveColors[n % waveColors.length];
-    for (i = 0; i < w; i += 5) {
+    const step = Math.max(5, Math.floor(w / 100)); // Adjust step size based on screen width
+    for (i = 0; i < w; i += step) {
       x = noise(i / 800, 0.3 * n, nt) * 100;
       ctx.lineTo(i, h * 0.5 + x);
     }
@@ -86,7 +114,8 @@ export const WavyBackground = ({
     ctx.fillStyle = backgroundFill || "hsl(270, 95%, 95%)";
     ctx.globalAlpha = waveOpacity || 0.5;
     ctx.fillRect(0, 0, w, h);
-    for (let n = 0; n < 4; n++) {
+    const waveCount = w < 600 ? 2 : 4; // Reduce wave count on smaller screens
+    for (let n = 0; n < waveCount; n++) {
       drawWave(n);
     }
     requestAnimationFrame(render);
@@ -99,7 +128,7 @@ export const WavyBackground = ({
   return (
     <div
       className={cn(
-        "min-h-[800px] flex flex-col items-center justify-center overflow-hidden",
+        "min-h-screen flex flex-col items-center justify-center overflow-hidden",
         containerClassName
       )}
     >
@@ -108,7 +137,14 @@ export const WavyBackground = ({
         ref={canvasRef}
         id="canvas"
       ></canvas>
-      <div className={cn("relative z-10", className)} {...props}>
+      <div
+        className={cn(
+          "relative z-10 w-full px-4 py-10 md:py-20",
+          "flex flex-col items-center justify-center",
+          className
+        )}
+        {...props}
+      >
         {children}
       </div>
     </div>
