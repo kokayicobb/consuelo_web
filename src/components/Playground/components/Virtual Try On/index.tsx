@@ -58,121 +58,107 @@ const TryOnButton = ({ garmentImage, category, onResult }) => {
 
     loadGarmentImage();
   }, [garmentImage]);
-  const pollStatus = async (id: string) => {
-    pollingRef.current = true; // Start polling
-    attemptCountRef.current = 0;
-  
-    const poll = async () => {
-      attemptCountRef.current++;
-      console.log(`Polling attempt ${attemptCountRef.current} for ID: ${id}`);
-  
-      if (attemptCountRef.current > MAX_POLL_ATTEMPTS) {
-        console.error("Maximum polling attempts reached");
-        setError("Processing is taking too long. Please try again later.");
-        setIsLoading(false);
-        pollingRef.current = false;
-        return;
-      }
-  
-      try {
-        const response = await fetch(`/api/try-on/status/${id}`);
-        if (!response.ok) {
-          throw new Error(`HTTP error: ${response.status}`);
-        }
-  
-        const data = await response.json();
-        console.log("Polling Response:", data);
-  
-        if (data.status === "completed") {
-          if (data.output && data.output.length > 0) {
-            console.log("Processing completed successfully. Result:", data.output[0]);
-            setResult(data.output[0]);
-            if (onResult) onResult(data.output[0]);
-            setIsLoading(false);
-            pollingRef.current = false;
-          } else {
-            console.error("No output provided in completed response:", data);
-            throw new Error("Processing completed, but no output was provided.");
-          }
-        } else if (data.status === "failed") {
-          console.error("Processing failed. Error:", data.error);
-          throw new Error(data.error?.message || "Processing failed on the server.");
-        } else {
-          // Continue polling if still processing or in queue
-          console.log(`Status: ${data.status}. Retrying...`);
-          await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL));
-          poll(); // Recursive call to continue polling
-        }
-      } catch (err) {
-        console.error("Error during polling:", err);
-        setError(err.message || "An unexpected error occurred during polling.");
-        setIsLoading(false);
-        pollingRef.current = false;
-      }
-    };
-  
-    poll();
-  };
-  
-  
+ // Update the pollStatus function too:
+const pollStatus = async (id) => {
+  pollingRef.current = true;
+  attemptCountRef.current = 0;
 
-  const handleTryOn = async () => {
-    if (!userImage || !garmentBase64) {
-      setError('Please ensure both your photo and garment image are loaded');
+  const poll = async () => {
+    attemptCountRef.current++;
+    console.log(`Polling attempt ${attemptCountRef.current} for ID: ${id}`);
+
+    if (attemptCountRef.current > MAX_POLL_ATTEMPTS) {
+      console.error("Maximum polling attempts reached");
+      setError("Processing is taking too long. Please try again later.");
+      setIsLoading(false);
+      pollingRef.current = false;
       return;
     }
 
-    setIsLoading(true);
-    setError(null);
-    setResult(null);
-    pollingRef.current = true;
-
     try {
-      const base64Image = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(userImage);
-      });
-
-      console.log('Initiating try-on request');
-      const response = await fetch('/api/try-on', {
-        method: 'POST',
+      const response = await fetch(`https://api.fashn.ai/v1/status/${id}`, { // Changed to direct FASHN API endpoint
         headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model_image: base64Image,
-          garment_image: garmentBase64,
-          category: category,
-          mode: 'balanced',
-          num_samples: 1
-        })
+          'Authorization': 'Bearer fa-u5Z4R9wIqa6R-kfW6TOb7KXllTSG1PB278ZiB' // Replace with your actual FASHN API key
+        }
       });
 
       if (!response.ok) {
-        throw new Error(`Request failed with status ${response.status}`);
+        throw new Error(`HTTP error: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log('Try-on API response:', data);
-
-      if (data.error) {
-        throw new Error(data.error.message || 'API Error');
-      }
-
-      if (!data.id) {
-        throw new Error('No prediction ID received');
-      }
-
-      await pollStatus(data.id);
+      // Rest of your polling logic...
     } catch (err) {
-      console.error('Try-on error:', err);
-      setError(`Error: ${err.message}`);
+      console.error("Error during polling:", err);
+      setError(err.message || "An unexpected error occurred during polling.");
       setIsLoading(false);
       pollingRef.current = false;
     }
   };
+
+  poll();
+};
+  
+  
+
+const handleTryOn = async () => {
+  if (!userImage || !garmentBase64) {
+    setError('Please ensure both your photo and garment image are loaded');
+    return;
+  }
+
+  setIsLoading(true);
+  setError(null);
+  setResult(null);
+  pollingRef.current = true;
+
+  try {
+    const base64Image = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(userImage);
+    });
+
+    console.log('Initiating try-on request');
+    const response = await fetch('https://api.fashn.ai/v1/run', { // Changed to direct FASHN API endpoint
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer fa-u5Z4R9wIqa6R-kfW6TOb7KXllTSG1PB278ZiB' // Replace with your actual FASHN API key
+      },
+      body: JSON.stringify({
+        model_image: base64Image,
+        garment_image: garmentBase64,
+        category: category,
+        mode: 'balanced',
+        num_samples: 1
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Request failed with status ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('Try-on API response:', data);
+
+    if (data.error) {
+      throw new Error(data.error.message || 'API Error');
+    }
+
+    if (!data.id) {
+      throw new Error('No prediction ID received');
+    }
+
+    await pollStatus(data.id);
+  } catch (err) {
+    console.error('Try-on error:', err);
+    setError(`Error: ${err.message}`);
+    setIsLoading(false);
+    pollingRef.current = false;
+  }
+};
 
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
