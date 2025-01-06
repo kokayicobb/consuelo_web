@@ -222,7 +222,15 @@ const handleTryOn = async () => {
       fileInputRef.current.value = '';
     }
   };
-
+  const fashionFacts = [
+    "Did you know? The first fashion magazine was published in Germany in 1586!",
+    "High heels were originally worn by Persian horsemen in the 10th century to keep their feet in stirrups.",
+    "The concept of 'ready-to-wear' clothing didn't exist until the Industrial Revolution in the 19th century.",
+    "Buttons were originally used as decorative ornaments rather than fasteners - buttonholes weren't invented until the 13th century.",
+    "The little black dress became iconic after Coco Chanel published a simple calf-length black dress in Vogue in 1926.",
+    "The word 'denim' comes from the French phrase 'serge de Nîmes', referring to the city where the fabric was first made.",
+    "Before the 1920s, pink was considered a masculine color while blue was viewed as more feminine."
+  ];
   return (
     <div className="space-y-4">
       <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
@@ -274,13 +282,23 @@ const handleTryOn = async () => {
         {isLoading ? 'Processing...' : 'Try On Now'}
       </Button>
 
-      {isLoading && (
-        <div className="mt-4 text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-2 text-sm text-gray-600">
-            Processing your image... Attempt {attemptCountRef.current} of {MAX_POLL_ATTEMPTS}
-          </p>
-        </div>
+   
+
+{isLoading && (
+  <div className="mt-4 text-center space-y-4">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+    <div className="space-y-2">
+      <p className="text-sm text-gray-600">
+        Try-on AI is processing your image... This typically takes 10-13 seconds depending on your connection speed.
+      </p>
+      <p className="mt-4 text-sm italic text-gray-500">
+        While you wait, here's an interesting fashion fact:
+      </p>
+      <p className="text-sm text-gray-700 max-w-md mx-auto">
+        {fashionFacts[Math.floor(Math.random() * fashionFacts.length)]}
+      </p>
+    </div>
+  </div>
       )}
 
       {error && (
