@@ -45,8 +45,7 @@ export const BentoGridItem = ({
       href={href}
       onClick={onClick}
       className={cn(
-        "row-span-1 rounded-xl group/bento hover:shadow-xl transition duration-200 border border-transparent",
-        "shadow-none dark:shadow-none",
+        "row-span-1 rounded-xl group/bento relative",
         "overflow-hidden",
         "justify-between flex flex-col",
         "min-h-[12rem] sm:min-h-[15rem] lg:min-h-[20rem]",
@@ -55,6 +54,13 @@ export const BentoGridItem = ({
         className
       )}
     >
+      {/* Gradient border container */}
+      <div className="absolute inset-0 bg-gradient-to-r from-[#FF1493]/20 to-[#00BFFF]/20 rounded-xl opacity-60"></div>
+      
+      {/* Inner background */}
+      <div className="absolute inset-[1px] bg-background rounded-xl"></div>
+      
+      {/* Content */}
       {header}
       <div className="relative z-10 p-3 sm:p-4 lg:p-6 xl:p-8 flex flex-col h-full">
         <div className="bg-background/80 dark:bg-background/90 backdrop-blur-sm rounded-full p-2 sm:p-3 inline-block mb-2 sm:mb-3 self-start text-accent">
@@ -72,4 +78,3 @@ export const BentoGridItem = ({
     </Wrapper>
   );
 };
-

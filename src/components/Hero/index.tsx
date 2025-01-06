@@ -35,24 +35,46 @@ export function WavyBackgroundDemo() {
             confidence when they shop online.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-x-6">
-            <Button
-              asChild
-              size="lg"
-              className="w-full sm:w-auto bg-violet-600 hover:bg-violet-700 text-white transform hover:scale-105 transition-transform duration-300"
+          <Link 
+              href="/contact"
+              className="relative inline-flex items-center justify-center h-10 px-8 w-full sm:w-auto rounded-md cursor-pointer overflow-hidden group transform hover:scale-105 transition-transform duration-300"
             >
-              <Link href="/contact">Get Started</Link>
-            </Button>
-            <Button
-              asChild
-              variant="outline"
-              size="lg"
-              className="w-full sm:w-auto bg-black text-violet-400 border-black hover:bg-black hover:border-black hover:opacity-80 transform hover:scale-105 transition-transform duration-300"
-            >
-              <Link href="/playground">
-                Demo Playground
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
+              {/* Border */}
+              <span className="absolute inset-0 border border-violet-600 rounded-md z-[1]"></span>
+              
+              {/* Background */}
+              <span className="absolute inset-0 bg-violet-600 rounded-md z-[2] transition-opacity duration-300 opacity-100 group-hover:opacity-90"></span>
+              
+              {/* Text and icon */}
+              <span className="relative z-[3] flex items-center text-sm font-medium text-white">
+                Get Started
+                <ArrowRight strokeWidth={2} className="ml-2 h-4 w-4" />
+              </span>
+            </Link>
+            <Link 
+      
+      href="/playground"
+      className="relative inline-flex items-center justify-center h-10 px-8 w-full sm:w-auto rounded-md cursor-pointer overflow-hidden group transform hover:scale-105 transition-transform duration-300"
+    >
+      {/* Gradient border background */}
+      <span className="absolute inset-0 bg-gradient-to-r from-pink-500 to-blue-500 opacity-100 rounded-md z-[1]"></span>
+      
+      {/* Inner background - smaller to create visible border */}
+      <span className="absolute inset-[2px] bg-[hsl(270,95%,95%)] rounded-[3px] z-[2]"></span>
+      {/* Text and icon */}
+      <span className="relative z-[3] flex items-center text-sm font-medium text-transparent bg-clip-text bg-gradient-to-r from-[#FF1493] to-[#00BFFF]">
+        Demo Playground
+        <ArrowRight strokeWidth={2} className="ml-2 h-4 w-4 [&>path]:fill-transparent [&>path]:stroke-[url(#gradient)]" />
+        <svg width="0" height="0" className="absolute">
+          <defs>
+            <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#FF1493" />
+              <stop offset="100%" stopColor="#00BFFF" />
+            </linearGradient>
+          </defs>
+        </svg>
+      </span>
+    </Link>
           </div>
           <p className="mt-4 text-xs text-gray-500 dark:text-gray-400">
             No credit card required. Start for free.

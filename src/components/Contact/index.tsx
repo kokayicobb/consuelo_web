@@ -68,7 +68,7 @@ export function Contact() {
                   name="name"
                   placeholder="Jane Smith" 
                   type="text"
-                  className="bg-background/50" 
+                  className="bg-background/50 text-base"
                   required
                 />
               </LabelInputContainer>
@@ -79,7 +79,7 @@ export function Contact() {
                   name="company"
                   placeholder="Fashion Brand Inc." 
                   type="text"
-                  className="bg-background/50" 
+                 className="bg-background/50 text-base"
                   required
                 />
               </LabelInputContainer>
@@ -92,7 +92,7 @@ export function Contact() {
                 name="email"
                 placeholder="jane@fashionbrand.com" 
                 type="email"
-                className="bg-background/50" 
+                className="bg-background/50 text-base"
                 required
               />
             </LabelInputContainer>
@@ -104,7 +104,7 @@ export function Contact() {
                 name="website"
                 placeholder="www.fashionbrand.com" 
                 type="url"
-                className="bg-background/50" 
+               className="bg-background/50 text-base"
               />
             </LabelInputContainer>
 
