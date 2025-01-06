@@ -1,4 +1,4 @@
-// Helper function for retries
+// tryOn.ts
 const retryRequest = async (fn: Function, retries: number, delay: number) => {
   let attempt = 0;
   while (attempt < retries) {
@@ -6,7 +6,7 @@ const retryRequest = async (fn: Function, retries: number, delay: number) => {
       return await fn();
     } catch (error) {
       console.error(`Attempt ${attempt + 1} failed:`, error);
-      if (attempt === retries - 1) throw error; // Rethrow if all retries fail
+      if (attempt === retries - 1) throw error;
       attempt++;
       await new Promise(resolve => setTimeout(resolve, delay));
     }
@@ -19,14 +19,15 @@ export const initiateTryOn = async (body: any) => {
 
   return retryRequest(
     async () => {
-      const response = await fetch('/api/try-on', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					'Authorization': `Bearer ${process.env.NEXT_PUBLIC_FASHN_API_KEY}`, // Use environment variable for security
-				},
-				body: JSON.stringify(body),
-			});
+      // Make direct call to FASHN API instead of your local endpoint
+      const response = await fetch('https://api.fashn.ai/v1/run', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer fa-u5Z4R9wIqa6R-kfW6TOb7KXllTSG1PB278ZiB', // Replace with your actual API key
+        },
+        body: JSON.stringify(body),
+      });
 
       if (!response.ok) {
         throw new Error(`Failed to initiate try-on: ${response.status} ${response.statusText}`);
@@ -41,8 +42,8 @@ export const initiateTryOn = async (body: any) => {
 
       return data;
     },
-    3, // Retry up to 3 times
-    1000 // Wait 1 second between retries
+    3,
+    1000
   );
 };
 
@@ -52,7 +53,13 @@ export const getTryOnStatus = async (id: string) => {
 
   return retryRequest(
     async () => {
-      const response = await fetch(`/api/try-on/status/${id}`);
+      // Make direct call to FASHN API status endpoint
+      const response = await fetch(`https://api.fashn.ai/v1/status/${id}`, {
+        headers: {
+          'Authorization': 'Bearer fa-u5Z4R9wIqa6R-kfW6TOb7KXllTSG1PB278ZiB', // Replace with your actual API key
+        }
+      });
+
       if (!response.ok) {
         throw new Error(`Failed to get try-on status: ${response.status} ${response.statusText}`);
       }
@@ -66,7 +73,7 @@ export const getTryOnStatus = async (id: string) => {
 
       return data;
     },
-    3, // Retry up to 3 times
-    1000 // Wait 1 second between retries
+    3,
+    1000
   );
 };
