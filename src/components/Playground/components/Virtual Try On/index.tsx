@@ -70,7 +70,7 @@ const TryOnButton = ({ garmentImage, category, onResult }) => {
     try {
       const response = await fetch(`https://api.fashn.ai/v1/status/${id}`, {
         headers: {
-          'Authorization': 'Bearer YOUR_API_KEY_HERE'
+          'Authorization': 'Bearer fa-u5Z4R9wIqa6R-kfW6TOb7KXllTSG1PB278ZiB'
         }
       });
 
