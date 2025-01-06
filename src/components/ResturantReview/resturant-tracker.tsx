@@ -72,44 +72,44 @@ const RestaurantTracker = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      const { error } = await supabase
-        .from('restaurant_reviews')
-        .insert([
-          {
-            name: formData.name,
-            restaurant: formData.restaurant,
-            rating: parseInt(formData.rating),
-            comments: formData.comments,
-          }
-        ]);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success!",
-        description: "Your review has been submitted.",
-      });
-
-      setFormData({
-        name: '',
-        restaurant: '',
-        rating: '',
-        comments: '',
-      });
-    } catch (error) {
-      toast({
-        title: "Error submitting review",
-        description: error.message,
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+		e.preventDefault();
+		setLoading(true);
+	
+		try {
+			const { error } = await supabase
+				.from('restaurant_reviews')
+				.insert([
+					{
+						name: formData.name,
+						restaurant: formData.restaurant,
+						rating: parseInt(formData.rating),
+						comments: formData.comments,
+					}
+				]);
+	
+			if (error) throw error;
+	
+			toast({
+				title: "Success!",
+				description: "Your review has been submitted. Refresh the page to see all reviews including yours!",
+			});
+	
+			setFormData({
+				name: '',
+				restaurant: '',
+				rating: '',
+				comments: '',
+			});
+		} catch (error) {
+			toast({
+				title: "Error submitting review",
+				description: error.message,
+				variant: "destructive"
+			});
+		} finally {
+			setLoading(false);
+		}
+	};
 
   const handleChange = (e) => {
     const { name, value } = e.target;
