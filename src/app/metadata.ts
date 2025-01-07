@@ -1,36 +1,35 @@
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Consuelo',
-  description: 'AI-Powered Fit Technology',
-  metadataBase: new URL('https://www.consuelohq.com/'),
+  title: 'Consuelo - AI-Powered Fit Technology',
+  description: 'The personalized virtual fitting solution for Ecommerce retailers. Our innovative SaaS platform enables customers to try on clothes online ensuring the perfect fit and reducing returns.',
+  metadataBase: new URL('https://www.consuelohq.com'),
   applicationName: 'Consuelo',
-  keywords: ['AI','Virtual Fitting Room', 'Fashion', 'Fit Technology' ],
+  keywords: ['AI', 'Virtual Fitting Room', 'Fashion', 'Fit Technology'],
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://www.consuelohq.com/',
+    url: 'https://www.consuelohq.com',
     siteName: 'Consuelo',
-    title: 'Consuelo',
-    description: 'AI-Powered Fit Technology',
+    title: 'Consuelo - AI-Powered Fit Technology',
+    description: 'The personalized virtual fitting solution for Ecommerce retailers.',
     images: [{
-      url: '/images/logo.png',  // Remove 'public' from path
+      url: 'https://www.consuelohq.com/images/logo.png', // Use absolute URL
       width: 1200,
       height: 630,
-      alt: 'Consuelo App Preview'
-		}],
-    // Added fields for better social sharing
+      alt: 'Consuelo App Preview',
+      type: 'image/png',
+    }],
     countryName: 'United States',
     emails: ['Info@consuelohq.com'],
-   
   },
   twitter: {
     card: 'summary_large_image',
     site: '@YourTwitterHandle',
     creator: '@YourTwitterHandle',
-    title: 'Consuelo',
-    description: 'AI-Powered Fit Technology',
-    images: ['/images/logo.png']  // Remove 'public' from path
+    title: 'Consuelo - AI-Powered Fit Technology',
+    description: 'The personalized virtual fitting solution for Ecommerce retailers.',
+    images: ['https://www.consuelohq.com/images/logo.png'] // Use absolute URL // Remove 'public' from path
   },
   icons: {
     icon: '/favicon.ico',

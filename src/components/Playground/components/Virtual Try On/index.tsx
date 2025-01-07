@@ -1,7 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Camera, X } from 'lucide-react';
+import { Camera, CheckCircle, Info, Shirt, X } from 'lucide-react';
+import { Dialog, DialogTrigger, DialogContent } from '@radix-ui/react-dialog';
+import { Drawer } from 'vaul';
+import { useMediaQuery } from '../../hooks/UseMediaQuery';
+import { DrawerTrigger, DrawerContent } from '../ui/drawer';
+import { Checkbox } from '@radix-ui/react-checkbox';
+import { AnimatePresence, motion } from 'framer-motion';
+
 
 const TryOnButton = ({ garmentImage, category, onResult }) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -13,11 +20,30 @@ const TryOnButton = ({ garmentImage, category, onResult }) => {
   const fileInputRef = useRef(null);
   const pollingRef = useRef(false);
   const attemptCountRef = useRef(0);
+  const [screen, setScreen] = useState('welcome');
+  const [open, setOpen] = useState(false);
+  const isDesktop = useMediaQuery("(min-width: 1000px)");
 
   // Constants for polling
   const MAX_POLL_ATTEMPTS = 60;
   const POLL_INTERVAL = 2000;
   const POLL_TIMEOUT = 120000;
+
+  const handleOpenChange = (isOpen) => {
+    setOpen(isOpen);
+    if (!isOpen) {
+      // Reset states when dialog/drawer closes
+      setScreen('welcome');
+      setUserImage(null);
+      setUserImagePreview(null);
+      setResult(null);
+      setError(null);
+      setIsLoading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
 
   useEffect(() => {
     const loadGarmentImage = async () => {
@@ -58,136 +84,133 @@ const TryOnButton = ({ garmentImage, category, onResult }) => {
 
     loadGarmentImage();
   }, [garmentImage]);
- // Update the pollStatus function too:
- const pollStatus = async (id) => {
-  pollingRef.current = true;
-  attemptCountRef.current = 0;
 
-  const poll = async () => {
-    attemptCountRef.current++;
-    console.log(`Polling attempt ${attemptCountRef.current} for ID: ${id}`);
+  const pollStatus = async (id) => {
+    pollingRef.current = true;
+    attemptCountRef.current = 0;
+
+    const poll = async () => {
+      attemptCountRef.current++;
+      console.log(`Polling attempt ${attemptCountRef.current} for ID: ${id}`);
+
+      try {
+        const response = await fetch(`https://api.fashn.ai/v1/status/${id}`, {
+          headers: {
+            'Authorization': 'Bearer fa-u5Z4R9wIqa6R-kfW6TOb7KXllTSG1PB278ZiB'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log("Status response:", data);
+
+        switch(data.status) {
+          case "completed":
+            if (data.output && data.output.length > 0) {
+              console.log("Processing completed successfully. Result:", data.output[0]);
+              setResult(data.output[0]);
+              if (onResult) onResult(data.output[0]);
+              setIsLoading(false);
+              pollingRef.current = false;
+            } else {
+              throw new Error("Processing completed, but no output was provided.");
+            }
+            break;
+
+          case "failed":
+            throw new Error(data.error?.message || "Processing failed on the server.");
+            
+          case "processing":
+          case "in_queue":
+          case "starting":
+            console.log(`Status: ${data.status}. Retrying in 2 seconds...`);
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            await poll();
+            break;
+
+          default:
+            console.log(`Unknown status: ${data.status}`);
+            throw new Error(`Unknown status: ${data.status}`);
+        }
+      } catch (err) {
+        console.error("Error during polling:", err);
+        setError(err.message || "An unexpected error occurred during polling.");
+        setIsLoading(false);
+        pollingRef.current = false;
+      }
+    };
 
     try {
-      const response = await fetch(`https://api.fashn.ai/v1/status/${id}`, {
-        headers: {
-          'Authorization': 'Bearer fa-u5Z4R9wIqa6R-kfW6TOb7KXllTSG1PB278ZiB'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log("Status response:", data); // Add this log
-
-      switch(data.status) {
-        case "completed":
-          if (data.output && data.output.length > 0) {
-            console.log("Processing completed successfully. Result:", data.output[0]);
-            setResult(data.output[0]);
-            if (onResult) onResult(data.output[0]);
-            setIsLoading(false);
-            pollingRef.current = false;
-          } else {
-            throw new Error("Processing completed, but no output was provided.");
-          }
-          break;
-
-        case "failed":
-          throw new Error(data.error?.message || "Processing failed on the server.");
-          
-        case "processing":
-        case "in_queue":
-        case "starting":
-          console.log(`Status: ${data.status}. Retrying in 2 seconds...`);
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          await poll(); // Recursive call to continue polling
-          break;
-
-        default:
-          console.log(`Unknown status: ${data.status}`);
-          throw new Error(`Unknown status: ${data.status}`);
-      }
-
-    } catch (err) {
-      console.error("Error during polling:", err);
-      setError(err.message || "An unexpected error occurred during polling.");
+      await poll();
+    } catch (error) {
+      console.error("Polling failed:", error);
+      setError("Failed to get processing status");
       setIsLoading(false);
       pollingRef.current = false;
     }
   };
 
-  try {
-    await poll();
-  } catch (error) {
-    console.error("Polling failed:", error);
-    setError("Failed to get processing status");
-    setIsLoading(false);
-    pollingRef.current = false;
-  }
-};
-  
-  
-
-const handleTryOn = async () => {
-  if (!userImage || !garmentBase64) {
-    setError('Please ensure both your photo and garment image are loaded');
-    return;
-  }
-
-  setIsLoading(true);
-  setError(null);
-  setResult(null);
-  pollingRef.current = true;
-
-  try {
-    const base64Image = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(userImage);
-    });
-
-    console.log('Initiating try-on request');
-    const response = await fetch('https://api.fashn.ai/v1/run', { // Changed to direct FASHN API endpoint
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer fa-u5Z4R9wIqa6R-kfW6TOb7KXllTSG1PB278ZiB' // Replace with your actual FASHN API key
-      },
-      body: JSON.stringify({
-        model_image: base64Image,
-        garment_image: garmentBase64,
-        category: category,
-        mode: 'balanced',
-        num_samples: 1
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Request failed with status ${response.status}`);
+  const handleTryOn = async () => {
+    if (!userImage || !garmentBase64) {
+      setError('Please ensure both your photo and garment image are loaded');
+      return;
     }
 
-    const data = await response.json();
-    console.log('Try-on API response:', data);
+    setIsLoading(true);
+    setError(null);
+    setResult(null);
+    pollingRef.current = true;
 
-    if (data.error) {
-      throw new Error(data.error.message || 'API Error');
+    try {
+      const base64Image = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(userImage);
+      });
+
+      console.log('Initiating try-on request');
+      const response = await fetch('https://api.fashn.ai/v1/run', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer fa-u5Z4R9wIqa6R-kfW6TOb7KXllTSG1PB278ZiB'
+        },
+        body: JSON.stringify({
+          model_image: base64Image,
+          garment_image: garmentBase64,
+          category: category,
+          mode: 'balanced',
+          num_samples: 1
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('Try-on API response:', data);
+
+      if (data.error) {
+        throw new Error(data.error.message || 'API Error');
+      }
+
+      if (!data.id) {
+        throw new Error('No prediction ID received');
+      }
+
+      await pollStatus(data.id);
+    } catch (err) {
+      console.error('Try-on error:', err);
+      setError(`Error: ${err.message}`);
+      setIsLoading(false);
+      pollingRef.current = false;
     }
-
-    if (!data.id) {
-      throw new Error('No prediction ID received');
-    }
-
-    await pollStatus(data.id);
-  } catch (err) {
-    console.error('Try-on error:', err);
-    setError(`Error: ${err.message}`);
-    setIsLoading(false);
-    pollingRef.current = false;
-  }
-};
+  };
 
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
@@ -222,6 +245,7 @@ const handleTryOn = async () => {
       fileInputRef.current.value = '';
     }
   };
+
   const fashionFacts = [
     "Did you know? The first fashion magazine was published in Germany in 1586!",
     "High heels were originally worn by Persian horsemen in the 10th century to keep their feet in stirrups.",
@@ -231,88 +255,185 @@ const handleTryOn = async () => {
     "The word 'denim' comes from the French phrase 'serge de Nîmes', referring to the city where the fabric was first made.",
     "Before the 1920s, pink was considered a masculine color while blue was viewed as more feminine."
   ];
-  return (
+  const [instructionsChecked, setInstructionsChecked] = useState(false);
+  const [hasAnimated, setHasAnimated] = useState(false);
+  useEffect(() => {
+    // Reset animation state when component mounts
+    setHasAnimated(false);
+    return () => {
+      // Clean up (will run when component unmounts)
+      setHasAnimated(false);
+    };
+  }, []);
+
+  const WelcomeScreen = () => (
+    <div className="flex flex-col items-center justify-center space-y-4 p-4">
+    <Shirt className="h-12 w-12 text-primary" />
+    <p className="text-center text-sm text-muted-foreground">
+      Experience clothes virtually before you buy. Our AI-powered fitting room
+      helps you see how items will look on you.
+    </p>
+
+    <AnimatePresence>
+      <motion.div 
+        initial={!hasAnimated ? { opacity: 0, y: 20 } : false}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        onAnimationComplete={() => setHasAnimated(true)}
+        className="space-y-4 w-full"
+      >
+        <div className="flex items-center space-x-2">
+          <Info className="h-5 w-5 text-gray-500" />
+          <h3 className="text-lg font-semibold text-gray-900">Best Photo Tips</h3>
+        </div>
+        
+        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+          <p className="text-sm text-gray-700 leading-relaxed">
+            For the best virtual try-on results, please follow these guidelines when taking your photo:
+          </p>
+          
+          <div className="mt-3 space-y-2">
+          <div className="flex items-start space-x-2">
+          <CheckCircle className="h-5 w-5 text-gray-500 mt-0.5" />
+              <p className="text-sm text-gray-600">
+                Clear, full-body photo
+              </p>
+            </div>
+            <div className="flex items-start space-x-2">
+              <CheckCircle className="h-5 w-5 text-gray-500 mt-0.5" />
+              <p className="text-sm text-gray-600">
+                Simple background
+              </p>
+            </div>
+            <div className="flex items-start space-x-2">
+              <CheckCircle className="h-5 w-5 text-gray-500 mt-0.5" />
+              <p className="text-sm text-gray-600">
+                Face forward with arms slightly away
+              </p>
+            </div>
+          </div>
+        </div>
+      
+        <div className="flex items-center space-x-3 bg-white p-4 rounded-lg border border-gray-200">
+          <Checkbox
+            id="instructions-check"
+            checked={instructionsChecked}
+            onCheckedChange={(checked) => setInstructionsChecked(checked as boolean)}
+            className="border-gray-300"
+          />
+          <label
+            htmlFor="instructions-check"
+            className="text-sm font-medium leading-none cursor-pointer select-none text-gray-700"
+          >
+            I understand these guidelines and will follow them for the best results
+          </label>
+        </div>
+
+        <Button 
+          className="w-full"
+          onClick={() => setScreen('upload')}
+          disabled={!instructionsChecked}
+        >
+          Start Virtual Try-On
+        </Button>
+      </motion.div>
+    </AnimatePresence>
+  </div>
+  );
+
+  const UploadScreen = () => (
     <div className="space-y-4">
       <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
         <input
           type="file"
           accept="image/*"
-          onChange={handleImageUpload}
+          onChange={(e) => {
+            handleImageUpload(e);
+            if (e.target.files[0]) setScreen('preview');
+          }}
           className="hidden"
           ref={fileInputRef}
           disabled={isLoading}
         />
         
-        {!userImagePreview ? (
-          <Button 
-            onClick={() => fileInputRef.current?.click()}
-            className="w-full h-40 flex flex-col items-center justify-center gap-2"
-            variant="outline"
-            disabled={isLoading}
-          >
-            <Camera className="w-8 h-8" />
-            <span>Upload Your Photo</span>
-            <span className="text-sm text-gray-500">Click to browse</span>
-          </Button>
-        ) : (
-          <div className="relative">
-            <img 
-              src={userImagePreview} 
-              alt="Preview" 
-              className="w-full h-64 object-cover rounded-lg"
-            />
-            <Button
-              onClick={removeImage}
-              className="absolute top-2 right-2 p-2 rounded-full"
-              size="icon"
-              variant="destructive"
-              disabled={isLoading}
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
-        )}
+        <Button 
+          onClick={() => fileInputRef.current?.click()}
+          className="w-full h-40 flex flex-col items-center justify-center gap-2"
+          variant="outline"
+          disabled={isLoading}
+        >
+          <Camera className="w-8 h-8" />
+          <span>Upload Your Photo</span>
+          <span className="text-sm text-gray-500">Click to browse</span>
+        </Button>
       </div>
-
-      <Button 
-        onClick={handleTryOn} 
-        disabled={isLoading || !userImage || !garmentBase64}
-        className="w-full"
-      >
-        {isLoading ? 'Processing...' : 'Try On Now'}
-      </Button>
-
-   
-
-{isLoading && (
-  <div className="mt-4 text-center space-y-4">
-    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-    <div className="space-y-2">
-      <p className="text-sm text-gray-600">
-        Try-on AI is processing your image... This typically takes 10-13 seconds depending on your connection speed.
-      </p>
-      <p className="mt-4 text-sm italic text-gray-500">
-        While you wait, here's an interesting fashion fact:
-      </p>
-      <p className="text-sm text-gray-700 max-w-md mx-auto">
-        {fashionFacts[Math.floor(Math.random() * fashionFacts.length)]}
-      </p>
     </div>
+  );
+
+  const PreviewScreen = () => (
+    <div className="space-y-4">
+    <div className="flex justify-start">
+      <div className="relative"> {/* Added container specifically for image and button */}
+        <img 
+          src={userImagePreview} 
+          alt="Preview" 
+          className="max-h-96 max-w-full w-auto rounded-lg"
+        />
+        <Button
+          onClick={() => {
+            removeImage();
+            setScreen('upload');
+          }}
+          className="absolute top-2 right-2 p-2 rounded-full"
+          size="icon"
+          variant="destructive"
+          disabled={isLoading}
+        >
+          <X className="w-4 h-4" />
+        </Button>
+      </div>
+    </div>
+    
+    <Button 
+      onClick={() => {
+        handleTryOn();
+        setScreen('result');
+      }}
+      disabled={isLoading || !userImage || !garmentBase64}
+      className="w-full"
+    >
+      {isLoading ? 'Processing...' : 'Try On Now'}
+    </Button>
   </div>
-      )}
+  );
 
-      {error && (
-        <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
+  const ResultScreen = () => (
+    <div className="space-y-4">
+    {isLoading && (
+      <div className="mt-4 text-left space-y-4"> {/* Changed text-center to text-left */}
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"> {/* Removed mx-auto */}
+        </div>
+        <div className="space-y-2">
+          <p className="text-sm text-gray-600">
+            Try-on AI is processing your image... This typically takes 10-13 seconds depending on your connection speed.
+          </p>
+          <p className="mt-4 text-sm italic text-gray-500">
+            While you wait, here's an interesting fashion fact:
+          </p>
+          <p className="text-sm text-gray-700"> {/* Removed max-w-md and mx-auto */}
+            {fashionFacts[Math.floor(Math.random() * fashionFacts.length)]}
+          </p>
+        </div>
+      </div>
+    )}
 
-      {result && (
-        <div className="mt-4">
+    {result && (
+      <div className="mt-4">
+        <div className="relative flex justify-start"> {/* Added container with left alignment */}
           <img 
             src={result} 
             alt="Try-on result preview" 
-            className="w-full rounded-lg shadow-lg"
+            className="max-h-96 max-w-full w-auto rounded-lg"
             onLoad={() => {
               console.log('Result image loaded successfully');
               setIsLoading(false);
@@ -324,8 +445,65 @@ const handleTryOn = async () => {
             }}
           />
         </div>
+        <Button 
+          onClick={() => setScreen('upload')}
+          className="w-full mt-4"
+        >
+          Try Another Photo
+        </Button>
+      </div>
+    )}
+  </div>
+  );
+
+  const Content = () => (
+    <div className="space-y-4">
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
+      
+      {screen === 'welcome' && <WelcomeScreen />}
+      {screen === 'upload' && <UploadScreen />}
+      {screen === 'preview' && <PreviewScreen />}
+      {screen === 'result' && <ResultScreen />}
     </div>
+  );
+
+  if (isDesktop) {
+    return (
+      <Dialog open={open} onOpenChange={handleOpenChange}>
+        <DialogTrigger asChild>
+        <Button variant="link" className="w=auto h-auto justify-start p-0">
+          <span className="whitespace-normal text-sm">
+           Try-On Studio <span className="underline">Be The Model</span>{" "}
+            <span className="bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text px-[2px] text-sm italic text-transparent hover:no-underline">
+              Powered by AI
+            </span>
+          </span>
+        </Button>
+        </DialogTrigger>
+        <DialogContent >
+          <Content />
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  return (
+    <Drawer.Root open={open} onOpenChange={handleOpenChange}>
+    <Drawer.Trigger asChild>
+      <Button variant="secondary">Virtual Try-On</Button>
+    </Drawer.Trigger>
+    <Drawer.Portal>
+      <Drawer.Content className="fixed bottom-0 left-0 right-0 max-h-[96%] rounded-t-[10px] bg-white">
+        <div className="p-4">
+          <Content />
+        </div>
+      </Drawer.Content>
+    </Drawer.Portal>
+  </Drawer.Root>
   );
 };
 
