@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     title: 'Consuelo - AI-Powered Fit Technology',
     description: 'The personalized virtual fitting solution for Ecommerce retailers.',
     images: [{
-      url: 'https://www.consuelohq.com/images/logo.png', // Use absolute URL
+      url: '/images/transparent.png', // Use absolute URL
       width: 1200,
       height: 630,
       alt: 'Consuelo App Preview',
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     creator: '@YourTwitterHandle',
     title: 'Consuelo - AI-Powered Fit Technology',
     description: 'The personalized virtual fitting solution for Ecommerce retailers.',
-    images: ['https://www.consuelohq.com/images/logo.png'] // Use absolute URL // Remove 'public' from path
+    images: ['/images/transparent.png'] // Use absolute URL // Remove 'public' from path
   },
   icons: {
     icon: '/favicon.ico',
