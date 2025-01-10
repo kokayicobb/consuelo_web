@@ -270,11 +270,11 @@ const handleClearTryOn = useCallback(() => {
 
             <div className="flex flex-col gap-2">
               <SizeGuideButton />
-              <TryOnButton
+              {/* <TryOnButton
                 garmentImage="/showcoat.jpg"
                 category="tops"
                 onResult={handleTryOnResult}
-              />
+              /> */}
             </div>
 
             {/* Display Try-On Results */}

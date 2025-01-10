@@ -97,11 +97,11 @@ export function Header() {
         <div className="relative inline-block">
           <div className="absolute -inset-0.5 bg-gradient-to-r from-violet-400 via-violet-500 to-violet-400 rounded-lg blur-sm opacity-75 animate-gradient-xy"></div>
           <Link 
-            href="/virtual-try-on" 
+            href="/playground" 
             className="relative flex items-center justify-center px-4 py-2 bg-white dark:bg-background rounded-lg leading-none text-foreground text-sm font-medium 
                       transition duration-200 hover:text-violet-500 dark:hover:text-violet-400 hover:shadow-xl hover:bg-white/90 dark:hover:bg-background/90
                       ring-1 ring-violet-200 dark:ring-violet-700">
-            Virtual Fitting Room
+            Fit Calculator
           </Link>
         </div>
       </div>
