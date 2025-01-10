@@ -241,7 +241,7 @@ const handleClearTryOn = useCallback(() => {
               state-of-the-art equestrian helmet. Designed for both professional
               and amateur riders.
             </p>
-            <div className="text-2xl font-bold">$249.99</div>
+            <div className="text-2xl font-bold">$449.99</div>
 
             <div>
               <h3 className="mb-2 text-lg font-semibold">Select Size (CM)</h3>
