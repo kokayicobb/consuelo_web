@@ -1,40 +1,64 @@
-"use client";
-import SectionTitle from "../Common/SectionTitle";
-import PricingCard from "./PricingCard";
-import { pricingData } from "@/stripe/pricingData";
-import { Wallet } from "lucide-react";
+"use client"
+import { PricingTable } from "../ui/pricing-card";
 
-const Pricing = () => {
+const features = [
+  // Flexible Pay-Per-Scan Features
+  { name: "Pay as you go ($0.20 per try-on)", included: "starter" },
+  { name: "Minimum 100 try-ons purchase", included: "starter" },
+  { name: "No expiration date", included: "starter" },
+ 
+  
+  // Growth Plan Features
+  { name: "1,000 monthly try-ons included", included: "pro" },
+  { name: "Additional try-ons at $0.18 each", included: "pro" },
+  { name: "Enhanced analytics", included: "pro" },
+  
+  // Scale Plan Features
+  { name: "5,000 monthly try-ons included", included: "scale" },
+  { name: "Additional try-ons at $0.15 each", included: "scale" },
+  { name: "Priority support", included: "scale" },
+  
+  // Enterprise Features
+  { name: "Custom volume-based pricing", included: "custom" },
+  { name: "Dedicated account manager", included: "custom" },
+  { name: "Priority processing", included: "custom" },
+  { name: "API access", included: "custom" }
+];
+
+const plans = [
+  {
+    name: "Flexible Pay-Per-Scan",
+    price: { monthly: 20, yearly: 20 },
+    level: "starter",
+  },
+  {
+    name: "Growth Plan",
+    price: { monthly: 149, yearly: 1499 },
+    level: "pro",
+    popular: true,
+  },
+  {
+    name: "Scale Plan",
+    price: { monthly: 449, yearly: 4499 },
+    level: "scale",
+  },
+  {
+    name: "Enterprise",
+    price: { monthly: 0, yearly: 0 },
+    level: "custom",
+  },
+];
+
+export default function Pricing() {
   return (
-    <section className="bg-background pt-16 pb-24 sm:pt-24 sm:pb-32">
-  <div className="mx-auto max-w-7xl px-6 lg:px-8">
-    <div className="text-center mb-12">
-      {/* Top label matching the first section's style */}
-      <div className="inline-flex items-center rounded-full bg-accent/10 px-3 py-1 text-sm font-medium">
-        <Wallet className="mr-2 h-4 w-4 text-accent" />
-        <span className="text-accent">Pricing</span>
-      </div>
-
-      {/* Title with matching gradient */}
-      <h2 className="mt-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-        Choose Your <span className="bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent">Perfect Plan</span>
-      </h2>
-
-      {/* Subtitle matching the first section's style */}
-      <p className="mt-4 text-lg text-muted-foreground">
-        Unlock the full potential of your business with our flexible pricing options. Scale effortlessly and manage costs as you grow.
-      </p>
-    </div>
-
-        <div className="flex flex-wrap justify-center gap-8">
-          {pricingData.map((product, i) => (
-            <PricingCard key={i} product={product} />
-          ))}     
-        </div>
-      </div>
-    </section>
+    <PricingTable
+      features={features}
+      plans={plans}
+      defaultPlan="pro"
+      defaultInterval="monthly"
+      onPlanSelect={(plan) => console.log("Selected plan:", plan)}
+      containerClassName="py-12"
+      buttonClassName="bg-primary hover:bg-primary/90"
+    />
   );
-};
-
-export default Pricing;
-
+}
