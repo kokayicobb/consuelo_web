@@ -112,7 +112,7 @@ export function PricingTable({
                 )}
               </div>
               <div className="flex items-baseline gap-1">
-                <NumberFlow
+							<NumberFlow
                   format={{
                     style: "currency",
                     currency: "USD",
