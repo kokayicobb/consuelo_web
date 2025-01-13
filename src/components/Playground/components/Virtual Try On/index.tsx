@@ -478,10 +478,10 @@ const TryOnButton = ({ garmentImage, category, onResult }) => {
         <DialogTrigger asChild>
         <Button variant="link" className="w=auto h-auto justify-start p-0">
           <span className="whitespace-normal text-sm">
-           Try-On Studio <span className="underline">Be The Model</span>{" "}
-            <span className="bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text px-[2px] text-sm italic text-transparent hover:no-underline">
+           Try-On Studio <span className="underline">Powered by AI</span>{" "}
+            {/* <span className="bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text px-[2px] text-sm italic text-transparent hover:no-underline">
               Powered by AI
-            </span>
+            </span> */}
           </span>
         </Button>
         </DialogTrigger>

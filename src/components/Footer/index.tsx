@@ -91,7 +91,7 @@ const Footer = () => {
               <nav className="mt-4 flex flex-col space-y-2 text-sm text-muted-foreground">
                 <Link
                   className="transition-colors hover:text-accent"
-                  href="/playground"
+                  href="/virtual-try-on"
                 >
                   Virtual Try-On
                 </Link>

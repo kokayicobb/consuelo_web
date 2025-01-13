@@ -49,7 +49,7 @@ const solutions: {
 }[] = [
   {
     title: "Virtual Try-On",
-    href: "/playground",
+    href: "/virtual-try-on",
     description:
       "Experience clothes virtually with our advanced 3D modeling technology.",
     icon: <Shirt className="h-6 w-6" />,

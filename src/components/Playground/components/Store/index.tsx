@@ -9,7 +9,7 @@ import {
   Environment,
   ContactShadows,
 } from "@react-three/drei";
-
+import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -30,7 +30,7 @@ export default function EquestrianHelmetPage() {
   const [selectedSize, setSelectedSize] = useState("56");
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showModel, setShowModel] = useState(false);
-  
+
   const modelPosition: [number, number, number] = [0, -1, 0];
   const modelRotation: [number, number, number] = [0, 5.2, 0];
   const images = [
@@ -39,50 +39,60 @@ export default function EquestrianHelmetPage() {
     "/FrontHelmet.png?height=600&width=600&text=Side+View",
     "/UnderHelmet.png?height=600&width=600&text=Interior+View",
   ];
+  const tryOnButtonRef = useRef<HTMLDivElement>(null);
 
+  // Add this useEffect for the scroll and animation
+  useEffect(() => {
+    if (tryOnButtonRef.current) {
+      // Scroll to the button with a slight delay for smooth transition
+      setTimeout(() => {
+        tryOnButtonRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }, 500);
+    }
+  }, []);
   const sizes = ["54", "55", "56", "57", "58", "59", "60", "61"];
-// Modify your page component (EquestrianHelmetPage)
-const [tryOnState, setTryOnState] = useState({
-  isProcessing: false,
-  attemptCount: 0,
-  maxAttempts: 60,
-  resultUrl: null as string | null,
-  error: null as string | null
-});
-
-// Update your handleTryOnResult function
-const handleTryOnResult = useCallback((resultUrl: string) => {
-  console.log("Received try-on result URL:", resultUrl);
-  setTryOnState(prev => ({
-    ...prev,
-    isProcessing: false,
-    resultUrl,
-    error: null
-  }));
-}, []);
-
-// Add a function to handle processing updates
-const handleProcessingUpdate = useCallback((attemptCount: number) => {
-  setTryOnState(prev => ({
-    ...prev,
-    isProcessing: true,
-    attemptCount
-  }));
-}, []);
-
-// Add clear function
-const handleClearTryOn = useCallback(() => {
-  setTryOnState({
+  // Modify your page component (EquestrianHelmetPage)
+  const [tryOnState, setTryOnState] = useState({
     isProcessing: false,
     attemptCount: 0,
     maxAttempts: 60,
-    resultUrl: null,
-    error: null
+    resultUrl: null as string | null,
+    error: null as string | null,
   });
-}, []);
-  
 
-  
+  // Update your handleTryOnResult function
+  const handleTryOnResult = useCallback((resultUrl: string) => {
+    console.log("Received try-on result URL:", resultUrl);
+    setTryOnState((prev) => ({
+      ...prev,
+      isProcessing: false,
+      resultUrl,
+      error: null,
+    }));
+  }, []);
+
+  // Add a function to handle processing updates
+  const handleProcessingUpdate = useCallback((attemptCount: number) => {
+    setTryOnState((prev) => ({
+      ...prev,
+      isProcessing: true,
+      attemptCount,
+    }));
+  }, []);
+
+  // Add clear function
+  const handleClearTryOn = useCallback(() => {
+    setTryOnState({
+      isProcessing: false,
+      attemptCount: 0,
+      maxAttempts: 60,
+      resultUrl: null,
+      error: null,
+    });
+  }, []);
 
   const relatedProducts = [
     { name: "Classic Riding Helmet", price: "$189.99", image: "/1.jpeg" },
@@ -186,7 +196,7 @@ const handleClearTryOn = useCallback(() => {
                     className="absolute left-2 top-1/2 -translate-y-1/2"
                     onClick={() =>
                       setCurrentImageIndex((prev) =>
-                        prev > 0 ? prev - 1 : images.length - 1
+                        prev > 0 ? prev - 1 : images.length - 1,
                       )
                     }
                   >
@@ -198,7 +208,7 @@ const handleClearTryOn = useCallback(() => {
                     className="absolute right-2 top-1/2 -translate-y-1/2"
                     onClick={() =>
                       setCurrentImageIndex((prev) =>
-                        prev < images.length - 1 ? prev + 1 : 0
+                        prev < images.length - 1 ? prev + 1 : 0,
                       )
                     }
                   >
@@ -269,14 +279,14 @@ const handleClearTryOn = useCallback(() => {
             </div>
 
             <div className="flex flex-col gap-2">
-              <SizeGuideButton />
-              {/* <TryOnButton
-                garmentImage="/showcoat.jpg"
-                category="tops"
-                onResult={handleTryOnResult}
-              /> */}
+              <div
+                ref={tryOnButtonRef}
+                className="animate-glow flex flex-col gap-2"
+              >
+                <SizeGuideButton />
+            
+              </div>
             </div>
-
             {/* Display Try-On Results */}
             {tryOnResult && (
               <div className="mt-8 space-y-4">
@@ -289,21 +299,20 @@ const handleClearTryOn = useCallback(() => {
                     sizes="(max-width: 768px) 100vw, 50vw"
                     priority
                   />
-        <Button
-          variant="outline"
-          className="absolute right-4 top-4 z-10 bg-white/80 backdrop-blur-sm hover:bg-white"
-          onClick={handleClearTryOn}
-        >
-          Clear Try-On
-        </Button>
-      </div>
-      <p className="text-sm text-gray-600">
-        Virtual try-on result. Click 'Clear Try-On' to remove.
-      </p>
-    </div>
-  )}
+                  <Button
+                    variant="outline"
+                    className="absolute right-4 top-4 z-10 bg-white/80 backdrop-blur-sm hover:bg-white"
+                    onClick={handleClearTryOn}
+                  >
+                    Clear Try-On
+                  </Button>
+                </div>
+                <p className="text-sm text-gray-600">
+                  Virtual try-on result. Click 'Clear Try-On' to remove.
+                </p>
+              </div>
+            )}
 
- 
             <Button className="w-full">
               <ShoppingCart className="mr-2 h-4 w-4" /> Add to Cart
             </Button>
@@ -335,9 +344,9 @@ const handleClearTryOn = useCallback(() => {
                 <p>
                   To find your perfect fit, measure the circumference of your
                   head about 1 inch above your eyebrows. Use this measurement to
-                  select the appropriate size from our range. If you're
-                  between sizes, we recommend choosing the larger size for a
-                  more comfortable fit.
+                  select the appropriate size from our range. If you're between
+                  sizes, we recommend choosing the larger size for a more
+                  comfortable fit.
                 </p>
               </TabsContent>
             </Tabs>
@@ -345,10 +354,7 @@ const handleClearTryOn = useCallback(() => {
         </div>
 
         {/* Virtual Try-On Results */}
-        <TryOnResult 
-          resultUrl={tryOnResult} 
-          onClear={handleClearTryOn}
-        />
+        <TryOnResult resultUrl={tryOnResult} onClear={handleClearTryOn} />
 
         {/* Related Products */}
         <div className="mt-16">

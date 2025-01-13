@@ -67,7 +67,7 @@ export function WavyBackgroundDemo() {
             </Link>
             <Link 
       
-      href="/playground"
+      href="/virtual-try-on"
       className="relative inline-flex items-center justify-center h-10 px-8 w-full sm:w-auto rounded-md cursor-pointer overflow-hidden group transform hover:scale-105 transition-transform duration-300"
     >
       {/* Gradient border background */}

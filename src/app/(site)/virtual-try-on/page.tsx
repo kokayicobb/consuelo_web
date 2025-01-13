@@ -5,7 +5,7 @@ import { Metadata } from "next";
 
 // Remove the direct import and only use the dynamic import
 const DynamicVirtualTryOnPage = dynamic(
-  () => import("@/components/Playground/components/Virtual Try On/store/index"),
+  () => import("@/components/Playground/components/Virtual Try On/try-on-store/index"),
   { ssr: false }
 );
 
