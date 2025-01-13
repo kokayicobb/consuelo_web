@@ -113,14 +113,16 @@ export function PricingTable({
               </div>
               <div className="flex items-baseline gap-1">
 							<NumberFlow
-                  format={{
-                    style: "currency",
-                    currency: "USD",
-                    trailingZeroDisplay: "stripIfInteger",
-                  }}
-                  value={isYearly ? plan.price.yearly : plan.price.monthly}
-                  className="text-2xl font-bold"
-                />
+  format={{
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,  // This will remove trailing zeros
+    maximumFractionDigits: 0   // This ensures whole numbers
+  }}
+  value={isYearly ? plan.price.yearly : plan.price.monthly}
+  className="text-2xl font-bold"
+/>
+
                 <span className="text-sm font-normal text-muted-foreground">
                   /{isYearly ? "year" : "month"}
                 </span>
