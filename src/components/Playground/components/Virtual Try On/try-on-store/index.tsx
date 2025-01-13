@@ -114,80 +114,82 @@ export default function SplitLandingPage() {
 
   return (
     <>
-      <Header />
-      {/* Gender selection buttons */}
-      <div className="flex w-full justify-center space-x-4 p-4">
-        <Button
-          onClick={() => setSelectedGender("women")}
-          variant={selectedGender === "women" ? "default" : "outline"}
-          className="w-40"
-        >
-          Women's Collection
-        </Button>
-        <Button
-          onClick={() => setSelectedGender("men")}
-          variant={selectedGender === "men" ? "default" : "outline"}
-          className="w-40"
-        >
-          Men's Collection
-        </Button>
-      </div>
+     <Header />
+{/* Gender selection buttons */}
+<div className="flex w-full justify-center space-x-4 p-4">
+  <Button
+    onClick={() => setSelectedGender("women")}
+    variant={selectedGender === "women" ? "default" : "outline"}
+    className="w-40"
+  >
+    Women's Collection
+  </Button>
+  <Button
+    onClick={() => setSelectedGender("men")}
+    variant={selectedGender === "men" ? "default" : "outline"}
+    className="w-40"
+  >
+    Men's Collection
+  </Button>
+</div>
 
-      {/* Main content area with adjusted grid layout */}
-      <main className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-5 gap-8">
-          {/* Product Images Section - Now takes up 3/5 of the space */}
-          <div className="col-span-3 max-h-[800px] overflow-y-auto">
-            <div className="mx-auto grid w-full grid-cols-2 gap-4 p-4">
-              {currentProduct.images.map((src, index) => (
-                <div key={index} className="relative aspect-[3/4] w-full">
-                  <Image
-                    src={src}
-                    alt={`${selectedGender === "women" ? "Dress" : "Shirt"} View ${
-                      index + 1
-                    }`}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 60vw, 800px"
-                    priority={index === 0}
-                  />
-                </div>
-              ))}
-            </div>
+{/* Main content area with adjusted grid layout */}
+<main className="container mx-auto px-4 py-8">
+  <div className="grid grid-cols-1 gap-8 md:grid-cols-5">
+    {/* Product Images Section */}
+    <div className="col-span-1 md:col-span-3 md:max-h-[800px] md:overflow-y-auto">
+      <div className="mx-auto grid w-full grid-cols-1 gap-4 p-4 md:grid-cols-2">
+        {currentProduct.images.map((src, index) => (
+          <div 
+            key={index} 
+            className="relative w-full md:aspect-[3/4] aspect-[9/16]"
+          >
+            <Image
+              src={src}
+              alt={`${selectedGender === "women" ? "Dress" : "Shirt"} View ${
+                index + 1
+              }`}
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 60vw"
+              priority={index === 0}
+            />
           </div>
+        ))}
+      </div>
+    </div>
 
-          {/* Product Details Section - Now takes up 2/5 of the space */}
-          <div className="col-span-2 space-y-6">
-            {/* Rest of the product details content remains the same */}
-            <h1 className="text-3xl font-bold">{currentProduct.title}</h1>
-            <p className="text-gray-600">{currentProduct.description}</p>
-            <div className="text-2xl font-bold">{currentProduct.price}</div>
+    {/* Product Details Section */}
+    <div className="col-span-1 space-y-6 md:col-span-2">
+      <h1 className="text-3xl font-bold">{currentProduct.title}</h1>
+      <p className="text-gray-600">{currentProduct.description}</p>
+      <div className="text-2xl font-bold">{currentProduct.price}</div>
 
-            {/* Size Selection */}
-            <div>
-              <h3 className="mb-2 text-lg font-semibold">Select Size</h3>
-              <RadioGroup
-                value={selectedSize}
-                onValueChange={setSelectedSize}
-                className="flex flex-wrap gap-2"
+      {/* Size Selection */}
+      <div>
+        <h3 className="mb-2 text-lg font-semibold">Select Size</h3>
+        <RadioGroup
+          value={selectedSize}
+          onValueChange={setSelectedSize}
+          className="flex flex-wrap gap-2"
+        >
+          {currentProduct.sizes.map((size) => (
+            <div key={size}>
+              <RadioGroupItem
+                value={size}
+                id={`size-${size}`}
+                className="peer sr-only"
+              />
+              <Label
+                htmlFor={`size-${size}`}
+                className="flex items-center justify-center rounded-md border-2 border-muted bg-popover px-3 py-2 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary peer-data-[state=checked]:text-primary-foreground"
               >
-                {currentProduct.sizes.map((size) => (
-                  <div key={size}>
-                    <RadioGroupItem
-                      value={size}
-                      id={`size-${size}`}
-                      className="peer sr-only"
-                    />
-                    <Label
-                      htmlFor={`size-${size}`}
-                      className="flex items-center justify-center rounded-md border-2 border-muted bg-popover px-3 py-2 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary peer-data-[state=checked]:text-primary-foreground"
-                    >
-                      {size}
-                    </Label>
-                  </div>
-                ))}
-              </RadioGroup>
+                {size}
+              </Label>
             </div>
+          ))}
+        </RadioGroup>
+      </div>
 
            {/* Try-On Button */}
 <div 
