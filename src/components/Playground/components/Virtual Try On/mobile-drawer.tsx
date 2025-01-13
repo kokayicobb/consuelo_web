@@ -1,49 +1,49 @@
-import React, { useEffect, useRef } from 'react';
-import { X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Drawer } from 'vaul';
+import React, { useEffect, useRef } from "react";
+import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Drawer } from "vaul";
 
 const MobileDrawer = ({ open, onOpenChange, children }) => {
-  const contentRef = useRef(null);
   const scrollPos = useRef(0);
 
   useEffect(() => {
     if (open) {
-      // Store the scroll position when the drawer opens
+      // Save current scroll position
       scrollPos.current = window.scrollY;
 
-      // Lock the body scroll
-      document.body.style.position = 'fixed';
+      // Lock body scroll
+      document.body.style.position = "fixed";
       document.body.style.top = `-${scrollPos.current}px`;
-      document.body.style.width = '100%';
+      document.body.style.width = "100%";
     } else {
-      // Unlock the scroll and restore the previous scroll position
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
+      // Restore body scroll
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
       window.scrollTo(0, scrollPos.current);
     }
 
-    // Clean up on unmount
     return () => {
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
+      // Cleanup on unmount
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
     };
   }, [open]);
 
   const handleOpenChange = (newOpen) => {
-    // Handle opening/closing of the drawer
+    // Pass the open state change to the parent component
     onOpenChange(newOpen);
   };
 
-  // Prevent click events inside the drawer from triggering unintended actions
   const stopPropagation = (event) => {
+    // Prevent clicks inside the drawer from propagating
     event.stopPropagation();
   };
 
   return (
     <Drawer.Root open={open} onOpenChange={handleOpenChange}>
+      {/* Trigger Button */}
       <Drawer.Trigger asChild>
         <Button variant="link" className="w-auto h-auto justify-start p-0">
           <span className="whitespace-normal text-sm">
@@ -51,14 +51,22 @@ const MobileDrawer = ({ open, onOpenChange, children }) => {
           </span>
         </Button>
       </Drawer.Trigger>
+
+      {/* Drawer Portal */}
       <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 bg-black/25" />
+        {/* Overlay */}
+        <Drawer.Overlay
+          className="fixed inset-0 bg-black/25 z-40"
+          onClick={() => handleOpenChange(false)} // Close drawer when clicking on overlay
+        />
+
+        {/* Drawer Content */}
         <Drawer.Content
-          ref={contentRef}
           className="fixed bottom-0 left-0 right-0 max-h-[96%] rounded-t-[10px] bg-white z-50 overflow-y-auto overscroll-contain"
-          onClick={stopPropagation} // Prevent click propagation
+          onClick={stopPropagation} // Prevent clicks inside drawer from propagating
         >
-          <div className="relative p-4" onClick={stopPropagation}>
+          <div className="relative p-4">
+            {/* Close Button */}
             <Drawer.Close className="absolute right-4 top-4 p-1 rounded-full hover:bg-gray-100">
               <X className="h-5 w-5 text-gray-500" />
             </Drawer.Close>
