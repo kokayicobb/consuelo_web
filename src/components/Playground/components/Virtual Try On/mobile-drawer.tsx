@@ -31,9 +31,16 @@ const MobileDrawer = ({ open, onOpenChange, children }) => {
     };
   }, [open]);
 
-  const handleOpenChange = (newOpen) => {
-    // Pass the open state change to the parent component
-    onOpenChange(newOpen);
+  const handleOpen = () => {
+    // Scroll to the top of the page
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
+    // Open the drawer
+    onOpenChange(true);
+  };
+
+  const handleClose = () => {
+    onOpenChange(false);
   };
 
   const stopPropagation = (event) => {
@@ -42,10 +49,14 @@ const MobileDrawer = ({ open, onOpenChange, children }) => {
   };
 
   return (
-    <Drawer.Root open={open} onOpenChange={handleOpenChange}>
+    <Drawer.Root open={open} onOpenChange={onOpenChange}>
       {/* Trigger Button */}
       <Drawer.Trigger asChild>
-        <Button variant="link" className="w-auto h-auto justify-start p-0">
+        <Button
+          variant="link"
+          className="w-auto h-auto justify-start p-0"
+          onClick={handleOpen} // Handle scroll-to-top and open logic
+        >
           <span className="whitespace-normal text-sm">
             Try-On Studio <span className="underline">Powered by AI</span>
           </span>
@@ -57,7 +68,7 @@ const MobileDrawer = ({ open, onOpenChange, children }) => {
         {/* Overlay */}
         <Drawer.Overlay
           className="fixed inset-0 bg-black/25 z-40"
-          onClick={() => handleOpenChange(false)} // Close drawer when clicking on overlay
+          onClick={handleClose} // Close drawer when clicking on overlay
         />
 
         {/* Drawer Content */}
@@ -67,7 +78,10 @@ const MobileDrawer = ({ open, onOpenChange, children }) => {
         >
           <div className="relative p-4">
             {/* Close Button */}
-            <Drawer.Close className="absolute right-4 top-4 p-1 rounded-full hover:bg-gray-100">
+            <Drawer.Close
+              className="absolute right-4 top-4 p-1 rounded-full hover:bg-gray-100"
+              onClick={handleClose}
+            >
               <X className="h-5 w-5 text-gray-500" />
             </Drawer.Close>
             {children}
