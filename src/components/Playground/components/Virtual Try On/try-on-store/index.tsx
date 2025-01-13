@@ -114,7 +114,7 @@ export default function SplitLandingPage() {
 
   return (
     <>
-     <Header />
+    <Header />
 {/* Gender selection buttons */}
 <div className="flex w-full justify-center space-x-4 p-4">
   <Button
@@ -138,24 +138,28 @@ export default function SplitLandingPage() {
   <div className="grid grid-cols-1 gap-8 md:grid-cols-5">
     {/* Product Images Section */}
     <div className="col-span-1 md:col-span-3 md:max-h-[800px] md:overflow-y-auto">
-      <div className="mx-auto grid w-full grid-cols-1 gap-4 p-4 md:grid-cols-2">
-        {currentProduct.images.map((src, index) => (
-          <div 
-            key={index} 
-            className="relative w-full md:aspect-[3/4] aspect-[9/16]"
-          >
-            <Image
-              src={src}
-              alt={`${selectedGender === "women" ? "Dress" : "Shirt"} View ${
-                index + 1
-              }`}
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 100vw, 60vw"
-              priority={index === 0}
-            />
-          </div>
-        ))}
+      {/* Mobile horizontal scroll container */}
+      <div className="mx-auto w-full md:grid md:grid-cols-2 md:gap-4 md:p-4">
+        <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto md:block md:overflow-x-visible">
+          {currentProduct.images.map((src, index) => (
+            <div 
+              key={index} 
+              className="relative w-full flex-none snap-center md:aspect-[3/4] aspect-[9/16] md:w-full"
+              style={{ width: '100%' }} // Forces full width on mobile
+            >
+              <Image
+                src={src}
+                alt={`${selectedGender === "women" ? "Dress" : "Shirt"} View ${
+                  index + 1
+                }`}
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 60vw"
+                priority={index === 0}
+              />
+            </div>
+          ))}
+        </div>
       </div>
     </div>
 
