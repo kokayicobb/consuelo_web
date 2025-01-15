@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { Shield, LightbulbIcon, Camera, CheckCircle, Info  } from "lucide-react";
 import Image from "next/image";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import FaceDetection from "../Head Measurments/FaceDetection";
+import FaceDetection from "../Head Measurments";
 import { Button } from "../ui/button";
 import {
   Select,
