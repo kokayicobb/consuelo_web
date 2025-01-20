@@ -244,7 +244,7 @@ export function Header() {
             </NavigationMenuItem>
           </NavigationMenuList>
         </NavigationMenu>
-        <div className="ml-4 hidden md:flex items-center space-x-4">
+        <div className="ml-4 hidden items-center space-x-4 md:flex">
           <Button
             variant="ghost"
             size="icon"
@@ -252,15 +252,17 @@ export function Header() {
             className="rounded-full"
             onClick={() => setTheme(theme === "light" ? "dark" : "light")}
           >
-          
-          <Icons.sun className="h-5 w-5 scale-100  dark:scale-0" />
-                 <Icons.moon className="absolute h-5 w-5 scale-0  dark:scale-100" />
+            <Icons.sun className="h-5 w-5 scale-100  dark:scale-0" />
+            <Icons.moon className="absolute h-5 w-5 scale-0  dark:scale-100" />
             <span className="sr-only">Toggle theme</span>
           </Button>
-          <Button variant="ghost" className="rounded-full">
-            Sign In
-          </Button>
-          <Button className="rounded-full">Sign Up</Button>
+          <Link href="/signin">
+  <Button variant="ghost" className="rounded-full">
+    Sign In
+  </Button>
+</Link>
+<Link href="/signup">
+          <Button className="rounded-full">Sign Up</Button></Link>
         </div>
         <Sheet>
           <SheetTrigger asChild>
@@ -272,10 +274,7 @@ export function Header() {
           <SheetContent side="right" className="w-[300px] sm:w-[400px]">
             <ScrollArea className="h-[calc(100vh-4rem)]">
               <div className="flex flex-col space-y-4 py-4">
-                <Link
-                  href="/"
-                  className="flex items-center space-x-2 px-4"
-                >
+                <Link href="/" className="flex items-center space-x-2 px-4">
                   <img
                     src="/images/logo/logo.svg"
                     alt="Consuelo Logo"
@@ -320,12 +319,18 @@ export function Header() {
                   </Link>
                 </div>
                 <div className="px-4 pt-4">
-                  <Button className="w-full" variant="outline">
-                    Sign In
-                  </Button>
+                  <Link href="/signin" className="block w-full">
+                    <Button className="w-full" variant="outline">
+                      Sign In
+                    </Button>
+                  </Link>
                 </div>
                 <div className="px-4">
-                  <Button className="w-full">Sign Up</Button>
+                  <Link href="/signup" className="block w-full">
+                    <Button className="w-full" variant="outline">
+                      Sign Up
+                    </Button>
+                  </Link>
                 </div>
               </div>
             </ScrollArea>
@@ -337,7 +342,6 @@ export function Header() {
                 className="w-full"
                 onClick={() => setTheme(theme === "light" ? "dark" : "light")}
               >
-                 
                 <span>Toggle theme</span>
               </Button>
             </div>
