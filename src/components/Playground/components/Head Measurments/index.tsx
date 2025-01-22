@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useCallback } from "react";
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 let FaceLandmarker: any, FilesetResolver: any, DrawingUtils: any;
@@ -323,12 +323,11 @@ export default function FaceDetection() {
     el.innerHTML = htmlMaker;
   };
 
-  const enableCam = async () => {
+  const enableCam = useCallback(async () => {
     if (!faceLandmarker) {
       console.log("Wait! faceLandmarker not loaded yet.");
       return;
     }
-
     if (!webcamRunning) {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
@@ -339,20 +338,17 @@ export default function FaceDetection() {
       }
       return;
     }
-
     try {
       const constraints = {
         video: {
           facingMode: "user",
-          width: { ideal: 720 }, // Reduce ideal resolution
-          height: { ideal: 720 }, // Equalize width and height
-          advanced: [{ width: 720, height: 720 }], // Suggest fixed aspect ratio
+          width: { ideal: 720 },
+          height: { ideal: 720 },
+          advanced: [{ width: 720, height: 720 }],
         },
       };
-
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       streamRef.current = stream;
-
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         await new Promise((resolve) => {
@@ -360,8 +356,6 @@ export default function FaceDetection() {
             videoRef.current.onloadedmetadata = resolve;
           }
         });
-
-        // Reduced delay for camera stabilization
         await new Promise((resolve) => setTimeout(resolve, 100));
         cameraInitializedRef.current = true;
         predictWebcam();
@@ -370,7 +364,7 @@ export default function FaceDetection() {
       console.error("Error accessing webcam:", err);
       setWebcamRunning(false);
     }
-  };
+  }, [faceLandmarker, webcamRunning, setWebcamRunning]); // Add dependencies used in the function
   useEffect(() => {
     const initializeVision = async () => {
       try {
