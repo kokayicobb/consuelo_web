@@ -1,10 +1,12 @@
 "use client";
 
 import React from "react";
-import { WavyBackground } from "../ui/wavy-background";
+
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Zap } from "lucide-react";
 import Link from "next/link";
+import { WavyBackground } from "../ui/wavy-background";
+
 
 export function WavyBackgroundDemo() {
   return (
