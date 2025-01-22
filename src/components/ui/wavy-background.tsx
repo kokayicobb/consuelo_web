@@ -40,6 +40,7 @@ export const WavyBackground = ({
     ctx: any,
     canvas: any;
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
   const getSpeed = () => {
     switch (speed) {
       case "slow":
@@ -56,14 +57,12 @@ export const WavyBackground = ({
     ctx = canvas.getContext("2d");
     w = window.innerWidth;
     h = window.innerHeight;
-
     const pixelRatio = getPixelRatio(ctx);
     canvas.width = w * pixelRatio;
     canvas.height = h * pixelRatio;
     canvas.style.width = `${w}px`;
     canvas.style.height = `${h}px`;
     ctx.scale(pixelRatio, pixelRatio);
-
     ctx.filter = `blur(${blur}px)`;
     nt = 0;
 
@@ -82,18 +81,18 @@ export const WavyBackground = ({
   };
 
   const waveColors = colors ?? [
-    "#c4b5fd",
-    "#818cf8",
-    "#6366f1",
-    "#4f46e5",
-    "#4338ca",
+    "#c4b5fd",  // Lighter violet
+    "#818cf8",  // Light indigo
+    "#6366f1",  // Indigo
+    "#4f46e5",  // Darker indigo
+    "#4338ca"   // Darkest indigo
   ];
 
   const drawWave = (n: number) => {
     ctx.beginPath();
     ctx.lineWidth = waveWidth || 50;
     ctx.strokeStyle = waveColors[n % waveColors.length];
-    const step = Math.max(5, Math.floor(w / 100)); // Adjust step size based on screen width
+    const step = Math.max(5, Math.floor(w / 100));
     for (i = 0; i < w; i += step) {
       x = noise(i / 800, 0.3 * n, nt) * 100;
       ctx.lineTo(i, h * 0.5 + x);
@@ -107,7 +106,7 @@ export const WavyBackground = ({
     ctx.fillStyle = backgroundFill || "hsl(270, 95%, 95%)";
     ctx.globalAlpha = waveOpacity || 0.5;
     ctx.fillRect(0, 0, w, h);
-    const waveCount = w < 600 ? 2 : 4; // Reduce wave count on smaller screens
+    const waveCount = w < 600 ? 2 : 4;
     for (let n = 0; n < waveCount; n++) {
       drawWave(n);
     }
@@ -144,3 +143,4 @@ export const WavyBackground = ({
   );
 };
 
+export default WavyBackground;
