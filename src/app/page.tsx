@@ -30,8 +30,8 @@ export default function Home() {
       <Pricing />
       <FaqSection />
       <TeamSection />
-      <HomeBlogSection 
-        posts={posts} 
+      <HomeBlogSection
+        posts={posts}
         subtitle="Latest Updates"
         title="News & Insights"
         paragraph="Stay up to date with the latest developments in AI fashion technology, industry trends, and how Consuelo is revolutionizing the online shopping experience."
@@ -41,4 +41,3 @@ export default function Home() {
     </main>
   );
 }
-
