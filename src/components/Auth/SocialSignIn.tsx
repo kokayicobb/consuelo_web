@@ -1,11 +1,38 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { signIn } from "next-auth/react";
+import { supabase } from "@/lib/supabaseClient";
 
 const SocialSignIn = () => {
+  const handleOAuthSignIn = async (provider: string) => {
+    // try {
+    //   const { data, error } = await supabase.auth.signInWithOAuth({ provider: "google" });
+
+    //   if (error) {
+    //     console.log("Error during Google sign-in", error.message);
+    //     return; 
+    //   }
+
+    //   const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+
+    //   if (sessionError) {
+    //     console.error("Error getting session:", sessionError.message);
+    //     return;
+    //   }
+
+    //   if (sessionData?.session?.user) {
+    //     console.log("User signed in with Google:", sessionData.session.user);
+    //   } else {
+    //     console.log("No user found");
+    //   }
+    // } catch (err: any) {
+    //   console.error("Unexpected error during sign-in", err);
+    // }
+  }
+
   return (
     <>
       <button
-        onClick={() => signIn("google")}
+        onClick={() => handleOAuthSignIn("google")}
         className="flex w-full items-center justify-center gap-2.5 rounded-lg border border-gray-4 p-3.5 text-dark duration-200 ease-in hover:border-gray-5 hover:bg-gray dark:border-dark-3 dark:text-white dark:hover:bg-dark-3"
       >
         <svg

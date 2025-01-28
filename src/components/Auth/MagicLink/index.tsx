@@ -4,12 +4,13 @@ import { signIn } from "next-auth/react";
 import toast from "react-hot-toast";
 import { validateEmail } from "@/utils/validateEmail";
 import Loader from "@/components/Common/Loader";
+import { sendMagicLink } from "@/lib/magicLink";
 
 const MagicLink = () => {
-  const [email, setEmail] = useState("");
-  const [loader, setLoader] = useState(false);
+  const [email, setEmail] = useState<string>("");
+  const [loader, setLoader] = useState<boolean>(false);
 
-  const handleSubmit = (e: any) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
 
     if (!email) {
@@ -20,23 +21,35 @@ const MagicLink = () => {
     if (!validateEmail(email)) {
       setLoader(false);
       return toast.error("Please enter a valid email address.");
+    } 
+    
+    // else {
+    //   signIn("email", {
+    //     redirect: false,
+    //     email: email,
+    //   })
+    //     .then((callback) => {
+    //       if (callback?.ok) {
+    //         toast.success("Email sent");
+    //         setEmail("");
+    //         setLoader(false);
+    //       }
+    //     })
+    //     .catch((error) => {
+    //       console.log(error);
+    //       toast.error("Unable to send email!");
+    //       setLoader(false);
+    //     });
+    // }
+
+    const success = await sendMagicLink(email);
+
+    if (success) {
+      toast.success("Check your email for the magic lick!");
+      setLoader(false);
+      setEmail("");
     } else {
-      signIn("email", {
-        redirect: false,
-        email: email,
-      })
-        .then((callback) => {
-          if (callback?.ok) {
-            toast.success("Email sent");
-            setEmail("");
-            setLoader(false);
-          }
-        })
-        .catch((error) => {
-          console.log(error);
-          toast.error("Unable to send email!");
-          setLoader(false);
-        });
+      toast.error("Error sending magic link. Please try again.");
     }
   };
 

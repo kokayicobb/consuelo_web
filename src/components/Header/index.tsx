@@ -41,6 +41,11 @@ import {
   Menu,
 } from "lucide-react";
 
+import SignInOutButtons from "./logoutToggler";
+import { getUserSession } from "@/lib/getSession";
+
+import type { Session } from "@/lib/supabaseHelper";
+
 const solutions: {
   title: string;
   href: string;
@@ -116,6 +121,7 @@ const resources: {
 export function Header() {
   const { theme, setTheme } = useTheme();
   const [isScrolled, setIsScrolled] = React.useState(false);
+  const [session, setSession] = React.useState<Session | null>(null);
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -123,6 +129,16 @@ export function Header() {
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  React.useEffect(() => {
+    const fetchUserSession = async (): Promise<void> => {
+      const userSession = await getUserSession();
+
+      setSession(userSession);
+    };
+
+    fetchUserSession();
   }, []);
   const isDarkMode = theme === "dark";
   return (
@@ -256,13 +272,7 @@ export function Header() {
             <Icons.moon className="absolute h-5 w-5 scale-0  dark:scale-100" />
             <span className="sr-only">Toggle theme</span>
           </Button>
-          <Link href="/signin">
-  <Button variant="ghost" className="rounded-full">
-    Sign In
-  </Button>
-</Link>
-<Link href="/signup">
-          <Button className="rounded-full">Sign Up</Button></Link>
+          <SignInOutButtons />
         </div>
         <Sheet>
           <SheetTrigger asChild>

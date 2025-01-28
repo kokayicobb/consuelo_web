@@ -3,49 +3,94 @@ import { signIn } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import SocialSignIn from "../SocialSignIn";
 import SwitchOption from "../SwitchOption";
 import MagicLink from "../MagicLink";
 import Loader from "@/components/Common/Loader";
+import { getUserSession } from "@/lib/getSession";
+import { supabase } from "@/lib/supabaseHelper";
+import { useAuth } from "@/lib/authContext";
+
+import type { LoginData } from "@/types/login";
 
 const Signin = () => {
   const router = useRouter();
+  const { setSession } = useAuth();
 
-  const [loginData, setLoginData] = useState({
+  const [loginData, setLoginData] = useState<LoginData>({
     email: "",
     password: "",
     checkboxToggle: false,
   });
 
-  const [isPassword, setIsPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [isPassword, setIsPassword] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  
+  useEffect(() => {
+    const fetchUserSession = async (): Promise<void> => {
+      const userSession = await getUserSession();
 
-  const loginUser = (e: any) => {
+      if (userSession) {
+        router.push("/");  
+      }
+      
+      setSession(userSession);
+    };
+
+    fetchUserSession();
+  }, []);
+
+  const loginUser = async (e: any) => {
     e.preventDefault();
-
     setLoading(true);
-    signIn("credentials", { ...loginData, redirect: false })
-      .then((callback) => {
-        if (callback?.error) {
-          toast.error(callback?.error);
-          console.log(callback?.error);
-          setLoading(false);
-          return;
-        }
 
-        if (callback?.ok && !callback?.error) {
-          toast.success("Login successful");
-          setLoading(false);
-          router.push("/");
-        }
-      })
-      .catch((err) => {
-        setLoading(false);
-        console.log(err.message);
-        toast.error(err.message);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: loginData.email,
+        password: loginData.password
       });
+  
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+
+      console.log("User signed in:", data?.user);
+      toast.success("Login successful");
+
+      setSession(data?.session);
+
+      router.push("/");
+    } catch (err: any) {
+      throw Error(err);
+    } finally {
+      setLoading(false);
+    }
+
+    
+
+    // signIn("credentials", { ...loginData, redirect: false })
+    //   .then((callback) => {
+    //     if (callback?.error) {
+    //       toast.error(callback?.error);
+    //       console.log(callback?.error);
+    //       setLoading(false);
+    //       return;
+    //     }
+
+    //     if (callback?.ok && !callback?.error) {
+    //       toast.success("Login successful");
+    //       setLoading(false);
+    //       router.push("/");
+    //     }
+    //   })
+    //   .catch((err) => {
+    //     setLoading(false);
+    //     console.log(err.message);
+    //     toast.error(err.message);
+    //   });
   };
 
   return (

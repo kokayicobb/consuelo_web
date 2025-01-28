@@ -8,37 +8,68 @@ import SwitchOption from "../SwitchOption";
 import { useState } from "react";
 import MagicLink from "../MagicLink";
 import Loader from "@/components/Common/Loader";
+import { Toaster } from "@/components/ui/toaster";
+import { supabase } from "@/lib/supabaseHelper";
 
 const SignUp = () => {
   const router = useRouter();
-  const [isPassword, setIsPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [isPassword, setIsPassword] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
 
-  const handleSubmit = (e: any) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
 
     setLoading(true);
-    const data = new FormData(e.currentTarget);
-    const value = Object.fromEntries(data.entries());
-    const finalData = { ...value };
+    const formData = new FormData(e.currentTarget);
+    const value = Object.fromEntries(formData.entries());
+    const finalData = { ...value }; 
 
-    fetch("/api/register", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(finalData),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        toast.success("Successfully registered");
-        setLoading(false);
-        router.push("/signin");
-      })
-      .catch((err) => {
-        toast.error(err.message);
-        setLoading(false);
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: finalData.email as string,
+        password: finalData.password as string,
+        options: {
+          data: {
+            name: finalData.name as string
+          }
+        }
       });
+
+      if (error) {
+        throw new Error(error.message);
+      } 
+      
+      if (data.user?.identities?.length === 0) {
+        toast.error("User already registered!");
+        router.push("/signin");
+        return;
+      } 
+
+      toast.success("Successfully registered! Redirecting...");
+      router.push("/signin");
+    } catch (err: any) {
+      toast.error(err.message || "An error occurred during registration.");
+    } finally {
+      setLoading(false);
+    }
+
+    // fetch("/api/register", {
+    //   method: "POST",
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //   },
+    //   body: JSON.stringify(finalData),
+    // })
+    //   .then((res) => res.json())
+    //   .then((data) => {
+    //     toast.success("Successfully registered");
+    //     setLoading(false);
+    //     router.push("/signin");
+    //   })
+    //   .catch((err) => {
+    //     toast.error(err.message);
+    //     setLoading(false);
+    //   });
   };
 
   return (

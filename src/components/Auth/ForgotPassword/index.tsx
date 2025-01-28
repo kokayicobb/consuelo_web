@@ -6,6 +6,7 @@ import axios from "axios";
 import Loader from "@/components/Common/Loader";
 import Link from "next/link";
 import Image from "next/image";
+import { supabase } from "@/lib/supabaseHelper";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -23,26 +24,35 @@ const ForgotPassword = () => {
     setLoader(true);
 
     try {
-      const res = await axios.post("/api/forgot-password/reset", {
-        email: email.toLowerCase(),
-      });
-
-      if (res.status === 404) {
-        toast.error("User not found.");
-        return;
-      }
-
-      if (res.status === 200) {
-        toast.success(res.data);
-        setEmail("");
-      }
-
-      setEmail("");
-      setLoader(false);
-    } catch (error: any) {
-      toast.error(error?.response.data);
+      const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: "" });
+    } catch (error) {
+      console.error("Error sending password reset email:", error);
+      toast.error("Failed to send password reset email. Please try again.");
+    } finally {
       setLoader(false);
     }
+
+    // try {
+    //   const res = await axios.post("/api/forgot-password/reset", {
+    //     email: email.toLowerCase(),
+    //   });
+
+    //   if (res.status === 404) {
+    //     toast.error("User not found.");
+    //     return;
+    //   }
+
+    //   if (res.status === 200) {
+    //     toast.success(res.data);
+    //     setEmail("");
+    //   }
+
+    //   setEmail("");
+    //   setLoader(false);
+    // } catch (error: any) {
+    //   toast.error(error?.response.data);
+    //   setLoader(false);
+    // }
   };
 
   return (
