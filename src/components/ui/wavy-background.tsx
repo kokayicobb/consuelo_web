@@ -1,4 +1,3 @@
-"use client";
 
 import { cn } from "@/lib/utils";
 import { useEffect, useRef } from "react";
@@ -81,20 +80,24 @@ export const WavyBackground = ({
   };
 
   const waveColors = colors ?? [
-    "#c4b5fd",  // Lighter violet
-    "#818cf8",  // Light indigo
-    "#6366f1",  // Indigo
-    "#4f46e5",  // Darker indigo
-    "#4338ca"   // Darkest indigo
+    "#c4b5fd",
+    "#818cf8",
+    "#6366f1",
+    "#4f46e5",
+    "#4338ca"
   ];
 
   const drawWave = (n: number) => {
     ctx.beginPath();
     ctx.lineWidth = waveWidth || 50;
     ctx.strokeStyle = waveColors[n % waveColors.length];
-    const step = Math.max(5, Math.floor(w / 100));
-    for (i = 0; i < w; i += step) {
-      x = noise(i / 800, 0.3 * n, nt) * 100;
+    // Adjust step calculation for better performance
+    const step = Math.max(2, Math.floor(w / 150)); // More points on larger screens
+    for (i = 0; i <= w + step; i += step) {
+      // Normalize noise input based on screen width
+      const noiseInput = i / (w * 0.3); // Adjust this value to control wave frequency
+      // Scale noise output by screen height
+      x = noise(noiseInput, 0.3 * n, nt) * (h * 0.15); // Adjust 0.15 to control wave amplitude
       ctx.lineTo(i, h * 0.5 + x);
     }
     ctx.stroke();
@@ -106,7 +109,8 @@ export const WavyBackground = ({
     ctx.fillStyle = backgroundFill || "hsl(270, 95%, 95%)";
     ctx.globalAlpha = waveOpacity || 0.5;
     ctx.fillRect(0, 0, w, h);
-    const waveCount = w < 600 ? 2 : 4;
+    // Adjust wave count based on screen size
+    const waveCount = Math.floor(Math.min(6, Math.max(3, w / 200)));
     for (let n = 0; n < waveCount; n++) {
       drawWave(n);
     }
