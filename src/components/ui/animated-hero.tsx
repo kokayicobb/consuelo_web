@@ -39,7 +39,7 @@ function Hero() {
     <div className="relative mx-auto flex min-h-screen max-w-full items-center overflow-hidden px-12 pb-12 pt-6 sm:px-6 md:pt-8 lg:px-8">
    {/* Wavy Background */}
 <div className="absolute inset-0 z-0">
-<div className="absolute left-1/2 top-1/2 w-[300%] -translate-x-1/2 -translate-y-1/2 md:w-[240%] lg:w-[170%] xl:w-[140%] 2xl:w-[120%]">
+<div className="absolute left-1/2 top-1/2 w-[325%] -translate-x-1/2 -translate-y-1/2 md:w-[240%] lg:w-[170%] xl:w-[140%] 2xl:w-[120%]">
     <svg
       viewBox="0 0 1200 800"
       className="h-full w-full"
