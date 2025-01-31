@@ -37,64 +37,64 @@ function Hero() {
 
   return (
     <div className="relative mx-auto flex min-h-screen max-w-full items-center overflow-hidden px-12 pb-12 pt-6 sm:px-6 md:pt-8 lg:px-8">
-   {/* Wavy Background */}
-<div className="absolute inset-0 z-0">
-<div className="absolute left-1/2 top-1/2 w-[300%] -translate-x-1/2 -translate-y-1/2 md:w-[240%] lg:w-[170%] xl:w-[140%] 2xl:w-[120%]">
-    <svg
-      viewBox="0 0 1200 800"
-      className="h-full w-full"
-      preserveAspectRatio="none"
-    >
-      <defs>
-        <linearGradient
-          id="pathGradient"
-          x1="0%"
-          y1="50%"
-          x2="100%"
-          y2="50%"
-        >
-          <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0" />
-          <stop offset="50%" stopColor="#7c3aed" stopOpacity="0.8" />
-          <stop offset="100%" stopColor="#6d28d9" stopOpacity="0" />
-        </linearGradient>
-        <linearGradient
-          id="areaGradient"
-          x1="0%"
-          y1="0%"
-          x2="0%"
-          y2="100%"
-        >
-          <stop offset="0%" stopColor="#7c3aed" stopOpacity="0.1" />
-          <stop offset="100%" stopColor="#6d28d9" stopOpacity="0.05" />
-        </linearGradient>
-        <filter id="glow">
-          <feGaussianBlur stdDeviation="4" result="coloredBlur" />
-          <feMerge>
-            <feMergeNode in="coloredBlur" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-      </defs>
+      {/* Wavy Background */}
+      <div className="absolute inset-0 z-0">
+        <div className="absolute left-1/2 top-1/2 w-[300%] -translate-x-1/2 -translate-y-1/2 md:w-[240%] lg:w-[170%] xl:w-[140%] 2xl:w-[120%]">
+          <svg
+            viewBox="0 0 1200 800"
+            className="h-full w-full"
+            preserveAspectRatio="none"
+          >
+            <defs>
+              <linearGradient
+                id="pathGradient"
+                x1="0%"
+                y1="50%"
+                x2="100%"
+                y2="50%"
+              >
+                <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0" />
+                <stop offset="50%" stopColor="#7c3aed" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="#6d28d9" stopOpacity="0" />
+              </linearGradient>
+              <linearGradient
+                id="areaGradient"
+                x1="0%"
+                y1="0%"
+                x2="0%"
+                y2="100%"
+              >
+                <stop offset="0%" stopColor="#7c3aed" stopOpacity="0.1" />
+                <stop offset="100%" stopColor="#6d28d9" stopOpacity="0.05" />
+              </linearGradient>
+              <filter id="glow">
+                <feGaussianBlur stdDeviation="4" result="coloredBlur" />
+                <feMerge>
+                  <feMergeNode in="coloredBlur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
 
-      <path
-        d="M 0 500 Q 600 -100 1200 500"
-        fill="none"
-        stroke="url(#pathGradient)"
-        strokeWidth="2"
-        filter="url(#glow)"
-        className="animate-orb-path"
-      />
+            <path
+              d="M 0 500 Q 600 -100 1200 500"
+              fill="none"
+              stroke="url(#pathGradient)"
+              strokeWidth="2"
+              filter="url(#glow)"
+              className="animate-orb-path"
+            />
 
-      <path
-        d="M 0 500 Q 600 -100 1200 500 L 1200 800 L 0 800 Z"
-        fill="url(#areaGradient)"
-        className="opacity-80"
-      />
-    </svg>
-  </div>
-  
-  <div className="animate-gradient-pulse absolute inset-0 bg-gradient-to-b from-violet-500/10 via-violet-400/15 to-transparent" />
-</div>
+            <path
+              d="M 0 500 Q 600 -100 1200 500 L 1200 800 L 0 800 Z"
+              fill="url(#areaGradient)"
+              className="opacity-80"
+            />
+          </svg>
+        </div>
+
+        <div className="animate-gradient-pulse absolute inset-0 bg-gradient-to-b from-violet-500/10 via-violet-400/15 to-transparent" />
+      </div>
       {/* Content Container */}
       <div className="container relative z-10 mx-auto">
         <div className="animate-fade-in flex flex-col items-center text-center">
