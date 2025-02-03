@@ -12,9 +12,9 @@ const teamData = [
   },
   {
     id: 2,
-    name: "Ryan Caves",
-    designation: "Chief Growth Officer",
-    image: "/images/team/kokayi.jpeg",
+    name: " Dakota Chanthakoummane",
+    designation: "Product Engineer (intern)",
+    image: "/DakotaHeadshot.jpg",
     link: "mailto:Ryan@consuelohq.com",
   },
   {
