@@ -117,23 +117,24 @@ export function Header() {
   const { theme, setTheme } = useTheme();
   const [isScrolled, setIsScrolled] = React.useState(false);
 
-  React.useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  // And update the scroll detection:
+React.useEffect(() => {
+  const handleScroll = () => {
+    setIsScrolled(window.scrollY > 50); // Increased threshold
+  };
+  window.addEventListener("scroll", handleScroll);
+  return () => window.removeEventListener("scroll", handleScroll);
+}, []);
   const isDarkMode = theme === "dark";
   return (
     <header
-      className={cn(
-        "sticky top-0 z-50 w-full transition-all duration-300",
-        isDarkMode || isScrolled
-          ? "border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
-          : "bg-transparent",
-      )}
-    >
+    className={cn(
+      "sticky top-0 z-50 w-full transition-all duration-300",
+      isScrolled
+        ? "border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+        : "bg-transparent border-transparent"
+    )}
+  >
       <div className="container flex h-16 items-center">
         <div className="flex items-center space-x-4">
           <Link href="/" className="flex items-center space-x-2">
