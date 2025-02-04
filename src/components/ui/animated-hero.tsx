@@ -36,7 +36,8 @@ function Hero() {
   }, [titleNumber, titles]);
 
   return (
-    <div className="relative mx-auto flex max-w-full overflow-hidden px-12 pt-16 pb-12 sm:px-6 lg:px-8">
+
+    
       {/* Content Container */}
       <div className="container relative z-10 mx-auto">
         <div className="animate-fade-in flex flex-col items-center text-center">
