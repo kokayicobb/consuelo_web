@@ -36,11 +36,10 @@ function Hero() {
   }, [titleNumber, titles]);
 
   return (
-
-    
-      {/* Content Container */}
-      <div className="container relative z-10 mx-auto">
-        <div className="animate-fade-in flex flex-col items-center text-center">
+    <div className="relative mx-auto flex max-w-full overflow-hidden px-12 pt-16 pb-12 sm:px-6 lg:px-8">
+    {/* Content Container */}
+    <div className="container relative z-10 mx-auto">
+      <div className="animate-fade-in flex flex-col items-center text-center">
           <div className="mb-4 inline-flex items-center rounded-full bg-violet-100 px-4 py-2 text-base font-medium dark:bg-violet-100">
             <Zap className="mr-2 h-5 w-5 text-violet-600 dark:text-violet-600" />
             <span className="text-violet-900 dark:text-violet-900">
