@@ -1,211 +1,111 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
-import { CheckIcon, ArrowRightIcon } from "lucide-react"
-import NumberFlow from "@number-flow/react"
+import * as React from "react";
+import { BadgeCheck, ArrowRight } from "lucide-react";
+import NumberFlow from "@number-flow/react";
 
-export type PlanLevel = "starter" | "pro" |  "custom" |"all" |string
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
-export interface PricingFeature {
-  name: string
-  included: PlanLevel | null
+export interface PricingTier {
+  name: string;
+  price: Record<string, number | string>;
+  description: string;
+  features: string[];
+  cta: string;
+  highlighted?: boolean;
+  popular?: boolean;
 }
 
-export interface PricingPlan {
-  name: string
-  level: PlanLevel
-  price: {
-    monthly: number
-    yearly: number
-  }
-  popular?: boolean
+interface PricingCardProps {
+  tier: PricingTier;
+  paymentFrequency: string;
 }
 
-export interface PricingTableProps
-  extends React.HTMLAttributes<HTMLDivElement> {
-  features: PricingFeature[]
-  plans: PricingPlan[]
-  onPlanSelect?: (plan: PlanLevel) => void
-  defaultPlan?: PlanLevel
-  defaultInterval?: "monthly" | "yearly"
-  containerClassName?: string
-  buttonClassName?: string
-}
-
-export function PricingTable({
-  features,
-  plans,
-  onPlanSelect,
-  defaultPlan = "pro",
-  defaultInterval = "monthly",
-  className,
-  containerClassName,
-  buttonClassName,
-  ...props
-}: PricingTableProps) {
-  const [isYearly, setIsYearly] = React.useState(defaultInterval === "yearly")
-  const [selectedPlan, setSelectedPlan] = React.useState<PlanLevel>(defaultPlan)
-
-  const handlePlanSelect = (plan: PlanLevel) => {
-    setSelectedPlan(plan)
-    onPlanSelect?.(plan)
-  }
+export function PricingCard({ tier, paymentFrequency }: PricingCardProps) {
+  const price = tier.price[paymentFrequency];
+  const isHighlighted = tier.highlighted;
+  const isPopular = tier.popular;
 
   return (
-    <section
+    <Card
       className={cn(
-        "bg-background text-foreground",
-        "py-4 sm:py-8 md:py-16 px-4",
-        "fade-bottom overflow-hidden pb-0",
+        "relative flex flex-col gap-8 overflow-hidden p-6",
+        isHighlighted
+          ? "bg-foreground text-background"
+          : "bg-background text-foreground",
+        isPopular && "ring-2 ring-primary",
       )}
     >
-      <div
-        className={cn("w-full max-w-3xl mx-auto px-4", containerClassName)}
-        {...props}
-      >
-        <div className="flex justify-end mb-4 sm:mb-8">
-          <div className="inline-flex items-center gap-2 text-xs sm:text-sm">
-            <button
-              type="button"
-              onClick={() => setIsYearly(false)}
-              className={cn(
-                "px-3 py-1 rounded-md transition-colors",
-                !isYearly ? "bg-accent/10 text-accent" : "text-muted-foreground",
-              )}
-            >
-              Monthly
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsYearly(true)}
-              className={cn(
-                "px-3 py-1 rounded-md transition-colors",
-                isYearly ? "bg-accent/10 text-accent" : "text-muted-foreground",
-              )}
-            >
-              Yearly
-            </button>
-          </div>
-        </div>
+      {isHighlighted && <HighlightedBackground />}
+      {isPopular && <PopularBackground />}
 
-        <div className="flex flex-col sm:flex-row gap-4 mb-8">
-          {plans.map((plan) => (
-            <button
-              key={plan.name}
-              type="button"
-              onClick={() => handlePlanSelect(plan.level)}
-              className={cn(
-                "flex-1 p-4 rounded-xl text-left transition-all",
-                "border border-border",
-                selectedPlan === plan.level &&
-                  "ring-2 ring-accent ring-offset-2 ring-offset-background",
-              )}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">{plan.name}</span>
-                {plan.popular && (
-                  <span className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded-full">
-                    Popular
-                  </span>
-                )}
-              </div>
-              <div className="flex items-baseline gap-1">
-							<NumberFlow
-  format={{
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 0,  // This will remove trailing zeros
-    maximumFractionDigits: 0   // This ensures whole numbers
-  }}
-  value={isYearly ? plan.price.yearly : plan.price.monthly}
-  className="text-2xl font-bold"
-/>
+      <h2 className="flex items-center gap-3 text-xl font-medium capitalize">
+        {tier.name}
+        {isPopular && (
+          <Badge variant="secondary" className="z-10 mt-1">
+            🔥 Most Popular
+          </Badge>
+        )}
+      </h2>
 
-                <span className="text-sm font-normal text-muted-foreground">
-                  /{isYearly ? "year" : "month"}
-                </span>
-              </div>
-            </button>
-          ))}
-        </div>
-
-        <div className="border border-border rounded-xl overflow-hidden">
-          <div className="overflow-x-auto">
-            <div className="min-w-[640px] divide-y divide-border">
-              <div className="flex items-center p-4 bg-muted/50">
-                <div className="flex-1 text-sm font-medium">Features</div>
-                <div className="flex items-center gap-8 text-sm">
-                  {plans.map((plan) => (
-                    <div
-                      key={plan.level}
-                      className="w-16 text-center font-medium"
-                    >
-                      {plan.name}
-                    </div>
-                  ))}
-                </div>
-              </div>
-              {features.map((feature) => (
-                <div
-                  key={feature.name}
-                  className={cn(
-                    "flex items-center p-4 transition-colors",
-                    feature.included === selectedPlan &&
-                      "bg-accent/5",
-                  )}
-                >
-                  <div className="flex-1 text-sm">{feature.name}</div>
-                  <div className="flex items-center gap-8 text-sm">
-                    {plans.map((plan) => (
-                      <div
-                        key={plan.level}
-                        className={cn(
-                          "w-16 flex justify-center",
-                          plan.level === selectedPlan && "font-medium",
-                        )}
-                      >
-                        {shouldShowCheck(feature.included, plan.level) ? (
-                          <CheckIcon className="w-5 h-5 text-accent" />
-                        ) : (
-                          <span className="text-muted-foreground/30">
-                            -
-                          </span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-8 text-center">
-          <Button
-            className={cn(
-              "w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground px-8 py-2 rounded-xl",
-              buttonClassName,
-            )}
-          >
-            Get started with {plans.find((p) => p.level === selectedPlan)?.name}
-            <ArrowRightIcon className="w-4 h-4 ml-2" />
-          </Button>
-        </div>
+      <div className="relative h-12">
+        {typeof price === "number" ? (
+          <>
+            <NumberFlow
+              format={{
+                style: "currency",
+                currency: "USD",
+                minimumFractionDigits: 0, // This will remove trailing zeros
+                maximumFractionDigits: 0, // This will remove trailing zeros
+              }}
+              value={price}
+              className="text-4xl font-medium"
+            />
+            <p className="-mt-2 text-xs text-muted-foreground">
+              Per month/user
+            </p>
+          </>
+        ) : (
+          <h1 className="text-4xl font-medium">{price}</h1>
+        )}
       </div>
-    </section>
-  )
+
+      <div className="flex-1 space-y-2">
+        <h3 className="text-sm font-medium">{tier.description}</h3>
+        <ul className="space-y-2">
+          {tier.features.map((feature, index) => (
+            <li
+              key={index}
+              className={cn(
+                "flex items-center gap-2 text-sm font-medium",
+                isHighlighted ? "text-background" : "text-muted-foreground",
+              )}
+            >
+              <BadgeCheck className="h-4 w-4" />
+              {feature}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <Button
+        variant={isHighlighted ? "secondary" : "default"}
+        className="w-full"
+      >
+        {tier.cta}
+        <ArrowRight className="ml-2 h-4 w-4" />
+      </Button>
+    </Card>
+  );
 }
 
-function shouldShowCheck(
-  included: PricingFeature["included"],
-  level: string,
-): boolean {
-  if (included === "all") return true;
-  if (level === "custom") return included === "custom" || included === "all";
-  if (level === "scale") return included === "scale" || included === "pro" || included === "starter" || included === "all";
-  if (level === "pro") return included === "pro" || included === "starter" || included === "all";
-  if (level === "starter") return included === "starter" || included === "all";
-  return false;
-}
+const HighlightedBackground = () => (
+  <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:45px_45px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_110%)]" />
+);
+
+const PopularBackground = () => (
+  <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.1),rgba(255,255,255,0))]" />
+);
