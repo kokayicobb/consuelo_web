@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import { useState, Suspense, useCallback } from "react";
-import {ShoppingCart, } from "lucide-react";
+import { ShoppingCart } from "lucide-react";
 import { useEffect, useRef } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -27,14 +27,16 @@ const womensDressImages = [
 const mensShirtImages = [
   "/tom-1.png",
   "/tom-2.jpg",
- "/tom-3.jpg",
- "/tom-4.jpg",
- "/tom-5.jpg",
+  "/tom-3.jpg",
+  "/tom-4.jpg",
+  "/tom-5.jpg",
 ];
 
 export default function SplitLandingPage() {
   // State management remains the same
-  const [selectedGender, setSelectedGender] = useState<"women" | "men">("women");
+  const [selectedGender, setSelectedGender] = useState<"women" | "men">(
+    "women",
+  );
   const [tryOnResult, setTryOnResult] = useState<string | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showModel, setShowModel] = useState(false);
@@ -43,7 +45,7 @@ export default function SplitLandingPage() {
   const womensSizes = ["XS", "S", "M", "L", "XL"];
   const mensSizes = ["S", "M", "L", "XL", "XXL"];
   const [selectedSize, setSelectedSize] = useState(
-    selectedGender === "women" ? "M" : "L"
+    selectedGender === "women" ? "M" : "L",
   );
 
   // Try-on state management remains the same
@@ -105,7 +107,7 @@ export default function SplitLandingPage() {
       setTimeout(() => {
         tryOnButtonRef.current?.scrollIntoView({
           behavior: "smooth",
-          block: "center"
+          block: "center",
         });
       }, 500);
     }
@@ -114,101 +116,100 @@ export default function SplitLandingPage() {
 
   return (
     <>
-    <Header />
-{/* Gender selection buttons */}
-<div className="flex w-full justify-center space-x-4 p-4">
-  <Button
-    onClick={() => setSelectedGender("women")}
-    variant={selectedGender === "women" ? "default" : "outline"}
-    className="w-40"
-  >
-    Women's Collection
-  </Button>
-  <Button
-    onClick={() => setSelectedGender("men")}
-    variant={selectedGender === "men" ? "default" : "outline"}
-    className="w-40"
-  >
-    Men's Collection
-  </Button>
-</div>
-
-{/* Main content area with adjusted grid layout */}
-<main className="container mx-auto px-4 py-8">
-  <div className="grid grid-cols-1 gap-8 md:grid-cols-5">
-    {/* Product Images Section */}
-    <div className="col-span-1 md:col-span-3 md:max-h-[800px] md:overflow-y-auto">
-      {/* Mobile horizontal scroll container */}
-      <div className="mx-auto w-full md:grid md:grid-cols-2 md:gap-4 md:p-4">
-        <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto md:block md:overflow-x-visible">
-          {currentProduct.images.map((src, index) => (
-            <div 
-              key={index} 
-              className="relative w-full flex-none snap-center md:aspect-[3/4] aspect-[9/16] md:w-full"
-              style={{ width: '100%' }} // Forces full width on mobile
-            >
-              <Image
-                src={src}
-                alt={`${selectedGender === "women" ? "Dress" : "Shirt"} View ${
-                  index + 1
-                }`}
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 100vw, 60vw"
-                priority={index === 0}
-              />
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-
-    {/* Product Details Section */}
-    <div className="col-span-1 space-y-6 md:col-span-2">
-      <h1 className="text-3xl font-bold">{currentProduct.title}</h1>
-      <p className="text-gray-600">{currentProduct.description}</p>
-      <div className="text-2xl font-bold">{currentProduct.price}</div>
-
-      {/* Size Selection */}
-      <div>
-        <h3 className="mb-2 text-lg font-semibold">Select Size</h3>
-        <RadioGroup
-          value={selectedSize}
-          onValueChange={setSelectedSize}
-          className="flex flex-wrap gap-2"
+      <Header />
+      {/* Gender selection buttons */}
+      <div className="flex w-full justify-center space-x-4 p-4">
+        <Button
+          onClick={() => setSelectedGender("women")}
+          variant={selectedGender === "women" ? "default" : "outline"}
+          className="w-40"
         >
-          {currentProduct.sizes.map((size) => (
-            <div key={size}>
-              <RadioGroupItem
-                value={size}
-                id={`size-${size}`}
-                className="peer sr-only"
-              />
-              <Label
-                htmlFor={`size-${size}`}
-                className="flex items-center justify-center rounded-md border-2 border-muted bg-popover px-3 py-2 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary peer-data-[state=checked]:text-primary-foreground"
-              >
-                {size}
-              </Label>
-            </div>
-          ))}
-        </RadioGroup>
+          Women's Collection
+        </Button>
+        <Button
+          onClick={() => setSelectedGender("men")}
+          variant={selectedGender === "men" ? "default" : "outline"}
+          className="w-40"
+        >
+          Men's Collection
+        </Button>
       </div>
 
-           {/* Try-On Button */}
-<div 
-  ref={tryOnButtonRef}
-  className="flex flex-col gap-2 animate-glow"
->
-  <TryOnButton
-    garmentImage={
-      selectedGender === "women" ? "/Second_dress.jpg" : "/toms.jpg"
-    }
-    category={selectedGender === "women" ? "one-pieces" : "tops"}
-    onResult={handleTryOnResult}
-  />
-</div>
+      {/* Main content area with adjusted grid layout */}
+      <main className="container mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-5">
+          {/* Product Images Section */}
+          <div className="col-span-1 md:col-span-3 md:max-h-[800px] md:overflow-y-auto">
+            {/* Mobile horizontal scroll container */}
+            <div className="mx-auto w-full md:grid md:grid-cols-2 md:gap-4 md:p-4">
+              <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto md:block md:overflow-x-visible">
+                {currentProduct.images.map((src, index) => (
+                  <div
+                    key={index}
+                    className="relative aspect-[9/16] w-full flex-none snap-center md:aspect-[3/4] md:w-full"
+                    style={{ width: "100%" }} // Forces full width on mobile
+                  >
+                    <Image
+                      src={src}
+                      alt={`${selectedGender === "women" ? "Dress" : "Shirt"} View ${
+                        index + 1
+                      }`}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, 60vw"
+                      priority={index === 0}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
 
+          {/* Product Details Section */}
+          <div className="col-span-1 space-y-6 md:col-span-2">
+            <h1 className="text-3xl font-bold">{currentProduct.title}</h1>
+            <p className="text-gray-600">{currentProduct.description}</p>
+            <div className="text-2xl font-bold">{currentProduct.price}</div>
+
+            {/* Size Selection */}
+            <div>
+              <h3 className="mb-2 text-lg font-semibold">Select Size</h3>
+              <RadioGroup
+                value={selectedSize}
+                onValueChange={setSelectedSize}
+                className="flex flex-wrap gap-2"
+              >
+                {currentProduct.sizes.map((size) => (
+                  <div key={size}>
+                    <RadioGroupItem
+                      value={size}
+                      id={`size-${size}`}
+                      className="peer sr-only"
+                    />
+                    <Label
+                      htmlFor={`size-${size}`}
+                      className="flex items-center justify-center rounded-md border-2 border-muted bg-popover px-3 py-2 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary peer-data-[state=checked]:text-primary-foreground"
+                    >
+                      {size}
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            </div>
+
+            {/* Try-On Button */}
+            <div
+              ref={tryOnButtonRef}
+              className="animate-glow flex flex-col gap-2"
+            >
+              <TryOnButton
+                garmentImage={
+                  selectedGender === "women" ? "/Second_dress.jpg" : "/toms.jpg"
+                }
+                category={selectedGender === "women" ? "one-pieces" : "tops"}
+                onResult={handleTryOnResult}
+              />
+            </div>
 
             {/* Try-On Results */}
             {tryOnState.resultUrl && (
