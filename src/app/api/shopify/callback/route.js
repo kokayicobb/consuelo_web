@@ -1,8 +1,20 @@
-// /src/app/api/shopify/callback/route.js
+// File: /src/app/api/shopify/callback/route.js
 import crypto from 'crypto';
 import axios from 'axios';
-import { supabase } from '../../../../lib/supabaseClient';
 import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+
+// Initialize Supabase client inside the handler to prevent build-time errors
+const getSupabase = () => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+  
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Missing Supabase environment variables');
+  }
+  
+  return createClient(supabaseUrl, supabaseKey);
+};
 
 function validateHmac(searchParams, secret) {
   const params = {};
@@ -58,6 +70,9 @@ export async function GET(request) {
     const tokenResponse = await axios.post(tokenRequestUrl, tokenPayload);
     const { access_token, scope } = tokenResponse.data;
 
+    // Initialize Supabase inside the handler
+    const supabase = getSupabase();
+    
     // Save the token to Supabase
     const { error } = await supabase
       .from('shop_tokens')
