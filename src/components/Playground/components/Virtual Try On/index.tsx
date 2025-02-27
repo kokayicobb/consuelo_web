@@ -371,7 +371,7 @@ const TryOnButton = ({ garmentImage, category, onResult }) => {
       </div>
     </div>
   );
-
+//
   const PreviewScreen = () => (
     <div className="space-y-4">
     <div className="flex justify-start">
