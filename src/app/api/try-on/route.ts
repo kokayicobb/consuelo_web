@@ -1,17 +1,51 @@
-// src/app/api/try-on/route.ts
+// app/api/try-on/route.js
+import { NextResponse } from 'next/server';
+
 export async function POST(req) {
   console.log('=== Try-on Request Started ===');
   
   try {
-    // Log the raw request headers to check content type
-    console.log('Request headers:', Object.fromEntries(req.headers));
+    // Extract API key from Authorization header (Bearer token format)
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.error('Missing or invalid Authorization header');
+      return NextResponse.json(
+        { error: { message: 'Missing or invalid Authorization header' } },
+        { status: 401 }
+      );
+    }
+    
+    const apiKey = authHeader.split('Bearer ')[1];
+    console.log(`API key received: ${apiKey.substring(0, 8)}...`);
+    
+    // Hard-coded API key validation for the client
+    const validClientKey = 'c816f700.0938efb8d12babafb768a79520c724012324d6ca8884ede35e8b5deb';
+    if (apiKey !== validClientKey) {
+      console.error('Invalid API key');
+      return NextResponse.json(
+        { error: { message: 'Invalid API key' } },
+        { status: 403 }
+      );
+    }
     
     // Get the request body
     const data = await req.json();
     
-    // Debug the exact category received
-    console.log('RECEIVED CATEGORY:', JSON.stringify(data.category));
-    console.log('CATEGORY TYPE:', typeof data.category);
+    // Validate required fields
+    if (!data.model_image) {
+      console.error('Missing model_image in request');
+      return NextResponse.json({ error: { message: 'Missing model_image' } }, { status: 400 });
+    }
+    
+    if (!data.garment_image) {
+      console.error('Missing garment_image in request');
+      return NextResponse.json({ error: { message: 'Missing garment_image' } }, { status: 400 });
+    }
+    
+    if (!data.category) {
+      console.error('Missing category in request');
+      return NextResponse.json({ error: { message: 'Missing category' } }, { status: 400 });
+    }
     
     // Log request structure without sensitive data
     console.log('Request data structure:', {
@@ -24,28 +58,11 @@ export async function POST(req) {
       num_samples: data.num_samples || 1
     });
 
-    // Validate required fields
-    if (!data.model_image) {
-      console.error('Missing model_image in request');
-      return Response.json({ error: { message: 'Missing model_image' } }, { status: 400 });
-    }
-    
-    if (!data.garment_image) {
-      console.error('Missing garment_image in request');
-      return Response.json({ error: { message: 'Missing garment_image' } }, { status: 400 });
-    }
-
-    // COMPLETELY FOOLPROOF CATEGORY NORMALIZATION
-    // ==========================================
-    
-    // Valid categories the FASHN API accepts
+    // Normalize category for FASHN API
     const validCategories = ['tops', 'bottoms', 'one-pieces'];
+    let normalizedCategory = data.category.toLowerCase().trim();
     
-    // Ensure we have a string to work with
-    const rawCategory = data.category ? String(data.category) : '';
-    let normalizedCategory = rawCategory.toLowerCase().trim();
-    
-    // Mapping for common values
+    // Map categories if needed
     const categoryMap = {
       'dress': 'one-pieces',
       'dresses': 'one-pieces', 
@@ -70,74 +87,66 @@ export async function POST(req) {
       'skirt': 'bottoms'
     };
     
-    // Apply mapping if we can
     if (categoryMap[normalizedCategory]) {
-      console.log(`Mapping category "${normalizedCategory}" to "${categoryMap[normalizedCategory]}"`);
       normalizedCategory = categoryMap[normalizedCategory];
     }
     
-    // Final validation check - default to tops if invalid
+    // Final validation - default to tops if invalid
     if (!validCategories.includes(normalizedCategory)) {
-      console.error(`Invalid category after normalization: "${normalizedCategory}", defaulting to "tops"`);
+      console.warn(`Invalid category: "${normalizedCategory}", defaulting to "tops"`);
       normalizedCategory = 'tops';
     }
     
-    console.log(`Final normalized category: "${normalizedCategory}"`);
-    // ==========================================
-
-    // Prepare the payload for FASHN API with normalized category
+    // Forward to FASHN API
+    const fashnApiKey = 'fa-u5Z4R9wIqa6R-kfW6TOb7KXllTSG1PB278ZiB';
     const payload = {
       model_image: data.model_image,
       garment_image: data.garment_image,
-      category: normalizedCategory,  // Use the normalized valid category
+      category: normalizedCategory,
       mode: data.mode || 'balanced',
       num_samples: data.num_samples || 1
     };
-
+    
     console.log('Sending request to FASHN API with category:', normalizedCategory);
     const response = await fetch('https://api.fashn.ai/v1/run', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.FASHN_API_KEY || 'fa-u5Z4R9wIqa6R-kfW6TOb7KXllTSG1PB278ZiB'}`
+        'Authorization': `Bearer ${fashnApiKey}`
       },
       body: JSON.stringify(payload)
     });
-
-    // Log response status and headers
-    console.log('FASHN API response status:', response.status);
-    console.log('FASHN API response headers:', Object.fromEntries(response.headers));
-
-    // Get response body as text first for better error handling
-    const responseText = await response.text();
-    let result;
     
-    try {
-      result = JSON.parse(responseText);
-      console.log('FASHN API response body:', result);
-    } catch (e) {
-      console.error('Error parsing API response:', responseText);
-      return Response.json(
-        { error: { message: 'Invalid response from FASHN API' } },
-        { status: 500 }
-      );
-    }
-
+    // Log response status
+    console.log('FASHN API response status:', response.status);
+    
+    // If response is not OK, return error
     if (!response.ok) {
-      console.error('FASHN API error:', result);
-      return Response.json(
-        { error: result.error || { message: 'Error from FASHN API' } },
-        { status: response.status }
-      );
+      const errorText = await response.text();
+      console.error('Error from FASHN API:', errorText);
+      
+      try {
+        const errorJson = JSON.parse(errorText);
+        return NextResponse.json(
+          { error: errorJson.error || { message: 'Error from API provider' } },
+          { status: response.status }
+        );
+      } catch (e) {
+        return NextResponse.json(
+          { error: { message: 'Error from API provider' } },
+          { status: response.status }
+        );
+      }
     }
-
-    return Response.json(result);
+    
+    // Forward the successful response
+    const responseData = await response.json();
+    return NextResponse.json(responseData);
+    
   } catch (error) {
-    // Log the detailed error
     console.error('Try-on error:', error);
-    console.error('Error stack:', error.stack);
-    return Response.json(
-      { error: { message: error.message, stack: error.stack } },
+    return NextResponse.json(
+      { error: { message: 'Internal server error' } },
       { status: 500 }
     );
   }
