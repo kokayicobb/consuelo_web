@@ -36,21 +36,19 @@ function Hero() {
   }, [titleNumber, titles]);
 
   return (
-    <div className="relative mx-auto flex max-w-full overflow-hidden px-12 pb-12 pt-16 sm:px-6 lg:px-8">
-      {/* Content Container */}
-      <div className="container relative z-10 mx-auto">
-        <div className="animate-fade-in flex flex-col items-center text-center">
+    <div className="relative mx-auto flex max-w-full overflow-hidden px-12 pt-16 pb-12 sm:px-6 lg:px-8">
+    {/* Content Container */}
+    <div className="container relative z-10 mx-auto">
+      <div className="animate-fade-in flex flex-col items-center text-center">
           <div className="mb-4 inline-flex items-center rounded-full bg-violet-100 px-4 py-2 text-base font-medium dark:bg-violet-100">
             <Zap className="mr-2 h-5 w-5 text-violet-600 dark:text-violet-600" />
             <span className="text-violet-900 dark:text-violet-900">
               Revolutionizing E-commerce Fitting
             </span>
           </div>
-
+          
           <h1 className="font-regular max-w-4xl text-center text-5xl tracking-tighter md:text-7xl">
-            <span className="text-spektr-cyan-50 mb-4 block">
-              This is something
-            </span>
+            <span className="text-spektr-cyan-50 mb-4 block">This is something</span>
             <span className="relative flex w-full justify-center overflow-hidden text-center md:pb-4 md:pt-2">
               &nbsp;
               {titles.map((title, index) => (
@@ -76,13 +74,13 @@ function Hero() {
               ))}
             </span>
           </h1>
-
+          
           <p className="mt-6 max-w-2xl text-lg text-violet-950 dark:text-violet-950 sm:text-xl">
             Be the brand that nails the perfect fit every time by giving your
             customers AI-driven sizing recommendations that boost their
             confidence when they shop online.
           </p>
-
+          
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row sm:gap-x-6">
             <Link
               href="/contact"
@@ -109,7 +107,7 @@ function Hero() {
                 </svg>
               </span>
             </Link>
-
+            
             <Link
               href="/virtual-try-on"
               className="group relative inline-flex h-12 w-full transform cursor-pointer items-center justify-center overflow-hidden rounded-md px-8 transition-transform duration-300 hover:scale-105 sm:w-auto"
@@ -139,7 +137,7 @@ function Hero() {
               </span>
             </Link>
           </div>
-
+          
           <p className="mt-6 text-sm text-gray-500 dark:text-gray-400">
             No credit card required. Start for free.
           </p>
