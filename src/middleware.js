@@ -1,4 +1,3 @@
-// src/middleware.js
 import { NextResponse } from 'next/server';
 
 // Define the same CORS headers
@@ -11,12 +10,12 @@ const corsHeaders = {
 };
 
 export function middleware(request) {
-  // Only apply to the try-on API route
-  if (request.nextUrl.pathname !== '/api/try-on') {
+  // Check if the request is for the try-on API
+  if (!request.nextUrl.pathname.startsWith('/api/try-on')) {
     return NextResponse.next();
   }
   
-  // Handle OPTIONS preflight
+  // Handle OPTIONS preflight - IMPORTANT to prevent redirects
   if (request.method === 'OPTIONS') {
     return new NextResponse(null, {
       status: 204,
@@ -35,7 +34,7 @@ export function middleware(request) {
   return response;
 }
 
-// Configure the middleware to only run on the try-on API route
+// Configure the middleware to match any path starting with /api/try-on
 export const config = {
-  matcher: '/api/try-on',
+  matcher: ['/api/try-on', '/api/try-on/:path*'],
 };
