@@ -1,21 +1,27 @@
 // app/api/try-on/route.js
 import { NextResponse } from 'next/server';
 
+// Define CORS headers in one place to ensure consistency
+const corsHeaders = {
+  'Access-Control-Allow-Origin': 'https://try-on-testing.myshopify.com',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-api-key',
+  'Access-Control-Allow-Credentials': 'true',
+  'Access-Control-Max-Age': '86400', // 24 hours
+};
+
 // Handle OPTIONS requests (for CORS preflight)
-export async function OPTIONS(req) {
+export async function OPTIONS() {
+  // Important: Return 204 (No Content) instead of 200 for OPTIONS
   return new NextResponse(null, {
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': 'https://try-on-testing.myshopify.com',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-api-key',
-      'Access-Control-Max-Age': '86400', // 24 hours
-    },
+    status: 204,
+    headers: corsHeaders,
   });
 }
 
 export async function POST(req) {
   console.log('=== Try-on Request Started ===');
+  
   try {
     const data = await req.json();
     console.log('Request data:', {
@@ -50,21 +56,13 @@ export async function POST(req) {
         { error: result },
         { 
           status: response.status,
-          headers: {
-            'Access-Control-Allow-Origin': 'https://try-on-testing.myshopify.com',
-            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-api-key'
-          }
+          headers: corsHeaders
         }
       );
     }
 
     return NextResponse.json(result, {
-      headers: {
-        'Access-Control-Allow-Origin': 'https://try-on-testing.myshopify.com',
-        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-api-key'
-      }
+      headers: corsHeaders
     });
   } catch (error) {
     console.error('Try-on error:', error);
@@ -72,11 +70,7 @@ export async function POST(req) {
       { error: { message: error.message } },
       { 
         status: 500,
-        headers: {
-          'Access-Control-Allow-Origin': 'https://try-on-testing.myshopify.com',
-          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-api-key'
-        }
+        headers: corsHeaders
       }
     );
   }
