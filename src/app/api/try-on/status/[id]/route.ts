@@ -1,8 +1,5 @@
 // app/api/try-on/status/[id]/route.js
 import { NextResponse } from 'next/server';
-import { validateApiKey, incrementUsage } from '../../keys';
-import { logApiUsage } from '../../stats';
-
 
 export async function GET(req, { params }) {
   console.log('=== Try-on Status Request ===');
@@ -10,66 +7,59 @@ export async function GET(req, { params }) {
   try {
     const id = params.id;
     
-    // Extract API key from headers
-    const apiKey = req.headers.get('x-api-key');
-    if (!apiKey) {
-      console.error('Missing x-api-key header');
+    // Extract API key from Authorization header (Bearer token format)
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.error('Missing or invalid Authorization header');
       return NextResponse.json(
-        { error: 'API key is required' },
+        { error: 'Missing or invalid Authorization header' },
         { status: 401 }
       );
     }
-
-    // Validate API key - using your existing validation logic
-    const keyData = await validateApiKey(apiKey);
-    if (!keyData) {
+    
+    const apiKey = authHeader.split('Bearer ')[1];
+    console.log(`API key received: ${apiKey.substring(0, 8)}...`);
+    
+    // Hard-coded API key validation for the client
+    const validClientKey = 'c816f700.0938efb8d12babafb768a79520c724012324d6ca8884ede35e8b5deb';
+    if (apiKey !== validClientKey) {
+      console.error('Invalid API key');
       return NextResponse.json(
         { error: 'Invalid API key' },
         { status: 403 }
       );
     }
-
-    // Log the API usage (non-blocking)
-    logApiUsage(apiKey, 'status', true).catch(err => {
-      console.error('Failed to log API usage:', err);
-    });
     
-    // Make request to fashn.ai API
+    // Forward the request to FASHN API with your FASHN API key
+    const fashnApiKey = 'fa-u5Z4R9wIqa6R-kfW6TOb7KXllTSG1PB278ZiB';
+    console.log(`Making request to FASHN API for status of ID: ${id}`);
+    
     const response = await fetch(`https://api.fashn.ai/v1/status/${id}`, {
       headers: {
-        'Authorization': `Bearer ${process.env.FASHN_API_KEY || 'fa-u5Z4R9wIqa6R-kfW6TOb7KXllTSG1PB278ZiB'}`
+        'Authorization': `Bearer ${fashnApiKey}`
       }
     });
     
-    // Parse response as JSON
-    const data = await response.json();
+    console.log(`FASHN API response status: ${response.status}`);
     
-    // Check for errors
-    if (data.error) {
+    // If response is not OK, return error
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Error from FASHN API:', errorText);
       return NextResponse.json(
-        { 
-          error: data.error.message || 'Error from external API',
-          source: 'external'
-        },
-        { status: 500 }
+        { error: 'Error from API provider' },
+        { status: response.status }
       );
     }
     
-    // Increment usage count (non-blocking)
-    incrementUsage(apiKey).catch(err => {
-      console.error('Failed to increment usage count:', err);
-    });
-    
-    // Return successful response
+    // Forward the successful response
+    const data = await response.json();
     return NextResponse.json(data);
     
   } catch (error) {
     console.error('Try-on status error:', error);
     return NextResponse.json(
-      { 
-        error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error'
-      },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
