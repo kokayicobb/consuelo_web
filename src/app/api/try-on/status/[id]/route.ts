@@ -1,18 +1,8 @@
 // app/api/try-on/status/[id]/route.js
 import { NextResponse } from 'next/server';
+import { validateApiKey, incrementUsage } from '../../keys';
+import { logApiUsage } from '../../stats';
 
-// Handle OPTIONS requests (for CORS preflight)
-export async function OPTIONS(req) {
-  return new NextResponse(null, {
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': 'https://try-on-testing.myshopify.com',
-      'Access-Control-Allow-Methods': 'GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-api-key',
-      'Access-Control-Max-Age': '86400', // 24 hours
-    },
-  });
-}
 
 export async function GET(req, { params }) {
   console.log('=== Try-on Status Request ===');
@@ -20,63 +10,67 @@ export async function GET(req, { params }) {
   try {
     const id = params.id;
     
-    if (!id) {
+    // Extract API key from headers
+    const apiKey = req.headers.get('x-api-key');
+    if (!apiKey) {
+      console.error('Missing x-api-key header');
       return NextResponse.json(
-        { error: 'Job ID is required' },
-        { 
-          status: 400,
-          headers: {
-            'Access-Control-Allow-Origin': 'https://try-on-testing.myshopify.com',
-            'Access-Control-Allow-Methods': 'GET, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-api-key'
-          }
-        }
+        { error: 'API key is required' },
+        { status: 401 }
       );
     }
+
+    // Validate API key - using your existing validation logic
+    const keyData = await validateApiKey(apiKey);
+    if (!keyData) {
+      return NextResponse.json(
+        { error: 'Invalid API key' },
+        { status: 403 }
+      );
+    }
+
+    // Log the API usage (non-blocking)
+    logApiUsage(apiKey, 'status', true).catch(err => {
+      console.error('Failed to log API usage:', err);
+    });
     
+    // Make request to fashn.ai API
     const response = await fetch(`https://api.fashn.ai/v1/status/${id}`, {
       headers: {
-        'Authorization': `Bearer ${process.env.FASHN_API_KEY}`
+        'Authorization': `Bearer ${process.env.FASHN_API_KEY || 'fa-u5Z4R9wIqa6R-kfW6TOb7KXllTSG1PB278ZiB'}`
       }
     });
     
-    const result = await response.json();
-    console.log('FASHN API Status Response:', result);
+    // Parse response as JSON
+    const data = await response.json();
     
-    if (!response.ok) {
-      console.error('FASHN API Status Error:', result);
+    // Check for errors
+    if (data.error) {
       return NextResponse.json(
-        { error: result },
         { 
-          status: response.status,
-          headers: {
-            'Access-Control-Allow-Origin': 'https://try-on-testing.myshopify.com',
-            'Access-Control-Allow-Methods': 'GET, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-api-key'
-          }
-        }
+          error: data.error.message || 'Error from external API',
+          source: 'external'
+        },
+        { status: 500 }
       );
     }
     
-    return NextResponse.json(result, {
-      headers: {
-        'Access-Control-Allow-Origin': 'https://try-on-testing.myshopify.com',
-        'Access-Control-Allow-Methods': 'GET, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-api-key'
-      }
+    // Increment usage count (non-blocking)
+    incrementUsage(apiKey).catch(err => {
+      console.error('Failed to increment usage count:', err);
     });
+    
+    // Return successful response
+    return NextResponse.json(data);
+    
   } catch (error) {
     console.error('Try-on status error:', error);
     return NextResponse.json(
-      { error: { message: error.message } },
       { 
-        status: 500,
-        headers: {
-          'Access-Control-Allow-Origin': 'https://try-on-testing.myshopify.com',
-          'Access-Control-Allow-Methods': 'GET, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-api-key'
-        }
-      }
+        error: 'Internal server error',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      },
+      { status: 500 }
     );
   }
 }
