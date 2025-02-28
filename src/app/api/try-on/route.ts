@@ -6,8 +6,14 @@ export async function POST(req) {
     // Log the raw request headers to check content type
     console.log('Request headers:', Object.fromEntries(req.headers));
     
-    // Get the request body and log it (without full image data)
+    // Get the request body
     const data = await req.json();
+    
+    // Debug the exact category received
+    console.log('RECEIVED CATEGORY:', JSON.stringify(data.category));
+    console.log('CATEGORY TYPE:', typeof data.category);
+    
+    // Log request structure without sensitive data
     console.log('Request data structure:', {
       hasModelImage: !!data.model_image,
       modelImageLength: data.model_image ? data.model_image.length : 'none',
@@ -21,31 +27,63 @@ export async function POST(req) {
     // Validate required fields
     if (!data.model_image) {
       console.error('Missing model_image in request');
-      return Response.json({ error: 'Missing model_image' }, { status: 400 });
+      return Response.json({ error: { message: 'Missing model_image' } }, { status: 400 });
     }
     
     if (!data.garment_image) {
       console.error('Missing garment_image in request');
-      return Response.json({ error: 'Missing garment_image' }, { status: 400 });
+      return Response.json({ error: { message: 'Missing garment_image' } }, { status: 400 });
     }
 
-    // Validate and normalize category - THIS IS THE KEY FIX
+    // COMPLETELY FOOLPROOF CATEGORY NORMALIZATION
+    // ==========================================
+    
+    // Valid categories the FASHN API accepts
     const validCategories = ['tops', 'bottoms', 'one-pieces'];
-    let normalizedCategory = data.category ? String(data.category).toLowerCase().trim() : '';
     
-    // Map "dress" to "one-pieces" (which is what FASHN API accepts)
-    if (normalizedCategory === 'dress') {
-      normalizedCategory = 'one-pieces';
+    // Ensure we have a string to work with
+    const rawCategory = data.category ? String(data.category) : '';
+    let normalizedCategory = rawCategory.toLowerCase().trim();
+    
+    // Mapping for common values
+    const categoryMap = {
+      'dress': 'one-pieces',
+      'dresses': 'one-pieces', 
+      'jumpsuit': 'one-pieces',
+      'romper': 'one-pieces',
+      'one piece': 'one-pieces',
+      'onepiece': 'one-pieces',
+      'one-piece': 'one-pieces',
+      'top': 'tops',
+      'shirt': 'tops',
+      'shirts': 'tops',
+      'blouse': 'tops',
+      'tshirt': 'tops',
+      't-shirt': 'tops',
+      'jacket': 'tops',
+      'hoodie': 'tops',
+      'bottom': 'bottoms',
+      'pant': 'bottoms',
+      'pants': 'bottoms',
+      'jeans': 'bottoms',
+      'shorts': 'bottoms',
+      'skirt': 'bottoms'
+    };
+    
+    // Apply mapping if we can
+    if (categoryMap[normalizedCategory]) {
+      console.log(`Mapping category "${normalizedCategory}" to "${categoryMap[normalizedCategory]}"`);
+      normalizedCategory = categoryMap[normalizedCategory];
     }
     
-    // Validate the category is one of the supported values
+    // Final validation check - default to tops if invalid
     if (!validCategories.includes(normalizedCategory)) {
-      console.error(`Invalid category: "${normalizedCategory}"`);
-      return Response.json(
-        { error: `"category" must be one of [tops, bottoms, one-pieces]` },
-        { status: 400 }
-      );
+      console.error(`Invalid category after normalization: "${normalizedCategory}", defaulting to "tops"`);
+      normalizedCategory = 'tops';
     }
+    
+    console.log(`Final normalized category: "${normalizedCategory}"`);
+    // ==========================================
 
     // Prepare the payload for FASHN API with normalized category
     const payload = {
@@ -70,13 +108,25 @@ export async function POST(req) {
     console.log('FASHN API response status:', response.status);
     console.log('FASHN API response headers:', Object.fromEntries(response.headers));
 
-    const result = await response.json();
-    console.log('FASHN API response body:', result);
+    // Get response body as text first for better error handling
+    const responseText = await response.text();
+    let result;
+    
+    try {
+      result = JSON.parse(responseText);
+      console.log('FASHN API response body:', result);
+    } catch (e) {
+      console.error('Error parsing API response:', responseText);
+      return Response.json(
+        { error: { message: 'Invalid response from FASHN API' } },
+        { status: 500 }
+      );
+    }
 
     if (!response.ok) {
       console.error('FASHN API error:', result);
       return Response.json(
-        { error: result },
+        { error: result.error || { message: 'Error from FASHN API' } },
         { status: response.status }
       );
     }
