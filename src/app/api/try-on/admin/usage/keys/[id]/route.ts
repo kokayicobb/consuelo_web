@@ -1,7 +1,13 @@
+// File: /src/app/api/try-on/admin/usage/keys/[id]/route.ts (assuming this is the path)
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/utils/auth';
-import { getKeyUsageStats } from '@/utils/usage';
+
+// Import utility function dynamically to prevent build-time Supabase initialization
+async function importUsageUtils() {
+  const { getKeyUsageStats } = await import('@/utils/usage');
+  return { getKeyUsageStats };
+}
 
 export async function GET(
   req: NextRequest,
@@ -21,6 +27,9 @@ export async function GET(
 
     // Get days parameter from query string
     const days = parseInt(req.nextUrl.searchParams.get('days') || '30', 10);
+    
+    // Dynamically import the usage utility to prevent build-time Supabase initialization
+    const { getKeyUsageStats } = await importUsageUtils();
     
     const stats = await getKeyUsageStats(keyId, days);
     if (!stats) {

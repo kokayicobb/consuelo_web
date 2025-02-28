@@ -1,8 +1,14 @@
+// File: /src/app/api/try-on/admin/usage/keys/route.ts (assuming this is the path)
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/utils/auth';
-import { getAllKeysUsage } from '@/utils/usage';
-import { listApiKeys } from '@/utils/keys';
+
+// Import utility functions dynamically to prevent build-time Supabase initialization
+async function importUtils() {
+  const { getAllKeysUsage } = await import('@/utils/usage');
+  const { listApiKeys } = await import('@/utils/keys');
+  return { getAllKeysUsage, listApiKeys };
+}
 
 export async function GET(req: NextRequest) {
   // First verify the user is authenticated as an admin
@@ -14,6 +20,9 @@ export async function GET(req: NextRequest) {
   try {
     // Get days parameter from query string
     const days = parseInt(req.nextUrl.searchParams.get('days') || '30', 10);
+    
+    // Dynamically import the utility functions to prevent build-time Supabase initialization
+    const { getAllKeysUsage, listApiKeys } = await importUtils();
     
     // Get all keys and their usage counts
     const keys = await listApiKeys(true); // Include inactive keys
