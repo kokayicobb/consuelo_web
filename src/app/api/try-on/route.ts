@@ -1,3 +1,4 @@
+// src/app/api/try-on/route.ts
 export async function POST(req) {
   console.log('=== Try-on Request Started ===');
   
@@ -28,16 +29,34 @@ export async function POST(req) {
       return Response.json({ error: 'Missing garment_image' }, { status: 400 });
     }
 
-    // Prepare the payload for FASHN API
+    // Validate and normalize category - THIS IS THE KEY FIX
+    const validCategories = ['tops', 'bottoms', 'one-pieces'];
+    let normalizedCategory = data.category ? String(data.category).toLowerCase().trim() : '';
+    
+    // Map "dress" to "one-pieces" (which is what FASHN API accepts)
+    if (normalizedCategory === 'dress') {
+      normalizedCategory = 'one-pieces';
+    }
+    
+    // Validate the category is one of the supported values
+    if (!validCategories.includes(normalizedCategory)) {
+      console.error(`Invalid category: "${normalizedCategory}"`);
+      return Response.json(
+        { error: `"category" must be one of [tops, bottoms, one-pieces]` },
+        { status: 400 }
+      );
+    }
+
+    // Prepare the payload for FASHN API with normalized category
     const payload = {
       model_image: data.model_image,
       garment_image: data.garment_image,
-      category: data.category || 'dress', // Provide default if missing
+      category: normalizedCategory,  // Use the normalized valid category
       mode: data.mode || 'balanced',
       num_samples: data.num_samples || 1
     };
 
-    console.log('Sending request to FASHN API...');
+    console.log('Sending request to FASHN API with category:', normalizedCategory);
     const response = await fetch('https://api.fashn.ai/v1/run', {
       method: 'POST',
       headers: {
