@@ -10,11 +10,23 @@ const nextConfig = {
       },
     ],
   },
-  // Add CORS headers at the Next.js configuration level
+  // Disable trailing slash redirects
+  trailingSlash: false,
+  // Add CORS headers
   async headers() {
     return [
       {
-        source: '/api/:path*',
+        source: '/api/try-on',
+        headers: [
+          { key: 'Access-Control-Allow-Origin', value: 'https://try-on-testing.myshopify.com' },
+          { key: 'Access-Control-Allow-Methods', value: 'GET, POST, OPTIONS' },
+          { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization, x-api-key' },
+          { key: 'Access-Control-Max-Age', value: '86400' }
+        ]
+      },
+      {
+        // Also apply to paths with trailing slash just in case
+        source: '/api/try-on/',
         headers: [
           { key: 'Access-Control-Allow-Origin', value: 'https://try-on-testing.myshopify.com' },
           { key: 'Access-Control-Allow-Methods', value: 'GET, POST, OPTIONS' },
