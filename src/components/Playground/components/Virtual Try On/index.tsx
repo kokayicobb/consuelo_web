@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -10,6 +11,7 @@ import { Checkbox } from "@radix-ui/react-checkbox";
 import { AnimatePresence, motion } from "framer-motion";
 import MobileDrawer from "./mobile-drawer";
 import Timer from "@/components/ui/timer";
+
 
 const TryOnButton = ({ garmentImage, category, onResult }) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -384,7 +386,7 @@ const TryOnButton = ({ garmentImage, category, onResult }) => {
       </div>
     </div>
   );
-
+//
   const PreviewScreen = () => (
     <div className="space-y-4 rounded-lg border border-gray-300 p-4">
       <div className="flex justify-start">

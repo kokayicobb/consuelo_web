@@ -12,7 +12,7 @@ import { getAllPosts } from "@/utils/markdown";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Consuelo - AI-Powered Fit Technology",
+  title: "Consuelo - See it. Try it. Buy it.",
   description:
     "The personalized virtual fitting solution for Ecommerce retailers. Our innovative SaaS platform enables customers to try on clothes online ensuring the perfect fit and reducing returns.",
 };

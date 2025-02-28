@@ -18,7 +18,8 @@ const Playground = () => {
     <main>
       <Breadcrumb pageName="Playground" />
       <Suspense fallback={<div>Loading...</div>}>
-        <EquestrianHelmetPage />
+        <EquestrianHelmetPage /> 
+        
       </Suspense>
     </main>
   );

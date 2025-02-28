@@ -1,10 +1,6 @@
+// pages/api/shopify/products.js
 import axios from 'axios';
-
-// Dummy function to fetch stored token (replace with real db query)
-async function getAccessTokenFromDB(shop) {
-  // Replace with your own logic
-  return 'stored-shop-access-token';
-}
+import { getAccessTokenFromDB } from '../../../lib/getAccessTokenFromDB';
 
 export default async function handler(req, res) {
   const { shop } = req.query;
@@ -26,7 +22,6 @@ export default async function handler(req, res) {
       },
     });
 
-    // Return the products
     return res.status(200).json(response.data);
   } catch (error) {
     console.error('Error fetching products:', error);
