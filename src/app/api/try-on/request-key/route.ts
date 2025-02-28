@@ -1,5 +1,11 @@
+// File: /src/app/api/keys/route.ts (assuming this is the path)
 import { NextRequest, NextResponse } from 'next/server';
-import { createApiKey } from '@/utils/keys';
+
+// Import utility function dynamically to prevent build-time Supabase initialization
+async function importKeysUtils() {
+  const { createApiKey } = await import('@/utils/keys');
+  return { createApiKey };
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,6 +23,9 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+    
+    // Dynamically import the createApiKey function
+    const { createApiKey } = await importKeysUtils();
     
     // Create the API key without requiring a user ID
     console.log("Creating API key for:", name);
