@@ -1,39 +1,82 @@
 // app/api/try-on/status/[id]/route.js
+import { NextResponse } from 'next/server';
+
+// Handle OPTIONS requests (for CORS preflight)
+export async function OPTIONS(req) {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': 'https://try-on-testing.myshopify.com',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-api-key',
+      'Access-Control-Max-Age': '86400', // 24 hours
+    },
+  });
+}
+
 export async function GET(req, { params }) {
-  console.log('=== Status Check Started ===');
+  console.log('=== Try-on Status Request ===');
+  
   try {
-    const { id } = params;
-    console.log('Request ID:', id);
+    const id = params.id;
     
-    const url = `https://api.fashn.ai/v1/status/${id}`;
-    console.log('Calling FASHN API URL:', url);
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Job ID is required' },
+        { 
+          status: 400,
+          headers: {
+            'Access-Control-Allow-Origin': 'https://try-on-testing.myshopify.com',
+            'Access-Control-Allow-Methods': 'GET, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-api-key'
+          }
+        }
+      );
+    }
     
-    const response = await fetch(url, {
+    const response = await fetch(`https://api.fashn.ai/v1/status/${id}`, {
       headers: {
-        'Authorization': `Bearer ${process.env.FASHN_API_KEY}`,
-        'Cache-Control': 'no-cache'
+        'Authorization': `Bearer ${process.env.FASHN_API_KEY}`
       }
     });
     
-    console.log('FASHN API Response Status:', response.status);
-    const data = await response.json();
-    console.log('FASHN API Raw Response:', data);
-
-    if (data.status === 'completed') {
-      console.log('Processing completed successfully. Output URLs:', data.output);
+    const result = await response.json();
+    console.log('FASHN API Status Response:', result);
+    
+    if (!response.ok) {
+      console.error('FASHN API Status Error:', result);
+      return NextResponse.json(
+        { error: result },
+        { 
+          status: response.status,
+          headers: {
+            'Access-Control-Allow-Origin': 'https://try-on-testing.myshopify.com',
+            'Access-Control-Allow-Methods': 'GET, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-api-key'
+          }
+        }
+      );
     }
-
-    return new Response(JSON.stringify(data), {
+    
+    return NextResponse.json(result, {
       headers: {
-        'Content-Type': 'application/json',
-        'Cache-Control': 'no-store, no-cache, must-revalidate'
+        'Access-Control-Allow-Origin': 'https://try-on-testing.myshopify.com',
+        'Access-Control-Allow-Methods': 'GET, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-api-key'
       }
     });
   } catch (error) {
-    console.error('Status check error:', error);
-    return Response.json(
+    console.error('Try-on status error:', error);
+    return NextResponse.json(
       { error: { message: error.message } },
-      { status: 500 }
+      { 
+        status: 500,
+        headers: {
+          'Access-Control-Allow-Origin': 'https://try-on-testing.myshopify.com',
+          'Access-Control-Allow-Methods': 'GET, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-api-key'
+        }
+      }
     );
   }
 }
