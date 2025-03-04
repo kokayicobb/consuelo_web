@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 // Define the same CORS headers
 const corsHeaders = {
-  'Access-Control-Allow-Origin': 'https://try-on-testing.myshopify.com',
+  'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-api-key',
   'Access-Control-Allow-Credentials': 'true',
