@@ -33,7 +33,7 @@ export default function FaceDetection() {
   const [measurements, setMeasurements] = useState<any>(null);
   const [positionFeedback, setPositionFeedback] = useState<string[]>([]);
   const [selectedGender, setSelectedGender] = useState(null);
-  const [userGender, setUserGender] = useState('male'); // default to male
+  const [userGender, setUserGender] = useState("male"); // default to male
   const runningModeRef = useRef<"IMAGE" | "VIDEO">("IMAGE");
   const lastVideoTimeRef = useRef<number>(-1);
   const streamRef = useRef<MediaStream | null>(null);
@@ -120,7 +120,7 @@ export default function FaceDetection() {
 
     // Dynamic pixel-to-cm conversion factor
     const PIXEL_TO_CM = dynamicPixelToCm(templeWidth, landmarks);
-    const CALIBRATION_FACTOR = userGender === 'male' ? 1.85 : 1.75; // Adjust calibration based on gender
+    const CALIBRATION_FACTOR = userGender === "male" ? 1.85 : 1.75; // Adjust calibration based on gender
 
     // Final measurements
     return {
@@ -168,8 +168,6 @@ export default function FaceDetection() {
     // Simple check for mobile
     const isMobile = window.innerWidth < 768;
 
-  
-
     // Check distance from camera
     const templeRight = points[HEAD_LANDMARKS.temple_right];
     const templeLeft = points[HEAD_LANDMARKS.temple_left];
@@ -193,7 +191,7 @@ export default function FaceDetection() {
         feedback.push("👤 Move further from the camera");
       }
     }
-  // Check jaw position
+    // Check jaw position
     const chin = points[HEAD_LANDMARKS.chin];
     const forehead = points[HEAD_LANDMARKS.forehead_mid];
     const jawAngle =
@@ -217,35 +215,34 @@ export default function FaceDetection() {
     return feedback;
   };
 
-  const calculateCalibrationFactor = (landmarks, gender = 'male') => {
+  const calculateCalibrationFactor = (landmarks, gender = "male") => {
     if (!landmarks || landmarks.length === 0) return null;
-    
+
     const points = landmarks[0];
-    
+
     const getDistance = (point1, point2) => {
       return Math.hypot(
         point1.x - point2.x,
         point1.y - point2.y,
-        point1.z - point2.z
+        point1.z - point2.z,
       );
     };
 
     // Known average facial proportions (in cm)
     const AVERAGE_PROPORTIONS = {
       male: {
-        INTERPUPILLARY: 6.5,    // Male average
-        BITEMPORAL: 15.0,       // Male average
-        EYE_TO_CHIN: 12.0,      // Male average
-        NOSE_LENGTH: 5.2        // Male average
+        INTERPUPILLARY: 6.5, // Male average
+        BITEMPORAL: 15.0, // Male average
+        EYE_TO_CHIN: 12.0, // Male average
+        NOSE_LENGTH: 5.2, // Male average
       },
       female: {
-        INTERPUPILLARY: 6.2,    // Female average
-        BITEMPORAL: 13.0,       // Female average
-        EYE_TO_CHIN: 11.0,      // Female average
-        NOSE_LENGTH: 4.8        // Female average
-      }
+        INTERPUPILLARY: 6.2, // Female average
+        BITEMPORAL: 13.0, // Female average
+        EYE_TO_CHIN: 11.0, // Female average
+        NOSE_LENGTH: 4.8, // Female average
+      },
     };
-    
 
     // Extract relevant facial points
     const leftEye = points[33]; // Left eye center
@@ -262,16 +259,16 @@ export default function FaceDetection() {
     const eyeToChinDist = getDistance(leftEye, chin);
     const noseLength = getDistance(noseTip, noseBottom);
 
-   // Use gender-specific proportions
-  const proportions = AVERAGE_PROPORTIONS[gender];
+    // Use gender-specific proportions
+    const proportions = AVERAGE_PROPORTIONS[gender];
 
-  // Rest of the calculation using proportions...
-  const scales = [
-    proportions.INTERPUPILLARY / interpupillaryDist,
-    proportions.BITEMPORAL / bitemporalDist,
-    proportions.EYE_TO_CHIN / eyeToChinDist,
-    proportions.NOSE_LENGTH / noseLength
-  ];
+    // Rest of the calculation using proportions...
+    const scales = [
+      proportions.INTERPUPILLARY / interpupillaryDist,
+      proportions.BITEMPORAL / bitemporalDist,
+      proportions.EYE_TO_CHIN / eyeToChinDist,
+      proportions.NOSE_LENGTH / noseLength,
+    ];
 
     // Remove outliers (values that are too far from median)
     const median = scales.sort((a, b) => a - b)[Math.floor(scales.length / 2)];
@@ -579,7 +576,6 @@ export default function FaceDetection() {
   };
 
   const WelcomeScreen = ({ onEnableCamera }) => {
-   
     return (
       <div className="flex h-full flex-col justify-between bg-white text-black">
         <div className="space-y-1 text-center">
@@ -596,44 +592,44 @@ export default function FaceDetection() {
         </div>
 
         <div className="flex h-full flex-col justify-between bg-white p-5 text-black">
-        <div className="space-y-4">
-          <div className="rounded-lg bg-blue-50 p-5 text-center">
-            <h2 className="text-sm font-medium text-blue-900">
-              Let's Get the Perfect Shot!
-            </h2>
-            <p className="text-xl text-blue-800">
-              Hold your device at eye level or slightly above
-            </p>
-          </div>
+          <div className="space-y-4">
+            <div className="rounded-lg bg-blue-50 p-5 text-center">
+              <h2 className="text-sm font-medium text-blue-900">
+                Let's Get the Perfect Shot!
+              </h2>
+              <p className="text-xl text-blue-800">
+                Hold your device at eye level or slightly above
+              </p>
+            </div>
 
-          <div className="rounded-lg bg-blue-50 p-5">
-            <h2 className="mb-3 text-sm font-medium text-blue-900">
-              Select your gender for more accurate measurements:
-            </h2>
-            <div className="flex justify-center gap-3">
-              <button
-                onClick={() => setSelectedGender('male')}
-                className={`rounded-lg px-4 py-2 ${
-                  selectedGender === 'male'
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-white text-blue-500'
-                }`}
-              >
-                Male
-              </button>
-              <button
-                onClick={() => setSelectedGender('female')}
-                className={`rounded-lg px-4 py-2 ${
-                  selectedGender === 'female'
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-white text-blue-500'
-                }`}
-              >
-                Female
-              </button>
+            <div className="rounded-lg bg-blue-50 p-5">
+              <h2 className="mb-3 text-sm font-medium text-blue-900">
+                Select your gender for more accurate measurements:
+              </h2>
+              <div className="flex justify-center gap-3">
+                <button
+                  onClick={() => setSelectedGender("male")}
+                  className={`rounded-lg px-4 py-2 ${
+                    selectedGender === "male"
+                      ? "bg-blue-500 text-white"
+                      : "bg-white text-blue-500"
+                  }`}
+                >
+                  Male
+                </button>
+                <button
+                  onClick={() => setSelectedGender("female")}
+                  className={`rounded-lg px-4 py-2 ${
+                    selectedGender === "female"
+                      ? "bg-blue-500 text-white"
+                      : "bg-white text-blue-500"
+                  }`}
+                >
+                  Female
+                </button>
+              </div>
             </div>
           </div>
-        </div>
         </div>
 
         {/* <div className="rounded-lg bg-gray-50 p-5 text-xs">
@@ -659,8 +655,8 @@ export default function FaceDetection() {
         </div> */}
 
         <Button
-           onClick={() => onEnableCamera(selectedGender)}
-           disabled={!selectedGender}
+          onClick={() => onEnableCamera(selectedGender)}
+          disabled={!selectedGender}
           className="mt-4 flex w-full items-center justify-center text-sm sm:w-auto sm:text-base"
           size="default"
         >
@@ -713,11 +709,7 @@ export default function FaceDetection() {
                   </span>
                   <span className="font-bold text-black">
                     {measurements?.estimatedCircumference
-                      ? Math.floor(measurements.estimatedCircumference * 10) %
-                          10 >=
-                        6
-                        ? Math.ceil(measurements.estimatedCircumference)
-                        : Math.floor(measurements.estimatedCircumference)
+                      ? measurements.estimatedCircumference
                       : null}{" "}
                     cm
                   </span>
@@ -727,14 +719,13 @@ export default function FaceDetection() {
           </div>
         ) : (
           <>
-          
             {!webcamRunning ? (
-  <WelcomeScreen 
-    onEnableCamera={(gender) => {
-      setUserGender(gender);
-      setWebcamRunning(true);
-    }} 
-  />
+              <WelcomeScreen
+                onEnableCamera={(gender) => {
+                  setUserGender(gender);
+                  setWebcamRunning(true);
+                }}
+              />
             ) : (
               // Active webcam state
 
