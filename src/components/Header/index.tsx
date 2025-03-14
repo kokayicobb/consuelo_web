@@ -126,6 +126,15 @@ React.useEffect(() => {
   return () => window.removeEventListener("scroll", handleScroll);
 }, []);
   const isDarkMode = theme === "dark";
+
+  // Check if header should be hidden
+  const shouldHide = typeof document !== "undefined" && 
+    document.body.getAttribute("data-hide-header") === "true";
+  
+  // Return null if the header should be hidden
+  if (shouldHide) {
+    return null;
+  }
   return (
     <header
     className={cn(
@@ -267,7 +276,7 @@ React.useEffect(() => {
         </div>
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="md:hidden">
+            <Button variant="breadcrumb" size="icon" className="md:hidden">
               <Menu className="h-5 w-5" />
               <span className="sr-only">Toggle menu</span>
             </Button>
@@ -321,14 +330,14 @@ React.useEffect(() => {
                 </div>
                 <div className="px-4 pt-4">
                   <Link href="/signin" className="block w-full">
-                    <Button className="w-full" variant="outline">
+                    <Button className="w-full" variant="primary">
                       Sign In
                     </Button>
                   </Link>
                 </div>
                 <div className="px-4">
                   <Link href="/signup" className="block w-full">
-                    <Button className="w-full" variant="outline">
+                    <Button className="w-full" variant="primary">
                       Sign Up
                     </Button>
                   </Link>
@@ -337,7 +346,7 @@ React.useEffect(() => {
             </ScrollArea>
             <div className="absolute bottom-4 left-4 right-4">
               <Button
-                variant="outline"
+                variant="primary"
                 size="icon"
                 aria-label="Toggle theme"
                 className="w-full"
