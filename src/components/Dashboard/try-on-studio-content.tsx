@@ -653,45 +653,7 @@ export default function TryOnStudioContent() {
         </div>
       </div>
 
-      {/* Bottom Links */}
-      <div className="mt-auto px-4 pt-1">
-        <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1 text-xs">
-          {["Pro", "Enterprise", "API", "Blog", "Careers", "Store", "Finance"].map((item, index) => (
-            <motion.div key={item} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 + index * 0.05 }}>
-              <Link
-                href="#"
-                className="text-muted-foreground transition-colors hover:text-accent"
-              >
-                {item}
-              </Link>
-            </motion.div>
-          ))}
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.9 }}>
-            <div className="flex items-center gap-1">
-              <Link
-                href="#"
-                className="text-muted-foreground transition-colors hover:text-accent"
-              >
-                English
-              </Link>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-muted-foreground"
-              >
-                <path d="m6 9 6 6 6-6" />
-              </svg>
-            </div>
-          </motion.div>
-        </div>
-      </div>
+     
     </div>
   );
 }
