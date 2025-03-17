@@ -69,8 +69,11 @@ const pricingTiers = [
     highlighted: true
   }
 ];
+interface ProContentProps {
+  onBack: () => void;
+}
 
-export default function ProContent() {
+export default function ProContent({ onBack }: ProContentProps)  {
   const [interval, setInterval] = React.useState("monthly")
 
   return (
