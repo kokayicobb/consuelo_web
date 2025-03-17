@@ -256,7 +256,7 @@ React.useEffect(() => {
         </NavigationMenu>
         <div className="ml-4 hidden items-center space-x-4 md:flex">
           <Button
-            variant="primary"
+            variant="default"
             size="icon"
             aria-label="Toggle theme"
             className="rounded-full"
@@ -267,7 +267,7 @@ React.useEffect(() => {
             <span className="sr-only">Toggle theme</span>
           </Button>
           <Link href="/signin">
-  <Button variant="primary" className="rounded-full">
+  <Button variant="default" className="rounded-full">
     Sign In
   </Button>
 </Link>
