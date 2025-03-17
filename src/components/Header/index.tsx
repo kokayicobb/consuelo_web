@@ -268,7 +268,7 @@ React.useEffect(() => {
           </Button>
           <Link href="/signin">
   <Button variant="default" className="rounded-full"> 
-    
+
     Sign In
   </Button>
 </Link>
@@ -277,7 +277,7 @@ React.useEffect(() => {
         </div>
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="breadcrumb" size="icon" className="md:hidden">
+            <Button variant="default" size="icon" className="md:hidden">
               <Menu className="h-5 w-5" />
               <span className="sr-only">Toggle menu</span>
             </Button>
