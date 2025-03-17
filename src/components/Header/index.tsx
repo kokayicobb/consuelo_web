@@ -267,7 +267,8 @@ React.useEffect(() => {
             <span className="sr-only">Toggle theme</span>
           </Button>
           <Link href="/signin">
-  <Button variant="default" className="rounded-full">
+  <Button variant="default" className="rounded-full"> 
+    
     Sign In
   </Button>
 </Link>
