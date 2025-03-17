@@ -17,6 +17,7 @@ interface SidebarContextProps {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   animate: boolean;
+  isMobile: boolean;
 }
 
 const SidebarContext = createContext<SidebarContextProps | undefined>(
@@ -43,12 +44,25 @@ export const SidebarProvider = ({
   animate?: boolean;
 }) => {
   const [openState, setOpenState] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  
+  React.useEffect(() => {
+    // Check if we're on mobile
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const open = openProp !== undefined ? openProp : openState;
   const setOpen = setOpenProp !== undefined ? setOpenProp : setOpenState;
 
   return (
-    <SidebarContext.Provider value={{ open, setOpen, animate }}>
+    <SidebarContext.Provider value={{ open, setOpen, animate, isMobile }}>
       {children}
     </SidebarContext.Provider>
   );
@@ -76,7 +90,9 @@ export const SidebarBody = (props: React.ComponentProps<typeof motion.div>) => {
   return (
     <>
       <DesktopSidebar {...props} />
-      <MobileSidebar {...(props as React.ComponentProps<"div">)} />
+      <MobileSidebar className={props.className}>
+        {props.children}
+      </MobileSidebar>
     </>
   );
 };
@@ -108,8 +124,10 @@ export const DesktopSidebar = ({
 export const MobileSidebar = ({
   className,
   children,
-  ...props
-}: React.ComponentProps<"div">) => {
+}: {
+  className?: string;
+  children?: React.ReactNode;
+}) => {
   const { open, setOpen } = useSidebar();
   return (
     <>
@@ -117,7 +135,6 @@ export const MobileSidebar = ({
         className={cn(
           "h-10 px-4 py-4 flex flex-row md:hidden items-center justify-between bg-[#191919] dark:bg-[#191919] w-full"
         )}
-        {...props}
       >
         <div className="flex justify-end z-20 w-full">
           <Menu
@@ -142,7 +159,7 @@ export const MobileSidebar = ({
             >
               <div
                 className="absolute right-10 top-10 z-50 text-gray-200 cursor-pointer"
-                onClick={() => setOpen(!open)}
+                onClick={() => setOpen(false)}
               >
                 <X />
               </div>
@@ -166,17 +183,21 @@ export const SidebarLink = ({
   onClick?: () => void;
   props?: LinkProps;
 }) => {
-  const { open, animate } = useSidebar();
+  const { open, setOpen, animate, isMobile } = useSidebar();
   
   const handleClick = (e: React.MouseEvent) => {
+    // Handle custom click events
     if (onClick) {
-      e.preventDefault();
       onClick();
     }
     
     if (link?.onClick) {
-      e.preventDefault();
       link.onClick();
+    }
+    
+    // Close mobile sidebar after clicking a link
+    if (isMobile) {
+      setOpen(false);
     }
   };
   
