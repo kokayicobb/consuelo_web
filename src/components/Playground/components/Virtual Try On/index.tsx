@@ -375,7 +375,7 @@ const TryOnButton = ({ garmentImage, category, onResult }) => {
         <Button
           onClick={() => fileInputRef.current?.click()}
           className="flex h-40 w-full flex-col items-center justify-center gap-2"
-          variant="outline"
+          variant="primary"
           disabled={isLoading}
         >
           <Camera className="h-8 w-8" />
@@ -405,7 +405,7 @@ const TryOnButton = ({ garmentImage, category, onResult }) => {
             }}
             className="absolute right-2 top-2 rounded-full p-2"
             size="icon"
-            variant="destructive"
+            variant="primary"
             disabled={isLoading}
           >
             <X className="h-4 w-4" />
@@ -497,7 +497,7 @@ const TryOnButton = ({ garmentImage, category, onResult }) => {
     return (
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogTrigger asChild>
-          <Button variant="link" className="w=auto h-auto justify-start p-0">
+          <Button variant="primary" className="w=auto h-auto justify-start p-0">
             <span className="whitespace-normal text-sm">
               Try-On Studio <span className="underline">Powered by AI</span>{" "}
               {/* <span className="bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text px-[2px] text-sm italic text-transparent hover:no-underline">
