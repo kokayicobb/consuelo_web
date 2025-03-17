@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Camera, CheckCircle, Info, Shirt, X } from 'lucide-react';
+import { Camera, CheckCircle, Info, Shirt, Timer, X } from 'lucide-react';
 import { Dialog, DialogTrigger, DialogContent } from '@radix-ui/react-dialog';
 import { Drawer } from 'vaul';
 import { useMediaQuery } from '../../hooks/UseMediaQuery';
@@ -432,7 +432,7 @@ const TryOnButton = ({ garmentImage, category, onResult }) => {
         <div className="mt-4 space-y-4 text-left">
           {" "}
           {/* Changed text-center to text-left */}
-          <Timer></Timer>
+          <Timer></Timer>,
           <div className="space-y-2">
             <p className="text-sm text-gray-600">
               Try-on AI is processing your image... This typically takes 10-13
