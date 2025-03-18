@@ -56,40 +56,122 @@ export default function TryOnStudioContent() {
     }
   };
 
-  const handleTryOn = async () => {
-    if (!modelImage || !garmentImage) return;
+  // Replace the existing handleTryOn function with this implementation
+// Replace the existing handleTryOn function with this implementation
+const handleTryOn = async () => {
+  if (!modelImage || !garmentImage) return;
 
-    setIsLoading(true);
+  setIsLoading(true);
+  setResultImage(null);
 
-    // Simulate a delay and set the result to the model image
-    setTimeout(() => {
-      setResultImage(modelImage);
-      setIsLoading(false);
-      setShowConfetti(true);
+  try {
+    // First API call to start the try-on process
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://consuelohq.com';
+    const apiKey = process.env.NEXT_PUBLIC_DASHBOARD_API_KEY;
+    
+    const response = await fetch(`${apiBaseUrl}/api/try-on`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model_image: modelImage,
+        garment_image: garmentImage,
+        category: mapCategory(category), // Map UI category to API category
+        mode: quality, // Use the quality setting selected by user (performance, balanced, quality)
+        num_samples: samples, // Use the number of samples selected by user
+        // Additional parameters that might be useful
+        nsfw_filter: true, // Enable NSFW content filter
+        restore_background: true, // Better background preservation
+        garment_photo_type: 'auto', // Auto-detect if it's a flat-lay or model image
+        restore_clothes: true // Better preservation of other clothing items
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const predictionId = data.id;
+
+    if (!predictionId) {
+      throw new Error('No prediction ID returned from API');
+    }
+
+    // Start polling for results
+    await pollForResults(predictionId);
+  } catch (error) {
+    console.error('Error during try-on process:', error);
+    setIsLoading(false);
+    // You might want to show an error message to the user here
+  }
+};
+
+// Helper function to map UI category names to API category names
+const mapCategory = (uiCategory) => {
+  const categoryMap = {
+    'top': 'tops',
+    'bottom': 'bottoms',
+    'fullbody': 'one-pieces'
+  };
+  return categoryMap[uiCategory] || 'tops'; // Default to tops if mapping not found
+};
+
+// Function to poll for results until complete or failed
+const pollForResults = async (predictionId) => {
+  const maxAttempts = 60; // Maximum number of polling attempts (30 seconds at 500ms intervals)
+  let attempts = 0;
+
+  const checkStatus = async () => {
+    try {
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://consuelohq.com';
+      const apiKey = process.env.NEXT_PUBLIC_DASHBOARD_API_KEY;
       
-      // Trigger confetti effect
-      if (resultRef.current) {
-        const rect = resultRef.current.getBoundingClientRect();
-        const x = rect.left + rect.width / 2;
-        const y = rect.top + rect.height / 2;
-        
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { 
-            x: x / window.innerWidth, 
-            y: y / window.innerHeight 
-          },
-          colors: ['#FF5E5B', '#D8D8D8', '#39A0ED'],
-          zIndex: 1000,
-        });
+      const statusResponse = await fetch(`${apiBaseUrl}/api/try-on/status/${predictionId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`
+        }
+      });
+
+      if (!statusResponse.ok) {
+        throw new Error(`Status API error: ${statusResponse.status}`);
+      }
+
+      const statusData = await statusResponse.json();
+      
+      // Check if the prediction is complete
+      if (statusData.status === 'completed' && statusData.output && statusData.output.length > 0) {
+        // Use the first result if multiple samples were requested
+        setResultImage(statusData.output[0]);
+        setIsLoading(false);
+        return;
       }
       
-      // Reset confetti flag after animation
-      setTimeout(() => setShowConfetti(false), 2500);
-    }, 2000);
+      // Check if the prediction failed
+      if (statusData.status === 'failed') {
+        throw new Error(statusData.error?.message || 'Processing failed');
+      }
+      
+      // If not complete and not failed, continue polling
+      attempts++;
+      if (attempts < maxAttempts) {
+        setTimeout(checkStatus, 500);
+      } else {
+        throw new Error('Timed out waiting for result');
+      }
+    } catch (error) {
+      console.error('Error checking try-on status:', error);
+      setIsLoading(false);
+      // You might want to show an error message to the user here
+    }
   };
 
+  // Start the polling process
+  checkStatus();
+};
   const resetImages = () => {
     setModelImage(null);
     setGarmentImage(null);
