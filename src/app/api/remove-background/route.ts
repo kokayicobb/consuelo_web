@@ -2,7 +2,9 @@
 // This handles the background removal as a separate API call
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+
 export const runtime = 'edge';
+
 
 // Initialize Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;

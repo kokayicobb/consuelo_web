@@ -1,7 +1,9 @@
 // app/api/generate-fashion-image/route.js
 
+
 import { NextResponse } from 'next/server';
 export const runtime = 'edge';
+
 // Helper function to build enhanced fashion prompt
 function buildFashionPrompt(options) {
   const { modelOptions, clothingOptions, backgroundOptions, customPrompt, brandGuidelines } = options;
