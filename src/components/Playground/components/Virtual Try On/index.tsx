@@ -1,16 +1,15 @@
-
-import React, { useState, useRef, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Camera, CheckCircle, Info, Shirt, X } from "lucide-react";
-import { Dialog, DialogTrigger, DialogContent } from "@radix-ui/react-dialog";
-import { Drawer } from "vaul";
-import { useMediaQuery } from "../../hooks/UseMediaQuery";
-import { DrawerTrigger, DrawerContent } from "../ui/drawer";
-import { Checkbox } from "@radix-ui/react-checkbox";
-import { AnimatePresence, motion } from "framer-motion";
-import MobileDrawer from "./mobile-drawer";
-import Timer from "@/components/ui/timer";
+// src/components/Playground/components/Virtual Try On/index.tsx
+import React, { useState, useRef, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Camera, CheckCircle, Info, Shirt, Timer, X } from 'lucide-react';
+import { Dialog, DialogTrigger, DialogContent } from '@radix-ui/react-dialog';
+import { Drawer } from 'vaul';
+import { useMediaQuery } from '../../hooks/UseMediaQuery';
+import { DrawerTrigger, DrawerContent } from '../ui/drawer';
+import { Checkbox } from '@radix-ui/react-checkbox';
+import { AnimatePresence, motion } from 'framer-motion';
+import MobileDrawer from './mobile-drawer';
 
 
 const TryOnButton = ({ garmentImage, category, onResult }) => {
@@ -376,7 +375,7 @@ const TryOnButton = ({ garmentImage, category, onResult }) => {
         <Button
           onClick={() => fileInputRef.current?.click()}
           className="flex h-40 w-full flex-col items-center justify-center gap-2"
-          variant="outline"
+          variant="primary"
           disabled={isLoading}
         >
           <Camera className="h-8 w-8" />
@@ -386,6 +385,7 @@ const TryOnButton = ({ garmentImage, category, onResult }) => {
       </div>
     </div>
   );
+//
 //
   const PreviewScreen = () => (
     <div className="space-y-4 rounded-lg border border-gray-300 p-4">
@@ -405,7 +405,7 @@ const TryOnButton = ({ garmentImage, category, onResult }) => {
             }}
             className="absolute right-2 top-2 rounded-full p-2"
             size="icon"
-            variant="destructive"
+            variant="primary"
             disabled={isLoading}
           >
             <X className="h-4 w-4" />
@@ -432,7 +432,7 @@ const TryOnButton = ({ garmentImage, category, onResult }) => {
         <div className="mt-4 space-y-4 text-left">
           {" "}
           {/* Changed text-center to text-left */}
-          <Timer></Timer>
+          <Timer></Timer>,
           <div className="space-y-2">
             <p className="text-sm text-gray-600">
               Try-on AI is processing your image... This typically takes 10-13
@@ -497,7 +497,7 @@ const TryOnButton = ({ garmentImage, category, onResult }) => {
     return (
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogTrigger asChild>
-          <Button variant="link" className="w=auto h-auto justify-start p-0">
+          <Button variant="primary" className="w=auto h-auto justify-start p-0">
             <span className="whitespace-normal text-sm">
               Try-On Studio <span className="underline">Powered by AI</span>{" "}
               {/* <span className="bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text px-[2px] text-sm italic text-transparent hover:no-underline">

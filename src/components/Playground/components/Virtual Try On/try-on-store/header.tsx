@@ -78,13 +78,13 @@ export function Header() {
                   </div>
                 </div>
               </div>
-              <Button variant="ghost" size="icon" className="relative ml-4">
+              <Button variant="primary" size="icon" className="relative ml-4">
                 <ShoppingCart className="h-6 w-6" />
                 <span className="absolute right-0 top-0 inline-flex -translate-y-1/2 translate-x-1/2 transform items-center justify-center rounded-full bg-red-600 px-2 py-1 text-xs font-bold leading-none text-white">
                   3
                 </span>
               </Button>
-              <Button variant="ghost" size="icon" className="ml-2 md:hidden">
+              <Button variant="primary" size="icon" className="ml-2 md:hidden">
                 <Menu className="h-6 w-6" />
               </Button>
             </div>

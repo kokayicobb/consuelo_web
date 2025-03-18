@@ -126,6 +126,15 @@ React.useEffect(() => {
   return () => window.removeEventListener("scroll", handleScroll);
 }, []);
   const isDarkMode = theme === "dark";
+
+  // Check if header should be hidden
+  const shouldHide = typeof document !== "undefined" && 
+    document.body.getAttribute("data-hide-header") === "true";
+  
+  // Return null if the header should be hidden
+  if (shouldHide) {
+    return null;
+  }
   return (
     <header
     className={cn(
@@ -247,7 +256,7 @@ React.useEffect(() => {
         </NavigationMenu>
         <div className="ml-4 hidden items-center space-x-4 md:flex">
           <Button
-            variant="ghost"
+            variant="default"
             size="icon"
             aria-label="Toggle theme"
             className="rounded-full"
@@ -258,7 +267,8 @@ React.useEffect(() => {
             <span className="sr-only">Toggle theme</span>
           </Button>
           <Link href="/signin">
-  <Button variant="ghost" className="rounded-full">
+  <Button variant="default" className="rounded-full"> 
+
     Sign In
   </Button>
 </Link>
@@ -267,7 +277,7 @@ React.useEffect(() => {
         </div>
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="md:hidden">
+            <Button variant="default" size="icon" className="md:hidden">
               <Menu className="h-5 w-5" />
               <span className="sr-only">Toggle menu</span>
             </Button>
@@ -321,14 +331,14 @@ React.useEffect(() => {
                 </div>
                 <div className="px-4 pt-4">
                   <Link href="/signin" className="block w-full">
-                    <Button className="w-full" variant="outline">
+                    <Button className="w-full" variant="default">
                       Sign In
                     </Button>
                   </Link>
                 </div>
                 <div className="px-4">
                   <Link href="/signup" className="block w-full">
-                    <Button className="w-full" variant="outline">
+                    <Button className="w-full" variant="default">
                       Sign Up
                     </Button>
                   </Link>
@@ -337,7 +347,7 @@ React.useEffect(() => {
             </ScrollArea>
             <div className="absolute bottom-4 left-4 right-4">
               <Button
-                variant="outline"
+                variant="default"
                 size="icon"
                 aria-label="Toggle theme"
                 className="w-full"

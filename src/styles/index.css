@@ -1,146 +1,78 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 body {
-  font-family: "Inter", sans-serif;
-}
-
-.sticky-menu .navbar-logo {
-  @apply py-2;
-}
-
-.sticky-menu #navbarToggler span {
-  @apply bg-primary;
-}
-
-.sticky-menu #navbarCollapse li > a {
-  @apply text-primary hover:text-primary hover:opacity-70;
-}
-
-#navbarCollapse li .ud-menu-scroll.active {
-  @apply opacity-70;
-}
-.sticky-menu #navbarCollapse li .ud-menu-scroll.active {
-  @apply text-primary opacity-100 ;
-}
-.sticky-menu .loginBtn {
-  @apply text-dark hover:text-primary hover:opacity-100 dark:text-white;
-}
-
-.sticky-menu .signUpBtn {
-  @apply bg-primary hover:bg-dark text-white hover:text-white;
-}
-
-.navbarTogglerActive > span:nth-child(1) {
-  @apply top-[7px] rotate-45 transform;
-}
-.navbarTogglerActive > span:nth-child(2) {
-  @apply opacity-0;
-}
-.navbarTogglerActive > span:nth-child(3) {
-  @apply top-[-8px] rotate-[135deg];
-}
-
-.blog-details,
-.blog-details p {
-  @apply text-body-color dark:text-dark-6 text-base leading-relaxed;
-}
-
-.blog-details p {
-  @apply mb-8;
-}
-
-.blog-details strong {
-  @apply text-dark font-bold dark:text-white;
-}
-
-.blog-details ul {
-  @apply mb-8 list-inside list-disc space-y-3;
-}
-
-.blog-details ol {
-  @apply mb-8 list-inside list-decimal space-y-3;
-}
-
-.blog-details h1 {
-  @apply text-dark mb-8 text-3xl font-bold dark:text-white sm:text-4xl md:text-[40px] md:leading-[1.28];
-}
-
-.blog-details h2 {
-  @apply text-dark mb-8 text-2xl font-bold dark:text-white sm:text-3xl md:text-[35px] md:leading-[1.28];
-}
-
-.blog-details h3 {
-  @apply text-dark mb-6 text-2xl font-bold dark:text-white sm:text-[28px] sm:leading-[40px];
+  font-family: "Space Grotesk", sans-serif;
 }
 
 @layer base {
   :root {
-  --background: 0 0% 100%;
-  --foreground: 240 10% 3.9%;
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
 
-  --card: 0 0% 100%;
-  --card-foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
  
-  --popover: 0 0% 100%;
-  --popover-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
  
-  --primary: 240 5.9% 10%;
-  --primary-foreground: 0 0% 98%;
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
  
-  --secondary: 240 4.8% 95.9%;
-  --secondary-foreground: 240 5.9% 10%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
  
-  /* Updated accent to match Tailwind's violet-500 */
-  --accent: 270 95% 75%;  /* This is the HSL equivalent of violet-500 */
-  --accent-foreground: 0 0% 100%;  /* White text for contrast */
+    /* Purple accent */
+    --accent: 270 95% 75%;
+    --accent-foreground: 0 0% 100%;
  
-  --muted: 240 4.8% 95.9%;
-  --muted-foreground: 240 3.8% 46.1%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
  
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 0 0% 98%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
 
-  --border: 240 5.9% 90%;
-  --input: 240 5.9% 90%;
-  --ring: 240 5% 64.9%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 5% 64.9%;
  
-  --radius: 0.5rem;
-}
+    --radius: 0.5rem;
+  }
 
-.dark {
-  --background: 240 10% 3.9%;
-  --foreground: 0 0% 98%;
+  .dark {
+    /* Dark theme for our dashboard */
+    --background: 0 0% 10%;  /* Dark grey/black background */
+    --foreground: 0 0% 98%;  /* Almost white text */
+
+    --card: 0 0% 12%;  /* Slightly lighter than background */
+    --card-foreground: 0 0% 98%;
  
-  --card: 240 10% 3.9%;
-  --card-foreground: 0 0% 98%;
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 98%;
  
-  --popover: 240 10% 3.9%;
-  --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;  /* White as primary */
+    --primary-foreground: 0 0% 10%;
  
-  --primary: 0 0% 98%;
-  --primary-foreground: 240 5.9% 10%;
+    --secondary: 0 0% 15%;  /* Slightly lighter grey */
+    --secondary-foreground: 0 0% 98%;
  
-  --secondary: 240 3.7% 15.9%;
-  --secondary-foreground: 0 0% 98%;
+    /* Purple accent */
+    --accent: 270 60% 60%;
+    --accent-foreground: 0 0% 100%;
  
-  /* Updated dark mode accent to match theme */
-  --accent: 270 95% 75%;  /* Keeping it the same for consistency */
-  --accent-foreground: 0 0% 100%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 70%;
  
-  --muted: 240 3.7% 15.9%;
-  --muted-foreground: 240 5% 64.9%;
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 98%;
  
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 0 0% 98%;
- 
-  --border: 240 3.7% 15.9%;
-  --input: 240 3.7% 15.9%;
-  --ring: 240 4.9% 83.9%;
-}
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 0 0% 30%;
+  }
 }
 
 @layer base {
@@ -164,40 +96,39 @@ body {
     animation: fade-in 0.8s ease-out;
   }
   
-  /* Add the glow animation here */
+  /* Subtle glow animation with muted colors */
   @keyframes glow {
-  0% {
-    box-shadow: 0 0 5px rgba(167, 139, 250, 0.3),
-                0 0 10px rgba(167, 139, 250, 0.3);
-    transform: scale(1);
+    0% {
+      box-shadow: 0 0 5px rgba(150, 150, 160, 0.3),
+                  0 0 10px rgba(150, 150, 160, 0.3);
+      transform: scale(1);
+    }
+    25% {
+      box-shadow: 0 0 15px rgba(150, 150, 160, 0.5),
+                  0 0 25px rgba(150, 150, 160, 0.3),
+                  0 0 35px rgba(150, 150, 160, 0.2);
+      transform: scale(1.02);
+    }
+    50% {
+      box-shadow: 0 0 25px rgba(150, 150, 160, 0.6),
+                  0 0 45px rgba(150, 150, 160, 0.4),
+                  0 0 65px rgba(150, 150, 160, 0.2);
+      transform: scale(1.03);
+    }
+    75% {
+      box-shadow: 0 0 15px rgba(150, 150, 160, 0.5),
+                  0 0 25px rgba(150, 150, 160, 0.3),
+                  0 0 35px rgba(150, 150, 160, 0.2);
+      transform: scale(1.02);
+    }
+    100% {
+      box-shadow: none;
+      transform: scale(1);
+    }
   }
-  25% {
-    box-shadow: 0 0 15px rgba(167, 139, 250, 0.6),
-                0 0 25px rgba(167, 139, 250, 0.4),
-                0 0 35px rgba(167, 139, 250, 0.2);
-    transform: scale(1.02);
+  .animate-glow {
+    animation: glow 3s ease-in-out forwards;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
   }
-  50% {
-    box-shadow: 0 0 25px rgba(167, 139, 250, 0.8),
-                0 0 45px rgba(167, 139, 250, 0.6),
-                0 0 65px rgba(167, 139, 250, 0.3);
-    transform: scale(1.03);
-  }
-  75% {
-    box-shadow: 0 0 15px rgba(167, 139, 250, 0.6),
-                0 0 25px rgba(167, 139, 250, 0.4),
-                0 0 35px rgba(167, 139, 250, 0.2);
-    transform: scale(1.02);
-  }
-  100% {
-    box-shadow: none;
-    transform: scale(1);
-  }
-}
-.animate-glow {
-  animation: glow 3s ease-in-out forwards;
-  padding: 0.5rem;
-  border-radius: 0.5rem;
-}
-
 }
