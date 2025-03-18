@@ -22,6 +22,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/utils/shopify.js"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/utils/shopify.js", "src/app/api/remove-background/route.js", "src/app/api/generate-fashion-image/route.js"],
   "exclude": ["node_modules"]
 }

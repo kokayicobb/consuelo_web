@@ -80,9 +80,9 @@ export async function POST(request) {
   try {
     // Check if we have the API key
     if (!process.env.STABILITY_API_KEY) {
-      console.error("STABILITY_API_KEY is not set in environment variables");
+      console.error("not set in environment variables");
       return NextResponse.json(
-        { error: 'Missing Stability API key in environment variables' },
+        { error: 'Missing environment variables' },
         { status: 500 }
       );
     }
@@ -129,10 +129,10 @@ export async function POST(request) {
 
     // Handle non-200 responses
     if (!generationResponse.ok) {
-      let errorMessage = `Stability API error: ${generationResponse.status}`;
+      let errorMessage = ` error: ${generationResponse.status}`;
       try {
         const errorData = await generationResponse.json();
-        console.error('Stability API error details:', errorData);
+        console.error('error details:', errorData);
         errorMessage += ` - ${JSON.stringify(errorData)}`;
       } catch (e) {
         console.error('Could not parse error response:', e);
@@ -154,9 +154,9 @@ export async function POST(request) {
     } else if (generationData.image) {
       imageBase64 = generationData.image;
     } else {
-      console.error("Unexpected API response structure:", generationData);
+      console.error("Unexpected  response structure:", generationData);
       return NextResponse.json(
-        { error: 'Could not find image data in API response' },
+        { error: 'Could not find image data in response' },
         { status: 500 }
       );
     }
