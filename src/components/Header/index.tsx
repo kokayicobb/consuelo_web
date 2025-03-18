@@ -331,14 +331,14 @@ React.useEffect(() => {
                 </div>
                 <div className="px-4 pt-4">
                   <Link href="/signin" className="block w-full">
-                    <Button className="w-full" variant="primary">
+                    <Button className="w-full" variant="default">
                       Sign In
                     </Button>
                   </Link>
                 </div>
                 <div className="px-4">
                   <Link href="/signup" className="block w-full">
-                    <Button className="w-full" variant="primary">
+                    <Button className="w-full" variant="default">
                       Sign Up
                     </Button>
                   </Link>
@@ -347,7 +347,7 @@ React.useEffect(() => {
             </ScrollArea>
             <div className="absolute bottom-4 left-4 right-4">
               <Button
-                variant="primary"
+                variant="default"
                 size="icon"
                 aria-label="Toggle theme"
                 className="w-full"
