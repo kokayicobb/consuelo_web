@@ -1,10 +1,5 @@
-// app/api/generate-fashion-image/route.js (Next.js App Router)
+// app/api/generate-fashion-image/route.js
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-// Initialize Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 // Helper function to build enhanced fashion prompt
 function buildFashionPrompt(options) {
@@ -78,113 +73,6 @@ function buildNegativePrompt() {
   return "distorted clothing, deformed body, unrealistic proportions, extra limbs, " +
     "missing limbs, floating limbs, disconnected limbs, malformed hands, extra fingers, " +
     "missing fingers, poorly drawn face, blurry, low quality, disfigured, duplicate clothing";
-}
-
-// Helper function to save generated images to Supabase
-async function saveImagesToSupabase(originalImage, transparentImage, requestData, prompt) {
-  if (!supabaseUrl || !supabaseServiceKey) {
-    console.warn("Supabase credentials not found.");
-    return null;
-  }
-
-  try {
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    
-    // Convert base64 images to files for storage
-    const originalImageFile = base64ToFile(originalImage, 'original.webp', 'image/webp');
-    
-    // Generate a unique path for the images
-    const timestamp = new Date().getTime();
-    const randomId = Math.random().toString(36).substring(2, 10);
-    const basePath = `fashion_models/${timestamp}_${randomId}`;
-    
-    // Upload original image to Supabase Storage
-    const { data: originalData, error: originalError } = await supabase.storage
-      .from('generated-images')
-      .upload(`${basePath}/original.webp`, originalImageFile, {
-        contentType: 'image/webp',
-        upsert: false
-      });
-      
-    if (originalError) {
-      console.error("Error saving original image to Supabase:", originalError);
-      return null;
-    }
-    
-    // Get public URL for original image
-    const { data: originalPublicData } = supabase.storage
-      .from('generated-images')
-      .getPublicUrl(`${basePath}/original.webp`);
-      
-    let transparentPublicData = null;
-    
-    // Upload transparent image if it exists
-    if (transparentImage) {
-      const transparentImageFile = base64ToFile(transparentImage, 'transparent.png', 'image/png');
-      
-      const { data: transparentData, error: transparentError } = await supabase.storage
-        .from('generated-images')
-        .upload(`${basePath}/transparent.png`, transparentImageFile, {
-          contentType: 'image/png',
-          upsert: false
-        });
-        
-      if (transparentError) {
-        console.error("Error saving transparent image to Supabase:", transparentError);
-      } else {
-        transparentPublicData = supabase.storage
-          .from('generated-images')
-          .getPublicUrl(`${basePath}/transparent.png`);
-      }
-    }
-    
-    // Store metadata in Supabase Database
-    const { data: metadataData, error: metadataError }: { data: { id: number; }[]; error?: any } = await supabase
-      .from('generated_fashion_images')
-      .insert({
-        original_image_url: originalPublicData?.publicUrl,
-        transparent_image_url: transparentPublicData?.data?.publicUrl || null,
-        model_options: requestData.modelOptions,
-        clothing_options: requestData.clothingOptions,
-        background_options: requestData.backgroundOptions,
-        custom_prompt: requestData.customPrompt,
-        brand_guidelines: requestData.brandGuidelines,
-        full_prompt: prompt,
-        created_at: new Date().toISOString()
-      }) as { data: { id: number }[] };
-      
-    if (metadataError) {
-      console.error("Error saving metadata to Supabase:", metadataError);
-    }
-    
-    return {
-      originalUrl: originalPublicData?.publicUrl,
-      transparentUrl: transparentPublicData?.data?.publicUrl || null,
-      recordId: metadataData ? metadataData[0]?.id : null
-    };
-    
-  } catch (error) {
-    console.error("Error in Supabase storage process:", error);
-    return null;
-  }
-}
-
-// Helper function to convert base64 to File
-function base64ToFile(base64String, filename, mimeType) {
-  // Remove the data URL prefix if it exists
-  const base64Data = base64String.includes(',') 
-    ? base64String.split(',')[1] 
-    : base64String;
-    
-  // Convert base64 to binary
-  const binaryString = atob(base64Data);
-  const bytes = new Uint8Array(binaryString.length);
-  for (let i = 0; i < binaryString.length; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
-  
-  // Create a Blob from the bytes
-  return new Blob([bytes], { type: mimeType });
 }
 
 export async function POST(request) {
@@ -272,72 +160,21 @@ export async function POST(request) {
       );
     }
     
-    let transparentImageBase64 = null;
-    
-    // If background removal is requested, process it
-    if (requestData.backgroundOptions && requestData.backgroundOptions.remove === true) {
-      // Background removal for transparent version
-      console.log("Removing background...");
-      
-      try {
-        // Convert base64 to Blob for the API request
-        const binaryString = atob(imageBase64);
-        const bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-          bytes[i] = binaryString.charCodeAt(i);
-        }
-        
-        const imageBlob = new Blob([bytes], { type: 'image/webp' });
-        
-        // Create FormData for background removal request
-        const bgRemovalFormData = new FormData();
-        bgRemovalFormData.append('image', imageBlob, 'image.webp');
-        bgRemovalFormData.append('output_format', 'png'); // PNG for transparency
-        
-        const bgRemovalResponse = await fetch('https://api.stability.ai/v2beta/stable-image/edit/remove-background', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${process.env.STABILITY_API_KEY}`,
-            'Accept': 'application/json'
-          },
-          body: bgRemovalFormData
-        });
-        
-        if (!bgRemovalResponse.ok) {
-          console.error('Background removal API error:', bgRemovalResponse.status);
-          // If background removal fails, we'll just continue without it
-        } else {
-          const bgRemovalData = await bgRemovalResponse.json();
-          
-          // Extract the transparent image data
-          if (bgRemovalData.artifacts && bgRemovalData.artifacts.length > 0 && bgRemovalData.artifacts[0].base64) {
-            transparentImageBase64 = bgRemovalData.artifacts[0].base64;
-          } else if (bgRemovalData.image) {
-            transparentImageBase64 = bgRemovalData.image;
-          } else {
-            console.error("Unexpected background removal API response:", bgRemovalData);
-          }
-        }
-      } catch (backgroundError) {
-        console.error("Error in background removal process:", backgroundError);
-        // If background removal process fails, we'll just continue without it
-      }
-    }
-    
-    // Save images to Supabase (async, don't wait for completion)
-    saveImagesToSupabase(
-      imageBase64, 
-      transparentImageBase64, 
-      requestData, 
-      enhancedPrompt
-    ).catch(error => {
-      console.error("Error saving to Supabase:", error);
-    });
+    // Return the model data along with the image for the background removal step
+    const modelData = {
+      modelOptions: requestData.modelOptions,
+      clothingOptions: requestData.clothingOptions,
+      backgroundOptions: requestData.backgroundOptions,
+      customPrompt: requestData.customPrompt,
+      brandGuidelines: requestData.brandGuidelines,
+      prompt: enhancedPrompt
+    };
     
     // Return the image data to the client
     return NextResponse.json({
       imageUrl: `data:image/webp;base64,${imageBase64}`,
-      transparentImageUrl: transparentImageBase64 ? `data:image/png;base64,${transparentImageBase64}` : null
+      requiresBackgroundRemoval: requestData.backgroundOptions?.remove === true,
+      modelData: modelData
     });
     
   } catch (error) {

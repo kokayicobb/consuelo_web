@@ -162,7 +162,7 @@ export default function ModelGenerationContent() {
     setGeneratedImages({ original: null, transparent: null });
     
     try {
-      // This is the real implementation that calls your API endpoint
+      // First API call - Generate the image
       const response = await fetch('/api/generate-fashion-image', {
         method: 'POST',
         headers: {
@@ -178,23 +178,57 @@ export default function ModelGenerationContent() {
         }),
       });
       
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
-      }
-      
       const data = await response.json();
       
-      // Check if we got an error message but still have images
+      // Check if we got an error message
       if (data.error) {
         setError(data.error);
+        setIsGenerating(false);
+        return;
       }
       
-      // Check if we have at least one image
+      // Update the UI with the generated image
       if (data.imageUrl) {
         setGeneratedImages({
           original: data.imageUrl,
-          transparent: data.transparentImageUrl || null
+          transparent: null
         });
+        
+        // If background removal is required, make a second API call
+        if (data.requiresBackgroundRemoval) {
+          setGenerationStep("Removing background...");
+          
+          try {
+            // Extract base64 data from the data URL
+            const imageBase64 = data.imageUrl.split(',')[1];
+            
+            const bgResponse = await fetch('/api/remove-background', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                imageBase64,
+                modelData: data.modelData // Pass the model data for Supabase storage
+              }),
+            });
+            
+            const bgData = await bgResponse.json();
+            
+            if (bgData.error) {
+              console.error("Background removal error:", bgData.error);
+              // Continue with just the original image
+            } else if (bgData.transparentImageUrl) {
+              setGeneratedImages({
+                original: data.imageUrl,
+                transparent: bgData.transparentImageUrl
+              });
+            }
+          } catch (bgError) {
+            console.error("Error in background removal process:", bgError);
+            // Continue with just the original image
+          }
+        }
       } else {
         throw new Error(data.error || 'Failed to generate image');
       }
