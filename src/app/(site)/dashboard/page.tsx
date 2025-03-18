@@ -1,25 +1,39 @@
-import Breadcrumb from "@/components/Common/Breadcrumb";
+"use client";
+
 import dynamic from "next/dynamic";
-import { Suspense } from "react";
-import { Metadata } from "next";
+import { Suspense, useEffect } from "react";
+import { usePathname } from "next/navigation";
 
 // Dynamically import the PoseDetection component
 const DynamicPoseDetection = dynamic(
-  () => import("@/components/Playground/components/Dashboard/dashboard"),
+  () => import("@/components/Dashboard/dashboard"),
   {
     ssr: false,
   },
 );
 
-export const metadata: Metadata = {
-  title: "Dashboard | Consuelo - AI-Powered Fit Technology",
-  description: "This is About page description",
-};
+// Create a global state to control header & footer visibility
+// This needs to be outside your component to be globally accessible
+let globalHeaderHidden = false;
+let globalFooterHidden = false;
 
-const VirtualTryOn = () => {
+const Dashboard = () => {
+  const pathname = usePathname();
+  
+  useEffect(() => {
+    // Set custom attributes on the document body to hide both header and footer
+    document.body.setAttribute("data-hide-header", "true");
+    document.body.setAttribute("data-hide-footer", "true");
+    
+    // Clean up when component unmounts
+    return () => {
+      document.body.removeAttribute("data-hide-header");
+      document.body.removeAttribute("data-hide-footer");
+    };
+  }, []);
+
   return (
-    <main>
-      <Breadcrumb pageName="Dashboard" />
+    <main className="w-full h-screen">
       <Suspense fallback={<div>Loading...</div>}>
         <DynamicPoseDetection />
       </Suspense>
@@ -27,4 +41,4 @@ const VirtualTryOn = () => {
   );
 };
 
-export default VirtualTryOn;
+export default Dashboard;

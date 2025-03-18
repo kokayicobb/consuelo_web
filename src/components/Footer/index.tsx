@@ -3,8 +3,33 @@ import { Facebook, Twitter, Instagram, Linkedin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { useState, useEffect } from "react";
 
 const Footer = () => {
+  const [isHidden, setIsHidden] = useState(false);
+  
+  useEffect(() => {
+    // Check if the footer should be hidden based on the data attribute
+    const checkVisibility = () => {
+      const shouldHide = document.body.getAttribute("data-hide-footer") === "true";
+      setIsHidden(shouldHide);
+    };
+
+    // Run once on initial load
+    checkVisibility();
+
+    // Set up an observer to monitor changes to the body's attributes
+    const observer = new MutationObserver(checkVisibility);
+    observer.observe(document.body, { attributes: true });
+
+    // Clean up the observer when component unmounts
+    return () => observer.disconnect();
+  }, []);
+
+  // Don't render the footer if it should be hidden
+  if (isHidden) {
+    return null;
+  }
   return (
     <footer className="bg-background">
       <div className="mx-auto max-w-7xl px-6 py-16 lg:px-8">
