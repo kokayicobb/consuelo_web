@@ -12,9 +12,9 @@ export async function POST(request) {
   try {
     // Check if we have the API key
     if (!process.env.STABILITY_API_KEY) {
-      console.error("STABILITY_API_KEY is not set in environment variables");
+      console.error("not set in environment variables");
       return NextResponse.json(
-        { error: 'Missing Stability API key in environment variables' },
+        { error: 'Missing environment variables' },
         { status: 500 }
       );
     }
@@ -56,7 +56,7 @@ export async function POST(request) {
       });
       
       if (!bgRemovalResponse.ok) {
-        console.error('Background removal API error:', bgRemovalResponse.status);
+        console.error('Background removal  error:', bgRemovalResponse.status);
         return NextResponse.json(
           { error: `Background removal failed: ${bgRemovalResponse.status}` },
           { status: 500 }
@@ -72,7 +72,7 @@ export async function POST(request) {
       } else if (bgRemovalData.image) {
         transparentImageBase64 = bgRemovalData.image;
       } else {
-        console.error("Unexpected background removal API response:", bgRemovalData);
+        console.error("Unexpected background removal response:", bgRemovalData);
         return NextResponse.json(
           { error: 'Failed to extract transparent image from API response' },
           { status: 500 }
@@ -87,7 +87,7 @@ export async function POST(request) {
           transparentImageBase64,
           requestData.modelData
         ).catch(error => {
-          console.error("Error saving to Supabase:", error);
+        
         });
       }
       
@@ -141,7 +141,7 @@ async function saveImagesToSupabase(originalImage, transparentImage, modelData) 
       });
       
     if (originalError) {
-      console.error("Error saving original image to Supabase:", originalError);
+    
       return null;
     }
     
@@ -164,7 +164,7 @@ async function saveImagesToSupabase(originalImage, transparentImage, modelData) 
         });
         
       if (transparentError) {
-        console.error("Error saving transparent image to Supabase:", transparentError);
+      
       } else {
         const publicUrlResponse = supabase.storage
           .from('generated-images')
@@ -190,7 +190,7 @@ async function saveImagesToSupabase(originalImage, transparentImage, modelData) 
       });
       
     if (metadataError) {
-      console.error("Error saving metadata to Supabase:", metadataError);
+    
     }
     
     return {
@@ -199,7 +199,7 @@ async function saveImagesToSupabase(originalImage, transparentImage, modelData) 
     };
     
   } catch (error) {
-    console.error("Error in Supabase storage process:", error);
+   
     return null;
   }
 }
