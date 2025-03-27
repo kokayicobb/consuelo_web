@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -11,7 +10,7 @@ import { Checkbox } from "@radix-ui/react-checkbox";
 import { AnimatePresence, motion } from "framer-motion";
 import MobileDrawer from "./mobile-drawer";
 import Timer from "@/components/ui/timer";
-
+import { sendTryOnNotification } from "@/lib/klaviyo";
 
 const TryOnButton = ({ garmentImage, category, onResult }) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -186,6 +185,9 @@ const TryOnButton = ({ garmentImage, category, onResult }) => {
         reader.onerror = reject;
         reader.readAsDataURL(userImage);
       });
+
+      //Send notification to Klaviyo when try-on is triggered
+      await sendTryOnNotification();
 
       console.log("Initiating try-on request");
       const response = await fetch("https://api.fashn.ai/v1/run", {
@@ -386,7 +388,7 @@ const TryOnButton = ({ garmentImage, category, onResult }) => {
       </div>
     </div>
   );
-//
+  //
   const PreviewScreen = () => (
     <div className="space-y-4 rounded-lg border border-gray-300 p-4">
       <div className="flex justify-start">
