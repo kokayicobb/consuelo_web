@@ -3,7 +3,7 @@ export async function sendTryOnNotification() {
     token: process.env.NEXT_PUBLIC_KLAVIYO_PUBLIC_API_KEY,
     event: "Virtual Try-On Clicked",
     customer_properties: {
-      $email: "chanzay.c@gmail.com",
+      $email: "Kokayi@consuelohq.com",
     },
     properties: {
       clickedAt: new Date().toISOString(),
