@@ -58,6 +58,7 @@ export default function TryOnStudioContent() {
 
   // Replace the existing handleTryOn function with this implementation
 // Replace the existing handleTryOn function with this implementation
+// Replace the existing handleTryOn function with this implementation
 const handleTryOn = async () => {
   if (!modelImage || !garmentImage) return;
 
@@ -67,7 +68,12 @@ const handleTryOn = async () => {
   try {
     // First API call to start the try-on process
     const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://consuelohq.com';
-    const apiKey = process.env.NEXT_PUBLIC_DASHBOARD_API_KEY;
+    
+    // IMPORTANT: Use the correct hardcoded API key that your backend expects
+    const apiKey = 'c816f700.0938efb8d12babafb768a79520c724012324d6ca8884ede35e8b5deb';
+    
+    console.log('Sending request to:', `${apiBaseUrl}/api/try-on`);
+    console.log('Using API key (first 8 chars):', apiKey.substring(0, 8));
     
     const response = await fetch(`${apiBaseUrl}/api/try-on`, {
       method: 'POST',
@@ -79,18 +85,15 @@ const handleTryOn = async () => {
         model_image: modelImage,
         garment_image: garmentImage,
         category: mapCategory(category), // Map UI category to API category
-        mode: quality, // Use the quality setting selected by user (performance, balanced, quality)
-        num_samples: samples, // Use the number of samples selected by user
-        // Additional parameters that might be useful
-        nsfw_filter: true, // Enable NSFW content filter
-        restore_background: true, // Better background preservation
-        garment_photo_type: 'auto', // Auto-detect if it's a flat-lay or model image
-        restore_clothes: true // Better preservation of other clothing items
+        mode: quality,
+        num_samples: samples
       })
     });
 
     if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
+      const errorText = await response.text();
+      console.error('API error response:', errorText);
+      throw new Error(`API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
@@ -100,15 +103,16 @@ const handleTryOn = async () => {
       throw new Error('No prediction ID returned from API');
     }
 
+    console.log('Received prediction ID:', predictionId);
+    
     // Start polling for results
-    await pollForResults(predictionId);
+    await pollForResults(predictionId, apiKey);
   } catch (error) {
     console.error('Error during try-on process:', error);
     setIsLoading(false);
     // You might want to show an error message to the user here
   }
 };
-
 // Helper function to map UI category names to API category names
 const mapCategory = (uiCategory) => {
   const categoryMap = {
@@ -120,15 +124,15 @@ const mapCategory = (uiCategory) => {
 };
 
 // Function to poll for results until complete or failed
-const pollForResults = async (predictionId) => {
-  const maxAttempts = 60; // Maximum number of polling attempts (30 seconds at 500ms intervals)
+const pollForResults = async (predictionId, apiKey) => {
+  const maxAttempts = 60; // Maximum number of polling attempts
   let attempts = 0;
 
   const checkStatus = async () => {
     try {
       const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://consuelohq.com';
-      const apiKey = process.env.NEXT_PUBLIC_DASHBOARD_API_KEY;
       
+      console.log('Checking status for ID:', predictionId);
       const statusResponse = await fetch(`${apiBaseUrl}/api/try-on/status/${predictionId}`, {
         method: 'GET',
         headers: {
@@ -137,10 +141,13 @@ const pollForResults = async (predictionId) => {
       });
 
       if (!statusResponse.ok) {
-        throw new Error(`Status API error: ${statusResponse.status}`);
+        const errorText = await statusResponse.text();
+        console.error('Status API error:', errorText);
+        throw new Error(`Status API error: ${statusResponse.status} - ${errorText}`);
       }
 
       const statusData = await statusResponse.json();
+      console.log('Status response:', statusData);
       
       // Check if the prediction is complete
       if (statusData.status === 'completed' && statusData.output && statusData.output.length > 0) {
