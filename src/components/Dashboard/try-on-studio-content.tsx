@@ -3,7 +3,7 @@
 import type React from "react";
 
 import { useState } from "react";
-import { Upload, ArrowLeftRight, ImageIcon, Play, Info, Shuffle } from 'lucide-react';
+import { Upload, ArrowLeftRight, ImageIcon, Play, Info, Shuffle, Download } from 'lucide-react'; 
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useEffect, useRef } from "react";
@@ -56,9 +56,17 @@ export default function TryOnStudioContent() {
     }
   };
 
-  // Replace the existing handleTryOn function with this implementation
-// Replace the existing handleTryOn function with this implementation
-// Replace the existing handleTryOn function with this implementation
+  const mapCategory = (uiCategory) => {
+    const categoryMap = {
+      'top': 'tops',
+      'bottom': 'bottoms',
+      'fullbody': 'one-pieces'
+    };
+    return categoryMap[uiCategory] || 'tops'; // Default to tops if mapping not found
+  };
+ // Update your handleTryOn function and pollForResults to directly call the FASHN API
+// This bypasses any middleware issues with your server
+
 const handleTryOn = async () => {
   if (!modelImage || !garmentImage) return;
 
@@ -66,37 +74,51 @@ const handleTryOn = async () => {
   setResultImage(null);
 
   try {
-    // First API call to start the try-on process
-    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://consuelohq.com';
+    // Ensure images are properly encoded as base64 if they aren't already
+    let modelBase64 = modelImage;
+    let garmentBase64 = garmentImage;
+
+    // Log what we're sending for debugging
+    console.log('Category being sent:', mapCategory(category));
+    console.log('Model image type:', typeof modelBase64);
+    console.log('Garment image type:', typeof garmentBase64);
     
-    // IMPORTANT: Use the correct hardcoded API key that your backend expects
-    const apiKey = 'c816f700.0938efb8d12babafb768a79520c724012324d6ca8884ede35e8b5deb';
+   
+    // Direct API call to FASHN
+    console.log('Sending direct request to FASHN API');
     
-    console.log('Sending request to:', `${apiBaseUrl}/api/try-on`);
-    console.log('Using API key (first 8 chars):', apiKey.substring(0, 8));
+    const payload = {
+      model_image: modelBase64,
+      garment_image: garmentBase64,
+      category: mapCategory(category),
+      mode: quality,
+      num_samples: samples
+    };
     
-    const response = await fetch(`${apiBaseUrl}/api/try-on`, {
+    console.log('Request payload structure:', {
+      ...payload,
+      model_image: `${modelBase64.substring(0, 20)}... (truncated)`,
+      garment_image: `${garmentBase64.substring(0, 20)}... (truncated)`
+    });
+    
+    const response = await fetch('https://api.fashn.ai/v1/run', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+        'Authorization': 'Bearer fa-u5Z4R9wIqa6R-kfW6TOb7KXllTSG1PB278ZiB'
       },
-      body: JSON.stringify({
-        model_image: modelImage,
-        garment_image: garmentImage,
-        category: mapCategory(category), // Map UI category to API category
-        mode: quality,
-        num_samples: samples
-      })
+      body: JSON.stringify(payload)
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('API error response:', errorText);
+      console.error('FASHN API error response:', errorText);
       throw new Error(`API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
+    console.log('FASHN API response:', data);
+    
     const predictionId = data.id;
 
     if (!predictionId) {
@@ -105,78 +127,87 @@ const handleTryOn = async () => {
 
     console.log('Received prediction ID:', predictionId);
     
-    // Start polling for results
-    await pollForResults(predictionId, apiKey);
+    // Poll for results directly from FASHN API
+    await pollForResultsDirect(predictionId);
   } catch (error) {
     console.error('Error during try-on process:', error);
     setIsLoading(false);
-    // You might want to show an error message to the user here
   }
 };
-// Helper function to map UI category names to API category names
-const mapCategory = (uiCategory) => {
-  const categoryMap = {
-    'top': 'tops',
-    'bottom': 'bottoms',
-    'fullbody': 'one-pieces'
-  };
-  return categoryMap[uiCategory] || 'tops'; // Default to tops if mapping not found
-};
 
-// Function to poll for results until complete or failed
-const pollForResults = async (predictionId, apiKey) => {
-  const maxAttempts = 60; // Maximum number of polling attempts
+const pollForResultsDirect = async (predictionId) => {
+  const maxAttempts = 60;
   let attempts = 0;
 
   const checkStatus = async () => {
     try {
-      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://consuelohq.com';
+      console.log(`Polling attempt ${attempts + 1} for ID: ${predictionId}`);
       
-      console.log('Checking status for ID:', predictionId);
-      const statusResponse = await fetch(`${apiBaseUrl}/api/try-on/status/${predictionId}`, {
+      const statusResponse = await fetch(`https://api.fashn.ai/v1/status/${predictionId}`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${apiKey}`
+          'Authorization': 'Bearer fa-u5Z4R9wIqa6R-kfW6TOb7KXllTSG1PB278ZiB'
         }
       });
 
       if (!statusResponse.ok) {
         const errorText = await statusResponse.text();
-        console.error('Status API error:', errorText);
+        console.error('FASHN Status API error:', errorText);
         throw new Error(`Status API error: ${statusResponse.status} - ${errorText}`);
       }
 
       const statusData = await statusResponse.json();
-      console.log('Status response:', statusData);
+      console.log('FASHN Status full response:', JSON.stringify(statusData, null, 2));
       
-      // Check if the prediction is complete
-      if (statusData.status === 'completed' && statusData.output && statusData.output.length > 0) {
-        // Use the first result if multiple samples were requested
-        setResultImage(statusData.output[0]);
-        setIsLoading(false);
-        return;
-      }
-      
-      // Check if the prediction failed
-      if (statusData.status === 'failed') {
-        throw new Error(statusData.error?.message || 'Processing failed');
-      }
-      
-      // If not complete and not failed, continue polling
-      attempts++;
-      if (attempts < maxAttempts) {
-        setTimeout(checkStatus, 500);
-      } else {
-        throw new Error('Timed out waiting for result');
+      // Check the status
+      switch (statusData.status) {
+        case 'completed':
+          if (statusData.output && statusData.output.length > 0) {
+            const resultImageUrl = statusData.output[0];
+            console.log('COMPLETED - Setting result image URL:', resultImageUrl);
+            
+            // Add a cache buster to ensure we're not getting a cached version
+            const cacheBuster = `?t=${Date.now()}`;
+            setResultImage(resultImageUrl + cacheBuster);
+            
+            // Verify image is loading
+            const testImg = new Image();
+            testImg.onload = () => console.log('Image verified to load correctly:', resultImageUrl);
+            testImg.onerror = (e) => console.error('Image failed to load:', e);
+            testImg.src = resultImageUrl + cacheBuster;
+            
+            setIsLoading(false);
+            return;
+          } else {
+            throw new Error('Processing completed but no output was provided');
+          }
+          
+        case 'failed':
+          console.error('Processing failed:', statusData.error);
+          throw new Error(statusData.error?.message || 'Processing failed');
+          
+        case 'processing':
+        case 'in_queue':
+        case 'starting':
+          // Continue polling
+          console.log(`Status is ${statusData.status}, continuing to poll...`);
+          attempts++;
+          if (attempts < maxAttempts) {
+            setTimeout(checkStatus, 2000); // Check every 2 seconds
+          } else {
+            throw new Error('Timed out waiting for result');
+          }
+          break;
+          
+        default:
+          throw new Error(`Unknown status: ${statusData.status}`);
       }
     } catch (error) {
       console.error('Error checking try-on status:', error);
       setIsLoading(false);
-      // You might want to show an error message to the user here
     }
   };
 
-  // Start the polling process
   checkStatus();
 };
   const resetImages = () => {
@@ -197,6 +228,17 @@ const pollForResults = async (predictionId, apiKey) => {
   const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault();
     setDragActive(null);
+  };
+  const handleSaveImage = () => {
+    if (!resultImage) return;
+
+    const link = document.createElement('a');
+    link.href = resultImage;
+    // Suggest a filename for the download
+    link.download = 'virtual-try-on-result.png'; 
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleDrop = (e: React.DragEvent, type: string) => {
@@ -230,35 +272,35 @@ const pollForResults = async (predictionId, apiKey) => {
 
   return (
     <div className="flex h-full flex-col">
-      {/* Main Content */}
-      <div className="flex flex-1 flex-col p-2">
-        {/* Top Row with Upload Sections */}
-        <div className="mb-3 grid grid-cols-1 gap-3 md:grid-cols-3">
-          {/* Model Upload */}
-          <motion.div 
-            className="overflow-hidden rounded-lg border border-border bg-card"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className="flex items-center justify-between border-b border-border px-3 py-2">
-              <div className="flex items-center gap-1.5">
-                <span className="text-sm font-medium text-white">
-                  Select Model
-                </span>
-                <Info className="h-3.5 w-3.5 text-muted-foreground" />
-              </div>
-              <motion.button 
-                className="flex h-7 w-7 items-center justify-center rounded hover:bg-muted/20"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Upload className="h-4 w-4 text-muted-foreground" />
-              </motion.button>
+    {/* Main Content */}
+    <div className="flex flex-1 flex-col p-2">
+      {/* Top Row with Upload Sections */}
+      <div className="mb-3 grid grid-cols-1 gap-3 md:grid-cols-3">
+        {/* Model Upload */}
+        <motion.div 
+          className="overflow-hidden rounded-lg border border-border bg-card"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="flex items-center justify-between border-b border-border px-3 py-2">
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm font-medium text-white">
+                Select Model
+              </span>
+              <Info className="h-3.5 w-3.5 text-muted-foreground" />
             </div>
+            <motion.button 
+              className="flex h-7 w-7 items-center justify-center rounded hover:bg-muted/20"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Upload className="h-4 w-4 text-muted-foreground" />
+            </motion.button>
+          </div>
 
             <div 
-              className="flex h-52 flex-col items-center justify-center p-2"
+              className="flex h-48 md:h-52 flex-col items-center justify-center p-2" // <-- MODIFIED HERE
               onDragOver={handleDragOver}
               onDragEnter={(e) => handleDragEnter(e, 'model')}
               onDragLeave={handleDragLeave}
@@ -358,7 +400,7 @@ const pollForResults = async (predictionId, apiKey) => {
             </div>
 
             <div 
-              className="flex h-52 flex-col items-center justify-center p-2"
+              className="flex h-48 md:h-52 flex-col items-center justify-center p-2"
               onDragOver={handleDragOver}
               onDragEnter={(e) => handleDragEnter(e, 'garment')}
               onDragLeave={handleDragLeave}
@@ -522,7 +564,8 @@ const pollForResults = async (predictionId, apiKey) => {
               </Link>
             </div>
 
-            <div className="flex h-52 flex-col items-center justify-center p-2 relative">
+           <div 
+              className="flex h-48 md:h-52 flex-col items-center justify-center p-2">
               {isLoading ? (
                 <div className="flex h-full w-full flex-col items-center justify-center">
                   <div className="relative h-12 w-12">
@@ -573,11 +616,11 @@ const pollForResults = async (predictionId, apiKey) => {
               )}
             </div>
 
-            <div className="p-2">
+            <div className="p-2 flex gap-2">
               <motion.button
                 onClick={handleTryOn}
                 disabled={!modelImage || !garmentImage || isLoading}
-                className={`flex w-full items-center justify-center gap-1 rounded-md py-2 text-sm font-medium
+                className={`flex flex-1 items-center justify-center gap-1 rounded-md py-2 text-sm font-medium
                   ${
                     !modelImage || !garmentImage || isLoading
                       ? "cursor-not-allowed bg-muted/50 text-muted-foreground"
@@ -588,6 +631,24 @@ const pollForResults = async (predictionId, apiKey) => {
               >
                 <Play className="h-4 w-4" />
                 Run (~14s)
+              </motion.button>
+
+              {/* Save Button */}
+              <motion.button
+                onClick={handleSaveImage}
+                disabled={!resultImage || isLoading}
+                className={`flex items-center justify-center gap-1 rounded-md border px-3 py-2 text-sm font-medium
+                  ${
+                    !resultImage || isLoading
+                      ? "cursor-not-allowed border-border bg-card text-muted-foreground"
+                      : "border-border bg-card text-white hover:bg-muted/20"
+                  }`}
+                whileHover={!(!resultImage || isLoading) ? { scale: 1.05 } : {}}
+                whileTap={!(!resultImage || isLoading) ? { scale: 0.95 } : {}}
+                title="Save Result Image" // Added tooltip
+              >
+                <Download className="h-4 w-4" />
+                Save
               </motion.button>
             </div>
           </motion.div>
