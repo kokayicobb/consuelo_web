@@ -120,10 +120,10 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="dark flex h-screen bg-background">
-      {/* Sidebar with the new component */}
-      <Sidebar open={sidebarOpen} setOpen={setSidebarOpen}>
-        <SidebarBody className="flex flex-col justify-between">
+    <div className="dark flex flex-col md:flex-row h-screen w-full overflow-hidden bg-background">
+    {/* Sidebar with the new component */}
+    <Sidebar open={sidebarOpen} setOpen={setSidebarOpen}>
+      <SidebarBody className="flex flex-col justify-between">
           <div>
             {/* Logo */}
             <div className="mb-6 flex items-center gap-2 px-2">
@@ -185,8 +185,8 @@ export default function Dashboard() {
       </Sidebar>
 
       {/* Main Content */}
-      <div className="flex flex-1 flex-col overflow-hidden">
-        {/* Header */}
+      <div className="flex-1 flex flex-col min-w-0">
+      {/* Header */}
         <header className="flex items-center justify-between border-b border-border bg-card p-4">
           <div className="flex items-center">
             <h1 className="mr-4 text-xl font-bold text-white">
@@ -218,12 +218,12 @@ export default function Dashboard() {
             </div>
           </div>
         </header>
-
-        {/* Content Area */}
-        <main className="flex-1 overflow-auto bg-background p-6">
-          {renderContent()}
-        </main>
-
+{/* Content Area */}
+<main className="flex-1 overflow-auto bg-background p-4 md:p-6"> {/* Added responsive padding */}
+      <div className="w-full h-full mx-auto max-w-full"> {/* Containment wrapper */}
+        {renderContent()}
+      </div>
+    </main>
         {/* Bottom Links */}
         <div className="mt-auto px-4 py-2 border-t border-border bg-card">
           <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1 text-xs">

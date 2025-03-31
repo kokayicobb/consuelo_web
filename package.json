@@ -49,7 +49,9 @@
     "bcrypt": "^5.0.1",
     "canvas-confetti": "^1.9.3",
 
+
     "chart.js": "^4.4.8",
+
 
     "cheerio": "^1.0.0",
     "class-variance-authority": "^0.7.1",

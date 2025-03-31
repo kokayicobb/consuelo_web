@@ -301,7 +301,7 @@ const pollForResultsDirect = async (predictionId) => {
           </div>
 
             <div 
-              className="flex h-48 md:h-52 flex-col items-center justify-center p-2" // <-- MODIFIED HERE
+              className="flex min-h-48 md:min-h-52 flex-col items-center justify-center p-2" // <-- MODIFIED HERE
               onDragOver={handleDragOver}
               onDragEnter={(e) => handleDragEnter(e, 'model')}
               onDragLeave={handleDragLeave}
@@ -401,7 +401,7 @@ const pollForResultsDirect = async (predictionId) => {
             </div>
 
             <div 
-              className="flex h-48 md:h-52 flex-col items-center justify-center p-2"
+              className="flex min-h-48 md:min-h-52 flex-col items-center justify-center p-2" 
               onDragOver={handleDragOver}
               onDragEnter={(e) => handleDragEnter(e, 'garment')}
               onDragLeave={handleDragLeave}
@@ -565,8 +565,9 @@ const pollForResultsDirect = async (predictionId) => {
               </Link>
             </div>
 
-           <div 
-              className="flex h-48 md:h-52 flex-col items-center justify-center p-2">
+        
+               <div 
+               className="flex min-h-48 md:min-h-52 flex-col items-center justify-center p-2" >
               {isLoading ? (
                 <div className="flex h-full w-full flex-col items-center justify-center">
                   <div className="relative h-12 w-12">
