@@ -5,7 +5,7 @@
 @tailwind utilities;
 
 html {
-  html {
+ 
     @apply max-w-[100vw];
     @apply overflow-x-hidden;
   }
