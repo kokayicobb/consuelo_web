@@ -229,7 +229,7 @@ const SettingsContent: React.FC = () => {
       ...prev,
       [type]: {
         ...prev[type],
-        [key]: !prev[type][key as keyof typeof prev[type]], // Type assertion needed here
+        [key]: !prev[type][key as keyof typeof prev[]], // Type assertion needed here
       },
     }));
     // Consider debouncing or adding a save button for notification changes
