@@ -459,7 +459,7 @@ const SettingsContent: React.FC = () => {
                  <CardContent>
                      <AlertDialog>
                         <AlertDialogTrigger asChild>
-                           <Button variant="breadcrumb">
+                           <Button variant="outline">
                                 <Trash2 className="mr-2 h-4 w-4" /> Delete Account
                            </Button>
                         </AlertDialogTrigger>
@@ -756,7 +756,7 @@ const SettingsContent: React.FC = () => {
                         </div>
                         <div className="flex gap-2">
                             <Button variant="outline">Change Plan</Button>
-                            <Button variant="breadcrumb">Cancel Subscription</Button>
+                            <Button variant="outline">Cancel Subscription</Button>
                         </div>
                     </div>
                      <div className="space-y-4">
