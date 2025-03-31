@@ -229,17 +229,18 @@ const pollForResultsDirect = async (predictionId) => {
     e.preventDefault();
     setDragActive(null);
   };
-  const handleSaveImage = () => {
-    if (!resultImage) return;
+  const handleSaveImage = (e) => {
+  if (e) e.preventDefault(); // Prevent any default navigation
+  
+  if (!resultImage) return;
 
-    const link = document.createElement('a');
-    link.href = resultImage;
-    // Suggest a filename for the download
-    link.download = 'virtual-try-on-result.png'; 
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+  const link = document.createElement('a');
+  link.href = resultImage;
+  link.download = 'virtual-try-on-result.png'; 
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
 
   const handleDrop = (e: React.DragEvent, type: string) => {
     e.preventDefault();
@@ -632,24 +633,11 @@ const pollForResultsDirect = async (predictionId) => {
                 <Play className="h-4 w-4" />
                 Run (~14s)
               </motion.button>
-
-              {/* Save Button */}
-              <motion.button
-                onClick={handleSaveImage}
-                disabled={!resultImage || isLoading}
-                className={`flex items-center justify-center gap-1 rounded-md border px-3 py-2 text-sm font-medium
-                  ${
-                    !resultImage || isLoading
-                      ? "cursor-not-allowed border-border bg-card text-muted-foreground"
-                      : "border-border bg-card text-white hover:bg-muted/20"
-                  }`}
-                whileHover={!(!resultImage || isLoading) ? { scale: 1.05 } : {}}
-                whileTap={!(!resultImage || isLoading) ? { scale: 0.95 } : {}}
-                title="Save Result Image" // Added tooltip
-              >
-                <Download className="h-4 w-4" />
-                Save
-              </motion.button>
+              <div className="text-sm text-muted-foreground flex items-center gap-1">
+      <Download className="h-4 w-4" />
+      Right-click image to save
+    </div>
+              
             </div>
           </motion.div>
         </div>
