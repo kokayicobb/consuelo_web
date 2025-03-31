@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import Link, { LinkProps } from "next/link";
 import React, { useState, createContext, useContext } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Lock, Unlock } from "lucide-react";
 
 interface Links {
   label: string;
@@ -18,6 +18,8 @@ interface SidebarContextProps {
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   animate: boolean;
   isMobile: boolean;
+  locked: boolean;
+  setLocked: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const SidebarContext = createContext<SidebarContextProps | undefined>(
@@ -45,6 +47,7 @@ export const SidebarProvider = ({
 }) => {
   const [openState, setOpenState] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [locked, setLocked] = useState(false);
   
   React.useEffect(() => {
     // Check if we're on mobile
@@ -62,7 +65,7 @@ export const SidebarProvider = ({
   const setOpen = setOpenProp !== undefined ? setOpenProp : setOpenState;
 
   return (
-    <SidebarContext.Provider value={{ open, setOpen, animate, isMobile }}>
+    <SidebarContext.Provider value={{ open, setOpen, animate, isMobile, locked, setLocked }}>
       {children}
     </SidebarContext.Provider>
   );
@@ -116,21 +119,51 @@ export const DesktopSidebar = ({
   children: React.ReactNode;
   [key: string]: any;
 }) => {
-  const { open, setOpen, animate } = useSidebar();
+  const { open, setOpen, animate, locked, setLocked } = useSidebar();
+  
+  const handleMouseEnter = () => {
+    if (!locked) {
+      setOpen(true);
+    }
+  };
+  
+  const handleMouseLeave = () => {
+    if (!locked) {
+      setOpen(false);
+    }
+  };
+
   return (
     <motion.div
       className={cn(
-        "h-full px-4 py-4 hidden md:flex md:flex-col bg-[#191919] dark:bg-[#191919] border-r border-gray-800 w-64 flex-shrink-0",
+        "h-full px-4 py-4 hidden md:flex md:flex-col bg-[#191919] dark:bg-[#191919] border-r border-gray-800 w-64 flex-shrink-0 relative",
         className
       )}
       animate={{
         width: animate ? (open ? "16rem" : "4rem") : "16rem",
       }}
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       {...props}
     >
       {children}
+      
+      {/* Lock Button */}
+      <div className="mt-auto pt-4 flex justify-center">
+        <button
+          onClick={() => {
+            setLocked(!locked);
+            if (!locked) {
+              // When locking, ensure sidebar is open
+              setOpen(true);
+            }
+          }}
+          className="p-2 rounded-md hover:bg-purple-800/40 text-gray-200 transition-colors"
+          title={locked ? "Unlock sidebar" : "Lock sidebar open"}
+        >
+          {locked ? <Unlock size={20} /> : <Lock size={20} />}
+        </button>
+      </div>
     </motion.div>
   );
 };
@@ -167,12 +200,13 @@ export const MobileSidebar = ({
                 ease: "easeInOut",
               }}
               className={cn(
-                "fixed h-full w-full inset-0 bg-[#191919] dark:bg-[#191919] p-10 z-[100] flex flex-col justify-between",
+                // Changed h-full to h-screen and adjusted padding
+                "fixed h-screen w-full inset-0 bg-[#191919] dark:bg-[#191919] p-4 z-[100] flex flex-col justify-between",
                 className
               )}
             >
               <div
-                className="absolute right-10 top-10 z-50 text-gray-200 cursor-pointer"
+                className="absolute right-4 top-4 z-50 text-gray-200 cursor-pointer"
                 onClick={() => setOpen(false)}
               >
                 <X />
