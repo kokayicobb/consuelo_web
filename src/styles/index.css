@@ -4,8 +4,12 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  @apply max-w-[100vw] overflow-x-hidden;
+}
 body {
   font-family: "Space Grotesk", sans-serif;
+  @apply w-full overflow-x-hidden;
 }
 
 @layer base {
