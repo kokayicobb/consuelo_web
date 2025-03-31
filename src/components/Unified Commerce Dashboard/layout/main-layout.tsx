@@ -33,26 +33,98 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-/**
- * MainLayout component that serves as the primary layout structure for the application.
- * 
- * @param {Object} props - Component props
- * @param {React.ReactNode} props.children - Child components to render in the main content area
- * @param {string} props.title - Title to display in the header
- * @returns {JSX.Element} The MainLayout component
- */
-const MainLayout = ({ title, children }) => {
-  // State to track the active navigation tab
+// Chat Interface Component for use with ExpandableChat
+const ChatInterface = () => {
+  const [messages, setMessages] = useState([
+    { text: "Hi there! How can I help you today?", sender: "bot" }
+  ]);
+  const [inputValue, setInputValue] = useState("");
+
+  const handleSend = () => {
+    if (inputValue.trim() === "") return;
+    
+    // Add user message
+    setMessages([...messages, { text: inputValue, sender: "user" }]);
+    setInputValue("");
+    
+    // Simulate bot response (would be replaced with actual API call)
+    setTimeout(() => {
+      setMessages(prev => [...prev, { 
+        text: "Thanks for your message! I'll help you with that.", 
+        sender: "bot" 
+      }]);
+    }, 1000);
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      handleSend();
+    }
+  };
+
+  return (
+    <>
+     <ExpandableChatHeader className="bg-black text-white">
+  <div className="flex items-center">
+    <div className="mr-2 h-8 w-8 rounded-full bg-white flex items-center justify-center">
+      <img
+        src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/apple-touch-icon-OnEhJzRCthwLXcIuoeeWSqvvYynB9c.png"
+        alt="Consuelo Logo"
+        className="h-6 w-6"
+      />
+    </div>
+    <span className="font-medium">Consuelo </span>
+  </div>
+</ExpandableChatHeader>
+
+<ExpandableChatBody className="bg-gray-50 p-4 space-y-4 w-full">
+  {messages.map((message, index) => (
+    <div
+      key={index}
+      className={`flex ${
+        message.sender === "user" ? "justify-end" : "justify-start"
+      }`}
+    >
+      <div
+        className={`max-w-[80%] rounded-lg px-4 py-2 ${
+          message.sender === "user"
+            ? "bg-black text-white"
+            : "bg-white text-gray-800 border border-gray-200"
+        }`}
+      >
+        {message.text}
+      </div>
+    </div>
+  ))}
+</ExpandableChatBody>
+
+<ExpandableChatFooter className="bg-white border-t border-gray-200">
+  <div className="flex items-center gap-2 w-full">
+    <Input
+      value={inputValue}
+      onChange={(e) => setInputValue(e.target.value)}
+      onKeyPress={handleKeyPress}
+      placeholder="Type your message..."
+      className="flex-1"
+    />
+    <Button onClick={handleSend} size="icon" className="bg-black hover:bg-gray-800">
+      <Send size={16} />
+    </Button>
+  </div>
+</ExpandableChatFooter>
+    </>
+  );
+};
+
+const MainLayout = ({ children, title }) => {
+  // Create a state to track the active tab
   const [activeTab, setActiveTab] = useState("home");
-  
-  // State to control sidebar visibility
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  // Effect to sync URL hash with state for navigation
+  // Effect to sync URL hash with state
   useEffect(() => {
-    // Function to handle hash change in URL
+    // Function to handle hash change
     const handleHashChange = () => {
-      // Get the current hash from URL or default to "home"
       const hash = window.location.hash.replace("#", "") || "home";
       setActiveTab(hash);
     };
@@ -60,19 +132,14 @@ const MainLayout = ({ title, children }) => {
     // Set initial state based on current hash
     handleHashChange();
 
-    // Listen for hash changes in URL
+    // Listen for hash changes
     window.addEventListener("hashchange", handleHashChange);
 
-    // Clean up event listener on component unmount
+    // Clean up event listener
     return () => window.removeEventListener("hashchange", handleHashChange);
   }, []);
 
-  /**
-   * Function to render the default content based on activeTab
-   * Only used when no children are provided
-   * 
-   * @returns {JSX.Element} The content component for the current active tab
-   */
+  // Function to render the correct content based on activeTab
   const renderContent = () => {
     switch (activeTab) {
       case "home":
@@ -98,7 +165,7 @@ const MainLayout = ({ title, children }) => {
     }
   };
 
-  // Define the navigation items for the sidebar
+  // Define the navigation items
   const navItems = [
     {
       label: "Home",
@@ -156,15 +223,10 @@ const MainLayout = ({ title, children }) => {
     },
   ];
 
-  // Determine the title to use - either from props or generate from activeTab
-  const headerTitle = title || (activeTab.charAt(0).toUpperCase() + activeTab.slice(1).replace("-", " "));
-
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-gray-100 md:flex-row">
-      {/* Sidebar navigation */}
       <Sidebar open={sidebarOpen} setOpen={setSidebarOpen}>
         <SidebarBody>
-          {/* Logo and brand header */}
           <div className="mb-6 flex items-center justify-center gap-2 px-2">
             <div className="h-8 w-8 flex-shrink-0">
               <img
@@ -178,22 +240,20 @@ const MainLayout = ({ title, children }) => {
             </span>
           </div>
     
-          {/* Navigation links */}
           <nav className="flex-1 space-y-1">
             {navItems.map((item) => (
               <SidebarLink
-                key={item.href}
-                link={item}
-                className={`${
-                  activeTab === item.href.replace("#", "")
-                    ? "bg-gray-700/40 font-medium"
-                    : ""
-                } text-white hover:bg-gray-700/40 hover:text-white`}
-              />
+              key={item.href}
+              link={item}
+              className={`${
+                activeTab === item.href.replace("#", "")
+                  ? "bg-gray-700/40 font-medium"
+                  : ""
+              } text-white hover:bg-gray-700/40 hover:text-white`}
+            />
             ))}
           </nav>
     
-          {/* User profile section */}
           <div className="mt-auto border-t border-gray-800 pt-4">
             <div className="flex items-center justify-center px-4 py-2">
               <div className="flex-shrink-0">
@@ -212,17 +272,19 @@ const MainLayout = ({ title, children }) => {
         </SidebarBody>
       </Sidebar>
    
-      {/* Main content area */}
       <div className="flex flex-1 flex-col overflow-y-auto">
-        {/* Only show header when not on home page and title is available */}
         {activeTab !== "home" && (
-          <Header title={headerTitle} />
+          <Header
+            title={
+              activeTab.charAt(0).toUpperCase() +
+              activeTab.slice(1).replace("-", " ")
+            }
+          />
         )}
-        
-        {/* Main content - either custom children passed as props or default content */}
-        <main className={`flex-1 ${activeTab === "home" ? "p-0" : "p-4 md:p-6"}`}>
-          {/* Render children if provided, otherwise use default content system */}
-          {children || renderContent()}
+        <main
+          className={`flex-1 ${activeTab === "home" ? "p-0" : "p-4 md:p-6"}`}
+        >
+          {renderContent()}
         </main>
         
         {/* Expandable Chat - Only show when not on home or settings page */}
@@ -233,89 +295,6 @@ const MainLayout = ({ title, children }) => {
         )}
       </div>
     </div>
-  );
-};
-
-// Chat Interface Component for use with ExpandableChat
-const ChatInterface = () => {
-  const [messages, setMessages] = useState([
-    { text: "Hi there! How can I help you today?", sender: "bot" }
-  ]);
-  const [inputValue, setInputValue] = useState("");
-
-  const handleSend = () => {
-    if (inputValue.trim() === "") return;
-    
-    // Add user message
-    setMessages([...messages, { text: inputValue, sender: "user" }]);
-    setInputValue("");
-    
-    // Simulate bot response (would be replaced with actual API call)
-    setTimeout(() => {
-      setMessages(prev => [...prev, { 
-        text: "Thanks for your message! I'll help you with that.", 
-        sender: "bot" 
-      }]);
-    }, 1000);
-  };
-
-  const handleKeyPress = (e) => {
-    if (e.key === "Enter") {
-      handleSend();
-    }
-  };
-
-  return (
-    <>
-      <ExpandableChatHeader className="bg-black text-white">
-        <div className="flex items-center">
-          <div className="mr-2 h-8 w-8 rounded-full bg-white flex items-center justify-center">
-            <img
-              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/apple-touch-icon-OnEhJzRCthwLXcIuoeeWSqvvYynB9c.png"
-              alt="Consuelo Logo"
-              className="h-6 w-6"
-            />
-          </div>
-          <span className="font-medium">Consuelo </span>
-        </div>
-      </ExpandableChatHeader>
-
-      <ExpandableChatBody className="bg-gray-50 p-4 space-y-4 w-full">
-        {messages.map((message, index) => (
-          <div
-            key={index}
-            className={`flex ${
-              message.sender === "user" ? "justify-end" : "justify-start"
-            }`}
-          >
-            <div
-              className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                message.sender === "user"
-                  ? "bg-black text-white"
-                  : "bg-white text-gray-800 border border-gray-200"
-              }`}
-            >
-              {message.text}
-            </div>
-          </div>
-        ))}
-      </ExpandableChatBody>
-
-      <ExpandableChatFooter className="bg-white border-t border-gray-200">
-        <div className="flex items-center gap-2 w-full">
-          <Input
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Type your message..."
-            className="flex-1"
-          />
-          <Button onClick={handleSend} size="icon" className="bg-black hover:bg-gray-800">
-            <Send size={16} />
-          </Button>
-        </div>
-      </ExpandableChatFooter>
-    </>
   );
 };
 
