@@ -116,7 +116,7 @@ const ChatInterface = () => {
   );
 };
 
-const MainLayout = () => {
+const MainLayout = ({ children, title }) => {
   // Create a state to track the active tab
   const [activeTab, setActiveTab] = useState("home");
   const [sidebarOpen, setSidebarOpen] = useState(true);
