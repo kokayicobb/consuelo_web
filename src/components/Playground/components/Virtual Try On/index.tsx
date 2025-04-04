@@ -12,14 +12,24 @@ import MobileDrawer from "./mobile-drawer";
 import Timer from "@/components/ui/timer";
 import { sendTryOnNotification } from "@/lib/klaviyo";
 
-const TryOnButton = ({ garmentImage, category, onResult }) => {
+interface TryOnButtonProps {
+  garmentImage: string;
+  category: string;
+  onResult?: (result: string) => void;
+}
+
+const TryOnButton: React.FC<TryOnButtonProps> = ({
+  garmentImage,
+  category,
+  onResult,
+}) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [result, setResult] = useState(null);
-  const [userImage, setUserImage] = useState(null);
-  const [userImagePreview, setUserImagePreview] = useState(null);
-  const [garmentBase64, setGarmentBase64] = useState(null);
-  const fileInputRef = useRef(null);
+  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<string | null>(null);
+  const [userImage, setUserImage] = useState<File | null>(null);
+  const [userImagePreview, setUserImagePreview] = useState<string | null>(null);
+  const [garmentBase64, setGarmentBase64] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const pollingRef = useRef(false);
   const attemptCountRef = useRef(0);
   const [screen, setScreen] = useState("welcome");
@@ -31,7 +41,7 @@ const TryOnButton = ({ garmentImage, category, onResult }) => {
   const POLL_INTERVAL = 2000;
   const POLL_TIMEOUT = 120000;
 
-  const handleOpenChange = (isOpen) => {
+  const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen);
     if (!isOpen) {
       // Reset states when dialog/drawer closes
@@ -74,7 +84,8 @@ const TryOnButton = ({ garmentImage, category, onResult }) => {
         const reader = new FileReader();
 
         reader.onloadend = () => {
-          setGarmentBase64(reader.result);
+          const result = reader.result as string;
+          setGarmentBase64(result);
         };
 
         reader.onerror = (error) => {
@@ -92,7 +103,7 @@ const TryOnButton = ({ garmentImage, category, onResult }) => {
     loadGarmentImage();
   }, [garmentImage]);
 
-  const pollStatus = async (id) => {
+  const pollStatus = async (id: string) => {
     pollingRef.current = true;
     attemptCountRef.current = 0;
 
@@ -149,7 +160,7 @@ const TryOnButton = ({ garmentImage, category, onResult }) => {
             console.log(`Unknown status: ${data.status}`);
             throw new Error(`Unknown status: ${data.status}`);
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error("Error during polling:", err);
         setError(err.message || "An unexpected error occurred during polling.");
         setIsLoading(false);
@@ -159,7 +170,7 @@ const TryOnButton = ({ garmentImage, category, onResult }) => {
 
     try {
       await poll();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Polling failed:", error);
       setError("Failed to get processing status");
       setIsLoading(false);
@@ -179,9 +190,9 @@ const TryOnButton = ({ garmentImage, category, onResult }) => {
     pollingRef.current = true;
 
     try {
-      const base64Image = await new Promise((resolve, reject) => {
+      const base64Image = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result);
+        reader.onloadend = () => resolve(reader.result as string);
         reader.onerror = reject;
         reader.readAsDataURL(userImage);
       });
@@ -221,7 +232,7 @@ const TryOnButton = ({ garmentImage, category, onResult }) => {
       }
 
       await pollStatus(data.id);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Try-on error:", err);
       setError(`Error: ${err.message}`);
       setIsLoading(false);
@@ -229,8 +240,8 @@ const TryOnButton = ({ garmentImage, category, onResult }) => {
     }
   };
 
-  const handleImageUpload = (event) => {
-    const file = event.target.files[0];
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
@@ -245,7 +256,7 @@ const TryOnButton = ({ garmentImage, category, onResult }) => {
 
     const reader = new FileReader();
     reader.onloadend = () => {
-      setUserImagePreview(reader.result);
+      setUserImagePreview(reader.result as string);
       setUserImage(file);
       setError(null);
     };
@@ -335,7 +346,7 @@ const TryOnButton = ({ garmentImage, category, onResult }) => {
               id="instructions-check"
               checked={instructionsChecked}
               onCheckedChange={(checked) =>
-                setInstructionsChecked(checked as boolean)
+                setInstructionsChecked(checked === true)
               }
               className="border-gray-300"
             />
@@ -368,7 +379,7 @@ const TryOnButton = ({ garmentImage, category, onResult }) => {
           accept="image/*"
           onChange={(e) => {
             handleImageUpload(e);
-            if (e.target.files[0]) setScreen("preview");
+            if (e.target.files?.[0]) setScreen("preview");
           }}
           className="hidden"
           ref={fileInputRef}
@@ -396,7 +407,7 @@ const TryOnButton = ({ garmentImage, category, onResult }) => {
           {" "}
           {/* Added container specifically for image and button */}
           <img
-            src={userImagePreview}
+            src={userImagePreview || ""}
             alt="Preview"
             className="max-h-96 w-auto max-w-full rounded-lg"
           />

@@ -31,8 +31,10 @@ export default function FaceDetection() {
   const [webcamRunning, setWebcamRunning] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [measurements, setMeasurements] = useState<any>(null);
+  // Fix the positionFeedback type to allow string values
   const [positionFeedback, setPositionFeedback] = useState<string[]>([]);
-  const [selectedGender, setSelectedGender] = useState(null);
+  // Fix the selectedGender type to allow string values
+  const [selectedGender, setSelectedGender] = useState<string | null>(null);
   const [userGender, setUserGender] = useState("male"); // default to male
   const runningModeRef = useRef<"IMAGE" | "VIDEO">("IMAGE");
   const lastVideoTimeRef = useRef<number>(-1);
@@ -133,10 +135,11 @@ export default function FaceDetection() {
       ).toFixed(1),
     };
   };
+
   const getPositionFeedback = (landmarks) => {
     if (!landmarks || landmarks.length === 0) return [];
 
-    const feedback = [];
+    const feedback: string[] = [];
     const points = landmarks[0];
 
     // Check head tilt (using eyes)
@@ -298,6 +301,7 @@ export default function FaceDetection() {
 
     return calibrationFactor;
   };
+
   const drawBlendShapes = (el: HTMLElement, blendShapes: any[]) => {
     if (!blendShapes.length) return;
 
@@ -362,6 +366,7 @@ export default function FaceDetection() {
       setWebcamRunning(false);
     }
   }, [faceLandmarker, webcamRunning, setWebcamRunning]); // Add dependencies used in the function
+
   useEffect(() => {
     const initializeVision = async () => {
       try {
@@ -575,7 +580,11 @@ export default function FaceDetection() {
     }
   };
 
-  const WelcomeScreen = ({ onEnableCamera }) => {
+  const WelcomeScreen = ({
+    onEnableCamera,
+  }: {
+    onEnableCamera: (gender: string) => void;
+  }) => {
     return (
       <div className="flex h-full flex-col justify-between bg-white text-black">
         <div className="space-y-1 text-center">
@@ -632,30 +641,8 @@ export default function FaceDetection() {
           </div>
         </div>
 
-        {/* <div className="rounded-lg bg-gray-50 p-5 text-xs">
-          <h3 className="mb-1 font-semibold text-gray-800">
-            Before You Begin:
-          </h3>
-          <div className="grid grid-cols-2 gap-x-2 gap-y-1">
-            {[
-              "Remove headwear",
-              "Hair out of face",
-              "Face fully visible",
-              "Good lighting",
-            ].map((item, index) => (
-              <div
-                key={index}
-                className="flex items-center gap-2 text-gray-600"
-              >
-                <Check className="h-3 w-3 flex-shrink-0 text-green-500" />
-                <span>{item}</span>
-              </div>
-            ))}
-          </div>
-        </div> */}
-
         <Button
-          onClick={() => onEnableCamera(selectedGender)}
+          onClick={() => selectedGender && onEnableCamera(selectedGender)}
           disabled={!selectedGender}
           className="mt-4 flex w-full items-center justify-center text-sm sm:w-auto sm:text-base"
           size="default"
@@ -687,22 +674,6 @@ export default function FaceDetection() {
 
             <div className="w-full max-w-md rounded-xl bg-gray-100 p-4 shadow-2xl md:p-6">
               <div className="space-y-3">
-                {/* <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-3">
-                  <span className="text-sm font-medium text-black md:text-base">
-                    Temple Width
-                  </span>
-                  <span className="font-bold text-black">
-                    {measurements?.templeWidth} cm
-                  </span>
-                </div>
-                <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-3">
-                  <span className="text-sm font-medium text-black md:text-base">
-                    Face Depth
-                  </span>
-                  <span className="font-bold text-black">
-                    {measurements?.faceDepth} cm
-                  </span>
-                </div> */}
                 <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-3">
                   <span className="text-sm font-medium text-black md:text-base">
                     Head Circumference
@@ -728,7 +699,6 @@ export default function FaceDetection() {
               />
             ) : (
               // Active webcam state
-
               <div className="flex h-full w-full flex-col bg-white p-4">
                 <div className="flex flex-grow flex-col">
                   <div className="relative mb-4 flex-grow">
@@ -819,8 +789,6 @@ export default function FaceDetection() {
                 </div>
               </div>
             )}
-
-            <div />
           </>
         )}
       </div>

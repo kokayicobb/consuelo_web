@@ -1,48 +1,59 @@
-"use client"
-import React, { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
-import { Textarea } from '../ui/textarea';
+"use client";
+import React, { useState, useEffect } from "react";
+import { createClient } from "@supabase/supabase-js";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { Textarea } from "../ui/textarea";
 
+// Define the type for a review
+interface RestaurantReview {
+  id: string;
+  name: string;
+  restaurant: string;
+  rating: number;
+  comments: string;
+  created_at: string;
+}
 
 // Initialize Supabase client - you'll need to add these to your environment variables
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 const RestaurantTracker = () => {
-  const [submissions, setSubmissions] = useState([]);
+  const [submissions, setSubmissions] = useState<RestaurantReview[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  
+
   const [formData, setFormData] = useState({
-    name: '',
-    restaurant: '',
-    rating: '',
-    comments: '',
+    name: "",
+    restaurant: "",
+    rating: "",
+    comments: "",
   });
 
   // Fetch initial data and set up real-time subscription
   useEffect(() => {
     fetchReviews();
-    
+
     // Set up real-time subscription
     const channel = supabase
-      .channel('restaurants')
+      .channel("restaurants")
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'restaurant_reviews'
+          event: "INSERT",
+          schema: "public",
+          table: "restaurant_reviews",
         },
         (payload) => {
-          setSubmissions(current => [payload.new, ...current]);
-        }
+          setSubmissions((current) => [
+            payload.new as RestaurantReview,
+            ...current,
+          ]);
+        },
       )
       .subscribe();
 
@@ -54,73 +65,74 @@ const RestaurantTracker = () => {
   const fetchReviews = async () => {
     try {
       const { data, error } = await supabase
-        .from('restaurant_reviews')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .from("restaurant_reviews")
+        .select("*")
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setSubmissions(data);
-    } catch (error) {
+      setSubmissions(data as RestaurantReview[]);
+    } catch (error: any) {
       toast({
         title: "Error fetching reviews",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSubmit = async (e) => {
-		e.preventDefault();
-		setLoading(true);
-	
-		try {
-			const { error } = await supabase
-				.from('restaurant_reviews')
-				.insert([
-					{
-						name: formData.name,
-						restaurant: formData.restaurant,
-						rating: parseInt(formData.rating),
-						comments: formData.comments,
-					}
-				]);
-	
-			if (error) throw error;
-	
-			toast({
-				title: "Success!",
-				description: "Your review has been submitted. Refresh the page to see all reviews including yours!",
-			});
-	
-			setFormData({
-				name: '',
-				restaurant: '',
-				rating: '',
-				comments: '',
-			});
-		} catch (error) {
-			toast({
-				title: "Error submitting review",
-				description: error.message,
-				variant: "destructive"
-			});
-		} finally {
-			setLoading(false);
-		}
-	};
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
 
-  const handleChange = (e) => {
+    try {
+      const { error } = await supabase.from("restaurant_reviews").insert([
+        {
+          name: formData.name,
+          restaurant: formData.restaurant,
+          rating: parseInt(formData.rating),
+          comments: formData.comments,
+        },
+      ]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success!",
+        description:
+          "Your review has been submitted. Refresh the page to see all reviews including yours!",
+      });
+
+      setFormData({
+        name: "",
+        restaurant: "",
+        rating: "",
+        comments: "",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error submitting review",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-4 space-y-6">
+    <div className="mx-auto max-w-2xl space-y-6 p-4">
       <Card>
         <CardHeader>
           <CardTitle>Weekly Restaurant Review</CardTitle>
@@ -128,7 +140,9 @@ const RestaurantTracker = () => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-base font-medium mb-1">Your Name</label>
+              <label className="mb-1 block text-base font-medium">
+                Your Name
+              </label>
               <Input
                 required
                 name="name"
@@ -139,7 +153,9 @@ const RestaurantTracker = () => {
               />
             </div>
             <div>
-              <label className="block text-base font-medium mb-1">Restaurant Name</label>
+              <label className="mb-1 block text-base font-medium">
+                Restaurant Name
+              </label>
               <Input
                 required
                 name="restaurant"
@@ -150,7 +166,9 @@ const RestaurantTracker = () => {
               />
             </div>
             <div>
-              <label className="block text-base font-medium mb-1">Rating (1-5)</label>
+              <label className="mb-1 block text-base font-medium">
+                Rating (1-5)
+              </label>
               <Input
                 required
                 type="number"
@@ -164,7 +182,9 @@ const RestaurantTracker = () => {
               />
             </div>
             <div>
-              <label className="block text-base font-medium mb-1">Comments</label>
+              <label className="mb-1 block text-base font-medium">
+                Comments
+              </label>
               <Textarea
                 name="comments"
                 value={formData.comments}
@@ -175,7 +195,7 @@ const RestaurantTracker = () => {
               />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Submitting...' : 'Submit Review'}
+              {loading ? "Submitting..." : "Submit Review"}
             </Button>
           </form>
         </CardContent>
@@ -184,22 +204,26 @@ const RestaurantTracker = () => {
       <div className="space-y-4">
         <h2 className="text-xl font-bold">Previous Reviews</h2>
         {loading && <p>Loading reviews...</p>}
-        {submissions.map(submission => (
+        {submissions.map((submission) => (
           <Card key={submission.id}>
             <CardContent className="pt-6">
-              <div className="flex justify-between items-start mb-2">
+              <div className="mb-2 flex items-start justify-between">
                 <div>
                   <h3 className="font-bold">{submission.restaurant}</h3>
-                  <p className="text-sm text-gray-500">Reviewed by {submission.name}</p>
+                  <p className="text-sm text-gray-500">
+                    Reviewed by {submission.name}
+                  </p>
                 </div>
                 <div className="flex items-center">
-                  <span className="text-xl font-bold">{submission.rating}/5</span>
+                  <span className="text-xl font-bold">
+                    {submission.rating}/5
+                  </span>
                 </div>
               </div>
               {submission.comments && (
                 <p className="mt-2 text-gray-700">{submission.comments}</p>
               )}
-              <p className="text-sm text-gray-500 mt-2">
+              <p className="mt-2 text-sm text-gray-500">
                 {new Date(submission.created_at).toLocaleDateString()}
               </p>
             </CardContent>

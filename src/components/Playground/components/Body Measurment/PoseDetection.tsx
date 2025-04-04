@@ -1,4 +1,4 @@
-"use client"; // <-- This tells Next.js that this is a Client Component
+"use client";
 
 import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
@@ -10,10 +10,12 @@ import {
 import { Button } from "@/components/ui/button";
 
 const PoseDetection = () => {
-  const [poseLandmarker, setPoseLandmarker] = useState(null);
+  const [poseLandmarker, setPoseLandmarker] = useState<PoseLandmarker | null>(
+    null,
+  );
   const [webcamRunning, setWebcamRunning] = useState(false);
-  const videoRef = useRef(null);
-  const canvasRef = useRef(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const createPoseLandmarker = async () => {
@@ -68,10 +70,18 @@ const PoseDetection = () => {
     console.log("Starting pose detection...");
 
     const canvasCtx = canvasRef.current.getContext("2d");
+    if (!canvasCtx) return; // Early return if context is null
+
     const drawingUtils = new DrawingUtils(canvasCtx);
 
     const detect = async () => {
-      if (!webcamRunning) return;
+      if (
+        !webcamRunning ||
+        !videoRef.current ||
+        !canvasRef.current ||
+        !canvasCtx
+      )
+        return;
 
       // Run detection
       poseLandmarker.detectForVideo(
@@ -84,8 +94,8 @@ const PoseDetection = () => {
           canvasCtx.clearRect(
             0,
             0,
-            canvasRef.current.width,
-            canvasRef.current.height,
+            canvasRef.current!.width,
+            canvasRef.current!.height,
           );
 
           // Check if landmarks are present
