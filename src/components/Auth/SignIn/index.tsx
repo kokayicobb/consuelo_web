@@ -1,368 +1,198 @@
 "use client";
-import { signIn } from "next-auth/react";
-import Image from "next/image";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+
 import { useState } from "react";
-import toast from "react-hot-toast";
-import SocialSignIn from "../SocialSignIn";
-import SwitchOption from "../SwitchOption";
-import MagicLink from "../MagicLink";
-import Loader from "@/components/Common/Loader";
+import { useAuth } from "@/contexts/AuthContext";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { LogIn, ArrowRight, Github, Mail } from "lucide-react";
 
-const Signin = () => {
-  const router = useRouter();
-
-  const [loginData, setLoginData] = useState({
-    email: "",
-    password: "",
-    checkboxToggle: false,
-  });
-
-  const [isPassword, setIsPassword] = useState(false);
+export default function SignIn() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [step, setStep] = useState<"email" | "password">("email");
+  const { signIn, signInWithGoogle } = useAuth();
 
-  const loginUser = (e: any) => {
+  const handleEmailContinue = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email || !/\S+@\S+\.\S+/.test(email)) {
+      setError("Please enter a valid email address");
+      return;
+    }
+    setError(null);
+    setStep("password");
+  };
 
+  const handleEmailLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
     setLoading(true);
-    signIn("credentials", { ...loginData, redirect: false })
-      .then((callback) => {
-        if (callback?.error) {
-          toast.error(callback?.error);
-          console.log(callback?.error);
-          setLoading(false);
-          return;
-        }
 
-        if (callback?.ok && !callback?.error) {
-          toast.success("Login successful");
-          setLoading(false);
-          router.push("/");
-        }
-      })
-      .catch((err) => {
-        setLoading(false);
-        console.log(err.message);
-        toast.error(err.message);
-      });
+    try {
+      await signIn(email, password);
+    } catch (error: any) {
+      setError(error.message || "Failed to sign in");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setError(null);
+    try {
+      await signInWithGoogle();
+    } catch (error: any) {
+      setError(error.message || "Failed to sign in with Google");
+    }
   };
 
   return (
-    <section className="bg-[#F4F7FF] py-14 dark:bg-dark lg:py-20">
-      <div className="container">
-        <div className="-mx-4 flex flex-wrap">
-          <div className="w-full px-4">
-            <div
-              className="wow fadeInUp relative mx-auto max-w-[525px] overflow-hidden rounded-lg bg-white px-8 py-14 text-center dark:bg-dark-2 sm:px-12 md:px-[60px]"
-              data-wow-delay=".15s"
-            >
-              <div className="mb-10 text-center">
-                <Link href="/" className="mx-auto inline-block max-w-[160px]">
-                  <Image
-                    src="/images/logo/logo.svg"
-                    alt="logo"
-                    width={140}
-                    height={30}
-                    className="dark:hidden"
+    <div className="flex min-h-[80vh] items-center justify-center px-4 py-12">
+      <Card className="w-full max-w-md shadow-lg">
+        <CardHeader className="space-y-1 text-center">
+          <CardTitle className="text-2xl font-bold">Sign in</CardTitle>
+          <CardDescription>
+            Enter your email to sign in to your account
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {error && (
+            <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-600">
+              {error}
+            </div>
+          )}
+
+          {step === "email" ? (
+            <form onSubmit={handleEmailContinue} className="space-y-4">
+              <div className="space-y-2">
+                <Input
+                  id="email"
+                  placeholder="name@example.com"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+              <Button type="submit" className="w-full">
+                Continue with Email <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </form>
+          ) : (
+            <form onSubmit={handleEmailLogin} className="space-y-4">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between rounded-md border p-2">
+                  <span className="text-sm">{email}</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setStep("email")}
+                    type="button"
+                  >
+                    Change
+                  </Button>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Input
+                  id="password"
+                  placeholder="••••••••"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="remember"
+                    className="h-4 w-4 rounded border-gray-300"
                   />
-                  <Image
-                    src="/images/logo/logo-white.svg"
-                    alt="logo"
-                    width={140}
-                    height={30}
-                    className="hidden dark:block"
-                  />
+                  <label htmlFor="remember" className="text-sm">
+                    Remember me
+                  </label>
+                </div>
+                <Link
+                  href="/reset-password"
+                  className="text-sm font-medium hover:underline"
+                >
+                  Forgot password?
                 </Link>
               </div>
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Signing in..." : "Sign in"}
+              </Button>
+            </form>
+          )}
 
-              <SocialSignIn />
-
-              <span className="z-1 relative my-8 block text-center">
-                <span className="-z-1 absolute left-0 top-1/2 block h-px w-full bg-stroke dark:bg-dark-3"></span>
-                <span className="text-body-secondary relative z-10 inline-block bg-white px-3 text-base dark:bg-dark-2">
-                  OR
-                </span>
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="bg-card px-2 text-muted-foreground">
+                or continue with
               </span>
-
-              <SwitchOption
-                isPassword={isPassword}
-                setIsPassword={setIsPassword}
-              />
-
-              {isPassword ? (
-                <form onSubmit={(e) => e.preventDefault()}>
-                  <div className="mb-[22px]">
-                    <input
-                      type="email"
-                      placeholder="Email"
-                      onChange={(e) =>
-                        setLoginData({ ...loginData, email: e.target.value })
-                      }
-                      className="w-full rounded-md border border-stroke bg-transparent px-5 py-3 text-base text-dark outline-none transition placeholder:text-dark-6 focus:border-primary focus-visible:shadow-none dark:border-dark-3 dark:text-white dark:focus:border-primary"
-                    />
-                  </div>
-                  <div className="mb-[22px]">
-                    <input
-                      type="password"
-                      placeholder="Password"
-                      onChange={(e) =>
-                        setLoginData({ ...loginData, password: e.target.value })
-                      }
-                      className="w-full rounded-md border border-stroke bg-transparent px-5 py-3 text-base text-dark outline-none transition placeholder:text-dark-6 focus:border-primary focus-visible:shadow-none dark:border-dark-3 dark:text-white dark:focus:border-primary"
-                    />
-                  </div>
-                  <div className="mb-9">
-                    <button
-                      onClick={loginUser}
-                      type="submit"
-                      className="flex w-full cursor-pointer items-center justify-center rounded-md border border-primary bg-primary px-5 py-3 text-base text-white transition duration-300 ease-in-out hover:bg-primary/90"
-                    >
-                      Sign In {loading && <Loader />}
-                    </button>
-                  </div>
-                </form>
-              ) : (
-                <MagicLink />
-              )}
-
-              <Link
-                href="/forgot-password"
-                className="mb-2 inline-block text-base text-dark hover:text-primary dark:text-white dark:hover:text-primary"
-              >
-                Forget Password?
-              </Link>
-              <p className="text-body-secondary text-base">
-                Not a member yet?{" "}
-                <Link href="/signup" className="text-primary hover:underline">
-                  Sign Up
-                </Link>
-              </p>
-
-              <div>
-                <span className="absolute right-1 top-1">
-                  <svg
-                    width="40"
-                    height="40"
-                    viewBox="0 0 40 40"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <circle
-                      cx="1.39737"
-                      cy="38.6026"
-                      r="1.39737"
-                      transform="rotate(-90 1.39737 38.6026)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="1.39737"
-                      cy="1.99122"
-                      r="1.39737"
-                      transform="rotate(-90 1.39737 1.99122)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="13.6943"
-                      cy="38.6026"
-                      r="1.39737"
-                      transform="rotate(-90 13.6943 38.6026)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="13.6943"
-                      cy="1.99122"
-                      r="1.39737"
-                      transform="rotate(-90 13.6943 1.99122)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="25.9911"
-                      cy="38.6026"
-                      r="1.39737"
-                      transform="rotate(-90 25.9911 38.6026)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="25.9911"
-                      cy="1.99122"
-                      r="1.39737"
-                      transform="rotate(-90 25.9911 1.99122)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="38.288"
-                      cy="38.6026"
-                      r="1.39737"
-                      transform="rotate(-90 38.288 38.6026)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="38.288"
-                      cy="1.99122"
-                      r="1.39737"
-                      transform="rotate(-90 38.288 1.99122)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="1.39737"
-                      cy="26.3057"
-                      r="1.39737"
-                      transform="rotate(-90 1.39737 26.3057)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="13.6943"
-                      cy="26.3057"
-                      r="1.39737"
-                      transform="rotate(-90 13.6943 26.3057)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="25.9911"
-                      cy="26.3057"
-                      r="1.39737"
-                      transform="rotate(-90 25.9911 26.3057)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="38.288"
-                      cy="26.3057"
-                      r="1.39737"
-                      transform="rotate(-90 38.288 26.3057)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="1.39737"
-                      cy="14.0086"
-                      r="1.39737"
-                      transform="rotate(-90 1.39737 14.0086)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="13.6943"
-                      cy="14.0086"
-                      r="1.39737"
-                      transform="rotate(-90 13.6943 14.0086)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="25.9911"
-                      cy="14.0086"
-                      r="1.39737"
-                      transform="rotate(-90 25.9911 14.0086)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="38.288"
-                      cy="14.0086"
-                      r="1.39737"
-                      transform="rotate(-90 38.288 14.0086)"
-                      fill="#3056D3"
-                    />
-                  </svg>
-                </span>
-                <span className="absolute bottom-1 left-1">
-                  <svg
-                    width="29"
-                    height="40"
-                    viewBox="0 0 29 40"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <circle
-                      cx="2.288"
-                      cy="25.9912"
-                      r="1.39737"
-                      transform="rotate(-90 2.288 25.9912)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="14.5849"
-                      cy="25.9911"
-                      r="1.39737"
-                      transform="rotate(-90 14.5849 25.9911)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="26.7216"
-                      cy="25.9911"
-                      r="1.39737"
-                      transform="rotate(-90 26.7216 25.9911)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="2.288"
-                      cy="13.6944"
-                      r="1.39737"
-                      transform="rotate(-90 2.288 13.6944)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="14.5849"
-                      cy="13.6943"
-                      r="1.39737"
-                      transform="rotate(-90 14.5849 13.6943)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="26.7216"
-                      cy="13.6943"
-                      r="1.39737"
-                      transform="rotate(-90 26.7216 13.6943)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="2.288"
-                      cy="38.0087"
-                      r="1.39737"
-                      transform="rotate(-90 2.288 38.0087)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="2.288"
-                      cy="1.39739"
-                      r="1.39737"
-                      transform="rotate(-90 2.288 1.39739)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="14.5849"
-                      cy="38.0089"
-                      r="1.39737"
-                      transform="rotate(-90 14.5849 38.0089)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="26.7216"
-                      cy="38.0089"
-                      r="1.39737"
-                      transform="rotate(-90 26.7216 38.0089)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="14.5849"
-                      cy="1.39761"
-                      r="1.39737"
-                      transform="rotate(-90 14.5849 1.39761)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="26.7216"
-                      cy="1.39761"
-                      r="1.39737"
-                      transform="rotate(-90 26.7216 1.39761)"
-                      fill="#3056D3"
-                    />
-                  </svg>
-                </span>
-              </div>
             </div>
           </div>
-        </div>
-      </div>
-    </section>
-  );
-};
 
-export default Signin;
+          <div className="grid grid-cols-1 gap-3">
+            <button
+              onClick={handleGoogleLogin}
+              className="flex w-full items-center justify-center gap-3 rounded-md bg-white px-3 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus-visible:ring-2"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                width="16"
+                height="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <g transform="matrix(1, 0, 0, 1, 27.009001, -39.238998)">
+                  <path
+                    fill="#4285F4"
+                    d="M -3.264 51.509 C -3.264 50.719 -3.334 49.969 -3.454 49.239 L -14.754 49.239 L -14.754 53.749 L -8.284 53.749 C -8.574 55.229 -9.424 56.479 -10.684 57.329 L -10.684 60.329 L -6.824 60.329 C -4.564 58.239 -3.264 55.159 -3.264 51.509 Z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M -14.754 63.239 C -11.514 63.239 -8.804 62.159 -6.824 60.329 L -10.684 57.329 C -11.764 58.049 -13.134 58.489 -14.754 58.489 C -17.884 58.489 -20.534 56.379 -21.484 53.529 L -25.464 53.529 L -25.464 56.619 C -23.494 60.539 -19.444 63.239 -14.754 63.239 Z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M -21.484 53.529 C -21.734 52.809 -21.864 52.039 -21.864 51.239 C -21.864 50.439 -21.724 49.669 -21.484 48.949 L -21.484 45.859 L -25.464 45.859 C -26.284 47.479 -26.754 49.299 -26.754 51.239 C -26.754 53.179 -26.284 54.999 -25.464 56.619 L -21.484 53.529 Z"
+                  />
+                  <path
+                    fill="#EA4335"
+                    d="M -14.754 43.989 C -12.984 43.989 -11.404 44.599 -10.154 45.789 L -6.734 42.369 C -8.804 40.429 -11.514 39.239 -14.754 39.239 C -19.444 39.239 -23.494 41.939 -25.464 45.859 L -21.484 48.949 C -20.534 46.099 -17.884 43.989 -14.754 43.989 Z"
+                  />
+                </g>
+              </svg>
+              Google
+            </button>
+          </div>
+        </CardContent>
+        <CardFooter className="justify-center">
+          <p className="text-center text-sm">
+            Don't have an account?{" "}
+            <Link href="/signup" className="font-medium hover:underline">
+              Sign up
+            </Link>
+          </p>
+        </CardFooter>
+      </Card>
+    </div>
+  );
+}

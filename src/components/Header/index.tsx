@@ -14,6 +14,7 @@ import {
   IconLock,
   IconPolygon,
 } from "@tabler/icons-react";
+import { useAuth } from "@/contexts/AuthContext"; // Import the useAuth hook
 
 import {
   NavigationMenu,
@@ -39,6 +40,8 @@ import {
   Ruler,
   Sparkles,
   Menu,
+  LogOut,
+  User,
 } from "lucide-react";
 
 const solutions: {
@@ -116,25 +119,37 @@ const resources: {
 export function Header() {
   const { theme, setTheme } = useTheme();
   const [isScrolled, setIsScrolled] = React.useState(false);
+  const { user, signOut } = useAuth(); // Get user and signOut function from auth context
 
   // And update the scroll detection:
-React.useEffect(() => {
-  const handleScroll = () => {
-    setIsScrolled(window.scrollY > 50); // Increased threshold
+  React.useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50); // Increased threshold
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Handle logout
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      // No need to redirect, the signOut function should handle that
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
   };
-  window.addEventListener("scroll", handleScroll);
-  return () => window.removeEventListener("scroll", handleScroll);
-}, []);
+
   const isDarkMode = theme === "dark";
   return (
     <header
-    className={cn(
-      "sticky top-0 z-50 w-full transition-all duration-300",
-      isScrolled
-        ? "border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
-        : "bg-transparent border-transparent"
-    )}
-  >
+      className={cn(
+        "sticky top-0 z-50 w-full transition-all duration-300",
+        isScrolled
+          ? "border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+          : "border-transparent bg-transparent",
+      )}
+    >
       <div className="container flex h-16 items-center">
         <div className="flex items-center space-x-4">
           <Link href="/" className="flex items-center space-x-2">
@@ -257,13 +272,36 @@ React.useEffect(() => {
             <Icons.moon className="absolute h-5 w-5 scale-0  dark:scale-100" />
             <span className="sr-only">Toggle theme</span>
           </Button>
-          <Link href="/signin">
-  <Button variant="ghost" className="rounded-full">
-    Sign In
-  </Button>
-</Link>
-<Link href="/signup">
-          <Button className="rounded-full">Sign Up</Button></Link>
+
+          {/* Conditional rendering based on authentication state */}
+          {user ? (
+            <>
+              <Link href="/dashboard">
+                <Button variant="ghost" className="rounded-full">
+                  Dashboard
+                </Button>
+              </Link>
+              <Button
+                variant="outline"
+                className="flex items-center gap-2 rounded-full"
+                onClick={handleSignOut}
+              >
+                <LogOut className="h-4 w-4" />
+                Sign Out
+              </Button>
+            </>
+          ) : (
+            <>
+              <Link href="/signin">
+                <Button variant="ghost" className="rounded-full">
+                  Sign In
+                </Button>
+              </Link>
+              <Link href="/signup">
+                <Button className="rounded-full">Sign Up</Button>
+              </Link>
+            </>
+          )}
         </div>
         <Sheet>
           <SheetTrigger asChild>
@@ -319,20 +357,49 @@ React.useEffect(() => {
                     Contact
                   </Link>
                 </div>
-                <div className="px-4 pt-4">
-                  <Link href="/signin" className="block w-full">
-                    <Button className="w-full" variant="outline">
-                      Sign In
-                    </Button>
-                  </Link>
-                </div>
-                <div className="px-4">
-                  <Link href="/signup" className="block w-full">
-                    <Button className="w-full" variant="outline">
-                      Sign Up
-                    </Button>
-                  </Link>
-                </div>
+
+                {/* Conditional rendering for mobile auth */}
+                {user ? (
+                  <>
+                    <div className="px-4 pt-4">
+                      <p className="text-sm font-medium">Logged in as:</p>
+                      <p className="text-sm">{user.email}</p>
+                    </div>
+                    <div className="px-4 pt-2">
+                      <Link href="/dashboard" className="block w-full">
+                        <Button className="w-full" variant="outline">
+                          Dashboard
+                        </Button>
+                      </Link>
+                    </div>
+                    <div className="px-4 pt-2">
+                      <Button
+                        className="w-full"
+                        variant="outline"
+                        onClick={handleSignOut}
+                      >
+                        Sign Out
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="px-4 pt-4">
+                      <Link href="/signin" className="block w-full">
+                        <Button className="w-full" variant="outline">
+                          Sign In
+                        </Button>
+                      </Link>
+                    </div>
+                    <div className="px-4">
+                      <Link href="/signup" className="block w-full">
+                        <Button className="w-full" variant="outline">
+                          Sign Up
+                        </Button>
+                      </Link>
+                    </div>
+                  </>
+                )}
               </div>
             </ScrollArea>
             <div className="absolute bottom-4 left-4 right-4">

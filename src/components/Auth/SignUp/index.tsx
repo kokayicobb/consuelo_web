@@ -1,375 +1,261 @@
 "use client";
-import Image from "next/image";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import toast from "react-hot-toast";
-import SocialSignIn from "../SocialSignIn";
-import SwitchOption from "../SwitchOption";
+
 import { useState } from "react";
-import MagicLink from "../MagicLink";
-import Loader from "@/components/Common/Loader";
+import { useAuth } from "@/contexts/AuthContext";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { ArrowRight, Check, Github, Mail } from "lucide-react";
 
-const SignUp = () => {
-  const router = useRouter();
-  const [isPassword, setIsPassword] = useState(false);
+export default function SignUp() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [step, setStep] = useState<"email" | "password" | "success">("email");
+  const [success, setSuccess] = useState(false);
+  const { signUp, signInWithGoogle } = useAuth();
 
-  const handleSubmit = (e: any) => {
+  const handleEmailContinue = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email || !/\S+@\S+\.\S+/.test(email)) {
+      setError("Please enter a valid email address");
+      return;
+    }
+    setError(null);
+    setStep("password");
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    // Validate passwords
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    if (password.length < 8) {
+      setError("Password should be at least 8 characters long");
+      return;
+    }
 
     setLoading(true);
-    const data = new FormData(e.currentTarget);
-    const value = Object.fromEntries(data.entries());
-    const finalData = { ...value };
 
-    fetch("/api/register", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(finalData),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        toast.success("Successfully registered");
-        setLoading(false);
-        router.push("/signin");
-      })
-      .catch((err) => {
-        toast.error(err.message);
-        setLoading(false);
-      });
+    try {
+      await signUp(email, password);
+      setSuccess(true);
+      setStep("success");
+    } catch (error: any) {
+      setError(error.message || "Failed to create account");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignup = async () => {
+    setError(null);
+    try {
+      await signInWithGoogle();
+    } catch (error: any) {
+      setError(error.message || "Failed to sign up with Google");
+    }
   };
 
   return (
-    <section className="bg-[#F4F7FF] py-14 dark:bg-dark lg:py-[90px]">
-      <div className="container">
-        <div className="-mx-4 flex flex-wrap">
-          <div className="w-full px-4">
-            <div
-              className="wow fadeInUp shadow-form relative mx-auto max-w-[525px] overflow-hidden rounded-xl bg-white px-8 py-14 text-center dark:bg-dark-2 sm:px-12 md:px-[60px]"
-              data-wow-delay=".15s"
-            >
-              <div className="mb-10 text-center">
-                <Link href="/" className="mx-auto inline-block max-w-[160px]">
-                  <Image
-                    src="/images/logo/logo.svg"
-                    alt="logo"
-                    width={140}
-                    height={30}
-                    className="dark:hidden"
-                  />
-                  <Image
-                    src="/images/logo/logo-white.svg"
-                    alt="logo"
-                    width={140}
-                    height={30}
-                    className="hidden dark:block"
-                  />
-                </Link>
-              </div>
-
-              <SocialSignIn />
-
-              <span className="z-1 relative my-8 block text-center">
-                <span className="-z-1 absolute left-0 top-1/2 block h-px w-full bg-stroke dark:bg-dark-3"></span>
-                <span className="text-body-secondary relative z-10 inline-block bg-white px-3 text-base dark:bg-dark-2">
-                  OR
-                </span>
-              </span>
-
-              <SwitchOption
-                isPassword={isPassword}
-                setIsPassword={setIsPassword}
-              />
-
-              {isPassword ? (
-                <form onSubmit={handleSubmit}>
-                  <div className="mb-[22px]">
-                    <input
-                      type="text"
-                      placeholder="Name"
-                      name="name"
-                      required
-                      className="w-full rounded-md border border-stroke bg-transparent px-5 py-3 text-base text-dark outline-none transition placeholder:text-dark-6 focus:border-primary focus-visible:shadow-none dark:border-dark-3 dark:text-white dark:focus:border-primary"
-                    />
-                  </div>
-                  <div className="mb-[22px]">
-                    <input
-                      type="email"
-                      placeholder="Email"
-                      name="email"
-                      required
-                      className="w-full rounded-md border border-stroke bg-transparent px-5 py-3 text-base text-dark outline-none transition placeholder:text-dark-6 focus:border-primary focus-visible:shadow-none dark:border-dark-3 dark:text-white dark:focus:border-primary"
-                    />
-                  </div>
-                  <div className="mb-[22px]">
-                    <input
-                      type="password"
-                      placeholder="Password"
-                      name="password"
-                      required
-                      className="w-full rounded-md border border-stroke bg-transparent px-5 py-3 text-base text-dark outline-none transition placeholder:text-dark-6 focus:border-primary focus-visible:shadow-none dark:border-dark-3 dark:text-white dark:focus:border-primary"
-                    />
-                  </div>
-                  <div className="mb-9">
-                    <button
-                      type="submit"
-                      className="flex w-full cursor-pointer items-center justify-center rounded-md border border-primary bg-primary px-5 py-3 text-base text-white transition duration-300 ease-in-out hover:bg-blue-dark"
-                    >
-                      Sign Up {loading && <Loader />}
-                    </button>
-                  </div>
-                </form>
-              ) : (
-                <MagicLink />
-              )}
-
-              <p className="text-body-secondary mb-4 text-base">
-                By creating an account you are agree with our{" "}
-                <a href="/#" className="text-primary hover:underline">
-                  Privacy
-                </a>{" "}
-                and{" "}
-                <a href="/#" className="text-primary hover:underline">
-                  Policy
-                </a>
-              </p>
-
-              <p className="text-body-secondary text-base">
-                Already have an account?
-                <Link
-                  href="/signin"
-                  className="pl-2 text-primary hover:underline"
-                >
-                  Sign In
-                </Link>
-              </p>
-
-              <div>
-                <span className="absolute right-1 top-1">
-                  <svg
-                    width="40"
-                    height="40"
-                    viewBox="0 0 40 40"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <circle
-                      cx="1.39737"
-                      cy="38.6026"
-                      r="1.39737"
-                      transform="rotate(-90 1.39737 38.6026)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="1.39737"
-                      cy="1.99122"
-                      r="1.39737"
-                      transform="rotate(-90 1.39737 1.99122)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="13.6943"
-                      cy="38.6026"
-                      r="1.39737"
-                      transform="rotate(-90 13.6943 38.6026)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="13.6943"
-                      cy="1.99122"
-                      r="1.39737"
-                      transform="rotate(-90 13.6943 1.99122)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="25.9911"
-                      cy="38.6026"
-                      r="1.39737"
-                      transform="rotate(-90 25.9911 38.6026)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="25.9911"
-                      cy="1.99122"
-                      r="1.39737"
-                      transform="rotate(-90 25.9911 1.99122)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="38.288"
-                      cy="38.6026"
-                      r="1.39737"
-                      transform="rotate(-90 38.288 38.6026)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="38.288"
-                      cy="1.99122"
-                      r="1.39737"
-                      transform="rotate(-90 38.288 1.99122)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="1.39737"
-                      cy="26.3057"
-                      r="1.39737"
-                      transform="rotate(-90 1.39737 26.3057)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="13.6943"
-                      cy="26.3057"
-                      r="1.39737"
-                      transform="rotate(-90 13.6943 26.3057)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="25.9911"
-                      cy="26.3057"
-                      r="1.39737"
-                      transform="rotate(-90 25.9911 26.3057)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="38.288"
-                      cy="26.3057"
-                      r="1.39737"
-                      transform="rotate(-90 38.288 26.3057)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="1.39737"
-                      cy="14.0086"
-                      r="1.39737"
-                      transform="rotate(-90 1.39737 14.0086)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="13.6943"
-                      cy="14.0086"
-                      r="1.39737"
-                      transform="rotate(-90 13.6943 14.0086)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="25.9911"
-                      cy="14.0086"
-                      r="1.39737"
-                      transform="rotate(-90 25.9911 14.0086)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="38.288"
-                      cy="14.0086"
-                      r="1.39737"
-                      transform="rotate(-90 38.288 14.0086)"
-                      fill="#3056D3"
-                    />
-                  </svg>
-                </span>
-                <span className="absolute bottom-1 left-1">
-                  <svg
-                    width="29"
-                    height="40"
-                    viewBox="0 0 29 40"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <circle
-                      cx="2.288"
-                      cy="25.9912"
-                      r="1.39737"
-                      transform="rotate(-90 2.288 25.9912)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="14.5849"
-                      cy="25.9911"
-                      r="1.39737"
-                      transform="rotate(-90 14.5849 25.9911)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="26.7216"
-                      cy="25.9911"
-                      r="1.39737"
-                      transform="rotate(-90 26.7216 25.9911)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="2.288"
-                      cy="13.6944"
-                      r="1.39737"
-                      transform="rotate(-90 2.288 13.6944)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="14.5849"
-                      cy="13.6943"
-                      r="1.39737"
-                      transform="rotate(-90 14.5849 13.6943)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="26.7216"
-                      cy="13.6943"
-                      r="1.39737"
-                      transform="rotate(-90 26.7216 13.6943)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="2.288"
-                      cy="38.0087"
-                      r="1.39737"
-                      transform="rotate(-90 2.288 38.0087)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="2.288"
-                      cy="1.39739"
-                      r="1.39737"
-                      transform="rotate(-90 2.288 1.39739)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="14.5849"
-                      cy="38.0089"
-                      r="1.39737"
-                      transform="rotate(-90 14.5849 38.0089)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="26.7216"
-                      cy="38.0089"
-                      r="1.39737"
-                      transform="rotate(-90 26.7216 38.0089)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="14.5849"
-                      cy="1.39761"
-                      r="1.39737"
-                      transform="rotate(-90 14.5849 1.39761)"
-                      fill="#3056D3"
-                    />
-                    <circle
-                      cx="26.7216"
-                      cy="1.39761"
-                      r="1.39737"
-                      transform="rotate(-90 26.7216 1.39761)"
-                      fill="#3056D3"
-                    />
-                  </svg>
-                </span>
-              </div>
+    <div className="flex min-h-[80vh] items-center justify-center px-4 py-12">
+      <Card className="w-full max-w-md shadow-lg">
+        <CardHeader className="space-y-1 text-center">
+          <CardTitle className="text-2xl font-bold">
+            Create an account
+          </CardTitle>
+          <CardDescription>
+            {step === "email" && "Enter your email to create an account"}
+            {step === "password" && "Now create a secure password"}
+            {step === "success" && "Your account has been created"}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {error && (
+            <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-600">
+              {error}
             </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-};
+          )}
 
-export default SignUp;
+          {step === "email" ? (
+            <form onSubmit={handleEmailContinue} className="space-y-4">
+              <div className="space-y-2">
+                <Input
+                  id="email"
+                  placeholder="name@example.com"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+              <Button type="submit" className="w-full">
+                Continue with Email <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </form>
+          ) : step === "password" ? (
+            <form onSubmit={handleSignUp} className="space-y-4">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between rounded-md border p-2">
+                  <span className="text-sm">{email}</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setStep("email")}
+                    type="button"
+                  >
+                    Change
+                  </Button>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Input
+                  id="password"
+                  placeholder="Create password"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Input
+                  id="confirmPassword"
+                  placeholder="Confirm password"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <ul className="space-y-1 text-sm">
+                  <li
+                    className={`flex items-center ${password.length >= 8 ? "text-green-600" : "text-gray-500"}`}
+                  >
+                    <Check
+                      className={`mr-2 h-4 w-4 ${password.length >= 8 ? "opacity-100" : "opacity-30"}`}
+                    />
+                    At least 8 characters
+                  </li>
+                  <li
+                    className={`flex items-center ${/[A-Z]/.test(password) ? "text-green-600" : "text-gray-500"}`}
+                  >
+                    <Check
+                      className={`mr-2 h-4 w-4 ${/[A-Z]/.test(password) ? "opacity-100" : "opacity-30"}`}
+                    />
+                    At least one uppercase letter
+                  </li>
+                  <li
+                    className={`flex items-center ${/[0-9]/.test(password) ? "text-green-600" : "text-gray-500"}`}
+                  >
+                    <Check
+                      className={`mr-2 h-4 w-4 ${/[0-9]/.test(password) ? "opacity-100" : "opacity-30"}`}
+                    />
+                    At least one number
+                  </li>
+                </ul>
+              </div>
+
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Creating account..." : "Create account"}
+              </Button>
+            </form>
+          ) : (
+            <div className="space-y-4 text-center">
+              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
+                <Check className="h-10 w-10 text-green-600" />
+              </div>
+              <h3 className="text-xl font-medium">Account created</h3>
+              <p className="text-sm text-gray-500">
+                We've sent a confirmation link to your email. Please verify your
+                account to continue.
+              </p>
+              <Button asChild className="w-full">
+                <Link href="/signin">Go to sign in</Link>
+              </Button>
+            </div>
+          )}
+
+          {step !== "success" && (
+            <>
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="bg-card px-2 text-muted-foreground">
+                    or continue with
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3">
+                <button
+                  onClick={handleGoogleSignup}
+                  className="flex w-full items-center justify-center gap-3 rounded-md bg-white px-3 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus-visible:ring-2"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="16"
+                    height="16"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <g transform="matrix(1, 0, 0, 1, 27.009001, -39.238998)">
+                      <path
+                        fill="#4285F4"
+                        d="M -3.264 51.509 C -3.264 50.719 -3.334 49.969 -3.454 49.239 L -14.754 49.239 L -14.754 53.749 L -8.284 53.749 C -8.574 55.229 -9.424 56.479 -10.684 57.329 L -10.684 60.329 L -6.824 60.329 C -4.564 58.239 -3.264 55.159 -3.264 51.509 Z"
+                      />
+                      <path
+                        fill="#34A853"
+                        d="M -14.754 63.239 C -11.514 63.239 -8.804 62.159 -6.824 60.329 L -10.684 57.329 C -11.764 58.049 -13.134 58.489 -14.754 58.489 C -17.884 58.489 -20.534 56.379 -21.484 53.529 L -25.464 53.529 L -25.464 56.619 C -23.494 60.539 -19.444 63.239 -14.754 63.239 Z"
+                      />
+                      <path
+                        fill="#FBBC05"
+                        d="M -21.484 53.529 C -21.734 52.809 -21.864 52.039 -21.864 51.239 C -21.864 50.439 -21.724 49.669 -21.484 48.949 L -21.484 45.859 L -25.464 45.859 C -26.284 47.479 -26.754 49.299 -26.754 51.239 C -26.754 53.179 -26.284 54.999 -25.464 56.619 L -21.484 53.529 Z"
+                      />
+                      <path
+                        fill="#EA4335"
+                        d="M -14.754 43.989 C -12.984 43.989 -11.404 44.599 -10.154 45.789 L -6.734 42.369 C -8.804 40.429 -11.514 39.239 -14.754 39.239 C -19.444 39.239 -23.494 41.939 -25.464 45.859 L -21.484 48.949 C -20.534 46.099 -17.884 43.989 -14.754 43.989 Z"
+                      />
+                    </g>
+                  </svg>
+                  Google
+                </button>
+              </div>
+            </>
+          )}
+        </CardContent>
+        {step !== "success" && (
+          <CardFooter className="justify-center">
+            <p className="text-center text-sm">
+              Already have an account?{" "}
+              <Link href="/signin" className="font-medium hover:underline">
+                Sign in
+              </Link>
+            </p>
+          </CardFooter>
+        )}
+      </Card>
+    </div>
+  );
+}
