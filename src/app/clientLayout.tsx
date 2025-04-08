@@ -7,7 +7,7 @@ import ScrollToTop from "@/components/ScrollToTop";
 import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "next-themes";
 import { useEffect, useState } from "react";
-import ShimmerLoader from "@/app/loading";
+import SimpleLoader from "@/app/loading";
 import ToasterContext from "./api/contex/ToasetContex";
 
 export default function ClientLayout({
@@ -23,7 +23,7 @@ export default function ClientLayout({
   }, []);
 
   return loading ? (
-    <ShimmerLoader />
+    <SimpleLoader />
   ) : (
     <SessionProvider>
       <ThemeProvider
