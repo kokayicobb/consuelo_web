@@ -1,20 +1,20 @@
-import Signin from "@/components/Auth/SignIn";
+import AuthRedirect from "@/components/Auth/Redirect";
 import Breadcrumb from "@/components/Common/Breadcrumb";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title:
-    "Sign In | Consuelo - AI-Powered Fit Technology",
+    "Redirect| Consuelo - AI-Powered Fit Technology",
 };
 
-const SigninPage = () => {
+const RedirectPage = () => {
   return (
     <>
       <Breadcrumb pageName="Sign In Page" />
 
-      <Signin />
+      <AuthRedirect />
     </>
   );
 };
 
-export default SigninPage;
+export default RedirectPage;
