@@ -1,46 +1,37 @@
-"use client"
+'use client';
 
-import { useState, useEffect } from "react"
-import { ShootingStars } from "@/components/ui/shooting-stars"
-import { StarsBackground } from "@/components/ui/stars-background"
+import { useEffect, useState } from 'react';
 
-const ShimmerLoader = ({ onLoadComplete }: { onLoadComplete?: () => void }) => {
-  const [showLoader, setShowLoader] = useState(true)
-
+const SimpleLoader = () => {
+  const [progress, setProgress] = useState(0);
+  
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowLoader(false)
-      onLoadComplete?.()
-    }, 2000)
-
-    return () => {
-      clearTimeout(timer)
-    }
-  }, [onLoadComplete])
-
-  if (!showLoader) return null
-
+    const interval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          return 100;
+        }
+        return prev + 10;
+      });
+    }, 100);
+    
+    return () => clearInterval(interval);
+  }, []);
+  
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-[#111111] z-50 overflow-hidden">
-      <StarsBackground className={undefined} />
-      <ShootingStars 
-        minSpeed={15}
-        maxSpeed={35}
-        starColor="#9E00FF"
-        trailColor="#2EB9DF" className={undefined}      />
-      <div 
-        className="relative z-10 text-6xl font-bold text-center"
-        style={{
-          fontFamily: "'Inter', sans-serif",
-          background: "linear-gradient(to right, #8A2BE2, #FF69B4)",
-          WebkitBackgroundClip: "text",
-          WebkitTextFillColor: "transparent",
-        }}
-      >
-        CONSUELO
+    <div className="fixed inset-0 flex flex-col items-center justify-center bg-white dark:bg-gray-900 z-50">
+      <div className="w-48 h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+        <div 
+          className="h-full bg-blue-600 dark:bg-blue-400 transition-all duration-300 ease-out"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+      <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+        Loading...
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ShimmerLoader
+export default SimpleLoader;
