@@ -81,25 +81,9 @@ const TestimonialCard: React.FC<{ testimonial: Testimonial }> = ({ testimonial }
 
 const Testimonials: React.FC = () => {
   return (
-    <section className="bg-background py-16 sm:py-16">
+    <section className="bg-background ">
   <div className="mx-auto max-w-7xl px-6 lg:px-8">
-    <motion.div
-      initial={{ opacity: 0, y: 50 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="text-center"
-    >
-      <div className="mb-6 inline-flex items-center rounded-full bg-accent/10 px-4 py-1 text-sm font-medium">
-  <Quote className="mr-2 h-4 w-4 text-accent" />
-  <span className="text-accent">Testimonials</span>
-</div>
-<h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-  What <span className="bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent">Experts Have Said</span>
-</h2>
-<p className="mt-4 text-lg text-muted-foreground">
-  Recognized by industry experts in E-Commerce and Retail for its innovative approach, our solution meets the demands of today's shopping experience.
-</p>
-        </motion.div>
+   
         <div className="hidden lg:mt-16 lg:flex lg:gap-6 lg:justify-center">
           <Carousel className="w-full max-w-5xl">
             <CarouselContent>

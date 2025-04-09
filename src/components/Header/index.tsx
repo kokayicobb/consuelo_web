@@ -1,393 +1,170 @@
 "use client";
 
-import * as React from "react";
+import React from "react";
 import Link from "next/link";
-import { useTheme } from "next-themes";
-import { cn } from "@/lib/utils";
-import { Icons } from "@/components/ui/icons";
-import {
-  IconShirt,
-  IconRuler,
-  IconCube,
-  IconChartBar,
-  IconMail,
-  IconLock,
-  IconPolygon,
-} from "@tabler/icons-react";
-
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-  navigationMenuTriggerStyle,
-} from "@/components/ui/navigation-menu";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { Menu, Search } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Laptop,
-  Users,
-  Zap,
-  BarChart,
-  BookOpen,
-  Phone,
-  PenTool,
-  Shirt,
-  Ruler,
-  Sparkles,
-  Menu,
-} from "lucide-react";
-
-const solutions: {
-  title: string;
-  href: string;
-  description: string;
-  icon: React.ReactNode;
-}[] = [
-  {
-    title: "Virtual Try-On",
-    href: "/virtual-try-on",
-    description:
-      "Experience clothes virtually with our advanced 3D modeling technology.",
-    icon: <Shirt className="h-6 w-6" />,
-  },
-  {
-    title: "Fit Calculator",
-    href: "/playground",
-    description:
-      "Get personalized size recommendations based on your body measurements.",
-    icon: <Ruler className="h-6 w-6" />,
-  },
-  {
-    title: "Competition Dashboard",
-    href: "/solutions/fit-analysis",
-    description:
-      "Analyze your performance against competitors with our comprehensive dashboard.",
-    icon: <IconChartBar className="h-6 w-6" />,
-  },
-  {
-    title: "3D Product Viewer",
-    href: "/playground",
-    description:
-      "Give customers a 360-degree view of products, enhancing their online shopping experience.",
-    icon: <IconCube className="h-6 w-6" />,
-  },
-];
-
-const resources: {
-  title: string;
-  href: string;
-  description: string;
-  icon: React.ReactNode;
-}[] = [
-  {
-    title: "Blog",
-    href: "/blogs",
-    description:
-      "Read the latest news and insights about AI in fashion and e-commerce.",
-    icon: <BookOpen className="h-6 w-6" />,
-  },
-  {
-    title: "Case Studies",
-    href: "/about",
-    description:
-      "Explore how leading brands are using Consuelo to revolutionize online shopping.",
-    icon: <BarChart className="h-6 w-6" />,
-  },
-  {
-    title: "Documentation",
-    href: "/about",
-    description:
-      "Access detailed guides and API references for integrating Consuelo.",
-    icon: <Laptop className="h-6 w-6" />,
-  },
-  {
-    title: "Webinars",
-    href: "/about",
-    description:
-      "Watch on-demand webinars about the future of AI in fashion retail.",
-    icon: <Users className="h-6 w-6" />,
-  },
-];
 
 export function Header() {
-  const { theme, setTheme } = useTheme();
   const [isScrolled, setIsScrolled] = React.useState(false);
 
-  // And update the scroll detection:
-React.useEffect(() => {
-  const handleScroll = () => {
-    setIsScrolled(window.scrollY > 50); // Increased threshold
-  };
-  window.addEventListener("scroll", handleScroll);
-  return () => window.removeEventListener("scroll", handleScroll);
-}, []);
-  const isDarkMode = theme === "dark";
+  React.useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 0);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   // Check if header should be hidden
-  const shouldHide = typeof document !== "undefined" && 
+  const shouldHide =
+    typeof document !== "undefined" &&
     document.body.getAttribute("data-hide-header") === "true";
-  
+
   // Return null if the header should be hidden
   if (shouldHide) {
     return null;
   }
-  return (
-    <header
-    className={cn(
-      "sticky top-0 z-50 w-full transition-all duration-300",
-      isScrolled
-        ? "border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
-        : "bg-transparent border-transparent"
-    )}
-  >
-      <div className="container flex h-16 items-center">
-        <div className="flex items-center space-x-4">
-          <Link href="/" className="flex items-center space-x-2">
-            <img
-              src="/images/logo/logo.svg"
-              alt="Consuelo Logo"
-              className="h-10 w-auto dark:invert"
-            />
-          </Link>
-        </div>
-        <div className="flex-1" />
-        <NavigationMenu className="hidden md:flex">
-          <NavigationMenuList>
-            <NavigationMenuItem>
-              <NavigationMenuTrigger className="bg-transparent hover:bg-accent/10">
-                Solutions
-              </NavigationMenuTrigger>
-              <NavigationMenuContent>
-                <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr]">
-                  <li className="row-span-4">
-                    <NavigationMenuLink asChild>
-                      <a
-                        className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md"
-                        href="/about"
-                      >
-                        <img
-                          src="/apple-touch-icon.png"
-                          alt="Consuelo Logo"
-                          className="h-9 w-9 text-muted-foreground [&>path]:fill-current"
-                        />
-                        <div className="mb-2 mt-4 text-lg font-medium">
-                          Consuelo
-                        </div>
-                        <p className="text-sm leading-tight text-muted-foreground">
-                          Revolutionizing e-commerce with AI-powered fitting
-                          solutions for a perfect shopping experience.
-                        </p>
-                      </a>
-                    </NavigationMenuLink>
-                  </li>
-                  {solutions.map((item) => (
-                    <ListItem
-                      key={item.title}
-                      title={item.title}
-                      href={item.href}
-                      icon={item.icon}
-                    >
-                      {item.description}
-                    </ListItem>
-                  ))}
-                </ul>
-              </NavigationMenuContent>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
-              <NavigationMenuTrigger className="bg-transparent hover:bg-accent/10">
-                Resources
-              </NavigationMenuTrigger>
-              <NavigationMenuContent>
-                <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-                  {resources.map((item) => (
-                    <ListItem
-                      key={item.title}
-                      title={item.title}
-                      href={item.href}
-                      icon={item.icon}
-                    >
-                      {item.description}
-                    </ListItem>
-                  ))}
-                </ul>
-              </NavigationMenuContent>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
-              <Link href="/pricing" legacyBehavior passHref>
-                <NavigationMenuLink
-                  className={cn(
-                    navigationMenuTriggerStyle(),
-                    "bg-transparent hover:bg-accent/10",
-                  )}
-                >
-                  Pricing
-                </NavigationMenuLink>
-              </Link>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
-              <Link href="/about" legacyBehavior passHref>
-                <NavigationMenuLink
-                  className={cn(
-                    navigationMenuTriggerStyle(),
-                    "bg-transparent hover:bg-accent/10",
-                  )}
-                >
-                  About
-                </NavigationMenuLink>
-              </Link>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
-              <Link href="/contact" legacyBehavior passHref>
-                <NavigationMenuLink
-                  className={cn(
-                    navigationMenuTriggerStyle(),
-                    "bg-transparent hover:bg-accent/10",
-                  )}
-                >
-                  Contact
-                </NavigationMenuLink>
-              </Link>
-            </NavigationMenuItem>
-          </NavigationMenuList>
-        </NavigationMenu>
-        <div className="ml-4 hidden items-center space-x-4 md:flex">
-          <Button
-            variant="default"
-            size="icon"
-            aria-label="Toggle theme"
-            className="rounded-full"
-            onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-          >
-            <Icons.sun className="h-5 w-5 scale-100  dark:scale-0" />
-            <Icons.moon className="absolute h-5 w-5 scale-0  dark:scale-100" />
-            <span className="sr-only">Toggle theme</span>
-          </Button>
-          <Link href="/signin">
-  <Button variant="default" className="rounded-full"> 
 
-    Sign In
-  </Button>
-</Link>
-<Link href="/signup">
-          <Button className="rounded-full">Sign Up</Button></Link>
-        </div>
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="default" size="icon" className="md:hidden">
-              <Menu className="h-5 w-5" />
-              <span className="sr-only">Toggle menu</span>
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-            <ScrollArea className="h-[calc(100vh-4rem)]">
-              <div className="flex flex-col space-y-4 py-4">
-                <Link href="/" className="flex items-center space-x-2 px-4">
-                  <img
-                    src="/images/logo/logo.svg"
-                    alt="Consuelo Logo"
-                    className="h-8 w-auto dark:invert"
-                  />
-                </Link>
-                <div className="space-y-1 px-4">
-                  <h4 className="font-medium">Solutions</h4>
-                  {solutions.map((item) => (
-                    <Link
-                      key={item.title}
-                      href={item.href}
-                      className="flex items-center space-x-2 py-1 text-sm"
-                    >
-                      <span>{item.icon}</span>
-                      <span>{item.title}</span>
-                    </Link>
-                  ))}
-                </div>
-                <div className="space-y-1 px-4">
-                  <h4 className="font-medium">Resources</h4>
-                  {resources.map((item) => (
-                    <Link
-                      key={item.title}
-                      href={item.href}
-                      className="flex items-center space-x-2 py-1 text-sm"
-                    >
-                      <span>{item.icon}</span>
-                      <span>{item.title}</span>
-                    </Link>
-                  ))}
-                </div>
-                <div className="space-y-1 px-4">
-                  <Link href="/pricing" className="block py-1 text-sm">
-                    Pricing
-                  </Link>
-                  <Link href="/about" className="block py-1 text-sm">
-                    About
-                  </Link>
-                  <Link href="/contact" className="block py-1 text-sm">
-                    Contact
-                  </Link>
-                </div>
-                <div className="px-4 pt-4">
-                  <Link href="/signin" className="block w-full">
-                    <Button className="w-full" variant="default">
-                      Sign In
-                    </Button>
-                  </Link>
-                </div>
-                <div className="px-4">
-                  <Link href="/signup" className="block w-full">
-                    <Button className="w-full" variant="default">
-                      Sign Up
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            </ScrollArea>
-            <div className="absolute bottom-4 left-4 right-4">
-              <Button
-                variant="default"
-                size="icon"
-                aria-label="Toggle theme"
-                className="w-full"
-                onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+  const navItems = [
+    { name: "Agents", href: "/app" },
+    { name: "Integrations", href: "/safety" },
+    { name: "Platform", href: "/app" },
+    { name: "Unified Commerce", href: "/sora" },
+    { name: "Shopify", href: "/api" },
+    { name: "For Business", href: "/business" },
+    { name: "Pricing", href: "/stories" },
+
+    { name: "News", href: "/news" },
+    { name: "What We Do", href: "/company" },
+    { name: "Klayvio Integration", href: "/company" },
+  ];
+
+  return (
+    <>
+      {/* Top header bar - always visible */}
+      <header
+        className={cn(
+          "fixed left-0 right-0 top-0 z-50 transition-all duration-300",
+          isScrolled ? "bg-transparent shadow-sm" : "bg-transparent",
+        )}
+      >
+        <div className="flex h-16 items-center justify-between px-8">
+          {/* Animated Logo */}
+          <Link href="/" className="flex items-center space-x-2">
+            <div className="relative h-8 w-[100px]">
+              <span
+                className={cn(
+                  "absolute inset-0 flex items-center text-xl font-semibold transition-all duration-500 ease-in-out",
+                  isScrolled
+                    ? "translate-y-2 opacity-0"
+                    : "translate-y-0 opacity-100",
+                )}
               >
-                <span>Toggle theme</span>
-              </Button>
+                Consuelo
+              </span>
+              <img
+                src="/apple-touch-icon.png"
+                alt="Consuelo Logo"
+                className={cn(
+                  "absolute inset-0 h-8 w-8 transition-all duration-500 ease-in-out",
+                  isScrolled
+                    ? "translate-y-0 opacity-100"
+                    : "-translate-y-2 opacity-0",
+                )}
+              />
             </div>
-          </SheetContent>
-        </Sheet>
+          </Link>
+
+          {/* Mobile menu trigger */}
+          <div className="md:hidden">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-5 w-5" />
+                  <span className="sr-only">Toggle menu</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-[240px] p-0">
+                <div className="flex h-full flex-col">
+                  <div className="border-b p-4">
+                    <Link href="/" className="flex items-center">
+                      <span className="text-xl font-semibold">OpenAI</span>
+                    </Link>
+                  </div>
+                  <nav className="flex-1 overflow-auto p-4">
+                    {navItems.map((item) => (
+                      <Link
+                        key={item.name}
+                        href={item.href}
+                        className="block py-3 text-sm transition-colors hover:text-primary"
+                      >
+                        {item.name}
+                      </Link>
+                    ))}
+                    <div className="mt-6 border-t pt-6">
+                      <Link
+                        href="/login"
+                        className="block py-3 text-sm transition-colors hover:text-primary"
+                      >
+                        Log in
+                      </Link>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start px-0 py-3"
+                      >
+                        <Search className="mr-2 h-4 w-4" />
+                        <span>Search</span>
+                      </Button>
+                    </div>
+                  </nav>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
+
+          {/* Right side items - only visible on desktop */}
+          <div className="hidden items-center space-x-4 md:flex">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full bg-transparent text-foreground hover:bg-secondary/50"
+            >
+              <Search className="h-5 w-5" />
+              <span className="sr-only">Search</span>
+            </Button>
+            <Link href="/login">
+              <Button
+                variant="ghost"
+                className="rounded-full bg-secondary/50 px-4 py-2 text-foreground hover:bg-secondary/80"
+              >
+                Log in
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      {/* Left sidebar - visible on desktop */}
+     <div className="fixed bottom-0 left-0 top-0 hidden w-48 pl-8 pt-16 md:flex">
+        <nav className="mt-20 flex flex-col">
+          {navItems.map((item) => (
+            <Link
+              key={item.name}
+              href={item.href}
+              className="py-3 text-sm transition-colors hover:text-primary"
+            >
+              {item.name}
+            </Link>
+          ))}
+        </nav>
       </div>
-    </header>
+
+      {/* Main content container with padding for header and sidebar */}
+      <div className="pt-16 md:pl-48">{/* Your page content goes here */}</div>
+    </>
   );
 }
-
-const ListItem = React.forwardRef<
-  React.ElementRef<"a">,
-  React.ComponentPropsWithoutRef<"a"> & { icon?: React.ReactNode }
->(({ className, title, children, icon, ...props }, ref) => {
-  return (
-    <li>
-      <NavigationMenuLink asChild>
-        <a
-          ref={ref}
-          className={cn(
-            "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent/10 hover:text-accent-foreground focus:bg-accent/10 focus:text-accent-foreground",
-            className,
-          )}
-          {...props}
-        >
-          <div className="flex items-center">
-            {icon && <span className="mr-2">{icon}</span>}
-            <div className="text-sm font-medium leading-none">{title}</div>
-          </div>
-          <p className="mt-1 line-clamp-2 text-sm leading-snug text-muted-foreground">
-            {children}
-          </p>
-        </a>
-      </NavigationMenuLink>
-    </li>
-  );
-});
-ListItem.displayName = "ListItem";

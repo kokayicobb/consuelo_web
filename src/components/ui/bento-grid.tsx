@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import Image from "next/image"; // Added Next.js Image import
 
 export const BentoGrid = ({
   className,
@@ -10,11 +11,18 @@ export const BentoGrid = ({
 }) => {
   return (
     <div
-      className={cn(
-        "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mx-auto",
-        "max-w-[90%] sm:max-w-[95%] lg:max-w-7xl xl:max-w-[95rem] 2xl:max-w-[110rem]",
-        className
-      )}
+    className={cn(
+      // Smaller grid with tighter spacing
+      "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mx-auto sm:ml-auto",
+      // Adjusted max-width to fit beside the sidebar
+      "max-w-[calc(100%-12rem)]", // 100% - sidebar width (12rem)
+      // Smaller overall padding and margins
+      "px-2 sm:px-4",
+      // Smaller min-heights for items
+      "[&>*]:min-h-[10rem] sm:[&>*]:min-h-[12rem] lg:[&>*]:min-h-[14rem]",
+      "[&>*:nth-last-child(2)]:lg:order-first [&>*:last-child]:lg:order-first",
+      className
+    )}
     >
       {children}
     </div>
@@ -29,6 +37,7 @@ export const BentoGridItem = ({
   icon,
   href = '',
   onClick,
+  backgroundImage, // Added background image prop
 }: {
   className?: string;
   title?: string | React.ReactNode;
@@ -37,6 +46,7 @@ export const BentoGridItem = ({
   icon?: React.ReactNode;
   href?: string;
   onClick?: () => void;
+  backgroundImage?: string; // New prop for background image URL
 }) => {
   const Wrapper = href ? Link : 'div';
   
@@ -57,15 +67,27 @@ export const BentoGridItem = ({
       {/* Gradient border container */}
       <div className="absolute inset-0 bg-gradient-to-r from-[#FF1493]/20 to-[#00BFFF]/20 rounded-xl opacity-60"></div>
       
-      {/* Inner background */}
-      <div className="absolute inset-[1px] bg-background rounded-xl"></div>
+      {/* Image background instead of solid color */}
+      {backgroundImage ? (
+        <div className="absolute inset-[1px] rounded-xl overflow-hidden">
+          <Image 
+            src={backgroundImage} 
+            alt="Background" 
+            fill 
+            className="object-cover"
+          />
+          {/* Semi-transparent overlay for better text visibility */}
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px]"></div>
+        </div>
+      ) : (
+        // Fallback to original background if no image provided
+        <div className="absolute inset-[1px] bg-background rounded-xl"></div>
+      )}
       
       {/* Content */}
       {header}
       <div className="relative z-10 p-3 sm:p-4 lg:p-6 xl:p-8 flex flex-col h-full">
-        <div className="bg-background/80 dark:bg-background/90 backdrop-blur-sm rounded-full p-2 sm:p-3 inline-block mb-2 sm:mb-3 self-start text-accent">
-          {icon}
-        </div>
+        
         <div className="flex-grow">
           <h3 className="font-bold text-foreground mb-1 sm:mb-2 mt-1 sm:mt-2 text-base sm:text-lg lg:text-xl xl:text-2xl">
             {title}
