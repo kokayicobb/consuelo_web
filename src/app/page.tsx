@@ -24,8 +24,8 @@ export default function Home() {
     <main>
       <ScrollUp />
       <WavyBackgroundDemo />
-      <Testimonials />
       <Features />
+      
       <Contact />
       <Pricing />
       <FaqSection />

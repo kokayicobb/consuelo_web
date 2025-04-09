@@ -9,10 +9,24 @@ html {
     @apply max-w-[100vw];
     @apply overflow-x-hidden;
   }
-body {
-  font-family: "Space Grotesk", sans-serif;
-  @apply w-full overflow-x-hidden;
-}
+  @font-face {
+    font-family: 'Söhne';
+    src: url('/fonts/soehne-web-buch.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+  }
+  
+  @font-face {
+    font-family: 'Söhne';
+    src: url('/fonts/soehne-web-kraftig.woff2') format('woff2');
+    font-weight: 500;
+    font-style: normal;
+  }
+  
+  body {
+    font-family: "Söhne", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    @apply w-full overflow-x-hidden bg-transparent;
+  }
 
 @layer base {
   :root {

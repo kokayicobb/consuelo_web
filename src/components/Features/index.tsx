@@ -1,3 +1,4 @@
+// src/components/Features/index.tsx
 import React from "react";
 import { BentoGrid, BentoGridItem } from "../ui/bento-grid";
 import { Lightbulb } from 'lucide-react'
@@ -28,21 +29,9 @@ const BackgroundPattern: React.FC<BackgroundPatternProps> = ({ children, classNa
 
 export function Features() {
   return (
-    <section className="bg-background pt-8 sm:pt-16 pb-12 sm:pb-24">
+    <section className="bg-transparent pt-8 sm:pt-12 pb-8 sm:pb-12">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Heading Section */}
-        <div className="text-center mb-8 sm:mb-12">
-          <div className="inline-flex items-center rounded-full bg-accent/10 px-2 py-1 text-xs sm:text-sm font-medium">
-            <Lightbulb className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 text-accent" />
-            <span className="text-accent">Solutions</span>
-          </div>
-          <h2 className="mt-3 sm:mt-4 text-2xl sm:text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-            Discover <span className="bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent">Consuelo's Core Products</span>
-          </h2>
-          <p className="mt-3 sm:mt-4 text-sm sm:text-base lg:text-lg text-muted-foreground">
-            Precision-engineered tools to help optimize your customer experience—from personalized fittings to accurate sizing recommendations.
-          </p>
-        </div>
+        
 
        
         <BentoGrid>
@@ -66,6 +55,7 @@ export function Features() {
           description={item.description}
           header={item.header}
           icon={item.icon}
+          backgroundImage={item.image}
           className="h-full hover:scale-[1.02] transition-all duration-200"
         />
       </Link>
@@ -82,6 +72,8 @@ export function Features() {
 const items = [
   {
     title: "Virtual Try-On",
+   
+    
     description: "Allow customers to virtually try on clothes, seeing how they look and fit before making a purchase.",
     header: (
       <BackgroundPattern gradientFrom="from-purple-500" gradientTo="to-blue-500">
@@ -148,6 +140,7 @@ const items = [
   },
   {
     title: "Contact",
+     image: '/Square2.jpeg',
     description: "Get in touch with our team for personalized support and solutions.",
     header: (
       <BackgroundPattern gradientFrom="from-purple-500" gradientTo="to-pink-500">
@@ -161,6 +154,7 @@ const items = [
   },
   {
     title: "Secure Data Handling",
+    image: '/squareBento.jpeg',
     description: "We prioritize customer privacy and data security, ensuring all information is handled with the utmost care.",
     header: (
       <BackgroundPattern gradientFrom="from-blue-500" gradientTo="to-purple-500">
@@ -175,19 +169,9 @@ const items = [
   },
   {
     title: "Playground",
+    image: "/long.jpeg",
     description: "Explore our demo store to experience our tools in action and see how they can benefit your business.",
-    header: (
-      <BackgroundPattern gradientFrom="from-pink-500" gradientTo="to-blue-500">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-full h-full">
-          <circle cx="20" cy="20" r="15" fill="white" fillOpacity="0.2" />
-          <rect x="50" y="10" width="30" height="30" fill="white" fillOpacity="0.2" />
-          <polygon points="20,80 40,50 60,80" fill="white" fillOpacity="0.2" />
-          <path d="M70,70 Q85,55 100,70" fill="none" stroke="white" strokeWidth="2" />
-          <path d="M0,30 Q15,15 30,30" fill="none" stroke="white" strokeWidth="2" />
-        </svg>
-      </BackgroundPattern>
-    ),
-    icon: <IconPolygon className="h-8 w-8 text-accent" />,
+   
     className: "md:col-span-2",
     href: "/playground"
   },
