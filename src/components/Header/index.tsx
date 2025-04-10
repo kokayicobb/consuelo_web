@@ -29,16 +29,10 @@ export function Header() {
   }
 
   const navItems = [
-   
     { name: "Agents", href: "/app" },
     { name: "Platform", href: "/app" },
     { name: "Integrations", href: "/safety" },
-
-    
-
     { name: "Pricing", href: "/stories" },
-
-    
     { name: "How It Works", href: "/company" },
     { name: "Shopify", href: "/api" },
     { name: "Klayvio", href: "/company" },
@@ -46,12 +40,9 @@ export function Header() {
 
   return (
     <>
-      {/* Top header bar - always visible */}
+      {/* Top header bar - always fully transparent */}
       <header
-        className={cn(
-          "fixed left-0 right-0 top-0 z-50 transition-all duration-300",
-          isScrolled ? "bg-transparent shadow-sm" : "bg-transparent",
-        )}
+        className="fixed left-0 right-0 top-0 z-50 transition-all duration-300 bg-transparent"
       >
         <div className="flex h-16 items-center justify-between px-8">
           {/* Animated Logo */}
@@ -59,7 +50,7 @@ export function Header() {
             <div className="relative h-8 w-[100px]">
               <span
                 className={cn(
-                  "absolute inset-0 flex items-center text-xl font-semibold transition-all duration-500 ease-in-out",
+                  "absolute inset-0 flex items-center text-2xl font-semibold transition-all duration-500 ease-in-out",
                   isScrolled
                     ? "translate-y-2 opacity-0"
                     : "translate-y-0 opacity-100",
@@ -71,7 +62,7 @@ export function Header() {
                 src="/apple-touch-icon.png"
                 alt="Consuelo Logo"
                 className={cn(
-                  "absolute inset-0 h-8 w-8 transition-all duration-500 ease-in-out",
+                  "absolute inset-0 h-10 w-10 transition-all duration-500 ease-in-out",
                   isScrolled
                     ? "translate-y-0 opacity-100"
                     : "-translate-y-2 opacity-0",

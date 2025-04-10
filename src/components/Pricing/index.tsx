@@ -7,7 +7,7 @@ const features = [
   // Growth Features
   { name: "3,900 credits per month", included: "growth" },
   { name: "Run up to 2 tasks concurrently", included: "growth" },
-  { name: "Up to 8 integrations", included: "growth" },
+  { name: "Up to 6 integrations", included: "growth" },
   { name: "Enhanced stability with dedicated resources", included: "growth" },
   { name: "Extended context length", included: "growth" },
   { name: "Priority access during peak hours", included: "growth" },

@@ -131,7 +131,7 @@ export const BentoGridItem = ({
   description,
   header,
   icon,
-  href = "",
+  href,
   onClick,
   backgroundImage,
   isHero = false,
@@ -150,8 +150,6 @@ export const BentoGridItem = ({
   index?: number
   isAtVeryEnd?: boolean // Renamed from isAtEnd to isAtVeryEnd
 }) => {
-  const Wrapper = href ? Link : motion.div
-
   // Animation variants for regular items
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -166,101 +164,186 @@ export const BentoGridItem = ({
     }),
   }
 
-  const wrapperProps = href
-    ? { href }
-    : {
-        initial: "hidden",
-        whileInView: "visible",
-        viewport: { once: true, margin: "-100px" },
-        custom: index,
-        variants: !isHero ? itemVariants : undefined,
-      }
-
-  return (
-    <motion.div
-      className={cn(
-        "flex flex-col",
-        isHero && "mb-0 lg:mb-0", // No bottom margin for hero on larger screens
-      )}
-      whileHover={{ scale: isHero ? 1.01 : 1.02 }}
-      transition={{ duration: 0.2 }}
-    >
-      {/* Card with image */}
-      <Wrapper
-        {...wrapperProps}
-        onClick={onClick}
-        className={cn(
-          "row-span-1 rounded-xl group/bento relative",
-          "overflow-hidden",
-          // Adjust aspect ratio - Make hero bigger, items smaller
-          isHero ? "aspect-[5/3] lg:aspect-[16/12]" : "aspect-[3/2]", // Hero is taller, items stay the same
-          // Width properties
-          "w-full",
-          "transition-all duration-200 ease-out",
-          href && "cursor-pointer",
-          className,
-        )}
-      >
-        {/* Gradient border container */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#FF1493]/20 to-[#00BFFF]/20 rounded-xl opacity-60"></div>
-
-        {/* Image background */}
-        {backgroundImage ? (
-          <div className="absolute inset-[1px] rounded-xl overflow-hidden">
-            <Image src={backgroundImage || "/placeholder.svg"} alt="Background" fill className="object-cover" />
-            {/* Lighter overlay */}
-            <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px]"></div>
-          </div>
-        ) : (
-          <div className="absolute inset-[1px] bg-background rounded-xl"></div>
-        )}
-
-        {/* Card content */}
-        <div className="relative z-10 h-full">{header}</div>
-      </Wrapper>
-
-      {/* Text content below the card */}
+  // Render different components based on whether href is provided
+  if (href) {
+    return (
       <motion.div
         className={cn(
-          "mt-3", // Reduced from mt-4
-          // Consistent padding for all items
-          isHero ? "px-1" : "px-1",
+          "flex flex-col",
+          isHero && "mb-0 lg:mb-0", // No bottom margin for hero on larger screens
         )}
-        initial={{ opacity: 0, y: 10 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1, duration: 0.4 }}
-        viewport={{ once: true }}
+        whileHover={{ scale: isHero ? 1.01 : 1.02 }}
+        transition={{ duration: 0.2 }}
       >
-        {/* Title - Make last item bigger at the very end of the page */}
-        <h3
+        {/* Card with image */}
+        <Link
+          href={href}
+          onClick={onClick}
           className={cn(
-            "font-bold text-foreground mb-1", // Consistent margin
-            isHero 
-              ? "text-2xl sm:text-3xl lg:text-4xl" // Hero text is always large
-              : isAtVeryEnd 
-                ? "text-2xl sm:text-3xl lg:text-4xl" // Last item gets bigger at end
-                : "text-sm sm:text-base lg:text-lg", // Regular items stay small
-            "transition-all duration-500" // Smoother transition
+            "row-span-1 rounded-xl group/bento relative",
+            "overflow-hidden",
+            // Adjust aspect ratio - Make hero bigger, items smaller
+            isHero ? "aspect-[5/3] lg:aspect-[16/12]" : "aspect-[3/2]", // Hero is taller, items stay the same
+            // Width properties
+            "w-full",
+            "transition-all duration-200 ease-out",
+            "cursor-pointer",
+            className,
           )}
         >
-          {title}
-        </h3>
+          {/* Gradient border container */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#FF1493]/20 to-[#00BFFF]/20 rounded-xl opacity-60"></div>
 
-        {/* Description row */}
-        <div className="flex items-center">
-          <p className={cn(
-            "text-muted-foreground",
-            isHero
-              ? "text-sm sm:text-base" // Hero description is always large
-              : isAtVeryEnd
-                ? "text-sm sm:text-base" // Last item gets bigger at end
-                : "text-xs", // Regular items stay small
-            "transition-all duration-500" // Smoother transition
-          )}>
-            {description}
-          </p>
-        </div>
+          {/* Image background */}
+          {backgroundImage ? (
+            <div className="absolute inset-[1px] rounded-xl overflow-hidden">
+              <Image src={backgroundImage || "/placeholder.svg"} alt="Background" fill className="object-cover" />
+              {/* Lighter overlay */}
+              <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px]"></div>
+            </div>
+          ) : (
+            <div className="absolute inset-[1px] bg-background rounded-xl"></div>
+          )}
+
+          {/* Card content */}
+          <div className="relative z-10 h-full">{header}</div>
+        </Link>
+
+        {/* Text content below the card */}
+        <motion.div
+          className={cn(
+            "mt-3", // Reduced from mt-4
+            // Consistent padding for all items
+            isHero ? "px-1" : "px-1",
+          )}
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1, duration: 0.4 }}
+          viewport={{ once: true }}
+        >
+          {/* Title - Make last item bigger at the very end of the page */}
+          <h3
+            className={cn(
+              "font-bold text-foreground mb-1", // Consistent margin
+              isHero 
+                ? "text-2xl sm:text-3xl lg:text-4xl" // Hero text is always large
+                : isAtVeryEnd 
+                  ? "text-2xl sm:text-3xl lg:text-4xl" // Last item gets bigger at end
+                  : "text-sm sm:text-base lg:text-lg", // Regular items stay small
+              "transition-all duration-500" // Smoother transition
+            )}
+          >
+            {title}
+          </h3>
+
+          {/* Description row */}
+          <div className="flex items-center">
+            <p className={cn(
+              "text-muted-foreground",
+              isHero
+                ? "text-sm sm:text-base" // Hero description is always large
+                : isAtVeryEnd
+                  ? "text-sm sm:text-base" // Last item gets bigger at end
+                  : "text-xs", // Regular items stay small
+              "transition-all duration-500" // Smoother transition
+            )}>
+              {description}
+            </p>
+          </div>
+        </motion.div>
       </motion.div>
-    </motion.div>
-  )
+    );
+  } else {
+    return (
+      <motion.div
+        className={cn(
+          "flex flex-col",
+          isHero && "mb-0 lg:mb-0", // No bottom margin for hero on larger screens
+        )}
+        whileHover={{ scale: isHero ? 1.01 : 1.02 }}
+        transition={{ duration: 0.2 }}
+      >
+        {/* Card with image */}
+        <motion.div
+          onClick={onClick}
+          className={cn(
+            "row-span-1 rounded-xl group/bento relative",
+            "overflow-hidden",
+            // Adjust aspect ratio - Make hero bigger, items smaller
+            isHero ? "aspect-[5/3] lg:aspect-[16/12]" : "aspect-[3/2]", // Hero is taller, items stay the same
+            // Width properties
+            "w-full",
+            "transition-all duration-200 ease-out",
+            onClick && "cursor-pointer",
+            className,
+          )}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          custom={index}
+          variants={!isHero ? itemVariants : undefined}
+        >
+          {/* Gradient border container */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#FF1493]/20 to-[#00BFFF]/20 rounded-xl opacity-60"></div>
+
+          {/* Image background */}
+          {backgroundImage ? (
+            <div className="absolute inset-[1px] rounded-xl overflow-hidden">
+              <Image src={backgroundImage || "/placeholder.svg"} alt="Background" fill className="object-cover" />
+              {/* Lighter overlay */}
+              <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px]"></div>
+            </div>
+          ) : (
+            <div className="absolute inset-[1px] bg-background rounded-xl"></div>
+          )}
+
+          {/* Card content */}
+          <div className="relative z-10 h-full">{header}</div>
+        </motion.div>
+
+        {/* Text content below the card */}
+        <motion.div
+          className={cn(
+            "mt-3", // Reduced from mt-4
+            // Consistent padding for all items
+            isHero ? "px-1" : "px-1",
+          )}
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1, duration: 0.4 }}
+          viewport={{ once: true }}
+        >
+          {/* Title - Make last item bigger at the very end of the page */}
+          <h3
+            className={cn(
+              "font-bold text-foreground mb-1", // Consistent margin
+              isHero 
+                ? "text-2xl sm:text-3xl lg:text-4xl" // Hero text is always large
+                : isAtVeryEnd 
+                  ? "text-2xl sm:text-3xl lg:text-4xl" // Last item gets bigger at end
+                  : "text-sm sm:text-base lg:text-lg", // Regular items stay small
+              "transition-all duration-500" // Smoother transition
+            )}
+          >
+            {title}
+          </h3>
+
+          {/* Description row */}
+          <div className="flex items-center">
+            <p className={cn(
+              "text-muted-foreground",
+              isHero
+                ? "text-sm sm:text-base" // Hero description is always large
+                : isAtVeryEnd
+                  ? "text-sm sm:text-base" // Last item gets bigger at end
+                  : "text-xs", // Regular items stay small
+              "transition-all duration-500" // Smoother transition
+            )}>
+              {description}
+            </p>
+          </div>
+        </motion.div>
+      </motion.div>
+    );
+  }
 }
