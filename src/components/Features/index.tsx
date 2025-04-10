@@ -1,23 +1,16 @@
+"use client"
+
 // src/components/Features/index.tsx
-import React from "react";
-import { BentoGrid, BentoGridItem } from "../ui/bento-grid";
-import { Lightbulb } from 'lucide-react'
-import {
-  IconShirt,
-  IconRuler,
-  IconCube,
-  IconChartBar,
-  IconMail,
-  IconLock,
-  IconPolygon,
-} from "@tabler/icons-react";
-import Link from "next/link";
+import type React from "react"
+import { useEffect, useRef } from "react"
+import { BentoGrid, BentoGridItem } from "../ui/bento-grid"
+import { IconShirt, IconRuler, IconCube, IconChartBar, IconMail, IconLock } from "@tabler/icons-react"
 
 interface BackgroundPatternProps {
-  children: React.ReactNode;
-  className?: string;
-  gradientFrom: string;
-  gradientTo: string;
+  children: React.ReactNode
+  className?: string
+  gradientFrom: string
+  gradientTo: string
 }
 
 const BackgroundPattern: React.FC<BackgroundPatternProps> = ({ children, className, gradientFrom, gradientTo }) => (
@@ -25,56 +18,113 @@ const BackgroundPattern: React.FC<BackgroundPatternProps> = ({ children, classNa
     <div className={`absolute inset-0 opacity-70 bg-gradient-to-br ${gradientFrom} ${gradientTo}`}></div>
     <div className="absolute inset-0 opacity-30">{children}</div>
   </div>
-);
+)
 
 export function Features() {
-  return (
-    <section className="bg-transparent pt-8 sm:pt-12 pb-8 sm:pb-12">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        
+  // Get the hero item (using AI Commerce Suite which has md:col-span-2 in the original)
+  const heroItem = items.find((item) => item.title === "AI Commerce Suite")
 
-       
-        <BentoGrid>
-  {items.map((item, i) => (
-    <div key={i} className={item.className}>
-      <Link 
-        href={
-          item.title === "Playground" ? "/playground" :
-          item.title === "Virtual Try-On" ? "/playground" :
-          item.title === "Fit Calculator" ? "/playground" :
-          item.title === "3D Product Viewer" ? "/playground" :
-          item.title === "Competition Dashboard" ? "/dashboard" :
-          item.title === "Contact" ? "/contact" :
-          item.title === "Secure Data Handling" ? "/contact" :
-          "#"
+  // Get all other items except the hero
+  const regularItems = items.filter((item) => item.title !== "AI Commerce Suite")
+
+  // Ref for the section
+  const sectionRef = useRef<HTMLElement>(null)
+
+  // Add extra space to ensure scrolling
+  useEffect(() => {
+    if (sectionRef.current) {
+      // Add a spacer div after the section to ensure scrolling
+      const spacer = document.createElement("div")
+      spacer.style.height = "50vh"
+      spacer.style.width = "100%"
+
+      if (sectionRef.current.parentNode) {
+        sectionRef.current.parentNode.insertBefore(spacer, sectionRef.current.nextSibling)
+      }
+
+      return () => {
+        if (spacer.parentNode) {
+          spacer.parentNode.removeChild(spacer)
         }
-        className="block h-full" // This ensures the link takes full height
-      >
-        <BentoGridItem
-          title={item.title}
-          description={item.description}
-          header={item.header}
-          icon={item.icon}
-          backgroundImage={item.image}
-          className="h-full hover:scale-[1.02] transition-all duration-200"
-        />
-      </Link>
-    </div>
-  ))}
-</BentoGrid>
-         
+      }
+    }
+  }, [])
+
+  return (
+    <section
+      ref={sectionRef}
+      className="bg-transparent pt-8 sm:pt-12 pb-8 sm:pb-12"
+      style={{ minHeight: "150vh", paddingBottom: "30vh" }}
+    >
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <BentoGrid>
+          {/* Hero item */}
+          {heroItem && (
+            <BentoGridItem
+              title={heroItem.title}
+              description={heroItem.description}
+              header={
+                heroItem.header || (
+                  <BackgroundPattern gradientFrom="from-purple-500" gradientTo="to-blue-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-full h-full">
+                      <path d="M20,50 Q35,20 50,50 T80,50" fill="none" stroke="white" strokeWidth="2" />
+                      <path d="M20,70 Q35,40 50,70 T80,70" fill="none" stroke="white" strokeWidth="2" />
+                    </svg>
+                  </BackgroundPattern>
+                )
+              }
+              icon={heroItem.icon}
+              backgroundImage={heroItem.image}
+              isHero={true}
+              href={heroItem.href}
+            />
+          )}
+
+          {/* Regular items for the right column */}
+          {regularItems.map((item, i) => (
+            <BentoGridItem
+              key={i}
+              index={i}
+              title={item.title}
+              description={item.description}
+              header={item.header}
+              icon={item.icon}
+              backgroundImage={item.image}
+              href={
+                item.title === "Klaviyo Integration"
+                  ? "/integrations/klaviyo"
+                  : item.title === "Automated Marketing"
+                    ? "/marketing"
+                  : item.title === "AI Shopping Assistant"
+                      ? "/ai-assistant"
+                      : item.title === "Analytics Dashboard"
+                        ? "/dashboard"
+                        : item.title === "Contact"
+                          ? "/contact"
+                          : item.title === "Data Security"
+                            ? "/security"
+                            : item.href || "#"
+              }
+            />
+          ))}
+        </BentoGrid>
       </div>
     </section>
-  );
+  )
 }
-
 
 const items = [
   {
-    title: "Virtual Try-On",
-   
-    
-    description: "Allow customers to virtually try on clothes, seeing how they look and fit before making a purchase.",
+    title: "AI Commerce Suite",
+    image: "/long.jpeg",
+    description: "Product | 8 min read",
+    className: "md:col-span-2",
+    href: "/platform",
+  },
+  {
+    title: "Klaviyo Integration",
+    image: "/blueBackground.jpeg",
+    description: "Integration | 5 min read",
     header: (
       <BackgroundPattern gradientFrom="from-purple-500" gradientTo="to-blue-500">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-full h-full">
@@ -88,8 +138,9 @@ const items = [
     icon: <IconShirt className="h-8 w-8 text-accent" />,
   },
   {
-    title: "Fit Calculator",
-    description: "Our advanced AI algorithms provide accurate sizing recommendations based on customer data and product specifications.",
+    title: "Automated Marketing",
+    image: "/blueBackground.jpeg",
+    description: "Automation | 6 min read",
     header: (
       <BackgroundPattern gradientFrom="from-blue-500" gradientTo="to-cyan-500">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-full h-full">
@@ -107,8 +158,9 @@ const items = [
     icon: <IconRuler className="h-8 w-8 text-accent" />,
   },
   {
-    title: "3D Product Viewer",
-    description: "Give customers a 360-degree view of products, enhancing their online shopping experience.",
+    title: "AI Shopping Assistant",
+    image: "/long.jpeg",
+    description: "AI Agent | 4 min read",
     header: (
       <BackgroundPattern gradientFrom="from-cyan-500" gradientTo="to-teal-500">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-full h-full">
@@ -121,8 +173,9 @@ const items = [
     icon: <IconCube className="h-8 w-8 text-accent" />,
   },
   {
-    title: "Competition Dashboard",
-    description: "Analyze your performance against competitors with our comprehensive dashboard.",
+    title: "Analytics Dashboard",
+    image: "/greenBackground.jpeg",
+    description: "Platform | 7 min read",
     header: (
       <BackgroundPattern gradientFrom="from-teal-500" gradientTo="to-purple-500">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-full h-full">
@@ -140,8 +193,8 @@ const items = [
   },
   {
     title: "Contact",
-     image: '/Square2.jpeg',
-    description: "Get in touch with our team for personalized support and solutions.",
+    image: "/Square2.jpeg",
+    description: "Support | 2 min read",
     header: (
       <BackgroundPattern gradientFrom="from-purple-500" gradientTo="to-pink-500">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-full h-full">
@@ -153,9 +206,9 @@ const items = [
     icon: <IconMail className="h-8 w-8 text-accent" />,
   },
   {
-    title: "Secure Data Handling",
-    image: '/squareBento.jpeg',
-    description: "We prioritize customer privacy and data security, ensuring all information is handled with the utmost care.",
+    title: "Data Security",
+    image: "/blueGreenBackground.jpeg",
+    description: "Security | 5 min read",
     header: (
       <BackgroundPattern gradientFrom="from-blue-500" gradientTo="to-purple-500">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-full h-full">
@@ -167,15 +220,6 @@ const items = [
     ),
     icon: <IconLock className="h-8 w-8 text-accent" />,
   },
-  {
-    title: "Playground",
-    image: "/long.jpeg",
-    description: "Explore our demo store to experience our tools in action and see how they can benefit your business.",
-   
-    className: "md:col-span-2",
-    href: "/playground"
-  },
-];
+]
 
-export default Features;
-
+export default Features

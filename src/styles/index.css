@@ -7,7 +7,7 @@
 html {
  
     @apply max-w-[100vw];
-    @apply overflow-x-hidden;
+    /* @apply overflow-x-hidden; */
   }
   @font-face {
     font-family: 'Söhne';
@@ -25,7 +25,7 @@ html {
   
   body {
     font-family: "Söhne", "Helvetica Neue", Helvetica, Arial, sans-serif;
-    @apply w-full overflow-x-hidden bg-transparent;
+    @apply w-full bg-transparent;
   }
 
 @layer base {
