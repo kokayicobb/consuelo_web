@@ -22,39 +22,21 @@ const BackgroundPattern: React.FC<BackgroundPatternProps> = ({ children, classNa
 
 export function Features() {
   // Get the hero item (using AI Commerce Suite which has md:col-span-2 in the original)
-  const heroItem = items.find((item) => item.title === "AI Commerce Suite")
+  const heroItem = items.find((item) => item.title === "Introducing Unified Data Platform")
 
   // Get all other items except the hero
-  const regularItems = items.filter((item) => item.title !== "AI Commerce Suite")
+  const regularItems = items.filter((item) => item.title !== "Introducing Unified Data Platform")
 
   // Ref for the section
   const sectionRef = useRef<HTMLElement>(null)
 
-  // Add extra space to ensure scrolling
-  useEffect(() => {
-    if (sectionRef.current) {
-      // Add a spacer div after the section to ensure scrolling
-      const spacer = document.createElement("div")
-      spacer.style.height = "50vh"
-      spacer.style.width = "100%"
-
-      if (sectionRef.current.parentNode) {
-        sectionRef.current.parentNode.insertBefore(spacer, sectionRef.current.nextSibling)
-      }
-
-      return () => {
-        if (spacer.parentNode) {
-          spacer.parentNode.removeChild(spacer)
-        }
-      }
-    }
-  }, [])
+  
 
   return (
     <section
       ref={sectionRef}
       className="bg-transparent pt-8 sm:pt-12 pb-8 sm:pb-12"
-      style={{ minHeight: "150vh", paddingBottom: "30vh" }}
+      style={{ minHeight: "0vh", paddingBottom: "0vh" }}
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <BentoGrid>
@@ -91,9 +73,9 @@ export function Features() {
               icon={item.icon}
               backgroundImage={item.image}
               href={
-                item.title === "Klaviyo Integration"
+                item.title === "Marketing AI Agent"
                   ? "/integrations/klaviyo"
-                  : item.title === "Automated Marketing"
+                  : item.title === "Chat Smarter"
                     ? "/marketing"
                   : item.title === "AI Shopping Assistant"
                       ? "/ai-assistant"
@@ -101,7 +83,7 @@ export function Features() {
                         ? "/dashboard"
                         : item.title === "Contact"
                           ? "/contact"
-                          : item.title === "Data Security"
+                          : item.title === "Klaviyo Integration"
                             ? "/security"
                             : item.href || "#"
               }
@@ -115,16 +97,16 @@ export function Features() {
 
 const items = [
   {
-    title: "AI Commerce Suite",
+    title: "Introducing Unified Data Platform",
     image: "/long.jpeg",
-    description: "Product | 8 min read",
+    description: "Release | 8 min read",
     className: "md:col-span-2",
     href: "/platform",
   },
   {
-    title: "Klaviyo Integration",
+    title: "Introducing Muse",
     image: "/blueBackground.jpeg",
-    description: "Integration | 5 min read",
+    description: "AI Agent | 5 min read",
     header: (
       <BackgroundPattern gradientFrom="from-purple-500" gradientTo="to-blue-500">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-full h-full">
@@ -138,9 +120,9 @@ const items = [
     icon: <IconShirt className="h-8 w-8 text-accent" />,
   },
   {
-    title: "Automated Marketing",
+    title: "Chat smarter",
     image: "/blueBackground.jpeg",
-    description: "Automation | 6 min read",
+    description: "ChatGPT Integration  | 6 min read",
     header: (
       <BackgroundPattern gradientFrom="from-blue-500" gradientTo="to-cyan-500">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-full h-full">
@@ -158,9 +140,25 @@ const items = [
     icon: <IconRuler className="h-8 w-8 text-accent" />,
   },
   {
-    title: "AI Shopping Assistant",
+    title: "Consuelo Analytics",
+    image: "/blueGreenBackground.jpeg",
+    description: "Product | 5 min read",
+    header: (
+      <BackgroundPattern gradientFrom="from-blue-500" gradientTo="to-purple-500">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-full h-full">
+          <circle cx="50" cy="50" r="40" fill="none" stroke="white" strokeWidth="2" />
+          <path d="M50,10 L50,90 M10,50 L90,50" stroke="white" strokeWidth="2" />
+          <path d="M30,30 L70,70 M30,70 L70,30" stroke="white" strokeWidth="2" />
+        </svg>
+      </BackgroundPattern>
+    ),
+    icon: <IconLock className="h-8 w-8 text-accent" />,
+  },
+  
+  {
+    title: "Creative Studio",
     image: "/long.jpeg",
-    description: "AI Agent | 4 min read",
+    description: "Product | 4 min read",
     header: (
       <BackgroundPattern gradientFrom="from-cyan-500" gradientTo="to-teal-500">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-full h-full">
@@ -172,8 +170,24 @@ const items = [
     ),
     icon: <IconCube className="h-8 w-8 text-accent" />,
   },
+  
+  // {
+  //   title: "Contact",
+  //   image: "/Square2.jpeg",
+  //   description: "Support | 2 min read",
+  //   header: (
+  //     <BackgroundPattern gradientFrom="from-purple-500" gradientTo="to-pink-500">
+  //       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-full h-full">
+  //         <path d="M10,20 L50,50 L90,20 L90,80 L10,80 Z" fill="none" stroke="white" strokeWidth="2" />
+  //         <path d="M10,20 L50,50 L90,20" fill="none" stroke="white" strokeWidth="2" />
+  //       </svg>
+  //     </BackgroundPattern>
+  //   ),
+  //   icon: <IconMail className="h-8 w-8 text-accent" />,
+  // },
+ 
   {
-    title: "Analytics Dashboard",
+    title: "Single source of truth",
     image: "/greenBackground.jpeg",
     description: "Platform | 7 min read",
     header: (
@@ -190,35 +204,6 @@ const items = [
     ),
     icon: <IconChartBar className="h-8 w-8 text-accent" />,
     className: "md:col-span-2",
-  },
-  {
-    title: "Contact",
-    image: "/Square2.jpeg",
-    description: "Support | 2 min read",
-    header: (
-      <BackgroundPattern gradientFrom="from-purple-500" gradientTo="to-pink-500">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-full h-full">
-          <path d="M10,20 L50,50 L90,20 L90,80 L10,80 Z" fill="none" stroke="white" strokeWidth="2" />
-          <path d="M10,20 L50,50 L90,20" fill="none" stroke="white" strokeWidth="2" />
-        </svg>
-      </BackgroundPattern>
-    ),
-    icon: <IconMail className="h-8 w-8 text-accent" />,
-  },
-  {
-    title: "Data Security",
-    image: "/blueGreenBackground.jpeg",
-    description: "Security | 5 min read",
-    header: (
-      <BackgroundPattern gradientFrom="from-blue-500" gradientTo="to-purple-500">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-full h-full">
-          <circle cx="50" cy="50" r="40" fill="none" stroke="white" strokeWidth="2" />
-          <path d="M50,10 L50,90 M10,50 L90,50" stroke="white" strokeWidth="2" />
-          <path d="M30,30 L70,70 M30,70 L70,30" stroke="white" strokeWidth="2" />
-        </svg>
-      </BackgroundPattern>
-    ),
-    icon: <IconLock className="h-8 w-8 text-accent" />,
   },
 ]
 

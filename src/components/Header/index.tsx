@@ -29,17 +29,19 @@ export function Header() {
   }
 
   const navItems = [
+   
     { name: "Agents", href: "/app" },
-    { name: "Integrations", href: "/safety" },
     { name: "Platform", href: "/app" },
-    { name: "Unified Commerce", href: "/sora" },
-    { name: "Shopify", href: "/api" },
-    { name: "For Business", href: "/business" },
+    { name: "Integrations", href: "/safety" },
+
+    
+
     { name: "Pricing", href: "/stories" },
 
-    { name: "News", href: "/news" },
-    { name: "What We Do", href: "/company" },
-    { name: "Klayvio Integration", href: "/company" },
+    
+    { name: "How It Works", href: "/company" },
+    { name: "Shopify", href: "/api" },
+    { name: "Klayvio", href: "/company" },
   ];
 
   return (
@@ -63,7 +65,7 @@ export function Header() {
                     : "translate-y-0 opacity-100",
                 )}
               >
-                Consuelo
+                consuelo
               </span>
               <img
                 src="/apple-touch-icon.png"
@@ -149,7 +151,7 @@ export function Header() {
       </header>
 
       {/* Left sidebar - visible on desktop */}
-     <div className="fixed bottom-0 left-0 top-0 hidden w-48 pl-8 pt-16 md:flex">
+      <div className="fixed bottom-0 left-0 top-0 hidden w-48 pl-8 pt-16 md:flex">
         <nav className="mt-20 flex flex-col">
           {navItems.map((item) => (
             <Link

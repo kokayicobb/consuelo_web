@@ -1,10 +1,5 @@
 "use client";
-
-import * as React from "react";
-import { BadgeCheck, ArrowRight } from "lucide-react";
-import NumberFlow from "@number-flow/react";
-
-import { cn } from "@/lib/utils";
+import { Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -12,10 +7,14 @@ import { Card } from "@/components/ui/card";
 export interface PricingTier {
   name: string;
   price: Record<string, number | string>;
-  description: string;
+  description?: string;
   features: string[];
   cta: string;
   highlighted?: boolean;
+  beta?: boolean;
+  credits?: number;
+  concurrentTasks?: number;
+  level?: string;
   popular?: boolean;
 }
 
@@ -26,86 +25,101 @@ interface PricingCardProps {
 
 export function PricingCard({ tier, paymentFrequency }: PricingCardProps) {
   const price = tier.price[paymentFrequency];
-  const isHighlighted = tier.highlighted;
-  const isPopular = tier.popular;
+  const isHighlighted = tier.highlighted || tier.popular;
 
   return (
-    <Card
-      className={cn(
-        "relative flex flex-col gap-8 overflow-hidden p-6",
-        isHighlighted
-          ? "bg-foreground text-background"
-          : "bg-background text-foreground",
-        isPopular && "ring-2 ring-primary",
-      )}
-    >
-      {isHighlighted && <HighlightedBackground />}
-      {isPopular && <PopularBackground />}
-
-      <h2 className="flex items-center gap-3 text-xl font-medium capitalize">
-        {tier.name}
-        {isPopular && (
-          <Badge variant="secondary" className="z-10 mt-1">
-            🔥 Most Popular
-          </Badge>
-        )}
-      </h2>
-
-      <div className="relative h-12">
-        {typeof price === "number" ? (
-          <>
-            <NumberFlow
-              format={{
-                style: "currency",
-                currency: "USD",
-                minimumFractionDigits: 0, // This will remove trailing zeros
-                maximumFractionDigits: 0, // This will remove trailing zeros
-              }}
-              value={price}
-              className="text-4xl font-medium"
-            />
-            <p className="-mt-2 text-xs text-muted-foreground">
-              Per month/user
-            </p>
-          </>
-        ) : (
-          <h1 className="text-4xl font-medium">{price}</h1>
-        )}
-      </div>
-
-      <div className="flex-1 space-y-2">
-        <h3 className="text-sm font-medium">{tier.description}</h3>
-        <ul className="space-y-2">
-          {tier.features.map((feature, index) => (
-            <li
-              key={index}
-              className={cn(
-                "flex items-center gap-2 text-sm font-medium",
-                isHighlighted ? "text-background" : "text-muted-foreground",
-              )}
+    <Card className="flex h-[600px] w-full flex-col justify-between rounded-3xl border border-white/10 bg-white/5 p-7 backdrop-blur-[2px]">
+      <div>
+        <div className="flex items-center gap-2">
+          <h2 className="text-xl font-bold text-white">{tier.name}</h2>
+          {tier.beta && (
+            <Badge
+              variant="outline"
+              className="rounded-md border-zinc-600 bg-transparent px-2 py-0.5 text-sm font-medium text-zinc-300"
             >
-              <BadgeCheck className="h-4 w-4" />
-              {feature}
-            </li>
-          ))}
-        </ul>
+              Beta
+            </Badge>
+          )}
+        </div>
+
+        <div className="mt-4 flex items-baseline">
+          {typeof price === "number" ? (
+            <>
+              <span className="text-4xl font-bold text-white">${price}</span>
+              <span className="ml-1 text-lg text-zinc-400">
+                / {paymentFrequency === "monthly" ? "month" : "year"}
+              </span>
+            </>
+          ) : (
+            <span className="text-4xl font-bold text-white">{price}</span>
+          )}
+        </div>
+
+        <Button className="mt-6 w-full rounded-full bg-zinc-100 py-4 text-base font-medium text-zinc-900 hover:bg-white">
+          {tier.cta || "Log in to subscribe"}
+        </Button>
       </div>
 
-      <Button
-        variant={isHighlighted ? "secondary" : "default"}
-        className="w-full"
-      >
-        {tier.cta}
-        <ArrowRight className="ml-2 h-4 w-4" />
-      </Button>
+      <div className="mt-8 flex-grow space-y-4">
+        {tier.features.map((feature, index) => {
+          // Check if this is the credits feature
+          const isCreditsFeature = feature.includes("credits per month");
+
+          if (isCreditsFeature) {
+            // Extract the number from the feature text
+            const creditsMatch = feature.match(/(\d+,\d+)/);
+            const creditsText = creditsMatch ? creditsMatch[1] : "";
+
+            return (
+              <div key={index} className="flex gap-3">
+                <Check className="mt-0.5 h-5 w-5 flex-shrink-0 text-zinc-300" />
+                <div className="text-zinc-300">
+                  <span className="font-semibold text-white">
+                    {creditsText}
+                  </span>{" "}
+                  credits per month{" "}
+                  <a
+                    href="#"
+                    className="text-zinc-400 underline decoration-[0.8px] hover:text-zinc-200"
+                  >
+                    Learn more
+                  </a>
+                </div>
+              </div>
+            );
+          }
+
+          // Check if this is the concurrent tasks feature
+          const isTasksFeature = feature.includes("tasks concurrently");
+
+          if (isTasksFeature) {
+            // Extract the number from the feature text
+            const tasksMatch = feature.match(/(\d+)/);
+            const tasksNumber = tasksMatch ? tasksMatch[1] : "";
+
+            return (
+              <div key={index} className="flex gap-3">
+                <Check className="mt-0.5 h-5 w-5 flex-shrink-0 text-zinc-300" />
+                <div className="text-zinc-300">
+                  Run up to{" "}
+                  <span className="font-semibold text-white">
+                    {tasksNumber}
+                  </span>{" "}
+                  tasks concurrently
+                </div>
+              </div>
+            );
+          }
+
+          // Default rendering for other features
+          return (
+            <div key={index} className="flex gap-3">
+              <Check className="mt-0.5 h-5 w-5 flex-shrink-0 text-zinc-300" />
+              <div className="text-zinc-300">{feature}</div>
+            </div>
+          );
+        })}
+      </div>
     </Card>
   );
 }
-
-const HighlightedBackground = () => (
-  <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:45px_45px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_110%)]" />
-);
-
-const PopularBackground = () => (
-  <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.1),rgba(255,255,255,0))]" />
-);

@@ -1,102 +1,69 @@
 "use client"
-
-import * as React from "react"
-import { PricingCard } from "../ui/pricing-card"
-import { Tab } from "../ui/pricing-tab"
+import * as React from "react";
+import { PricingCard } from "../ui/pricing-card";
+import { Tab } from "../ui/pricing-tab";
 
 const features = [
-  // Starter Features
-  { name: "Pay-per-scan pricing", included: "starter" },
-  { name: "Minimum 100 scans purchase", included: "starter" },
-  { name: "Basic analytics", included: "starter" },
-  { name: "Standard support", included: "starter" },
-  
   // Growth Features
-  { name: "300 monthly scans included", included: "growth" },
-  { name: "Additional scans at reduced rate", included: "growth" },
-  { name: "Enhanced analytics", included: "growth" },
-  { name: "Priority email support", included: "growth" },
+  { name: "3,900 credits per month", included: "growth" },
+  { name: "Run up to 2 tasks concurrently", included: "growth" },
+  { name: "Up to 8 integrations", included: "growth" },
+  { name: "Enhanced stability with dedicated resources", included: "growth" },
+  { name: "Extended context length", included: "growth" },
+  { name: "Priority access during peak hours", included: "growth" },
   
   // Scale Features
-  { name: "2,500 monthly scans included", included: "scale" },
-  { name: "Bulk scan pricing", included: "scale" },
-  { name: "Advanced analytics dashboard", included: "scale" },
-  { name: "Priority support", included: "scale" },
-  
-  // Enterprise Features
-  { name: "Custom volume-based pricing", included: "enterprise" },
-  { name: "Dedicated account manager", included: "enterprise" },
-  { name: "Custom integrations", included: "enterprise" },
-  { name: "SLA guarantees", included: "enterprise" }
+  { name: "19,900 credits per month", included: "scale" },
+  { name: "Run up to 5 tasks concurrently", included: "scale" },
+  { name: "Unlimited integrations", included: "scale" },
+  { name: "Access to high-effort mode and other beta features", included: "scale" },
+  { name: "Enhanced stability with dedicated resources", included: "scale" },
+  { name: "Extended context length", included: "scale" },
+  { name: "Priority access during peak hours", included: "scale" },
 ];
 
 const pricingTiers = [
   {
-    name: "Starter",
-    price: { monthly: 20, yearly: 200 },
-    description: "Perfect for testing our virtual try-on solution",
-    features: features.filter(f => f.included === "starter").map(f => f.name),
-    cta: "Get Started",
-    level: "starter",
-    highlighted: false
-  },
-  {
-    name: "Growth",
-    price: { monthly: 49, yearly: 490 },
-    description: "Ideal for growing businesses with regular scan needs",
+    name: "Consuelo Starter",
+    price: { monthly: 39, yearly: 390 },
+    description: "For growing businesses with regular integration needs.",
     features: features.filter(f => f.included === "growth").map(f => f.name),
-    cta: "Start Growing",
+    cta: "Log in to subscribe",
     level: "growth",
-    popular: true
+    popular: true,
+    beta: true
   },
   {
-    name: "Scale",
-    price: { monthly: 299, yearly: 2990 },
-    description: "For businesses with high-volume scanning requirements",
+    name: "Consuelo Pro",
+    price: { monthly: 199, yearly: 1990 },
+    description: "For businesses with advanced requirements and full platform access.",
     features: features.filter(f => f.included === "scale").map(f => f.name),
-    cta: "Scale Up",
+    cta: "Log in to subscribe",
     level: "scale",
-    highlighted: false
-  },
-  {
-    name: "Enterprise",
-    price: { monthly: "Custom", yearly: "Custom" },
-    description: "Custom solutions for large-scale implementations",
-    features: features.filter(f => f.included === "enterprise").map(f => f.name),
-    cta: "Contact Sales",
-    level: "enterprise",
-    highlighted: true
+    highlighted: false,
+    beta: true
   }
 ];
 
 export default function Pricing() {
-  const [interval, setInterval] = React.useState("monthly")
-
+  const [interval, setInterval] = React.useState("monthly");
+  
   return (
-    <div className="container py-12">
-      <div className="mx-auto mb-8 flex max-w-fit items-center justify-center rounded-full border bg-muted p-1">
-        <Tab
-          text="Monthly"
-          selected={interval === "monthly"}
-          setSelected={() => setInterval("monthly")}
-        />
-        <Tab
-          text="Yearly"
-          selected={interval === "yearly"}
-          setSelected={() => setInterval("yearly")}
-          discount={true}
-        />
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+    <div className="container flex flex-col items-center justify-center">
+      <h2 className="mb-16 text-5xl font-bold text-center">Pricing</h2>
+      
+  
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
         {pricingTiers.map((tier) => (
-          <PricingCard
-            key={tier.name}
-            tier={tier}
-            paymentFrequency={interval}
-          />
+          <div key={tier.name} className="w-full">
+            <PricingCard
+              tier={tier}
+              paymentFrequency={interval}
+            />
+          </div>
         ))}
       </div>
     </div>
-  )
+  );
 }
