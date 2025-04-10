@@ -7,6 +7,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import Analytics from '@/components/Analytics'
 import { AuthProvider } from '@/lib/auth/auth-context';
 
+
 export default function RootLayout({
   children,
 }: {
@@ -18,6 +19,7 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+        
       </head>
       <body className="md:pl-64"> 
         <AuthProvider>
