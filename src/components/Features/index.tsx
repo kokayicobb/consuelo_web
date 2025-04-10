@@ -98,14 +98,14 @@ export function Features() {
 const items = [
   {
     title: "Introducing Unified Data Platform",
-    image: "/long.jpeg",
+    image: "/StablityBlue3.png",
     description: "Release | 8 min read",
     className: "md:col-span-2",
     href: "/platform",
   },
   {
     title: "Introducing Muse",
-    image: "/blueBackground.jpeg",
+     image: "/StablityBlue2.png",
     description: "AI Agent | 5 min read",
     header: (
       <BackgroundPattern gradientFrom="from-purple-500" gradientTo="to-blue-500">
@@ -121,7 +121,7 @@ const items = [
   },
   {
     title: "Chat smarter",
-    image: "/blueBackground.jpeg",
+    image: "/StablityPurple1.png",
     description: "ChatGPT Integration  | 6 min read",
     header: (
       <BackgroundPattern gradientFrom="from-blue-500" gradientTo="to-cyan-500">
@@ -141,7 +141,7 @@ const items = [
   },
   {
     title: "Consuelo Analytics",
-    image: "/blueGreenBackground.jpeg",
+    image: "/StablityRiver2.png",
     description: "Product | 5 min read",
     header: (
       <BackgroundPattern gradientFrom="from-blue-500" gradientTo="to-purple-500">
@@ -157,7 +157,7 @@ const items = [
   
   {
     title: "Creative Studio",
-    image: "/long.jpeg",
+    image: "/StablityCloud1.png",
     description: "Product | 4 min read",
     header: (
       <BackgroundPattern gradientFrom="from-cyan-500" gradientTo="to-teal-500">
@@ -188,7 +188,7 @@ const items = [
  
   {
     title: "Single source of truth",
-    image: "/greenBackground.jpeg",
+    image: "/StablitySky2.png",
     description: "Platform | 7 min read",
     header: (
       <BackgroundPattern gradientFrom="from-teal-500" gradientTo="to-purple-500">

@@ -17,7 +17,7 @@ export default function UseCases() {
         {/* Use Case 1 */}
         <UseCaseItem
           href="/use-cases/ai-driven-campaign-orchestration"
-          imageSrc="/squareBento.jpeg"
+          imageSrc="/StablityFlowers2.png"
           altText="Marketing campaign orchestration"
           title="Create Klaviyo flows using natural language"
           description="Marketing | Revenue Lift"
@@ -26,14 +26,15 @@ export default function UseCases() {
  {/* Use Case 2 */}
  <UseCaseItem
           href="/use-cases/tiktok-to-sales-pipeline"
-          imageSrc="/squareBento.jpeg"
+          imageSrc="/StablityMountains1.png"
+
           altText="Inventory aware marketing automation"
           title="Inventory aware marketing automation"
           description="Growth | ROI Enhancement"
         />
          <UseCaseItem
           href="/use-cases/customer-lifetime-value-prediction"
-          imageSrc="/squareBento.jpeg"
+          imageSrc="/StablitySky1.png"
           altText="Automatic product tagging for search"
           title="Automatic product tagging for search"
           description="Analytics | Strategic Planning"
@@ -41,7 +42,7 @@ export default function UseCases() {
 
         <UseCaseItem
           href="/use-cases/multi-channel-inventory-optimization"
-          imageSrc="/squareBento.jpeg"
+          imageSrc="/StablityWater1.png"
           altText="Inventory management dashboard"
           title="CLV-Based product bundling"
           description="Retail | Brand Success"
@@ -54,7 +55,7 @@ export default function UseCases() {
         {/* Use Case 4 */}
         <UseCaseItem
           href="/use-cases/real-time-pricing-optimization"
-           imageSrc="/squareBento.jpeg"
+           imageSrc="/StablityDesert1.png"
           altText="Pricing optimization dashboard"
           title="Real time pricing optimization"
           description="Strategy | Margin Improvement"
@@ -66,7 +67,7 @@ export default function UseCases() {
         {/* Use Case 6 */}
         <UseCaseItem
           href="/use-cases/unified-performance-dashboards"
-          imageSrc="/squareBento.jpeg"
+          imageSrc="/StablityPicasso1.png"
           altText="Unified performance dashboard"
           title="Single performance dashboards"
           description="Operations | Executive Insights"
