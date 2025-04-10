@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 import Image from "next/image"
-import React, { useRef, useEffect } from "react"
+import React, { useRef, useEffect, useState } from "react"
 import { motion } from "framer-motion"
 
 // Modified BentoGrid with Hero layout - Larger hero, smaller items, sidebar compatible
@@ -23,8 +23,9 @@ export const BentoGrid = ({
   const containerRef = useRef<HTMLDivElement>(null)
   const heroRef = useRef<HTMLDivElement>(null)
   const rightColumnRef = useRef<HTMLDivElement>(null)
+  const [isAtVeryEnd, setIsAtVeryEnd] = useState(false)
 
-  // Use effect to ensure sticky behavior works
+  // Use effect to ensure sticky behavior works and handle scroll events
   useEffect(() => {
     // Force recalculation of layout to ensure sticky positioning works
     if (heroRef.current && containerRef.current) {
@@ -39,15 +40,33 @@ export const BentoGrid = ({
         if (rightColumn) {
           // Set minimum height to ensure scrolling
           const rightColumnHeight = rightColumn.getBoundingClientRect().height
-          container.style.minHeight = `${rightColumnHeight + 100}px`
+          container.style.minHeight = `${rightColumnHeight}px`
+        }
+      }
+
+      // Handle scroll events to check if we're at the end of the page
+      const handleScroll = () => {
+        if (rightColumnRef.current) {
+          const rightColumnBottom = rightColumnRef.current.getBoundingClientRect().bottom
+          const viewportHeight = window.innerHeight
+          
+          // Only trigger at the very end - when the bottom of right column is almost aligned with viewport bottom
+          // Lower threshold means it happens closer to the actual end
+          if (rightColumnBottom <= viewportHeight + 50) {
+            setIsAtVeryEnd(true)
+          } else {
+            setIsAtVeryEnd(false)
+          }
         }
       }
 
       ensureHeight()
       window.addEventListener("resize", ensureHeight)
+      window.addEventListener("scroll", handleScroll)
 
       return () => {
         window.removeEventListener("resize", ensureHeight)
+        window.removeEventListener("scroll", handleScroll)
       }
     }
   }, [])
@@ -60,10 +79,10 @@ export const BentoGrid = ({
         // Adjust max width to fit within sidebar
         "max-w-6xl md:max-w-5xl lg:max-w-6xl",
         // Add left margin to avoid sidebar overlap
-        "md:ml-52", 
+       
         className
       )}
-      style={{ position: "relative", minHeight: "150vh" }}
+     
     >
       {/* Hero column with explicit sticky styling - Made larger */}
       <div
@@ -77,12 +96,29 @@ export const BentoGrid = ({
           zIndex: 10,
         }}
       >
-        {heroItem}
+        {/* Pass isAtVeryEnd state to the hero item */}
+        {React.isValidElement(heroItem) && 
+          React.cloneElement(heroItem as React.ReactElement, { isAtVeryEnd: false })}
       </div>
 
       {/* Right column with regular items - Made smaller */}
       <motion.div ref={rightColumnRef} className="md:col-span-4 flex flex-col gap-3">
-        {regularItems}
+        {/* Pass isAtVeryEnd to the last item only */}
+        {regularItems.map((item, index) => {
+          // Check if this is the last item
+          const isLastItem = index === regularItems.length - 1;
+          
+          // Clone the element with the isAtVeryEnd prop if it's the last item
+          if (isLastItem && React.isValidElement(item)) {
+            return React.cloneElement(item as React.ReactElement, { 
+              isAtVeryEnd, 
+              key: index 
+            });
+          }
+          
+          // Return the item as is if it's not the last one
+          return item;
+        })}
       </motion.div>
     </div>
   )
@@ -100,6 +136,7 @@ export const BentoGridItem = ({
   backgroundImage,
   isHero = false,
   index = 0,
+  isAtVeryEnd = false, // Renamed from isAtEnd to isAtVeryEnd
 }: {
   className?: string
   title?: string | React.ReactNode
@@ -111,6 +148,7 @@ export const BentoGridItem = ({
   backgroundImage?: string
   isHero?: boolean
   index?: number
+  isAtVeryEnd?: boolean // Renamed from isAtEnd to isAtVeryEnd
 }) => {
   const Wrapper = href ? Link : motion.div
 
@@ -155,7 +193,7 @@ export const BentoGridItem = ({
           "row-span-1 rounded-xl group/bento relative",
           "overflow-hidden",
           // Adjust aspect ratio - Make hero bigger, items smaller
-          isHero ? "aspect-[5/3] lg:aspect-[16/8]" : "aspect-[3/2]", // Hero is taller, items stay the same
+          isHero ? "aspect-[5/3] lg:aspect-[16/12]" : "aspect-[3/2]", // Hero is taller, items stay the same
           // Width properties
           "w-full",
           "transition-all duration-200 ease-out",
@@ -185,19 +223,24 @@ export const BentoGridItem = ({
       <motion.div
         className={cn(
           "mt-3", // Reduced from mt-4
-          // Adjust padding for hero text
-          isHero ? "lg:pr-8" : "px-1", // Reduced right padding from 12 to 8
+          // Consistent padding for all items
+          isHero ? "px-1" : "px-1",
         )}
         initial={{ opacity: 0, y: 10 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1, duration: 0.4 }}
         viewport={{ once: true }}
       >
-        {/* Title - Made hero title bigger, regular items smaller */}
+        {/* Title - Make last item bigger at the very end of the page */}
         <h3
           className={cn(
-            "font-bold text-foreground mb-1", // Reduced margin from mb-2 to mb-1
-            isHero ? "text-2xl sm:text-3xl lg:text-4xl" : "text-sm sm:text-base lg:text-lg", // Smaller text for regular items
+            "font-bold text-foreground mb-1", // Consistent margin
+            isHero 
+              ? "text-2xl sm:text-3xl lg:text-4xl" // Hero text is always large
+              : isAtVeryEnd 
+                ? "text-2xl sm:text-3xl lg:text-4xl" // Last item gets bigger at end
+                : "text-sm sm:text-base lg:text-lg", // Regular items stay small
+            "transition-all duration-500" // Smoother transition
           )}
         >
           {title}
@@ -206,8 +249,13 @@ export const BentoGridItem = ({
         {/* Description row */}
         <div className="flex items-center">
           <p className={cn(
-            "text-muted-foreground", 
-            isHero ? "text-sm sm:text-base" : "text-xs" // Made regular description text smaller
+            "text-muted-foreground",
+            isHero
+              ? "text-sm sm:text-base" // Hero description is always large
+              : isAtVeryEnd
+                ? "text-sm sm:text-base" // Last item gets bigger at end
+                : "text-xs", // Regular items stay small
+            "transition-all duration-500" // Smoother transition
           )}>
             {description}
           </p>

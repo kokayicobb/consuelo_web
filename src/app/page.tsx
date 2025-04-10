@@ -10,6 +10,7 @@ import TeamSection from "@/components/Team";
 import Testimonials from "@/components/Testimonials";
 import { getAllPosts } from "@/utils/markdown";
 import { Metadata } from "next";
+import UseCases from "@/components/UseCases";
 
 export const metadata: Metadata = {
   title: "Consuelo - See it. Try it. Buy it.",
@@ -25,18 +26,11 @@ export default function Home() {
       <ScrollUp />
       <WavyBackgroundDemo />
       <Features />
-      
-      <Contact />
+      {/* Use Case gallery Place here */}
+
+      <UseCases />
       <Pricing />
-      <FaqSection />
-      <TeamSection />
-      <HomeBlogSection
-        posts={posts}
-        subtitle="Latest Updates"
-        title="News & Insights"
-        paragraph="Stay up to date with the latest developments in AI fashion technology, industry trends, and how Consuelo is revolutionizing the online shopping experience."
-      />
-      <Contact />
+
       <Clients />
     </main>
   );
