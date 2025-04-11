@@ -84,7 +84,7 @@ export function Header() {
                 <div className="flex h-full flex-col">
                   <div className="border-b p-4">
                     <Link href="/" className="flex items-center">
-                      <span className="text-xl font-semibold">OpenAI</span>
+                      <span className="text-xl font-semibold">consuelo</span>
                     </Link>
                   </div>
                   <nav className="flex-1 overflow-auto p-4">

@@ -40,7 +40,7 @@ export function Header() {
         <div className="container flex h-16 items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
-            <span className="text-xl font-semibold">OpenAI</span>
+            <span className="text-xl font-semibold">consuelo</span>
           </Link>
 
           {/* Right side items */}
