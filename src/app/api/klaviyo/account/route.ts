@@ -1,85 +1,80 @@
 // src/app/api/klaviyo/account/route.ts
-import { getKlaviyoAccountByUserId } from "@/lib/db/klaviyo-accounts";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
-import { NextRequest, NextResponse } from "next/server";
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
+  console.log('Klaviyo account API route handler called');
+  
   try {
-    // Get cookie store and create Supabase client
-    const cookieStore = cookies();
+    // Create a Supabase client with the cookies
+    const supabase = createRouteHandlerClient({ cookies });
     
-    // Check for development mode cookies first
-    const devConnectedCookie = cookieStore.get('klaviyo_dev_connected');
-    const devAccessToken = cookieStore.get('klaviyo_dev_access_token');
-    const devRefreshToken = cookieStore.get('klaviyo_dev_refresh_token');
-    const devExpiresAt = cookieStore.get('klaviyo_dev_expires_at');
-    
-    const isDevelopmentMode = devConnectedCookie && devAccessToken && devRefreshToken && devExpiresAt;
-    
-    if (isDevelopmentMode) {
-      console.log("Using development mode Klaviyo account from cookies");
-      // Return the account from development cookies
-      return NextResponse.json({
-        account: {
-          id: 'dev-account',
-          userId: 'dev-user',
-          storeId: null,
-          clientId: process.env.KLAVIYO_CLIENT_ID,
-          tokenExpiresAt: devExpiresAt.value,
-          scopes: 'accounts:read campaigns:read campaigns:write events:read events:write flows:read lists:read lists:write metrics:read profiles:read profiles:write',
-          isActive: true,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-      });
-    }
-    
-    // Continue with normal flow for authenticated users
-    const supabase = createServerComponentClient({ cookies: () => cookieStore });
-    
-    // Get session directly from Supabase
+    // Get the session and user info
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
     
-    if (!session?.user?.id) {
-      console.error("API: No authenticated user found");
+    console.log('Session check:', { 
+      hasSession: !!session, 
+      error: sessionError?.message,
+      userId: session?.user?.id?.substring(0, 8) + '...'
+    });
+    
+    // If no session is found, check for development mode cookie
+    if (!session || !session.user) {
+      // Check for dev mode cookie
+      const devModeCookie = cookies().get('klaviyo_dev_account');
+      
+      if (devModeCookie) {
+        try {
+          const devAccount = JSON.parse(devModeCookie.value);
+          console.log('Using development mode Klaviyo account');
+          return NextResponse.json({ account: devAccount });
+        } catch (e) {
+          console.error('Failed to parse dev mode cookie:', e);
+        }
+      }
+      
+      console.log('API: No authenticated user found');
       return NextResponse.json(
-        { error: 'Authentication required' },
+        { error: 'Unauthorized' },
         { status: 401 }
       );
     }
     
-    // Get the store ID from query parameters (optional)
-    const storeId = request.nextUrl.searchParams.get('store_id') || undefined;
+    // Query the database for the user's Klaviyo account
+    const { data: accountData, error: dbError } = await supabase
+      .from('klaviyo_integrations')
+      .select('*')
+      .eq('user_id', session.user.id)
+      .maybeSingle();
     
-    // Get the Klaviyo account for this user
-    const account = await getKlaviyoAccountByUserId(session.user.id, storeId);
+    if (dbError) {
+      console.error('Database error fetching Klaviyo account:', dbError);
+      throw dbError;
+    }
     
-    if (!account) {
-      // This is EXPECTED for new users who haven't connected to Klaviyo yet
-      console.log("API: No Klaviyo account found for user", session.user.id);
+    // If no account found
+    if (!accountData) {
+      console.log('No Klaviyo account found for user:', session.user.id);
       return NextResponse.json(
-        { account: null },
+        { message: 'No Klaviyo account connected' },
         { status: 404 }
       );
     }
     
-    // Return the account
-    return NextResponse.json({
-      account: {
-        id: account.id,
-        userId: account.userId,
-        storeId: account.storeId,
-        clientId: account.clientId,
-        tokenExpiresAt: account.tokenExpiresAt.toISOString(),
-        scopes: account.scopes,
-        isActive: account.isActive,
-        createdAt: account.createdAt.toISOString(),
-        updatedAt: account.updatedAt.toISOString(),
-      },
-    });
+    // Format the account data for the response
+    const account = {
+      id: accountData.id,
+      status: accountData.status,
+      lastSync: accountData.last_sync,
+      accountName: accountData.account_name || 'Klaviyo Account',
+      createdAt: accountData.created_at,
+    };
+    
+    console.log('Returning Klaviyo account for user:', session.user.id);
+    return NextResponse.json({ account });
   } catch (error) {
-    console.error('Error fetching Klaviyo account:', error);
+    console.error('Error in Klaviyo account API:', error);
     return NextResponse.json(
       { error: 'Failed to fetch Klaviyo account' },
       { status: 500 }

@@ -122,14 +122,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         persistSession?: boolean;
       };
       
-      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ 
+        email, 
+        password,
+      });
       
       if (error) {
         throw error;
       }
       
       // Wait a moment for cookies to be properly set
-      await new Promise(resolve => setTimeout(resolve, 500));
+    
       
       setAuthState({
         user: data.user,

@@ -1,22 +1,24 @@
 // src/middleware.ts
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
+import { createAuthMiddlewareClient } from './lib/supabase-config';
 
 // Define which routes require authentication
 const protectedRoutes = [
   '/dashboard',
   '/profile',
-  // '/klaviyo',
   '/settings',
+  '/app',
 ];
+
+// Public routes that should bypass auth checks
 const publicRoutes = [
-  '/login',
-  '/register',
-  '/forgot-password',
-  '/reset-password',
-  '/auth-redirect', // Add this line
+  '/auth-redirect',
+  '/',
+  '/about',
+  '/contact',
 ];
+
 // Define routes that are only accessible when not authenticated
 const authRoutes = [
   '/login',
@@ -28,31 +30,81 @@ const authRoutes = [
 // Define the CORS headers
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS, PUT, DELETE',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-api-key',
   'Access-Control-Allow-Credentials': 'true',
   'Access-Control-Max-Age': '86400',
 };
 
 export async function middleware(request: NextRequest) {
-  // Create a response object
-  const res = NextResponse.next();
-  
+  // Skip middleware for static files and non-essential paths
   const path = request.nextUrl.pathname;
   
+  // Skip for static assets, images, etc.
+  if (
+    path.startsWith('/_next') || 
+    path.includes('.') ||  // Files with extensions
+    path === '/favicon.ico'
+  ) {
+    return NextResponse.next();
+  }
+  
+  console.log(`[Middleware] Processing path: ${path}`);
+  
+  // Create a response to modify
+  const res = NextResponse.next();
+  
+  // Create a Supabase client configured to use cookies
+  const supabase = createAuthMiddlewareClient(request, res);
+  
+  // Check if this is an auth callback
+  const requestUrl = new URL(request.url);
+  const code = requestUrl.searchParams.get("code");
+  
+  if (code) {
+    // Exchange the code for a session
+    await supabase.auth.exchangeCodeForSession(code);
+    // Redirect to dashboard or saved redirect after successful auth
+    const redirectTo = requestUrl.searchParams.get("redirectTo") || "/dashboard";
+    return NextResponse.redirect(new URL(redirectTo, request.url));
+  }
+  
+  // CRITICAL: Always refresh session before checking auth state
+  await supabase.auth.getSession();
+  
+  // Allow API paths that should bypass auth redirects
+  if (
+    path.startsWith('/api/auth') || 
+    path.startsWith('/api/public')
+  ) {
+    console.log(`[Middleware] Bypassing auth for API path: ${path}`);
+    return NextResponse.next();
+  }
+  
+  // For Klaviyo API routes, process auth but don't block
   if (path.startsWith('/api/klaviyo')) {
-    // Allow Klaviyo API routes to pass through
-    return NextResponse.next();
+    console.log(`[Middleware] Processing auth for Klaviyo API path: ${path}`);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const isAuthenticated = !!session;
+      
+      console.log(`[Middleware] Klaviyo API auth check: Authenticated=${isAuthenticated}, User=${session?.user?.email || 'none'}`);
+      
+      // Add auth headers but don't block the request
+      if (isAuthenticated && session?.user) {
+        res.headers.set('x-user-id', session.user.id);
+        res.headers.set('x-user-email', session.user.email || '');
+      }
+      
+      return res;
+    } catch (error) {
+      console.error('[Middleware] Klaviyo auth error:', error);
+      return res;
+    }
   }
   
-  // Exempt auth-redirect from authentication checks
-  if (path.startsWith('/auth-redirect')) {
-    return NextResponse.next();
-  }
-  
-  // Check if the request is for the try-on API
-  if (request.nextUrl.pathname.startsWith('/api/try-on')) {
-    // Handle OPTIONS preflight - IMPORTANT to prevent redirects
+  // Special handling for try-on API
+  if (path.startsWith('/api/try-on')) {
     if (request.method === 'OPTIONS') {
       return new NextResponse(null, {
         status: 204,
@@ -60,63 +112,68 @@ export async function middleware(request: NextRequest) {
       });
     }
     
-    // For other methods, continue with the request but prepare headers
-    const response = NextResponse.next();
-    
-    // Add CORS headers to all responses
+    // Add CORS headers
     Object.entries(corsHeaders).forEach(([key, value]) => {
-      response.headers.set(key, value);
+      res.headers.set(key, value);
     });
     
-    return response;
+    return res;
   }
   
-  // Create a Supabase client for the middleware
-  const supabase = createMiddlewareClient({ req: request, res });
+  // Check if the path is public and should bypass auth checks
+  if (publicRoutes.some(route => path === route || path.startsWith(route + '/'))) {
+    console.log(`[Middleware] Public route, bypassing auth: ${path}`);
+    return NextResponse.next();
+  }
   
-  // Get the session
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  
-  const isAuthenticated = !!session;
-  
-  // Check if the path is a protected route and the user is not authenticated
-  const isProtectedRoute = protectedRoutes.some(route => path.startsWith(route));
-  if (isProtectedRoute && !isAuthenticated) {
-    // Create the URL for the login page with a redirect parameter
-    const redirectUrl = new URL('/login', request.url);
-    redirectUrl.searchParams.set('redirect', path);
+  try {
+    // Get the session
+    const { data: { session } } = await supabase.auth.getSession();
     
-    return NextResponse.redirect(redirectUrl);
+    const isAuthenticated = !!session;
+    
+    console.log(`[Middleware] Auth check for ${path}: Authenticated=${isAuthenticated}, User=${session?.user?.email || 'none'}`);
+    
+    // Check if the path is a protected route and the user is not authenticated
+    const isProtectedRoute = protectedRoutes.some(route => path === route || path.startsWith(route + '/'));
+    if (isProtectedRoute && !isAuthenticated) {
+      console.log(`[Middleware] Protected route without auth, redirecting to login: ${path}`);
+      
+      const redirectUrl = new URL('/login', request.url);
+      redirectUrl.searchParams.set('to', path);
+      
+      return NextResponse.redirect(redirectUrl);
+    }
+    
+    // Check if the path is an auth route and the user is authenticated
+    const isAuthRoute = authRoutes.some(route => path === route || path.startsWith(route + '/'));
+    if (isAuthRoute && isAuthenticated) {
+      const redirectTo = request.nextUrl.searchParams.get('to') || '/dashboard';
+      console.log(`[Middleware] Auth route with active session, redirecting to: ${redirectTo}`);
+      
+      return NextResponse.redirect(new URL(redirectTo, request.url));
+    }
+    
+    // Enhance the response with user info if authenticated
+    if (isAuthenticated) {
+      res.headers.set('x-user-id', session.user.id);
+      res.headers.set('x-user-email', session.user.email || '');
+    }
+    
+    return res;
+  } catch (error) {
+    console.error('[Middleware] Auth error:', error);
+    // On error, still allow the request to proceed
+    return NextResponse.next();
   }
-  
-  // Check if the path is an auth route and the user is authenticated
-  const isAuthRoute = authRoutes.some(route => path.startsWith(route));
-  if (isAuthRoute && isAuthenticated) {
-    // Redirect to dashboard if accessing auth routes while authenticated
-    return NextResponse.redirect(new URL('/dashboard', request.url));
-  }
-  
-  // For API routes that require authentication
-  if (path.startsWith('/api/') && 
-      !path.startsWith('/api/public') && 
-      !path.startsWith('/api/auth') && 
-      !path.startsWith('/api/try-on') && 
-      !isAuthenticated) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-  
-  return res;
 }
 
-// Combined matcher configuration
+// Updated matcher configuration
 export const config = {
   matcher: [
-    // For the authentication middleware - exclude auth-redirect
-    '/((?!_next/static|_next/image|favicon.ico|public/|api/public/|auth-redirect/).*)',
-    // For the CORS middleware
-    '/api/try-on',
-    '/api/try-on/:path*'
+    // Match everything except static files and specific API paths
+    '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\..*|api/public).*)',
+    // Include API paths that need auth or CORS
+    '/api/:path*',
   ],
 };

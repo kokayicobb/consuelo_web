@@ -1,3 +1,4 @@
+// src/app/page.tsx
 import { WavyBackgroundDemo } from "@/components/Hero";
 import HomeBlogSection from "@/components/Blog/HomeBlogSection";
 import Clients from "@/components/Clients";
@@ -19,6 +20,7 @@ export const metadata: Metadata = {
 };
 
 export default function Home() {
+  
   const posts = getAllPosts(["title", "date", "excerpt", "coverImage", "slug"]);
 
   return (
