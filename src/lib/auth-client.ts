@@ -1,6 +1,6 @@
 // src/lib/auth-client.ts
 import { User, Session } from '@supabase/supabase-js';
-import { createBrowserClient } from './supabase-config';
+import { createBrowserClient } from './supabase-config'; // Import the client!
 
 // Type definitions
 export type AuthStatus = {
@@ -10,9 +10,8 @@ export type AuthStatus = {
   error: string | null;
 };
 
-// Create a Supabase client for client components
-// Use the singleton version to prevent multiple instances warning
-export const createClient = () => createBrowserClient();
+// Use the existing client
+const supabase = createBrowserClient();
 
 /**
  * Synchronizes the client session state with the server session state
@@ -74,8 +73,7 @@ export async function refreshSession(): Promise<{
   user: User | null;
 }> {
   try {
-    const supabase = createClient();
-    const { data, error } = await supabase.auth.refreshSession();
+    const { data, error } = await supabase.auth.refreshSession(); // Use existing supabase
     
     if (error) {
       console.error('Error refreshing session:', error);
@@ -98,9 +96,7 @@ export async function refreshSession(): Promise<{
  */
 export async function signOut(): Promise<boolean> {
   try {
-    // Sign out on the client
-    const supabase = createClient();
-    const { error } = await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut(); // Use existing supabase
     
     if (error) {
       console.error('Error signing out:', error);
@@ -120,8 +116,7 @@ export async function signOut(): Promise<boolean> {
  */
 export async function checkAuth(): Promise<AuthStatus> {
   try {
-    const supabase = createClient();
-    const { data: { session }, error } = await supabase.auth.getSession();
+    const { data: { session }, error } = await supabase.auth.getSession(); // Use existing supabase
     
     if (error) {
       console.error('Client auth check error:', error);

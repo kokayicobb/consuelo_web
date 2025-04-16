@@ -1,8 +1,8 @@
 "use client"
 // src/lib/auth/auth-provider.tsx
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User } from '@supabase/supabase-js';
-import { createClient, checkAuth, refreshSession, signOut, AuthStatus } from '../auth-client';
+import { createClient, User } from '@supabase/supabase-js';
+import {  checkAuth, refreshSession, signOut, AuthStatus } from '../auth-client';
 
 // Create auth context
 const AuthContext = createContext<{
@@ -65,7 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Set up auth state listener
   useEffect(() => {
-    const supabase = createClient();
+    const supabase =  createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
     
     // Initial auth check
     refreshAuth();

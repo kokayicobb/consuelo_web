@@ -7,9 +7,9 @@ import { NextRequest, NextResponse } from 'next/server';
 export const defaultCookieOptions = {
   name: 'sb-auth',
   lifetime: 60 * 60 * 24 * 7, // 7 days
-  domain: '',
-  path: '/',
-  sameSite: 'lax' as const
+  domain: process.env.NODE_ENV === 'production' ? '.yourdomain.com' : '', // IMPORTANT
+  path: '/', // Almost always '/'
+  sameSite: 'lax' as const // Or 'none' with 'Secure' in production
 };
 
 /**

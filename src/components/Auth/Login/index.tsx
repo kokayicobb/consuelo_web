@@ -1,4 +1,4 @@
-// src/components/auth/LoginForm.tsx
+// src/components/Auth/Login/index.tsx
 'use client';
 
 import { useState } from 'react';
@@ -46,7 +46,7 @@ export default function LoginForm() {
       
       if (data.session) {
         console.log("Authentication successful, redirecting to:", redirect);
-        router.push(redirect);
+        window.location.href = redirect;
       } else {
         setError("Session not established. Please try again.");
         setIsLoading(false);

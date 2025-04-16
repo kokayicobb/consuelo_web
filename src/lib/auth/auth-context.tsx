@@ -116,30 +116,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signIn = async (email: string, password: string) => {
     try {
       setAuthState((prev) => ({ ...prev, isLoading: true, error: null }));
-      
-      // Use persistSession: true to ensure the session persists across page loads
-      type SignInOptions = {
-        persistSession?: boolean;
-      };
-      
-      const { data, error } = await supabaseClient.auth.signInWithPassword({ 
-        email, 
+
+      const { data, error } = await supabaseClient.auth.signInWithPassword({
+        email,
         password,
       });
-      
+
       if (error) {
         throw error;
       }
-      
-      // Wait a moment for cookies to be properly set
-    
-      
+//Introduce slight delay
+ await new Promise((resolve) => setTimeout(resolve, 200));
+      // Wait a moment for cookies to be properly set (CRITICAL!)
+
       setAuthState({
         user: data.user,
         session: data.session,
         isLoading: false,
         error: null,
       });
+
     } catch (error) {
       console.error('Error signing in:', error);
       setAuthState((prev) => ({
