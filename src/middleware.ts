@@ -1,122 +1,118 @@
-// src/middleware.ts
+// middleware.ts
+
+import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
 
-// Define which routes require authentication
 const protectedRoutes = [
-  '/dashboard',
-  '/profile',
-  // '/klaviyo',
-  '/settings',
+    '/dashboard',
+    '/profile',
+    '/settings',
+    // '/app',
 ];
+
 const publicRoutes = [
-  '/login',
-  '/register',
-  '/forgot-password',
-  '/reset-password',
-  '/auth-redirect', // Add this line
+    '/',
+    '/about',
+    '/contact',
 ];
-// Define routes that are only accessible when not authenticated
+
 const authRoutes = [
-  '/login',
-  '/register',
-  '/forgot-password',
-  '/reset-password',
+    '/login',
+    '/register',
+    '/forgot-password',
+    '/reset-password',
 ];
 
-// Define the CORS headers
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-api-key',
-  'Access-Control-Allow-Credentials': 'true',
-  'Access-Control-Max-Age': '86400',
-};
+export async function middleware(req: NextRequest) {
+    const res = NextResponse.next(); // Get the response object FIRST
 
-export async function middleware(request: NextRequest) {
-  // Create a response object
-  const res = NextResponse.next();
-  
-  const path = request.nextUrl.pathname;
-  
-  if (path.startsWith('/api/klaviyo')) {
-    // Allow Klaviyo API routes to pass through
-    return NextResponse.next();
-  }
-  
-  // Exempt auth-redirect from authentication checks
-  if (path.startsWith('/auth-redirect')) {
-    return NextResponse.next();
-  }
-  
-  // Check if the request is for the try-on API
-  if (request.nextUrl.pathname.startsWith('/api/try-on')) {
-    // Handle OPTIONS preflight - IMPORTANT to prevent redirects
-    if (request.method === 'OPTIONS') {
-      return new NextResponse(null, {
-        status: 204,
-        headers: corsHeaders,
-      });
-    }
-    
-    // For other methods, continue with the request but prepare headers
-    const response = NextResponse.next();
-    
-    // Add CORS headers to all responses
-    Object.entries(corsHeaders).forEach(([key, value]) => {
-      response.headers.set(key, value);
+    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
+
+    const pathname = req.nextUrl.pathname;
+    console.log(`[Middleware] Path: ${pathname}`);
+
+    // LOG COOKIES IMMEDIATELY - CRITICAL!
+    console.log('[Middleware] All Cookies:', req.cookies);
+    Object.entries(req.cookies).forEach(([key, value]) => {
+        console.log(`[Middleware] Cookie - ${key}: ${value}`);
     });
-    
-    return response;
-  }
-  
-  // Create a Supabase client for the middleware
-  const supabase = createMiddlewareClient({ req: request, res });
-  
-  // Get the session
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  
-  const isAuthenticated = !!session;
-  
-  // Check if the path is a protected route and the user is not authenticated
-  const isProtectedRoute = protectedRoutes.some(route => path.startsWith(route));
-  if (isProtectedRoute && !isAuthenticated) {
-    // Create the URL for the login page with a redirect parameter
-    const redirectUrl = new URL('/login', request.url);
-    redirectUrl.searchParams.set('redirect', path);
-    
-    return NextResponse.redirect(redirectUrl);
-  }
-  
-  // Check if the path is an auth route and the user is authenticated
-  const isAuthRoute = authRoutes.some(route => path.startsWith(route));
-  if (isAuthRoute && isAuthenticated) {
-    // Redirect to dashboard if accessing auth routes while authenticated
-    return NextResponse.redirect(new URL('/dashboard', request.url));
-  }
-  
-  // For API routes that require authentication
-  if (path.startsWith('/api/') && 
-      !path.startsWith('/api/public') && 
-      !path.startsWith('/api/auth') && 
-      !path.startsWith('/api/try-on') && 
-      !isAuthenticated) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-  
-  return res;
+
+    // Auth callback handling (PRIORITIZE THIS)
+    const requestUrl = new URL(req.url);
+    const code = requestUrl.searchParams.get('code');
+
+    if (code) {
+        console.log('[Middleware] Auth code detected, exchanging for session');
+        try {
+            const { error } = await supabase.auth.exchangeCodeForSession(code);
+            if (error) {
+                console.error('[Middleware] Error exchanging code for session:', error);
+                return NextResponse.redirect(new URL('/error?message=AuthError', req.url));
+            }
+
+            // IMPORTANT: Get the redirectTo URL *before* redirecting
+            const redirectTo = requestUrl.searchParams.get('redirectTo') || '/dashboard';
+            const redirectUrl = new URL(redirectTo, req.url);
+
+            return NextResponse.redirect(redirectUrl);  // Redirect immediately after exchange
+        } catch (error) {
+            console.error('[Middleware] Error during code exchange:', error);
+            return NextResponse.redirect(new URL('/error?message=AuthError', req.url));
+        }
+    }
+
+    // *AFTER* the code exchange, check the session
+    try {
+        const { data: { session }} = await supabase.auth.getSession();
+        const isAuthenticated = !!session;
+        console.log(`[Middleware] Is authenticated: ${isAuthenticated}`);
+
+        // Route protection logic
+        const isProtectedRoute = protectedRoutes.includes(pathname);
+        const isPublicRoute = publicRoutes.includes(pathname);
+        const isAuthRoute = authRoutes.includes(pathname);
+
+        if (isProtectedRoute && !isAuthenticated) {
+            console.log('[Middleware] Redirecting to login');
+            const loginUrl = new URL('/login', req.url);
+            loginUrl.searchParams.set('to', pathname);
+            return NextResponse.redirect(loginUrl);
+        }
+
+        if (isAuthRoute && isAuthenticated) {
+            console.log('[Middleware] Redirecting to dashboard');
+            return NextResponse.redirect(new URL('/dashboard', req.url));
+        }
+
+        // Add user info to headers if authenticated
+        if (isAuthenticated) {
+            res.headers.set('x-user-id', session?.user.id || '');
+            res.headers.set('x-user-email', session?.user.email || '');
+            console.log(`[Middleware] User ID: ${session?.user.id}, Email: ${session?.user.email}`);  // Added logs
+        } else {
+            console.log('[Middleware] User not authenticated, no headers set.'); //Added Log
+        }
+
+        console.log('[Middleware] Allowing request to proceed');
+        return res;
+
+    } catch (error) {
+        console.error('[Middleware] Error getting session:', error);
+        return NextResponse.redirect(new URL('/error?message=SessionError', req.url));
+    }
 }
 
-// Combined matcher configuration
 export const config = {
-  matcher: [
-    // For the authentication middleware - exclude auth-redirect
-    '/((?!_next/static|_next/image|favicon.ico|public/|api/public/|auth-redirect/).*)',
-    // For the CORS middleware
-    '/api/try-on',
-    '/api/try-on/:path*'
-  ],
+    matcher: [
+        /*
+         * Match all request paths except for the ones starting with:
+         * - _next/static (static files)
+         * - _next/image (image optimization files)
+         * - favicon.ico (favicon file)
+         * - api (API routes)
+         * - public (public assets)
+         */
+        '/((?!_next/static|_next/image|favicon.ico|api|public).*)',
+    ],
 };

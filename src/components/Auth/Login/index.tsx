@@ -1,4 +1,4 @@
-// src/components/auth/LoginForm.tsx
+// src/components/Auth/Login/index.tsx
 'use client';
 
 import { useState } from 'react';
@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2 } from 'lucide-react';
+import { supabaseClient } from '@/lib/supabase/client';
 
 export default function LoginForm() {
   const [email, setEmail] = useState('');
@@ -22,28 +23,37 @@ export default function LoginForm() {
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect') || '/dashboard';
   
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    setError(null);
+    setError('');
     
     try {
       console.log("Starting sign in process...");
       await signIn(email, password);
       console.log("Sign in successful");
       
-      // Use a full page refresh instead of client-side navigation
-      // This ensures the session cookie is fully established
-      window.location.href = redirect;
-    } catch (err: any) {
-      console.error('Login error:', err);
+      // Important: Add a delay to ensure cookies are set properly
+      // before attempting navigation
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
-      if (err.message?.includes('Invalid login credentials')) {
-        setError('Invalid email or password. Please try again.');
+      // Verify session is active before redirecting
+      const { data } = await supabaseClient.auth.getSession();
+      console.log("Session verification:", {
+        hasSession: !!data.session,
+        email: data.session?.user?.email || 'none'
+      });
+      
+      if (data.session) {
+        console.log("Authentication successful, redirecting to:", redirect);
+        window.location.href = redirect;
       } else {
-        setError('An error occurred during login. Please try again.');
+        setError("Session not established. Please try again.");
+        setIsLoading(false);
       }
-    } finally {
+    } catch (error) {
+      console.error("Login error:", error);
+      setError(error.message || "Failed to sign in. Please check your credentials.");
       setIsLoading(false);
     }
   };

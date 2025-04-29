@@ -1,14 +1,23 @@
+
 // src/app/api/klaviyo/refresh/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { getKlaviyoAccountById, updateKlaviyoAccountTokens } from '@/lib/db/klaviyo-accounts';
-import { auth } from '@/lib/auth';
+
 import { TokenResponse, generateBasicAuthHeader, KLAVIYO_ENDPOINTS } from '@/lib/klaviyo/oath-utils';
+import { getServerSideAuth } from '@/lib/auth';
 
 
 export async function POST(request: NextRequest) {
   try {
     // Ensure the user is authenticated
-    const session = await auth();
+    const context = {
+      req: request as any, // Cast to 'any' to bypass type mismatch
+      res: null,
+      query: {},
+      resolvedUrl: '',
+      cookies: request.cookies || {}, // Add cookies property
+    };
+    const session = await getServerSideAuth(context as any); // Cast context to 'any'
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'Authentication required' },
