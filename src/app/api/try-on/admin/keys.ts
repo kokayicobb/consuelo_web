@@ -6,7 +6,7 @@ import { getSession } from 'next-auth/react';
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // First verify the user is authenticated as an admin
   const session = await getSession({ req });
-  if (!session || !session.user || session.user.role !== 'admin') {
+  if (!session || !session.user || (session.user as { role?: string }).role !== 'admin') {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
