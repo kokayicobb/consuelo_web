@@ -26,14 +26,14 @@ const ApiKeysManagement = () => {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/api/auth/signin');
-    } else if (status === 'authenticated' && session?.user?.role !== 'admin') {
+    } else if (!session || !session.user || (session.user as { role?: string }).role !== 'admin') {
       router.push('/');
     }
   }, [status, session, router]);
 
   // Fetch API keys
   useEffect(() => {
-    if (status === 'authenticated' && session?.user?.role === 'admin') {
+    if (!session || !session.user || (session.user as { role?: string }).role !== 'admin') {
       fetchKeys();
     }
   }, [status, session]);
@@ -92,7 +92,7 @@ const ApiKeysManagement = () => {
     }
   };
 
-  if (status === 'loading' || (status === 'authenticated' && session?.user?.role !== 'admin')) {
+  if (!session || !session.user || (session.user as { role?: string }).role !== 'admin') {
     return <div className="p-6">Loading...</div>;
   }
 
