@@ -42,8 +42,8 @@ export function Header() {
   const navItems = [
     { name: "Agents", href: "/app" },
     { name: "Platform", href: "/app" },
-    { name: "Integrations", href: "/safety" },
-    { name: "Pricing", href: "/stories" },
+    { name: "Integrations", href: "/integrations" },
+    { name: "Pricing", href: "/pricing" },
     { name: "How It Works", href: "/company" },
     { name: "Shopify", href: "/api" },
     { name: "Klayvio", href: "/company" },

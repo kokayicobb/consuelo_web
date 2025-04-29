@@ -8,7 +8,7 @@ const protectedRoutes = [
     '/dashboard',
     '/profile',
     '/settings',
-    '/app',
+    // '/app',
 ];
 
 const publicRoutes = [

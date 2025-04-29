@@ -22,10 +22,10 @@ const BackgroundPattern: React.FC<BackgroundPatternProps> = ({ children, classNa
 
 export function Features() {
   // Get the hero item (using AI Commerce Suite which has md:col-span-2 in the original)
-  const heroItem = items.find((item) => item.title === "Introducing Unified Data Platform")
+  const heroItem = items.find((item) => item.title === "Introducing Muse: AI Powered CRM")
 
   // Get all other items except the hero
-  const regularItems = items.filter((item) => item.title !== "Introducing Unified Data Platform")
+  const regularItems = items.filter((item) => item.title !== "Introducing Muse: AI Powered CRM")
 
   // Ref for the section
   const sectionRef = useRef<HTMLElement>(null)
@@ -97,16 +97,16 @@ export function Features() {
 
 const items = [
   {
-    title: "Introducing Unified Data Platform",
+    title: "Introducing Muse: AI Powered CRM",
     image: "/StablityBlue3.png",
     description: "Release | 8 min read",
     className: "md:col-span-2",
     href: "/platform",
   },
   {
-    title: "Introducing Muse",
+    title: "Consuelo for B2C",
      image: "/StablityBlue2.png",
-    description: "AI Agent | 5 min read",
+    description: "AI Platform | 5 min read",
     header: (
       <BackgroundPattern gradientFrom="from-purple-500" gradientTo="to-blue-500">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-full h-full">
@@ -120,9 +120,9 @@ const items = [
     icon: <IconShirt className="h-8 w-8 text-accent" />,
   },
   {
-    title: "Chat smarter",
+    title: "Consuelo for Health & Fitness",
     image: "/StablityPurple1.png",
-    description: "ChatGPT Integration  | 6 min read",
+    description: "AI Platform | 6 min read",
     header: (
       <BackgroundPattern gradientFrom="from-blue-500" gradientTo="to-cyan-500">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-full h-full">
@@ -142,7 +142,7 @@ const items = [
   {
     title: "Consuelo Analytics",
     image: "/StablityRiver2.png",
-    description: "Product | 5 min read",
+    description: "Feature | 5 min read",
     header: (
       <BackgroundPattern gradientFrom="from-blue-500" gradientTo="to-purple-500">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-full h-full">
