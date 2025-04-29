@@ -4,10 +4,9 @@ import { motion } from "framer-motion"
 import { cn } from "@/lib/utils"
 import { MultimodalInput } from "./ui/chat"
 
-
 export default function ChatContent() {
   return (
-    <div className="w-full min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-black via-zinc-900 to-black dark:from-black dark:via-zinc-800/40 dark:to-black px-4">
+    <div className="w-full min-h-screen flex flex-col items-center justify-center bg-background px-4">
       <div className="w-full p-4 flex flex-col items-center justify-center h-screen mx-auto">
         <motion.div
           initial={{ opacity: 0 }}
@@ -15,10 +14,10 @@ export default function ChatContent() {
           transition={{ duration: 0.7 }}
           className={cn("text-center mb-10", "opacity-100 scale-100")}
         >
-          <h1 className="text-5xl md:text-6xl font-medium mb-4 tracking-tighter bg-clip-text bg-gradient-to-b from-black to-black/70 text-white">
+          <h1 className="text-5xl md:text-6xl font-medium mb-4 tracking-tighter text-foreground">
             Talk to your data
           </h1>
-          <p className="text-xl text-zinc-400">What can I do for you today?</p>
+          <p className="text-xl text-muted-foreground">What can I do for you today?</p>
         </motion.div>
 
         <motion.div
@@ -47,4 +46,3 @@ export default function ChatContent() {
     </div>
   )
 }
-

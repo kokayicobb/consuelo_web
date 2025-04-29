@@ -64,62 +64,62 @@ const ChatInterface = () => {
 
   return (
     <>
-     <ExpandableChatHeader className="bg-black text-white">
-  <div className="flex items-center">
-    <div className="mr-2 h-8 w-8 rounded-full bg-white flex items-center justify-center">
-      <img
-        src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/apple-touch-icon-OnEhJzRCthwLXcIuoeeWSqvvYynB9c.png"
-        alt="Consuelo Logo"
-        className="h-6 w-6"
-      />
-    </div>
-    <span className="font-medium">Consuelo </span>
-  </div>
-</ExpandableChatHeader>
+      <ExpandableChatHeader className="bg-black text-white">
+        <div className="flex items-center">
+          <div className="mr-2 h-8 w-8 rounded-full bg-white flex items-center justify-center">
+            <img
+              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/apple-touch-icon-OnEhJzRCthwLXcIuoeeWSqvvYynB9c.png"
+              alt="Consuelo Logo"
+              className="h-6 w-6"
+            />
+          </div>
+          <span className="font-medium">Consuelo </span>
+        </div>
+      </ExpandableChatHeader>
 
-<ExpandableChatBody className="bg-gray-50 p-4 space-y-4 w-full">
-  {messages.map((message, index) => (
-    <div
-      key={index}
-      className={`flex ${
-        message.sender === "user" ? "justify-end" : "justify-start"
-      }`}
-    >
-      <div
-        className={`max-w-[80%] rounded-lg px-4 py-2 ${
-          message.sender === "user"
-            ? "bg-black text-white"
-            : "bg-white text-gray-800 border border-gray-200"
-        }`}
-      >
-        {message.text}
-      </div>
-    </div>
-  ))}
-</ExpandableChatBody>
+      <ExpandableChatBody className="bg-background dark:bg-muted p-4 space-y-4 w-full">
+        {messages.map((message, index) => (
+          <div
+            key={index}
+            className={`flex ${
+              message.sender === "user" ? "justify-end" : "justify-start"
+            }`}
+          >
+            <div
+              className={`max-w-[80%] rounded-lg px-4 py-2 ${
+                message.sender === "user"
+                  ? "bg-black text-white"
+                  : "bg-card text-foreground border border-border"
+              }`}
+            >
+              {message.text}
+            </div>
+          </div>
+        ))}
+      </ExpandableChatBody>
 
-<ExpandableChatFooter className="bg-white border-t border-gray-200">
-  <div className="flex items-center gap-2 w-full">
-    <Input
-      value={inputValue}
-      onChange={(e) => setInputValue(e.target.value)}
-      onKeyPress={handleKeyPress}
-      placeholder="Type your message..."
-      className="flex-1"
-    />
-    <Button onClick={handleSend} size="icon" className="bg-black hover:bg-gray-800">
-      <Send size={16} />
-    </Button>
-  </div>
-</ExpandableChatFooter>
+      <ExpandableChatFooter className="bg-background border-t border-border">
+        <div className="flex items-center gap-2 w-full">
+          <Input
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="Type your message..."
+            className="flex-1"
+          />
+          <Button onClick={handleSend} size="icon" className="bg-black hover:bg-gray-800">
+            <Send size={16} />
+          </Button>
+        </div>
+      </ExpandableChatFooter>
     </>
   );
 };
 
-const MainLayout = ({ children, title }) => {
+const MainLayout = ({ children, title, hideSidebar = false }) => {
   // Create a state to track the active tab
   const [activeTab, setActiveTab] = useState("home");
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(!hideSidebar);
 
   // Effect to sync URL hash with state
   useEffect(() => {
@@ -210,7 +210,7 @@ const MainLayout = ({ children, title }) => {
       onClick: () => setActiveTab("ai-insights"),
     },
     {
-      label: "Connected Platforms",
+      label: "Integrations",
       href: "#integrations",
       icon: <Globe size={20} className="text-gray-200" />,
       onClick: () => setActiveTab("integrations"),
@@ -224,56 +224,58 @@ const MainLayout = ({ children, title }) => {
   ];
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-gray-100 md:flex-row">
-      <Sidebar open={sidebarOpen} setOpen={setSidebarOpen}>
-        <SidebarBody>
-          <div className="mb-6 flex items-center justify-center gap-2 px-2">
-            <div className="h-8 w-8 flex-shrink-0">
-              <img
-                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/apple-touch-icon-OnEhJzRCthwLXcIuoeeWSqvvYynB9c.png"
-                alt="Consuelo Logo"
-                className="h-full w-full object-contain"
-              />
-            </div>
-            <span className={`text-xl font-bold text-white ${!sidebarOpen && 'hidden'}`}>
-              Consuelo
-            </span>
-          </div>
-    
-          <nav className="flex-1 space-y-1">
-            {navItems.map((item) => (
-              <SidebarLink
-              key={item.href}
-              link={item}
-              className={`${
-                activeTab === item.href.replace("#", "")
-                  ? "bg-gray-700/40 font-medium"
-                  : ""
-              } text-white hover:bg-gray-700/40 hover:text-white`}
-            />
-            ))}
-          </nav>
-    
-          <div className="mt-auto border-t border-gray-800 pt-4">
-            <div className="flex items-center justify-center px-4 py-2">
-              <div className="flex-shrink-0">
+    <div className="flex h-screen flex-col overflow-hidden bg-background md:flex-row">
+      {!hideSidebar && (
+        <Sidebar open={sidebarOpen} setOpen={setSidebarOpen}>
+          <SidebarBody>
+            <div className="mb-6 flex items-center justify-center gap-2 px-2">
+              <div className="h-8 w-8 flex-shrink-0">
                 <img
-                  className="h-8 w-8 rounded-full"
-                  src="/placeholder-avatar.png"
-                  alt="User avatar"
+                  src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/apple-touch-icon-OnEhJzRCthwLXcIuoeeWSqvvYynB9c.png"
+                  alt="Consuelo Logo"
+                  className="h-full w-full object-contain"
                 />
               </div>
-              <div className={`ml-3 ${!sidebarOpen && 'hidden'}`}>
-                <p className="text-sm font-medium text-white">Sarah Johnson</p>
-                <p className="text-xs text-gray-400">FashionCo Admin</p>
+              <span className={`text-xl font-bold text-white ${!sidebarOpen && 'hidden'}`}>
+                Consuelo
+              </span>
+            </div>
+      
+            <nav className="flex-1 space-y-1">
+              {navItems.map((item) => (
+                <SidebarLink
+                key={item.href}
+                link={item}
+                className={`${
+                  activeTab === item.href.replace("#", "")
+                    ? "bg-gray-700/40 font-medium"
+                    : ""
+                } text-white hover:bg-gray-700/40 hover:text-white`}
+              />
+              ))}
+            </nav>
+      
+            <div className="mt-auto border-t border-gray-800 pt-4">
+              <div className="flex items-center justify-center px-4 py-2">
+                <div className="flex-shrink-0">
+                  <img
+                    className="h-8 w-8 rounded-full"
+                    src="/placeholder-avatar.png"
+                    alt="User avatar"
+                  />
+                </div>
+                <div className={`ml-3 ${!sidebarOpen && 'hidden'}`}>
+                  <p className="text-sm font-medium text-white">Sarah Johnson</p>
+                  <p className="text-xs text-gray-400">FashionCo Admin</p>
+                </div>
               </div>
             </div>
-          </div>
-        </SidebarBody>
-      </Sidebar>
+          </SidebarBody>
+        </Sidebar>
+      )}
    
-      <div className="flex flex-1 flex-col overflow-y-auto">
-        {activeTab !== "home" && (
+      <div className={`flex flex-1 flex-col overflow-y-auto bg-background ${hideSidebar ? 'w-full' : ''}`}>
+        {activeTab !== "home" && !hideSidebar && (
           <Header
             title={
               activeTab.charAt(0).toUpperCase() +
@@ -282,13 +284,13 @@ const MainLayout = ({ children, title }) => {
           />
         )}
         <main
-          className={`flex-1 ${activeTab === "home" ? "p-0" : "p-4 md:p-6"}`}
+          className={`flex-1 ${activeTab === "home" && !hideSidebar ? "p-0" : "p-4 md:p-6"} bg-background`}
         >
-          {renderContent()}
+          {hideSidebar ? children : renderContent()}
         </main>
         
-        {/* Expandable Chat - Only show when not on home or settings page */}
-        {activeTab !== "home" && activeTab !== "settings" && (
+        {/* Expandable Chat - Only show when not on home or settings page and sidebar is visible */}
+        {activeTab !== "home" && activeTab !== "settings" && !hideSidebar && (
           <ExpandableChat position="bottom-right" size="md">
             <ChatInterface />
           </ExpandableChat>

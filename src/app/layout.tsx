@@ -5,8 +5,8 @@ import "../styles/prism-vsc-dark-plus.css";
 import ClientLayout from './clientLayout';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import Analytics from '@/components/Analytics'
-import { AuthProvider } from '@/lib/auth/auth-context';
-
+import { Providers } from '@/components/providers';
+import { AuthProvider } from '@/lib/auth/auth-provider';
 
 export default function RootLayout({
   children,
@@ -19,16 +19,18 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-        
       </head>
-      <body className="md:pl-64"> 
-        <AuthProvider>
+      <body> 
+      <AuthProvider>
+        <Providers>
           <ClientLayout>{children}</ClientLayout>
           <Analytics />
           <SpeedInsights />
+        </Providers>
         </AuthProvider>
       </body>
     </html>
   );
 }
+
 export { metadata }

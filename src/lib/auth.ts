@@ -1,7 +1,7 @@
 // src/lib/auth.ts
-import { cookies } from 'next/headers';
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
 import { type User, type Session } from '@supabase/supabase-js';
+import { createPagesServerClient } from '@supabase/auth-helpers-nextjs';
+import type { GetServerSidePropsContext } from 'next';
 
 // Type for auth response
 export type AuthResponse = {
@@ -9,18 +9,18 @@ export type AuthResponse = {
   session: Session | null;
 };
 
-// Main auth function for server components and API routes
-export async function auth(): Promise<AuthResponse> {
-  const cookieStore = cookies();
-  const supabase = createServerComponentClient({ cookies: () => cookieStore });
+// Main auth function for server components and API routes in the Pages Router
+export async function getServerSideAuth(context: GetServerSidePropsContext): Promise<AuthResponse> {
+  const supabase = createPagesServerClient(context);
   
   try {
+    // First get the session
     const {
       data: { session },
       error,
     } = await supabase.auth.getSession();
     
-    console.log("Server auth check:", { 
+    console.log("Server auth check:", {
       hasSession: !!session,
       userId: session?.user?.id || null,
       error: error?.message || null
@@ -35,14 +35,8 @@ export async function auth(): Promise<AuthResponse> {
       return { user: null, session: null };
     }
     
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
-    if (userError) {
-      console.error('Error getting user:', userError);
-      return { user: null, session: null };
-    }
-    
-    return { user, session };
+    // Use the existing session
+    return { user: session.user, session };
   } catch (error) {
     console.error('Error in auth function:', error);
     return { user: null, session: null };
@@ -50,19 +44,47 @@ export async function auth(): Promise<AuthResponse> {
 }
 
 // Shorthand to check if user is authenticated
-export async function isAuthenticated(): Promise<boolean> {
-  const { user } = await auth();
+export async function isAuthenticated(context: GetServerSidePropsContext): Promise<boolean> {
+  const { user } = await getServerSideAuth(context);
   return !!user;
 }
 
 // Get user ID if authenticated
-export async function getUserId(): Promise<string | null> {
-  const { user } = await auth();
+export async function getUserId(context: GetServerSidePropsContext): Promise<string | null> {
+  const { user } = await getServerSideAuth(context);
   return user?.id || null;
 }
 
-// This function can be used with the `withAuth` HOC for protected pages
-export async function getAuthenticatedUser(): Promise<User | null> {
-  const { user } = await auth();
+// Get authenticated user
+export async function getAuthenticatedUser(context: GetServerSidePropsContext): Promise<User | null> {
+  const { user } = await getServerSideAuth(context);
   return user;
+}
+
+// Get access token for API calls
+export async function getAccessToken(context: GetServerSidePropsContext): Promise<string | null> {
+  const { session } = await getServerSideAuth(context);
+  return session?.access_token || null;
+}
+
+// Helper for API routes
+export async function getApiAuth(req: any, res: any): Promise<AuthResponse> {
+  const supabase = createPagesServerClient({ req, res });
+  
+  try {
+    const { data: { session }, error } = await supabase.auth.getSession();
+    
+    if (error) {
+      console.error('API auth error:', error);
+      return { user: null, session: null };
+    }
+    
+    return { 
+      user: session?.user || null, 
+      session: session || null 
+    };
+  } catch (error) {
+    console.error('Error in API auth function:', error);
+    return { user: null, session: null };
+  }
 }

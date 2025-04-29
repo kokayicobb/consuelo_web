@@ -1,15 +1,21 @@
 "use client";
-
+// src/components/Header/index.tsx
 import React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Menu, Search } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { usePathname } from "next/navigation";
 
 export function Header() {
   const [isScrolled, setIsScrolled] = React.useState(false);
+  const pathname = usePathname();
+  
+  // Check if we're in a dashboard or app route
+  const isAppRoute = pathname?.startsWith('/app') || pathname?.startsWith('/dashboard');
 
+  // All hooks must be called at the top level, before any conditional logic
   React.useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 0);
@@ -19,20 +25,25 @@ export function Header() {
   }, []);
 
   // Check if header should be hidden
-  const shouldHide =
+  const shouldHideHeader =
     typeof document !== "undefined" &&
     document.body.getAttribute("data-hide-header") === "true";
 
-  // Return null if the header should be hidden
-  if (shouldHide) {
+  // Check if sidebar should be hidden
+  const shouldHideSidebar =
+    typeof document !== "undefined" &&
+    document.body.getAttribute("data-hide-sidebar") === "true";
+
+  // If we're on an app route or header should be hidden, don't render anything
+  if (isAppRoute || shouldHideHeader) {
     return null;
   }
 
   const navItems = [
     { name: "Agents", href: "/app" },
     { name: "Platform", href: "/app" },
-    { name: "Integrations", href: "/safety" },
-    { name: "Pricing", href: "/stories" },
+    { name: "Integrations", href: "/integrations" },
+    { name: "Pricing", href: "/pricing" },
     { name: "How It Works", href: "/company" },
     { name: "Shopify", href: "/api" },
     { name: "Klayvio", href: "/company" },
@@ -141,23 +152,30 @@ export function Header() {
         </div>
       </header>
 
-      {/* Left sidebar - visible on desktop */}
-      <div className="fixed bottom-0 left-0 top-0 hidden w-48 pl-8 pt-16 md:flex">
-        <nav className="mt-20 flex flex-col">
-          {navItems.map((item) => (
-            <Link
-              key={item.name}
-              href={item.href}
-              className="py-3 text-sm transition-colors hover:text-primary"
-            >
-              {item.name}
-            </Link>
-          ))}
-        </nav>
-      </div>
+      {/* Left sidebar - visible on desktop unless hidden */}
+      {!shouldHideSidebar && (
+        <div className="fixed bottom-0 left-0 top-0 hidden w-48 pl-8 pt-16 md:flex">
+          <nav className="mt-20 flex flex-col">
+            {navItems.map((item) => (
+              <Link
+                key={item.name}
+                href={item.href}
+                className="py-3 text-sm transition-colors hover:text-primary"
+              >
+                {item.name}
+              </Link>
+            ))}
+          </nav>
+        </div>
+      )}
 
       {/* Main content container with padding for header and sidebar */}
-      <div className="pt-16 md:pl-48">{/* Your page content goes here */}</div>
+      <div className={cn(
+        "pt-16", 
+        !shouldHideSidebar ? "md:pl-48" : ""
+      )}>
+        {/* Your page content goes here */}
+      </div>
     </>
   );
 }

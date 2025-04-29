@@ -1,19 +1,26 @@
 // src/app/api/klaviyo/revoke/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { getKlaviyoAccountById, deactivateKlaviyoAccount } from '@/lib/db/klaviyo-accounts';
-import { auth } from '@/lib/auth'; // Your authentication method
+import {  getServerSideAuth } from '@/lib/auth'; // Your authentication method
 import { generateBasicAuthHeader, KLAVIYO_ENDPOINTS } from '@/lib/klaviyo/oath-utils';
 
 export async function POST(request: NextRequest) {
   try {
-    // Ensure the user is authenticated
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
+   // Ensure the user is authenticated
+   const context = {
+    req: request as any, // Cast to 'any' to bypass type mismatch
+    res: null,
+    query: {},
+    resolvedUrl: '',
+    cookies: request.cookies || {}, // Add cookies property
+  };
+  const session = await getServerSideAuth(context as any); // Cast context to 'any'
+  if (!session?.user?.id) {
+    return NextResponse.json(
+      { error: 'Authentication required' },
+      { status: 401 }
+    );
+  }
     
     // Get request body
     const body = await request.json();
