@@ -71,7 +71,7 @@ import { Textarea } from "@/components/ui/textarea";
 // Mock data for customer metrics
 const customerMetrics = [
   { 
-    title: 'Total Customers',
+    title: 'Total Accounts',
     value: '18,672',
     change: 9.1,
     trend: 'up',
@@ -92,7 +92,7 @@ const customerMetrics = [
     icon: <Repeat className="h-4 w-4" />
   },
   { 
-    title: 'Customer Lifetime Value',
+    title: 'Account Lifetime Value',
     value: '$854.20',
     change: -1.8,
     trend: 'down',
@@ -145,7 +145,7 @@ const customers = [
     email: 'olivia.martinez@example.com',
     phone: '+1 (555) 345-6789',
     location: 'Chicago, IL',
-    segment: 'Regular',
+    segment: 'At-Risk',
     totalSpent: 1876.25,
     orders: 17,
     lastOrder: 'Mar 20, 2025',
@@ -400,8 +400,8 @@ const CustomersContent: React.FC = () => {
           </Button>
           {activeTab === 'all-customers' && (
             <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Customer
+              <Plus className="h-4 w-4 mr-1" />
+              Add Accounts
             </Button>
           )}
         </div>

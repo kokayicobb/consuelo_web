@@ -107,6 +107,7 @@ const items = [
     title: "Consuelo for B2C",
      image: "/StablityBlue2.png",
     description: "AI Platform | 5 min read",
+    href: "/platform",
     header: (
       <BackgroundPattern gradientFrom="from-purple-500" gradientTo="to-blue-500">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-full h-full">
@@ -122,6 +123,7 @@ const items = [
   {
     title: "Consuelo for Health & Fitness",
     image: "/StablityPurple1.png",
+    href: "/platform",
     description: "AI Platform | 6 min read",
     header: (
       <BackgroundPattern gradientFrom="from-blue-500" gradientTo="to-cyan-500">
@@ -155,21 +157,21 @@ const items = [
     icon: <IconLock className="h-8 w-8 text-accent" />,
   },
   
-  {
-    title: "Creative Studio",
-    image: "/StablityCloud1.png",
-    description: "Product | 4 min read",
-    header: (
-      <BackgroundPattern gradientFrom="from-cyan-500" gradientTo="to-teal-500">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-full h-full">
-          <path d="M10,90 L50,10 L90,90 Z" fill="none" stroke="white" strokeWidth="2" />
-          <path d="M30,70 L50,30 L70,70" fill="none" stroke="white" strokeWidth="2" />
-          <path d="M10,90 L90,90" fill="none" stroke="white" strokeWidth="2" />
-        </svg>
-      </BackgroundPattern>
-    ),
-    icon: <IconCube className="h-8 w-8 text-accent" />,
-  },
+  // {
+  //   title: "Creative Studio",
+  //   image: "/StablityCloud1.png",
+  //   description: "Product | 4 min read",
+  //   header: (
+  //     <BackgroundPattern gradientFrom="from-cyan-500" gradientTo="to-teal-500">
+  //       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-full h-full">
+  //         <path d="M10,90 L50,10 L90,90 Z" fill="none" stroke="white" strokeWidth="2" />
+  //         <path d="M30,70 L50,30 L70,70" fill="none" stroke="white" strokeWidth="2" />
+  //         <path d="M10,90 L90,90" fill="none" stroke="white" strokeWidth="2" />
+  //       </svg>
+  //     </BackgroundPattern>
+  //   ),
+  //   icon: <IconCube className="h-8 w-8 text-accent" />,
+  // },
   
   // {
   //   title: "Contact",

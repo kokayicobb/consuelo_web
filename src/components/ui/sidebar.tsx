@@ -135,9 +135,9 @@ export const DesktopSidebar = ({
 
   return (
     <motion.div
-      className={cn(
-        "h-full px-4 py-4 hidden md:flex md:flex-col bg-[#191919] dark:bg-[#191919] border-r border-gray-800 w-64 flex-shrink-0 relative",
-        className
+    className={cn(
+      "h-full px-4 py-4 hidden md:flex md:flex-col bg-gray-100 border-r border-gray-200 w-64 flex-shrink-0 relative",
+      className
       )}
       animate={{
         width: animate ? (open ? "16rem" : "4rem") : "16rem",
@@ -158,7 +158,7 @@ export const DesktopSidebar = ({
               setOpen(true);
             }
           }}
-          className="p-2 rounded-md hover:bg-purple-800/40 text-gray-200 transition-colors"
+          className="p-2 rounded-md hover:bg-gray-200 text-gray-600 transition-colors"
           title={locked ? "Unlock sidebar" : "Lock sidebar open"}
         >
           {locked ? <Unlock size={20} /> : <Lock size={20} />}
@@ -179,13 +179,13 @@ export const MobileSidebar = ({
   return (
     <>
       <div
-        className={cn(
-          "h-10 px-4 py-4 flex flex-row md:hidden items-center justify-between bg-[#191919] dark:bg-[#191919] w-full"
-        )}
+       className={cn(
+        "h-10 px-4 py-4 flex flex-row md:hidden items-center justify-between bg-gray-50 w-full"
+      )}
       >
         <div className="flex justify-end z-20 w-full">
           <Menu
-            className="text-gray-200 cursor-pointer"
+           className="text-gray-700 opacity-50 cursor-pointer"
             onClick={() => setOpen(!open)}
           />
         </div>
@@ -200,13 +200,12 @@ export const MobileSidebar = ({
                 ease: "easeInOut",
               }}
               className={cn(
-                // Changed h-full to h-screen and adjusted padding
-                "fixed h-screen w-full inset-0 bg-[#191919] dark:bg-[#191919] p-4 z-[100] flex flex-col justify-between",
+                "fixed h-screen w-full inset-0 bg-gray-100 p-4 z-[100] flex flex-col justify-between",
                 className
               )}
             >
               <div
-                className="absolute right-4 top-4 z-50 text-gray-200 cursor-pointer"
+                className="absolute right-4 top-4 z-50 text-gray-100 cursor-pointer"
                 onClick={() => setOpen(false)}
               >
                 <X />
@@ -259,7 +258,7 @@ export const SidebarLink = ({
     <Link
       href={link.href || ""} 
       className={cn(
-        "flex items-center rounded-lg px-4 py-2.5 text-sm text-gray-200 hover:bg-purple-800/40 hover:text-white transition-colors",
+        "flex items-center rounded-lg px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-800 transition-colors",
         open ? "justify-start" : "justify-center",
         className
       )}
