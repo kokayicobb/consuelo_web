@@ -5,6 +5,8 @@ import { getAllPosts } from "@/utils/markdown";
 import { Metadata } from "next";
 
 
+
+
 import PlatformSection from "@/components/Platform-Screen";
 
 export const metadata: Metadata = {
