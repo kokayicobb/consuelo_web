@@ -14,11 +14,11 @@ export function WavyBackgroundDemo() {
   const [isFocused, setIsFocused] = useState(false);
 
   const placeholders = [
-    "Help me create an email campaign for new customers...",
-    "Create a personalized product recommendation flow...",
-    "Design a re-engagement sequence for dormant customers...",
-    "Set up automated abandoned cart recovery emails...",
-    "Analyze my customer segmentation strategy...",
+    "Help me log this sales call with auto-populated notes...",
+    "Analyze my customer data to identify churn risks...",
+    "Show me which leads need follow-up this week...",
+    "Create a customized email sequence for new clients...",
+    "Generate a performance report for my marketing campaigns...",
   ];
 
   useEffect(() => {
@@ -45,7 +45,7 @@ export function WavyBackgroundDemo() {
           className="mb-8 text-center"
         >
           <h1 className="text-4xl font-medium text-foreground">
-            What can I help with?
+          What can I help with?
           </h1>
         </motion.div>
 
@@ -53,7 +53,7 @@ export function WavyBackgroundDemo() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="w-full max-w-2xl"
+          className="w-full max-w-2xl px-1"
         >
           <div className="relative w-full">
             <div
@@ -71,12 +71,12 @@ export function WavyBackgroundDemo() {
                   onChange={(e) => setInputValue(e.target.value)}
                   onFocus={() => setIsFocused(true)}
                   onBlur={() => setIsFocused(false)}
-                  className="min-h-[120px] w-full resize-none rounded-3xl bg-transparent px-6 py-5 text-foreground outline-none"
+                  className="min-h-[120px] w-full resize-none rounded-3xl bg-transparent px-4 py-5 text-foreground outline-none"
                   placeholder=""
                 />
 
                 {!inputValue && (
-                  <div className="pointer-events-none absolute inset-0 overflow-hidden px-6 py-5 text-muted-foreground">
+                  <div className="pointer-events-none absolute inset-0 overflow-hidden px-4 py-5 text-muted-foreground">
                     <div className="relative h-full">
                       <motion.div
                         key={`current-${currentIndex}`}
@@ -138,23 +138,22 @@ export function WavyBackgroundDemo() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="mt-6 flex flex-wrap items-center justify-center gap-2"
+          className="mt-6 flex flex-wrap items-center justify-center gap-2 px-1"
         >
           <button className="rounded-full border border-border bg-transparent px-4 py-2 text-sm text-foreground transition-colors hover:bg-card/10">
-            AI Agent
+            Lead Scoring
           </button>
           <button className="rounded-full border border-border bg-transparent px-4 py-2 text-sm text-foreground transition-colors hover:bg-card/10">
-            SMS Sequencing
+            Call Notes
           </button>
           <button className="rounded-full border border-border bg-transparent px-4 py-2 text-sm text-foreground transition-colors hover:bg-card/10">
-            Connect My Data
+            Data Integration
           </button>
           <button className="rounded-full border border-border bg-transparent px-4 py-2 text-sm text-foreground transition-colors hover:bg-card/10">
-            Customer Segmentation
+            Churn Analysis
           </button>
-
           <button className="rounded-full border border-border bg-transparent px-4 py-2 text-sm text-foreground transition-colors hover:bg-card/10">
-            More
+            Reporting
           </button>
         </motion.div>
       </div>
