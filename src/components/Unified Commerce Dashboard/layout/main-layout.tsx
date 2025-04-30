@@ -64,9 +64,9 @@ const ChatInterface = () => {
 
   return (
     <>
-      <ExpandableChatHeader className="bg-black text-white">
+      <ExpandableChatHeader className="bg-gray-200 text-gray-800">
         <div className="flex items-center">
-          <div className="mr-2 h-8 w-8 rounded-full bg-white flex items-center justify-center">
+          <div className="mr-2 h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
             <img
               src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/apple-touch-icon-OnEhJzRCthwLXcIuoeeWSqvvYynB9c.png"
               alt="Consuelo Logo"
@@ -77,7 +77,7 @@ const ChatInterface = () => {
         </div>
       </ExpandableChatHeader>
 
-      <ExpandableChatBody className="bg-background dark:bg-muted p-4 space-y-4 w-full">
+      <ExpandableChatBody className="bg-gray-50 dark:bg-gray-100 p-4 space-y-4 w-full">
         {messages.map((message, index) => (
           <div
             key={index}
@@ -88,8 +88,8 @@ const ChatInterface = () => {
             <div
               className={`max-w-[80%] rounded-lg px-4 py-2 ${
                 message.sender === "user"
-                  ? "bg-black text-white"
-                  : "bg-card text-foreground border border-border"
+                  ? "bg-gray-200 text-gray-800"
+                  : "bg-gray-100 text-gray-800 border border-gray-200"
               }`}
             >
               {message.text}
@@ -98,16 +98,16 @@ const ChatInterface = () => {
         ))}
       </ExpandableChatBody>
 
-      <ExpandableChatFooter className="bg-background border-t border-border">
+      <ExpandableChatFooter className="bg-gray-50 border-t border-gray-200">
         <div className="flex items-center gap-2 w-full">
           <Input
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Type your message..."
-            className="flex-1"
+            className="flex-1 bg-gray-50 border-gray-200"
           />
-          <Button onClick={handleSend} size="icon" className="bg-black hover:bg-gray-800">
+          <Button onClick={handleSend} size="icon" className="bg-gray-200 hover:bg-gray-300 text-gray-800">
             <Send size={16} />
           </Button>
         </div>
@@ -150,7 +150,7 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
         return <ChannelsContent />;
       case "inventory":
         return <InventoryContent />;
-      case "customers":
+      case "accounts":
         return <CustomersContent />;
       case "marketing":
         return <MarketingContent />;
@@ -170,64 +170,64 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
     {
       label: "Home",
       href: "#home",
-      icon: <MessageCircle size={20} className="text-gray-200" />,
+      icon: <MessageCircle size={20} className="text-gray-600" />,
       onClick: () => setActiveTab("home"),
     },
     {
       label: "Dashboard",
       href: "#dashboard",
-      icon: <LayoutDashboard size={20} className="text-gray-200" />,
+      icon: <LayoutDashboard size={20} className="text-gray-600" />,
       onClick: () => setActiveTab("dashboard"),
     },
     {
       label: "Channel Performance",
       href: "#channels",
-      icon: <BarChart3 size={20} className="text-gray-200" />,
+      icon: <BarChart3 size={20} className="text-gray-600" />,
       onClick: () => setActiveTab("channels"),
     },
     {
       label: "Inventory Intelligence",
       href: "#inventory",
-      icon: <Package size={20} className="text-gray-200" />,
+      icon: <Package size={20} className="text-gray-600" />,
       onClick: () => setActiveTab("inventory"),
     },
     {
-      label: "Customer Insights",
-      href: "#customers",
-      icon: <Users size={20} className="text-gray-200" />,
-      onClick: () => setActiveTab("customers"),
+      label: "Accounts Insights",
+      href: "#accounts",
+      icon: <Users size={20} className="text-gray-600" />,
+      onClick: () => setActiveTab("accounts"),
     },
     {
       label: "Marketing Analytics",
       href: "#marketing",
-      icon: <PieChart size={20} className="text-gray-200" />,
+      icon: <PieChart size={20} className="text-gray-600" />,
       onClick: () => setActiveTab("marketing"),
     },
     {
       label: "AI Recommendations",
       href: "#ai-insights",
-      icon: <Lightbulb size={20} className="text-gray-200" />,
+      icon: <Lightbulb size={20} className="text-gray-600" />,
       onClick: () => setActiveTab("ai-insights"),
     },
     {
       label: "Integrations",
       href: "#integrations",
-      icon: <Globe size={20} className="text-gray-200" />,
+      icon: <Globe size={20} className="text-gray-600" />,
       onClick: () => setActiveTab("integrations"),
     },
     {
       label: "Settings",
       href: "#settings",
-      icon: <Settings size={20} className="text-gray-200" />,
+      icon: <Settings size={20} className="text-gray-600" />,
       onClick: () => setActiveTab("settings"),
     },
   ];
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-background md:flex-row">
+    <div className="flex h-screen flex-col overflow-hidden bg-gray-200 md:flex-row">
       {!hideSidebar && (
         <Sidebar open={sidebarOpen} setOpen={setSidebarOpen}>
-          <SidebarBody>
+          <SidebarBody className="bg-gray-100">
             <div className="mb-6 flex items-center justify-center gap-2 px-2">
               <div className="h-8 w-8 flex-shrink-0">
                 <img
@@ -236,7 +236,7 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
                   className="h-full w-full object-contain"
                 />
               </div>
-              <span className={`text-xl font-bold text-white ${!sidebarOpen && 'hidden'}`}>
+              <span className={`text-xl font-bold text-gray-800 ${!sidebarOpen && 'hidden'}`}>
                 Consuelo
               </span>
             </div>
@@ -248,25 +248,25 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
                 link={item}
                 className={`${
                   activeTab === item.href.replace("#", "")
-                    ? "bg-gray-700/40 font-medium"
+                    ? "bg-gray-200 font-medium"
                     : ""
-                } text-white hover:bg-gray-700/40 hover:text-white`}
+                } text-gray-700 hover:bg-gray-200 hover:text-gray-800`}
               />
               ))}
             </nav>
       
-            <div className="mt-auto border-t border-gray-800 pt-4">
+            <div className="mt-auto border-t border-gray-200 pt-4">
               <div className="flex items-center justify-center px-4 py-2">
                 <div className="flex-shrink-0">
                   <img
                     className="h-8 w-8 rounded-full"
-                    src="/placeholder-avatar.png"
+                    src="/placeholder-avatar.webp"
                     alt="User avatar"
                   />
                 </div>
                 <div className={`ml-3 ${!sidebarOpen && 'hidden'}`}>
-                  <p className="text-sm font-medium text-white">Sarah Johnson</p>
-                  <p className="text-xs text-gray-400">FashionCo Admin</p>
+                  <p className="text-sm font-medium text-gray-800">Sarah Johnson</p>
+                  <p className="text-xs text-gray-500">Admin</p>
                 </div>
               </div>
             </div>
@@ -274,7 +274,7 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
         </Sidebar>
       )}
    
-      <div className={`flex flex-1 flex-col overflow-y-auto bg-background ${hideSidebar ? 'w-full' : ''}`}>
+      <div className={`flex flex-1 flex-col overflow-y-auto bg-gray-50 ${hideSidebar ? 'w-full' : ''}`}>
         {activeTab !== "home" && !hideSidebar && (
           <Header
             title={
@@ -284,7 +284,7 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
           />
         )}
         <main
-          className={`flex-1 ${activeTab === "home" && !hideSidebar ? "p-0" : "p-4 md:p-6"} bg-background`}
+          className={`flex-1 ${activeTab === "home" && !hideSidebar ? "p-0" : "p-4 md:p-6"} bg-gray-50`}
         >
           {hideSidebar ? children : renderContent()}
         </main>

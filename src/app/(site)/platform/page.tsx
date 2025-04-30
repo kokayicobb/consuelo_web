@@ -4,7 +4,7 @@ import ScrollUp from "@/components/Common/ScrollUp";
 import { getAllPosts } from "@/utils/markdown";
 import { Metadata } from "next";
 
-import IntegrationsSection from "@/components/ui/integrations";
+
 import PlatformSection from "@/components/Platform-Screen";
 
 export const metadata: Metadata = {

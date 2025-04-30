@@ -3,7 +3,8 @@ import ScrollUp from "@/components/Common/ScrollUp";
 import { getAllPosts } from "@/utils/markdown";
 import { Metadata } from "next";
 import UseCases from "@/components/UseCases";
-import IntegrationsSection from "@/components/ui/integrations";
+import IntegrationsSection from "@/components/Integrations";
+
 
 export const metadata: Metadata = {
   title: "Consuelo - See it. Try it. Buy it.",

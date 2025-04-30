@@ -3,15 +3,16 @@ import { Card } from "@/components/ui/card";
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import type * as React from "react";
+import GoogleCalendarSVG from "../ui/Logos/google-calendar";
+import HubSpotSVG from "../ui/Logos/hubspot";
+import KlaviyoLogoSVG from "../ui/Logos/klaviyo";
+import MicrosoftTeamsSVG from "../ui/Logos/microsoft-teams";
+import MindBodySVG from "../ui/Logos/mindbody";
+import ShopifySVG from "../ui/Logos/shopify";
+import StripeSVG from "../ui/Logos/stripe";
+import WooCommerceSVG from "../ui/Logos/woocommerce";
 
-import MindBodySVG from "./Logos/mindbody";
-import GoogleCalendarSVG from "./Logos/google-calendar";
-import MicrosoftTeamsSVG from "./Logos/microsoft-teams";
-import ShopifySVG from "./Logos/shopify";
-import StripeSVG from "./Logos/stripe";
-import HubSpotSVG from "./Logos/hubspot";
-import WooCommerceSVG from "./Logos/woocommerce";
-import KlaviyoLogoSVG from "./Logos/klaviyo";
+
 
 export default function IntegrationsSection() {
   return (
@@ -39,7 +40,7 @@ export default function IntegrationsSection() {
               title="Mindbody"
               description="Integrate class schedules, member data, and attendance metrics to optimize engagement and retention strategies."
             >
-              <MindBodySVG className="h-20 w-20 text-[#E85815]" />
+              <MindBodySVG className="h-200 w-200 text-[#E85815]" />
             </IntegrationCard>
             <IntegrationCard
               title="Shopify"

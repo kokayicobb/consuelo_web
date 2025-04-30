@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -56,14 +57,16 @@ export function PricingCard({ tier, paymentFrequency }: PricingCardProps) {
           )}
         </div>
 
-        <Button 
-          className={cn(
-            "mt-6 w-full rounded-full py-4 text-base font-medium",
-            "bg-zinc-100 text-zinc-900 hover:bg-white dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white"
-          )}
-        >
-          {tier.cta || "Log in to subscribe"}
-        </Button>
+        <Link href="/login">
+  <Button 
+    className={cn(
+      "mt-6 w-full rounded-full py-4 text-base font-medium",
+      "bg-zinc-100 text-zinc-900 hover:bg-white dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white"
+    )}
+  >
+    {tier.cta || "Log in to subscribe"}
+  </Button>
+</Link>
       </div>
 
       <div className="mt-8 flex-grow space-y-4">
@@ -85,7 +88,7 @@ export function PricingCard({ tier, paymentFrequency }: PricingCardProps) {
                   </span>{" "}
                   credits per month{" "}
                   <a
-                    href="#"
+                    href="/login"
                     className="text-zinc-600 dark:text-zinc-400 underline decoration-[0.8px] hover:text-zinc-800 dark:hover:text-zinc-200"
                   >
                     Learn more

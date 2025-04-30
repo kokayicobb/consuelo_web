@@ -11,9 +11,10 @@ import { usePathname } from "next/navigation";
 export function Header() {
   const [isScrolled, setIsScrolled] = React.useState(false);
   const pathname = usePathname();
-  
+
   // Check if we're in a dashboard or app route
-  const isAppRoute = pathname?.startsWith('/app') || pathname?.startsWith('/dashboard');
+  const isAppRoute =
+    pathname?.startsWith("/app") || pathname?.startsWith("/dashboard");
 
   // All hooks must be called at the top level, before any conditional logic
   React.useEffect(() => {
@@ -41,7 +42,7 @@ export function Header() {
 
   const navItems = [
     { name: "Agents", href: "/app" },
-    { name: "Platform", href: "/app" },
+    { name: "Platform", href: "/platform" },
     { name: "Integrations", href: "/integrations" },
     { name: "Pricing", href: "/pricing" },
     { name: "How It Works", href: "/company" },
@@ -52,9 +53,7 @@ export function Header() {
   return (
     <>
       {/* Top header bar - always fully transparent */}
-      <header
-        className="fixed left-0 right-0 top-0 z-50 transition-all duration-300 bg-transparent"
-      >
+      <header className="fixed left-0 right-0 top-0 z-50 bg-transparent transition-all duration-300">
         <div className="flex h-16 items-center justify-between px-8">
           {/* Animated Logo */}
           <Link href="/" className="flex items-center space-x-2">
@@ -116,11 +115,11 @@ export function Header() {
                         Log in
                       </Link>
                       <Button
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
-                        className="w-full justify-start px-0 py-3"
+                        className="w-full justify-start bg-white px-2 py-3 text-black"
                       >
-                        <Search className="mr-2 h-4 w-4" />
+                        <Search className="mr-2 h-4 w-4 opacity-70" />
                         <span>Search</span>
                       </Button>
                     </div>
@@ -170,10 +169,7 @@ export function Header() {
       )}
 
       {/* Main content container with padding for header and sidebar */}
-      <div className={cn(
-        "pt-16", 
-        !shouldHideSidebar ? "md:pl-48" : ""
-      )}>
+      <div className={cn("pt-16", !shouldHideSidebar ? "md:pl-48" : "")}>
         {/* Your page content goes here */}
       </div>
     </>
