@@ -8,7 +8,7 @@ export default function StripeSVG(props: SVGProps<SVGSVGElement>) {
       fill="none"
       {...props}
     >
-      <rect x="0.5" y="0.5" width="157" height="120" rx="3.5" fill="white" stroke="#F3F3F3"/>
+      <rect x="0.5" y="0.5" width="157" height="120" rx="3.5" fill="white" stroke="#FFFDFDFF"/>
       <path 
         fillRule="evenodd" 
         clipRule="evenodd" 
