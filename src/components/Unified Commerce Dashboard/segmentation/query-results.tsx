@@ -18,10 +18,10 @@ import {
   Clock,
   Tag,
 } from "lucide-react";
-import ChartVisualization, {
-  ChartLoading,
-  ChartError,
-} from "./chart-visualization";
+// import ChartVisualization, {
+//   ChartLoading,
+//   ChartError,
+// } from "./chart-visualization";
 import ActionSuggestions, {
   ActionSuggestionsLoading,
 } from "./action-suggestions";
@@ -562,7 +562,7 @@ export default function QueryResults({
       {viewMode === "table" && <CardView data={results} />}
 
       {/* Chart View */}
-      {viewMode === "chart" && (
+      {/* {viewMode === "chart" && (
         <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
           {isLoadingChart ? (
             <ChartLoading />
@@ -572,7 +572,7 @@ export default function QueryResults({
             <ChartError message="Unable to generate a chart for this data" />
           )}
         </div>
-      )}
+      )} */}
 
       {/* Actions View */}
       {viewMode === "actions" && (
