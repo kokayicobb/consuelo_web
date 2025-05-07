@@ -192,12 +192,51 @@ export default function PlatformPage() {
     console.log("actionSuggestions exists:", !!actionSuggestions);
     console.log("===========================");
   };
+  
+  
 
   // Call debugState whenever any of these values change
   useState(() => {
     debugState();
   }, [isLoading, activeStep, sqlQuery, queryResults, isLoadingChart, chartConfig, isLoadingActions, actionSuggestions]);
-
+ 
+  const renderCellValue = (value) => {
+    if (value === null || value === undefined) {
+      return '';
+    }
+    
+    // For Date objects
+    if (value instanceof Date) {
+      return value.toLocaleDateString();
+    }
+    
+    // For timestamps/dates in string format
+    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value)) {
+      try {
+        return new Date(value).toLocaleDateString('en-US', {
+          weekday: 'short',
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric'
+        });
+      } catch (e) {
+        return value;
+      }
+    }
+    
+    // For other objects
+    if (typeof value === 'object') {
+      try {
+        return JSON.stringify(value);
+      } catch (e) {
+        return '[Complex Object]';
+      }
+    }
+    
+    // For primitive values
+    return String(value);
+  };
+  
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-2">Consuelo AI Client Segmentation</h1>
@@ -363,31 +402,31 @@ export default function PlatformPage() {
 
           {/* Table View */}
           {viewMode === 'table' && (
-            <div className="overflow-x-auto">
-              <table className="min-w-full bg-white border border-gray-200">
-                <thead>
-                  <tr className="bg-gray-100">
-                    {columns.map((column) => (
-                      <th key={column} className="py-2 px-3 text-left border-b">
-                        {column}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {queryResults.map((row, rowIndex) => (
-                    <tr key={rowIndex} className={rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                      {columns.map((column) => (
-                        <td key={`${rowIndex}-${column}`} className="py-2 px-3 border-b">
-                          {row[column] !== null ? String(row[column]) : ''}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+  <div className="overflow-x-auto">
+    <table className="min-w-full bg-white border border-gray-200">
+      <thead>
+        <tr className="bg-gray-100">
+          {columns.map((column) => (
+            <th key={column} className="py-2 px-3 text-left border-b">
+              {column}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {queryResults.map((row, rowIndex) => (
+          <tr key={rowIndex} className={rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+            {columns.map((column) => (
+              <td key={`${rowIndex}-${column}`} className="py-2 px-3 border-b">
+                {renderCellValue(row[column])}
+              </td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+)}
 
           {/* Chart View */}
           {viewMode === 'chart' && (

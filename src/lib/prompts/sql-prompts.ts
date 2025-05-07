@@ -193,7 +193,6 @@ JOIN "otf-clients" c ON s."ClientID" = c."ClientID"
 WHERE s."Status" = 'Late Cancel'
   AND s."Date" >= CURRENT_DATE - INTERVAL '30 days'
 ORDER BY s."Date" DESC
-LIMIT 50;
 For each component of the query:
 1. Explain what information it's retrieving
 2. Why this information is useful
