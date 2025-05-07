@@ -192,163 +192,246 @@ export async function generateQuery(input: string) {
     let sqlQuery = '';
     
     // Pattern 1: Late cancellations in a time period
-    if (normalizedInput.includes('late cancel') || 
-        (normalizedInput.includes('cancel') && normalizedInput.includes('last'))) {
-      
-      // Extract time period, default to 30 days
-      let days = 30;
-      const daysMatch = normalizedInput.match(/(\d+)\s*days?/);
-      if (daysMatch && daysMatch[1]) {
-        days = parseInt(daysMatch[1]);
-      }
-      
-      sqlQuery = `SELECT 
-  c."Client ID", 
-  c."Client", 
-  c.Email, 
-  c.Phone, 
-  s.Date, 
-  s.Description, 
-  s.Staff AS "Coach"
-FROM "otf-clients" c
-JOIN "otf-schedule" s ON s."Client ID" = c."Client ID"
-WHERE s.Status = 'Late Cancel' 
-  AND s.Date >= CURRENT_DATE - INTERVAL '${days} days'
-ORDER BY s.Date DESC;`;
-    } 
-    
-    // Pattern 2: New members without class attendance
-    else if ((normalizedInput.includes('new') || normalizedInput.includes('member')) && 
-             (normalizedInput.includes('no class') || normalizedInput.includes('haven') || normalizedInput.includes('not attend'))) {
-      
-      sqlQuery = `SELECT 
-  c."Client ID", 
-  c."Client", 
-  c.Email, 
-  c.Phone, 
-  c."Pricing Option", 
-  c."Expiration Date"
-FROM "otf-clients" c
-LEFT JOIN "otf-schedule" s ON c."Client ID" = s."Client ID"
-WHERE s."Client ID" IS NULL 
-  AND c."Expiration Date" > CURRENT_DATE
-ORDER BY c."Expiration Date" DESC;`;
-    }
-    
-    // Pattern 3: Coach attendance rates
-    else if (normalizedInput.includes('coach') && 
-             (normalizedInput.includes('attend') || normalizedInput.includes('rate'))) {
-      
-      // Extract time period, default to current year
-      let timeFrame = "DATE_TRUNC('year', CURRENT_DATE)";
-      if (normalizedInput.includes('month')) {
-        timeFrame = "DATE_TRUNC('month', CURRENT_DATE)";
-      } else if (normalizedInput.includes('week')) {
-        timeFrame = "DATE_TRUNC('week', CURRENT_DATE)";
-      }
-      
-      sqlQuery = `SELECT 
-  s.Staff AS "Coach",
-  COUNT(*) AS "Total_Classes",
-  SUM(CASE WHEN s.Status = 'Signed in' THEN 1 ELSE 0 END) AS "Attended_Classes",
-  ROUND(100.0 * SUM(CASE WHEN s.Status = 'Signed in' THEN 1 ELSE 0 END) / COUNT(*), 2) AS "Attendance_Rate"
-FROM "otf-schedule" s
-WHERE s.Date >= ${timeFrame}
-GROUP BY s.Staff
-HAVING COUNT(*) > 10
-ORDER BY "Attendance_Rate" DESC;`;
-    }
-    
-    // Pattern 4: Clients who haven't visited recently
-    else if (normalizedInput.includes('client') && 
-             (normalizedInput.includes('haven\'t visit') || normalizedInput.includes('not visit'))) {
-      
-      // Extract time period, default to 60 days
-      let days = 60;
-      const daysMatch = normalizedInput.match(/(\d+)\s*days?/);
-      if (daysMatch && daysMatch[1]) {
-        days = parseInt(daysMatch[1]);
-      }
-      
-      sqlQuery = `SELECT 
-  c."Client ID", 
-  c."Client", 
-  c.Email, 
-  c.Phone, 
-  c."Last Visit", 
-  c."Pricing Option"
-FROM "otf-clients" c
-WHERE c."Last Visit" < CURRENT_DATE - INTERVAL '${days} days'
-  AND c."Expiration Date" > CURRENT_DATE
-ORDER BY c."Last Visit" ASC;`;
-    }
-    
-    // Pattern 5: Membership expiration/renewal
-    else if (normalizedInput.includes('expir') || normalizedInput.includes('renew') || normalizedInput.includes('expiration')) {
-      
-      // Extract time period, default to 30 days
-      let days = 30;
-      const daysMatch = normalizedInput.match(/(\d+)\s*days?/);
-      if (daysMatch && daysMatch[1]) {
-        days = parseInt(daysMatch[1]);
-      }
-      
-      sqlQuery = `SELECT 
-  c."Client ID", 
-  c."Client", 
-  c.Email, 
-  c.Phone, 
-  c."Pricing Option", 
-  c."Expiration Date",
-  c."Last Visit"
-FROM "otf-clients" c
-WHERE c."Expiration Date" BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '${days} days'
-ORDER BY c."Expiration Date" ASC;`;
-    }
-    
-    // Pattern 6: Clients who need follow-up contact
-    else if (normalizedInput.includes('follow') || normalizedInput.includes('contact') || normalizedInput.includes('reach out')) {
-      
-      // Extract time period, default to 30 days
-      let days = 30;
-      const daysMatch = normalizedInput.match(/(\d+)\s*days?/);
-      if (daysMatch && daysMatch[1]) {
-        days = parseInt(daysMatch[1]);
-      }
-      
-      sqlQuery = `SELECT 
-  c."Client ID", 
-  c."Client", 
-  c.Email, 
-  c.Phone, 
-  c."Last Visit", 
-  l."Log Date" AS "Last_Contact_Date"
-FROM "otf-clients" c
-LEFT JOIN (
-  SELECT "Client", MAX("Log Date") AS "Log Date"
-  FROM "otf-contact-logs"
-  GROUP BY "Client"
-) l ON l."Client" = c."Client"
-WHERE (l."Log Date" IS NULL OR l."Log Date" < CURRENT_DATE - INTERVAL '${days} days')
-  AND c."Expiration Date" > CURRENT_DATE
-ORDER BY l."Log Date" ASC NULLS FIRST;`;
-    }
-    
-    // Default query if no pattern matches
-    else {
-      sqlQuery = `SELECT 
-  c."Client ID", 
-  c."Client", 
-  c.Email, 
-  c.Phone, 
-  c."Last Visit", 
-  c."# Visits", 
-  c."Pricing Option", 
-  c."Expiration Date"
-FROM "otf-clients" c
-ORDER BY c."Last Visit" DESC
-LIMIT 50;`;
-    }
+   // In your generateQuery function, update the template for late cancellations:
+// Pattern 1: Late cancellations in a time period
+// Updated generateQuery with contact logs added to all paths
+if (normalizedInput.includes('late cancel') || 
+(normalizedInput.includes('cancel') && normalizedInput.includes('last'))) {
+
+  let days = 30;
+  const daysMatch = normalizedInput.match(/(\d+)\s*days?/);
+  if (daysMatch && daysMatch[1]) {
+    days = parseInt(daysMatch[1]);
+  }
+
+  sqlQuery = `SELECT 
+    c."Client ID", 
+    c."Client", 
+    c.Email, 
+    c.Phone, 
+    s.Date, 
+    s.Description, 
+    s.Staff AS "Coach",
+    (
+      SELECT json_agg(log_data)
+      FROM (
+        SELECT 
+          cl."Log Date",
+          cl."Contact Method",
+          cl."Contact Log",
+          cl."Log Type",
+          cl."Sub Type",
+          cl."Contact"
+        FROM "otf-contact-logs" cl
+        WHERE cl."Client" = c."Client"
+        ORDER BY cl."Log Date" DESC
+      ) as log_data
+    ) as "contact_logs"
+  FROM "otf-clients" c
+  JOIN "otf-schedule" s ON s."Client ID" = c."Client ID"
+  WHERE s.Status = 'Late Cancel' 
+    AND s.Date >= CURRENT_DATE - INTERVAL '${days} days'
+  ORDER BY s.Date DESC;`;
+}
+
+else if ((normalizedInput.includes('new') || normalizedInput.includes('member')) && 
+         (normalizedInput.includes('no class') || normalizedInput.includes('haven') || normalizedInput.includes('not attend'))) {
+
+  sqlQuery = `SELECT 
+    c."Client ID", 
+    c."Client", 
+    c.Email, 
+    c.Phone, 
+    c."Pricing Option", 
+    c."Expiration Date",
+    (
+      SELECT json_agg(log_data)
+      FROM (
+        SELECT 
+          cl."Log Date",
+          cl."Contact Method",
+          cl."Contact Log",
+          cl."Log Type",
+          cl."Sub Type",
+          cl."Contact"
+        FROM "otf-contact-logs" cl
+        WHERE cl."Client" = c."Client"
+        ORDER BY cl."Log Date" DESC
+      ) as log_data
+    ) as "contact_logs"
+  FROM "otf-clients" c
+  LEFT JOIN "otf-schedule" s ON c."Client ID" = s."Client ID"
+  WHERE s."Client ID" IS NULL 
+    AND c."Expiration Date" > CURRENT_DATE
+  ORDER BY c."Expiration Date" DESC;`;
+}
+
+else if (normalizedInput.includes('coach') && 
+         (normalizedInput.includes('attend') || normalizedInput.includes('rate'))) {
+
+  let timeFrame = "DATE_TRUNC('year', CURRENT_DATE)";
+  if (normalizedInput.includes('month')) {
+    timeFrame = "DATE_TRUNC('month', CURRENT_DATE)";
+  } else if (normalizedInput.includes('week')) {
+    timeFrame = "DATE_TRUNC('week', CURRENT_DATE)";
+  }
+
+  sqlQuery = `SELECT 
+    s.Staff AS "Coach",
+    COUNT(*) AS "Total_Classes",
+    SUM(CASE WHEN s.Status = 'Signed in' THEN 1 ELSE 0 END) AS "Attended_Classes",
+    ROUND(100.0 * SUM(CASE WHEN s.Status = 'Signed in' THEN 1 ELSE 0 END) / COUNT(*), 2) AS "Attendance_Rate"
+  FROM "otf-schedule" s
+  WHERE s.Date >= ${timeFrame}
+  GROUP BY s.Staff
+  HAVING COUNT(*) > 10
+  ORDER BY "Attendance_Rate" DESC;`;
+}
+
+else if (normalizedInput.includes('client') && 
+         (normalizedInput.includes("haven't visit") || normalizedInput.includes('not visit'))) {
+
+  let days = 60;
+  const daysMatch = normalizedInput.match(/(\d+)\s*days?/);
+  if (daysMatch && daysMatch[1]) {
+    days = parseInt(daysMatch[1]);
+  }
+
+  sqlQuery = `SELECT 
+    c."Client ID", 
+    c."Client", 
+    c.Email, 
+    c.Phone, 
+    c."Last Visit", 
+    c."Pricing Option",
+    (
+      SELECT json_agg(log_data)
+      FROM (
+        SELECT 
+          cl."Log Date",
+          cl."Contact Method",
+          cl."Contact Log",
+          cl."Log Type",
+          cl."Sub Type",
+          cl."Contact"
+        FROM "otf-contact-logs" cl
+        WHERE cl."Client" = c."Client"
+        ORDER BY cl."Log Date" DESC
+      ) as log_data
+    ) as "contact_logs"
+  FROM "otf-clients" c
+  WHERE c."Last Visit" < CURRENT_DATE - INTERVAL '${days} days'
+    AND c."Expiration Date" > CURRENT_DATE
+  ORDER BY c."Last Visit" ASC;`;
+}
+
+else if (normalizedInput.includes('expir') || normalizedInput.includes('renew') || normalizedInput.includes('expiration')) {
+
+  let days = 30;
+  const daysMatch = normalizedInput.match(/(\d+)\s*days?/);
+  if (daysMatch && daysMatch[1]) {
+    days = parseInt(daysMatch[1]);
+  }
+
+  sqlQuery = `SELECT 
+    c."Client ID", 
+    c."Client", 
+    c.Email, 
+    c.Phone, 
+    c."Pricing Option", 
+    c."Expiration Date",
+    c."Last Visit",
+    (
+      SELECT json_agg(log_data)
+      FROM (
+        SELECT 
+          cl."Log Date",
+          cl."Contact Method",
+          cl."Contact Log",
+          cl."Log Type",
+          cl."Sub Type",
+          cl."Contact"
+        FROM "otf-contact-logs" cl
+        WHERE cl."Client" = c."Client"
+        ORDER BY cl."Log Date" DESC
+      ) as log_data
+    ) as "contact_logs"
+  FROM "otf-clients" c
+  WHERE c."Expiration Date" BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '${days} days'
+  ORDER BY c."Expiration Date" ASC;`;
+}
+
+else if (normalizedInput.includes('follow') || normalizedInput.includes('contact') || normalizedInput.includes('reach out')) {
+
+  let days = 30;
+  const daysMatch = normalizedInput.match(/(\d+)\s*days?/);
+  if (daysMatch && daysMatch[1]) {
+    days = parseInt(daysMatch[1]);
+  }
+
+  sqlQuery = `SELECT 
+    c."Client ID", 
+    c."Client", 
+    c.Email, 
+    c.Phone, 
+    c."Last Visit", 
+    l."Log Date" AS "Last_Contact_Date",
+    (
+      SELECT json_agg(log_data)
+      FROM (
+        SELECT 
+          cl."Log Date",
+          cl."Contact Method",
+          cl."Contact Log",
+          cl."Log Type",
+          cl."Sub Type",
+          cl."Contact"
+        FROM "otf-contact-logs" cl
+        WHERE cl."Client" = c."Client"
+        ORDER BY cl."Log Date" DESC
+      ) as log_data
+    ) as "contact_logs"
+  FROM "otf-clients" c
+  LEFT JOIN (
+    SELECT "Client", MAX("Log Date") AS "Log Date"
+    FROM "otf-contact-logs"
+    GROUP BY "Client"
+  ) l ON l."Client" = c."Client"
+  WHERE (l."Log Date" IS NULL OR l."Log Date" < CURRENT_DATE - INTERVAL '${days} days')
+    AND c."Expiration Date" > CURRENT_DATE
+  ORDER BY l."Log Date" ASC NULLS FIRST;`;
+}
+
+else {
+  sqlQuery = `SELECT 
+    c."Client ID", 
+    c."Client", 
+    c.Email, 
+    c.Phone, 
+    c."Last Visit", 
+    c."# Visits", 
+    c."Pricing Option", 
+    c."Expiration Date",
+    (
+      SELECT json_agg(log_data)
+      FROM (
+        SELECT 
+          cl."Log Date",
+          cl."Contact Method",
+          cl."Contact Log",
+          cl."Log Type",
+          cl."Sub Type",
+          cl."Contact"
+        FROM "otf-contact-logs" cl
+        WHERE cl."Client" = c."Client"
+        ORDER BY cl."Log Date" DESC
+      ) as log_data
+    ) as "contact_logs"
+  FROM "otf-clients" c
+  ORDER BY c."Last Visit" DESC
+  LIMIT 50;`;
+}
+
     
     debugLog(context, 'Template-based SQL query generated', {
       finalSql: sqlQuery

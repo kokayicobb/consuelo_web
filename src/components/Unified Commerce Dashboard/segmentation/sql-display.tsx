@@ -3,15 +3,15 @@
 import type { QueryExplanation } from "@/types/otf"
 import { Clipboard } from "lucide-react"
 import { useState } from "react"
-
 interface SqlDisplayProps {
   sqlQuery: string
   explanations: QueryExplanation[]
   isExplaining: boolean
   onExplain: () => Promise<void>
+  aiThoughts: string // <-- NEW prop
 }
 
-export default function SqlDisplay({ sqlQuery, explanations, isExplaining, onExplain }: SqlDisplayProps) {
+export default function SqlDisplay({ sqlQuery, explanations, isExplaining, onExplain, aiThoughts }: SqlDisplayProps) {
   const [copied, setCopied] = useState(false)
 
   const copyToClipboard = () => {
@@ -23,14 +23,14 @@ export default function SqlDisplay({ sqlQuery, explanations, isExplaining, onExp
   return (
     <div className="mb-8">
       <div className="flex justify-between items-center mb-2">
-        <h2 className="text-xl font-semibold">Generated SQL</h2>
+        <h2 className="text-xl font-semibold">AI Thought Process</h2>
         <div className="flex gap-2">
           <button
             onClick={copyToClipboard}
             className="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded-md flex items-center gap-1"
           >
             <Clipboard size={14} />
-            {copied ? "Copied!" : "Copy"}
+            {copied ? "Copied!" : "Copy SQL"}
           </button>
           <button
             onClick={onExplain}
@@ -41,8 +41,9 @@ export default function SqlDisplay({ sqlQuery, explanations, isExplaining, onExp
           </button>
         </div>
       </div>
+
       <div className="bg-gray-800 text-gray-100 p-4 rounded-md overflow-x-auto">
-        <pre className="whitespace-pre-wrap">{sqlQuery}</pre>
+        <pre className="whitespace-pre-wrap">{aiThoughts}</pre>
       </div>
 
       {/* SQL Explanation */}
