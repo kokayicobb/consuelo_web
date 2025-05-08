@@ -1,36 +1,53 @@
+// src/app/chat/segmentation/ActionSuggestions.tsx
 "use client"
 
-import { CheckCircle, Clock, Mail, Phone, Calendar, Users, AlertTriangle } from "lucide-react"
+import {
+  CheckCircle, Clock, Mail, Phone, Calendar, Users, AlertTriangle,
+  ListPlus, // Icon for creating a segment
+  Send, // Icon for sending email
+  PhoneCall, // Icon for generating call list
+  Search, // Icon for analysis/insight
+} from "lucide-react"
 
-interface ActionSuggestionsProps {
-  actions: {
-    title: string
-    description: string
-    priority: "high" | "medium" | "low"
-    icon?: string
-    clientCount?: number
-  }[]
-  summary: string
+// Define the structure of a suggested action, adding 'type' and optional 'payload'
+interface SuggestedAction {
+  title: string;
+  description: string;
+  priority: "high" | "medium" | "low";
+  icon?: string; // Keep icon string for flexible mapping
+  type: "create_segment" | "email_campaign" | "generate_call_list" | "view_segment" | "analysis_insight" | string; // Add specific action types
+  clientCount?: number;
+  payload?: any; // Data needed to execute the action (e.g., segment criteria, email template ID)
 }
 
-export default function ActionSuggestions({ actions, summary }: ActionSuggestionsProps) {
+interface ActionSuggestionsProps {
+  actions: SuggestedAction[]; // Use the new interface for actions
+  summary: string;
+  // Callback function to trigger when an action button is clicked
+  onInitiateAction: (action: SuggestedAction) => void;
+}
+
+export default function ActionSuggestions({ actions, summary, onInitiateAction }: ActionSuggestionsProps) {
   // Map icon strings to Lucide icons
-  const getIcon = (iconName?: string) => {
-    switch (iconName) {
-      case "mail":
-        return <Mail className="h-5 w-5" />
-      case "phone":
-        return <Phone className="h-5 w-5" />
-      case "calendar":
-        return <Calendar className="h-5 w-5" />
-      case "users":
-        return <Users className="h-5 w-5" />
-      case "alert":
-        return <AlertTriangle className="h-5 w-5" />
-      case "clock":
-        return <Clock className="h-5 w-5" />
-      default:
-        return <CheckCircle className="h-5 w-5" />
+  const getIcon = (iconName?: string, actionType?: string) => {
+    // Prioritize mapping by action type if iconName is not specific
+    switch (actionType) {
+        case "create_segment": return <ListPlus className="h-5 w-5" />;
+        case "email_campaign": return <Send className="h-5 w-5" />;
+        case "generate_call_list": return <PhoneCall className="h-5 w-5" />;
+        case "view_segment": return <Users className="h-5 w-5" />; // Users icon for viewing a segment
+        case "analysis_insight": return <Search className="h-5 w-5" />; // Search/magnifying glass for analysis
+        // Fallback to iconName if type doesn't have a specific icon mapping
+        default:
+             switch (iconName) {
+                case "mail": return <Mail className="h-5 w-5" />;
+                case "phone": return <Phone className="h-5 w-5" />;
+                case "calendar": return <Calendar className="h-5 w-5" />;
+                case "users": return <Users className="h-5 w-5" />;
+                case "alert": return <AlertTriangle className="h-5 w-5" />;
+                case "clock": return <Clock className="h-5 w-5" />;
+                default: return <CheckCircle className="h-5 w-5" />; // Default generic icon
+            }
     }
   }
 
@@ -48,41 +65,85 @@ export default function ActionSuggestions({ actions, summary }: ActionSuggestion
     }
   }
 
+   // Determine the button text based on action type
+    const getButtonText = (actionType: string) => {
+        switch (actionType) {
+            case "create_segment": return "Create Segment";
+            case "email_campaign": return "Initiate Email Campaign";
+            case "generate_call_list": return "Generate Call List";
+            case "view_segment": return "View Segment";
+            case "analysis_insight": return "Explore Insight";
+            default: return "Take Action";
+        }
+    }
+
+     // Determine button color/style
+     const getButtonClass = (priority: string) => {
+        switch (priority) {
+            case "high": return "bg-red-600 hover:bg-red-700 focus:ring-red-500";
+            case "medium": return "bg-yellow-600 hover:bg-yellow-700 focus:ring-yellow-500";
+            case "low": return "bg-green-600 hover:bg-green-700 focus:ring-green-500";
+            default: return "bg-sky-600 hover:bg-sky-700 focus:ring-sky-500"; // Default blue for general actions
+        }
+     }
+
+
   return (
     <div className="space-y-6">
+        <h3 className="text-lg font-semibold text-gray-800">Suggested Actions</h3> {/* Added a section header */}
       {summary && (
         <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-          <h3 className="font-medium text-blue-800 mb-2">Summary</h3>
-          <p className="text-gray-700">{summary}</p>
+          <h4 className="font-medium text-blue-800 mb-2">Summary</h4> {/* Changed h3 to h4 */}
+          <p className="text-gray-700 text-sm">{summary}</p> {/* Added text-sm */}
         </div>
       )}
 
-      <div className="grid gap-4 md:grid-cols-2">
-        {actions.map((action, index) => (
-          <div
-            key={index}
-            className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-start gap-3">
-              <div className="p-2 bg-orange-100 text-orange-600 rounded-full">{getIcon(action.icon)}</div>
-              <div className="flex-1">
-                <div className="flex justify-between items-start">
-                  <h3 className="font-medium text-gray-900">{action.title}</h3>
-                  <span className={`text-xs px-2 py-1 rounded-full ${getPriorityColor(action.priority)}`}>
-                    {action.priority}
-                  </span>
+      {actions.length === 0 && !summary && (
+         <div className="rounded-lg border border-gray-200 bg-white p-6 text-center shadow-sm">
+            <p className="text-gray-500">No action suggestions available for this message.</p>
+          </div>
+      )}
+
+      {actions.length > 0 && (
+        <div className="grid gap-4 md:grid-cols-2">
+          {actions.map((action, index) => (
+            <div
+              key={index} // Using index as key for now, assuming action list order is stable
+              className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between" // Use flex to push button to bottom
+            >
+              <div className="flex items-start gap-3 flex-grow"> {/* Flex-grow to take available space */}
+                <div className="p-2 bg-orange-100 text-orange-600 rounded-full flex-shrink-0"> {/* flex-shrink-0 to prevent icon from shrinking */}
+                   {/* Pass action type to getIcon for better mapping */}
+                  {getIcon(action.icon, action.type)}
+                  </div>
+                <div className="flex-1">
+                  <div className="flex justify-between items-start">
+                    <h3 className="font-medium text-gray-900 pr-2">{action.title}</h3> {/* Added pr-2 to give space */}
+                    <span className={`text-xs px-2 py-1 rounded-full ${getPriorityColor(action.priority)} flex-shrink-0`}> {/* flex-shrink-0 to prevent shrinking */}
+                      {action.priority}
+                    </span>
+                  </div>
+                  <p className="text-gray-600 text-sm mt-1">{action.description}</p>
+                  {action.clientCount !== undefined && ( // Check for undefined to allow 0 count
+                    <p className="text-sm text-gray-500 mt-2">
+                      Affects {action.clientCount} {action.clientCount === 1 ? "client" : "clients"}
+                    </p>
+                  )}
                 </div>
-                <p className="text-gray-600 text-sm mt-1">{action.description}</p>
-                {action.clientCount && (
-                  <p className="text-sm text-gray-500 mt-2">
-                    Affects {action.clientCount} {action.clientCount === 1 ? "client" : "clients"}
-                  </p>
-                )}
+              </div>
+               {/* Action Button */}
+              <div className="mt-4 pt-3 border-t border-gray-100"> {/* Separator */}
+                <button
+                  onClick={() => onInitiateAction(action)}
+                  className={`w-full inline-flex justify-center items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 ${getButtonClass(action.priority)}`}
+                >
+                  {getButtonText(action.type)}
+                </button>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -91,7 +152,7 @@ export function ActionSuggestionsLoading() {
   return (
     <div className="flex flex-col items-center justify-center py-12">
       <div className="mb-4 w-12 h-12 rounded-full border-4 border-orange-200 border-t-orange-500 animate-spin"></div>
-      <p className="text-gray-600">Generating action suggestions...</p>
+      <p className="text-gray-600 text-sm">Generating action suggestions...</p> {/* Added text-sm */}
     </div>
   )
 }
