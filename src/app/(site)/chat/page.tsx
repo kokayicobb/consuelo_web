@@ -1,6 +1,7 @@
 
+import ChatContent from "@/components/Unified Commerce Dashboard/home/chat-content";
 import { Metadata } from "next";
-import PlatformPage from "@/components/Unified Commerce Dashboard/home/components/chat";
+
 
 
 
@@ -13,7 +14,7 @@ const VirtualTryOn = () => {
   return (
     <main>
      
-        <PlatformPage />
+        <ChatContent />
       
     </main>
   );
