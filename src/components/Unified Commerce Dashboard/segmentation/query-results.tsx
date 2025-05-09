@@ -3,6 +3,8 @@
 import { useState } from "react";
 
 import type { Config } from "@/types/otf";
+import type { OtfClient, OtfContactLog } from "@/types/otf";
+
 import {
   Download,
   Table,
@@ -21,9 +23,11 @@ import {
 
 import ActionSuggestions, {
   ActionSuggestionsLoading,
-  type SuggestedAction // <<--- 1. IMPORT SuggestedAction TYPE
+  type SuggestedAction
 } from "./action-suggestions";
 import ContactModal from "./contact-modal";
+import ScriptModal from "./script-modal"; // Import our new ScriptModal component
+import { ClientScriptData, ContactModalState, ScriptModalState } from "@/types/scripts-modal";
 
 interface QueryResultsProps {
   results: any[];
@@ -32,10 +36,10 @@ interface QueryResultsProps {
   setViewMode: (mode: "table" | "actions") => void;
   chartConfig: Config | null;
   isLoadingChart: boolean;
-  actionSuggestions: { actions: SuggestedAction[]; summary: string } | null; // <-- Use SuggestedAction[] here
+  actionSuggestions: { actions: SuggestedAction[]; summary: string } | null;
   isLoadingActions: boolean;
   isCompactView?: boolean;
-  onInitiateAction: (action: SuggestedAction) => void; // <<--- 2. ADD onInitiateAction TO PROPS INTERFACE
+  onInitiateAction: (action: SuggestedAction) => void;
 }
 
 export default function QueryResults({
@@ -50,6 +54,8 @@ export default function QueryResults({
   isCompactView = false,
   onInitiateAction, 
 }: QueryResultsProps) {
+  // New state for script modal
+  const [scriptModal, setScriptModal] = useState<ScriptModalState | null>(null);
 
   // Determine the actual list of client items for display and counting
   // This handles the case where results might be nested like [[...]]
@@ -112,11 +118,7 @@ export default function QueryResults({
       logType: "Follow-up",
       subType: "",
     });
-    const [contactModal, setContactModal] = useState<{
-      type: "email" | "phone";
-      contact: string;
-      clientName: string;
-    } | null>(null);
+    const [contactModal, setContactModal] = useState<ContactModalState | null>(null);
 
     // 'data' is already the flattened displayableResults.
     // This check handles the case where data might be an array of strings,
@@ -134,6 +136,47 @@ export default function QueryResults({
       return item && typeof item === 'object' ? item : {};
     });
 
+    // Handler for script generation callback from ContactModal
+    const handleScriptGenerated = (script: string, scriptType: 'call' | 'email') => {
+      // First make sure the contact modal is closed
+      setContactModal(null);
+      
+      // Then open the script modal with the generated script
+      setScriptModal({
+        isOpen: true,
+        type: scriptType,
+        clientName: contactModal?.clientName || "Client",
+        script
+      });
+    };
+
+    const handleGenerateScript = (scriptType: 'call' | 'email', clientName: string, contact: string) => {
+      // Find the client data for this person
+      const client = normalizedData.find(item => 
+        item && typeof item === 'object' && item["Client"] === clientName
+      );
+      
+      if (client) {
+        // Create an action payload with the client ID and contact info
+        const action: SuggestedAction = {
+          type: scriptType === 'call' ? 'generate_call_script' : 'generate_email_script',
+          title: scriptType === 'call' ? 'Generate Call Script' : 'Generate Email Script',
+          description: `Generate ${scriptType} script for ${clientName}`,
+          priority: 'medium',
+          payload: {
+            clientId: client["Client ID"],
+            contact: contact
+          }
+        };
+        
+        // Pass this to the parent component's onInitiateAction handler
+        onInitiateAction(action);
+      } else {
+        // Fallback if client isn't found
+        console.error(`Client data not found for ${clientName}`);
+        alert(`Error: Could not find client data for ${clientName}`);
+      }
+    };
 
     const handleShowMore = () => {
       setVisibleCards((prev) => prev + 20);
@@ -269,10 +312,24 @@ export default function QueryResults({
                               if (
                                 typeof key === 'string' && (key.toLowerCase().includes("email") || key.toLowerCase().includes("phone"))
                               ) {
+                                // Extract client data for the modal
+                                const clientData: ClientScriptData = {
+                                  // Store the full client information
+                                  clientInfo: item as Partial<OtfClient>,
+                                  // Extract contact logs with proper typing
+                                  contactLogs: (item.contact_logs || []) as OtfContactLog[],
+                                  // Extract specific fields for convenience
+                                  membershipType: item["Membership Type"] || "Orange 60 - Tornado",
+                                  coach: item["Coach"] || item["Staff"] || "",
+                                  joinDate: item["Join Date"] || "",
+                                  lastVisit: item["Last Visit"] || ""
+                                };
+                                
                                 setContactModal({
                                   type: key.toLowerCase().includes("email") ? "email" : "phone",
                                   contact: String(value), // Ensure value is a string
                                   clientName,
+                                  clientData // Pass clientData directly through the modal state
                                 });
                               }
                             }}
@@ -443,31 +500,24 @@ export default function QueryResults({
             >
               Show More ({visibleCards} of {normalizedData.length})
             </button>
-            {contactModal && (
-              <ContactModal
-                isOpen={!!contactModal}
-                onClose={() => setContactModal(null)}
-                type={contactModal.type}
-                contact={contactModal.contact}
-                clientName={contactModal.clientName}
-              />
-            )}
           </div>
         )}
-         {/* Render modal outside the grid loop */}
-         {contactModal && (
+        
+        {/* Render ContactModal with new clientData prop */}
+        {contactModal && (
           <ContactModal
             isOpen={!!contactModal}
             onClose={() => setContactModal(null)}
             type={contactModal.type}
             contact={contactModal.contact}
             clientName={contactModal.clientName}
+            clientData={contactModal.clientData}
+            onScriptGenerated={handleScriptGenerated}
           />
         )}
       </div>
     );
   };
-
 
   return (
     <div>
@@ -536,13 +586,26 @@ export default function QueryResults({
           ) : actionSuggestions ? (
             <ActionSuggestions
                 actions={actionSuggestions.actions}
-                summary={actionSuggestions.summary} onInitiateAction={onInitiateAction}          />
+                summary={actionSuggestions.summary} 
+                onInitiateAction={onInitiateAction}
+            />
           ) : (
             <div className="rounded-lg border border-gray-200 bg-white p-6 text-center shadow-sm">
               <p className="text-gray-500">Unable to generate action suggestions for this data</p>
             </div>
           )}
         </div>
+      )}
+
+      {/* Script Modal - Render when scriptModal state is not null */}
+      {scriptModal && (
+        <ScriptModal
+          isOpen={scriptModal.isOpen}
+          onClose={() => setScriptModal(null)}
+          scriptType={scriptModal.type}
+          clientName={scriptModal.clientName}
+          script={scriptModal.script}
+        />
       )}
     </div>
   );

@@ -1,20 +1,19 @@
-// src/app/chat/segmentation/SideArtifactPanel.tsx (or your path)
 "use client";
 
-import React, { useState } from 'react'; // Added useState
+import React, { useState } from 'react';
+import { XMarkIcon, ArrowsPointingOutIcon, ArrowsPointingInIcon, ArrowLeftIcon, ClipboardDocumentIcon, CheckIcon } from '@heroicons/react/24/outline';
+import type { ChatMessageData } from '@/types/chats';
+import { QueryResults } from '../../segmentation';
 
-import { XMarkIcon, ArrowsPointingOutIcon, ArrowsPointingInIcon } from '@heroicons/react/24/outline';
-import type { ChatMessageData } from '@/types/chats'; // Ensure ChatMessageData can hold userQuery
-import { QueryResults } from '../../segmentation'; // Make sure this path is correct
-
-
-import type { OtfContactLog } from '@/types/otf'; // Adjust path
+import type { OtfContactLog } from '@/types/otf';
 import { generateSalesScript } from '@/lib/actions';
 import { SuggestedAction } from '../../segmentation/action-suggestions';
+import ScriptModal from '../../segmentation/script-modal';
+
 
 interface SideArtifactPanelProps {
-  data: ChatMessageData | null; // ChatMessageData should ideally include userQuery
-  userQuery?: string; // << OR pass userQuery as a separate prop
+  data: ChatMessageData | null;
+  userQuery?: string;
   isOpen: boolean;
   isExpanded: boolean;
   onClose: () => void;
@@ -24,38 +23,64 @@ interface SideArtifactPanelProps {
 
 const SideArtifactPanel: React.FC<SideArtifactPanelProps> = ({
   data,
-  userQuery, // << Destructure userQuery if passed as separate prop
+  userQuery,
   isOpen,
   isExpanded,
   onClose,
   onToggleExpand,
   onViewModeChange
 }) => {
-  // --- STATE FOR SCRIPT GENERATION MODAL ---
-  const [generatedScriptModalOpen, setGeneratedScriptModalOpen] = useState(false);
-  const [generatedScriptContent, setGeneratedScriptContent] = useState("");
+  // State for script generation
   const [isGeneratingScript, setIsGeneratingScript] = useState(false);
+  
+  // State for script modal
+  const [scriptModal, setScriptModal] = useState<{
+    isOpen: boolean;
+    type: 'call' | 'email';
+    clientName?: string;
+    script: string;
+  } | null>(null);
+  
+  // State for clipboard copy
+  const [isCopied, setIsCopied] = useState(false);
 
   if (!isOpen || !data) {
     return null;
   }
 
   // Resolve userQuery: prefer prop, then from data object
-  const currentQueryContext = userQuery || data?.userQuery || ""; // <<< Get userQuery
+  const currentQueryContext = userQuery || data?.userQuery || "";
 
-  // --- handleInitiateAction IMPLEMENTATION ---
+  // Handle copying script to clipboard
+  const handleCopyToClipboard = () => {
+    if (scriptModal) {
+      navigator.clipboard.writeText(scriptModal.script);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000); // Reset after 2 seconds
+    }
+  };
+
+  // handleInitiateAction implementation
   const handleInitiateAction = async (action: SuggestedAction) => {
     console.log('[SideArtifactPanel] handleInitiateAction triggered. Action:', action);
 
     if (action.type === "generate_call_script" || action.type === "generate_email_script") {
       console.log(`[SideArtifactPanel] Matched script generation type: ${action.type}`);
       setIsGeneratingScript(true);
-      setGeneratedScriptContent("");
+      
+      const scriptType = action.type === "generate_call_script" ? 'call' : 'email';
+      
+      // Initialize script modal with loading state
+      setScriptModal({
+        isOpen: true,
+        type: scriptType,
+        script: "Generating script...",
+      });
 
       let logsForScript: OtfContactLog[] = [];
       let specificClientName: string | undefined = undefined;
       
-      // Use displayableResults logic similar to QueryResults, or directly from data.queryResults
+      // Use displayableResults logic
       const resultsToUse =
         data.queryResults &&
         data.queryResults.length > 0 &&
@@ -66,7 +91,6 @@ const SideArtifactPanel: React.FC<SideArtifactPanelProps> = ({
 
       console.log('[SideArtifactPanel] Current queryResults for script:', resultsToUse);
       console.log('[SideArtifactPanel] Current userQuery/context for script:', currentQueryContext);
-
 
       if (action.payload?.clientId && resultsToUse.length > 0) {
         const targetClient = resultsToUse.find(client => client["Client ID"] === action.payload.clientId);
@@ -86,25 +110,52 @@ const SideArtifactPanel: React.FC<SideArtifactPanelProps> = ({
       }
 
       try {
+        // Extract any additional client data we might have
+        let clientContext = {};
+        if (action.payload?.clientId && resultsToUse.length > 0) {
+          const targetClient = resultsToUse.find(client => client["Client ID"] === action.payload.clientId);
+          if (targetClient) {
+            clientContext = {
+              membershipType: targetClient["Membership Type"] || "Orange 60 - Tornado",
+              coach: targetClient["Coach"] || "",
+              joinDate: targetClient["Join Date"] || "",
+              lastVisit: targetClient["Last Visit"] || ""
+            };
+          }
+        }
+        
         const scriptParams = {
           contactLogs: logsForScript.length > 0 ? logsForScript : undefined,
-          scriptType: action.type === "generate_call_script" ? 'call' : 'email' as 'call' | 'email',
+          scriptType: scriptType as 'call' | 'email',
           clientName: specificClientName,
           queryContext: currentQueryContext,
+          clientContext: clientContext
         };
         console.log('[SideArtifactPanel] Calling generateSalesScript with params:', scriptParams);
 
         const script = await generateSalesScript(scriptParams);
 
         console.log('[SideArtifactPanel] Script generated successfully:', script);
-        setGeneratedScriptContent(script);
-        setGeneratedScriptModalOpen(true);
+        
+        // Update script modal with the generated content
+        setScriptModal({
+          isOpen: true,
+          type: scriptType,
+          clientName: specificClientName,
+          script: script
+        });
 
       } catch (error) {
         console.error('[SideArtifactPanel] Error generating script:', error);
-        alert(`Error generating script: ${error instanceof Error ? error.message : "Unknown error"}`);
-        setGeneratedScriptContent(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
-        setGeneratedScriptModalOpen(true);
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        
+        // Update script modal with error message
+        setScriptModal({
+          isOpen: true,
+          type: scriptType,
+          clientName: specificClientName,
+          script: `Error generating script: ${errorMessage}`
+        });
       } finally {
         setIsGeneratingScript(false);
       }
@@ -113,21 +164,6 @@ const SideArtifactPanel: React.FC<SideArtifactPanelProps> = ({
       alert(`Action type: ${action.type} \nPayload: ${JSON.stringify(action.payload)}`);
     }
   };
-
-  // --- SCRIPT DISPLAY MODAL (simple version) ---
-  const ScriptDisplayModal = () => (
-    <div style={{
-        position: 'fixed', top: '0', left: '0', right: '0', bottom: '0',
-        backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex',
-        alignItems: 'center', justifyContent: 'center', zIndex: 1050 // Higher z-index
-    }}>
-      <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', width: '80%', maxWidth: '600px', maxHeight: '80vh', overflowY: 'auto' }}>
-        <h3>Generated Script</h3>
-        {isGeneratingScript ? <p>Loading...</p> : <pre style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>{generatedScriptContent}</pre>}
-        <button onClick={() => setGeneratedScriptModalOpen(false)} style={{ marginTop: '10px', padding: '8px 12px', cursor: 'pointer' }}>Close</button>
-      </div>
-    </div>
-  );
 
   const panelBaseClasses = "bg-white shadow-2xl flex flex-col transition-all duration-300 ease-in-out border-gray-200";
   let panelSizeAndPositionClasses = "";
@@ -138,9 +174,9 @@ const SideArtifactPanel: React.FC<SideArtifactPanelProps> = ({
     panelSizeAndPositionClasses = "fixed top-0 right-0 h-full w-4/5 sm:w-3/5 md:w-7/12 lg:w-1/2 xl:w-5/12 z-30 border-l";
   }
 
-  // --- Ensure script generation actions are available ---
+  // Ensure script generation actions are available
   const currentSuggestedActions = data.actionSuggestions?.actions || [];
-  const alwaysAvailableScriptActions: SuggestedAction[] = [ // Ensure SuggestedAction type is used
+  const alwaysAvailableScriptActions: SuggestedAction[] = [
       { title: "Generate Call Script", description: "Create a sales call script for the current context.", priority: "medium", type: "generate_call_script" },
       { title: "Generate Email Script", description: "Create a sales email script for the current context.", priority: "medium", type: "generate_email_script" }
   ];
@@ -156,7 +192,6 @@ const SideArtifactPanel: React.FC<SideArtifactPanelProps> = ({
       summary: data.actionSuggestions?.summary || "Review actions or generate scripts."
   };
 
-
   return (
     <>
       {isExpanded && (
@@ -168,10 +203,10 @@ const SideArtifactPanel: React.FC<SideArtifactPanelProps> = ({
 
       <div className={`${panelBaseClasses} ${panelSizeAndPositionClasses}`}>
         <div className="flex items-center justify-between p-3.5 border-b border-gray-200 bg-gray-50 flex-shrink-0">
-          {/* ... header ... */}
-           <h3 className="text-md font-semibold text-gray-700 truncate">
+          <h3 className="text-md font-semibold text-gray-700 truncate">
             Query Analysis & Results
           </h3>
+          
           <div className="flex items-center space-x-1.5">
             <button
               onClick={onToggleExpand}
@@ -192,7 +227,6 @@ const SideArtifactPanel: React.FC<SideArtifactPanelProps> = ({
 
         <div className="flex-grow p-4 overflow-y-auto space-y-4">
           {data.error && (
-            // ... error display ...
             <div className="rounded-md bg-red-50 p-4 text-red-700 border border-red-200">
               <h4 className="font-medium">Error Processing Query</h4>
               <p>{data.error}</p>
@@ -206,23 +240,34 @@ const SideArtifactPanel: React.FC<SideArtifactPanelProps> = ({
               viewMode={data.viewMode || 'cards'}
               setViewMode={onViewModeChange}
               chartConfig={data.chartConfig}
-              isLoadingChart={!!data.isLoadingChart} // Ensure boolean
-              actionSuggestions={actionSuggestionsForQueryResults} // Pass combined actions
-              isLoadingActions={!!data.isLoadingActions} // Ensure boolean
+              isLoadingChart={!!data.isLoadingChart}
+              actionSuggestions={actionSuggestionsForQueryResults}
+              isLoadingActions={!!data.isLoadingActions}
               isCompactView={!isExpanded}
-              onInitiateAction={handleInitiateAction} // <<<< PASS THE HANDLER HERE
+              onInitiateAction={handleInitiateAction}
             />
           ) : null}
-          {/* ... rest of your conditional rendering ... */}
-           {data.queryResults && data.queryResults.length === 0 && data.sqlQuery && !data.error && (
+          
+          {data.queryResults && data.queryResults.length === 0 && data.sqlQuery && !data.error && (
             <p className="text-sm text-gray-600 p-3 bg-gray-100 rounded-md">No clients match these criteria.</p>
           )}
-           {!data.sqlQuery && !data.error && (
-             <p className="text-sm text-gray-500 p-3">No details to display for this message.</p>
-           )}
+          
+          {!data.sqlQuery && !data.error && (
+            <p className="text-sm text-gray-500 p-3">No details to display for this message.</p>
+          )}
         </div>
       </div>
-      {generatedScriptModalOpen && <ScriptDisplayModal />}
+
+      {/* Script Modal */}
+      {scriptModal && (
+        <ScriptModal
+          isOpen={scriptModal.isOpen}
+          onClose={() => setScriptModal(null)}
+          scriptType={scriptModal.type}
+          clientName={scriptModal.clientName}
+          script={scriptModal.script}
+        />
+      )}
     </>
   );
 };

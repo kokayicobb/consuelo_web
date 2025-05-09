@@ -1,24 +1,79 @@
 // components/ContactModal.tsx
 import { Dialog } from "@headlessui/react"
-import { Fragment } from "react"
+import { Fragment, useState } from "react"
 import { Mail, Phone, MessageSquare, Clock, X } from "lucide-react"
+import { generateSalesScript } from "@/lib/actions" // Import the generateSalesScript function
 
-export default function ContactModal({ isOpen, onClose, type, contact, clientName }: {
+import type { OtfContactLog } from "@/types/otf"
+import { ClientScriptData } from "@/types/scripts-modal"
+
+export default function ContactModal({ 
+  isOpen, 
+  onClose, 
+  type, 
+  contact, 
+  clientName,
+  clientData = {}, // Add clientData parameter with default empty object
+  onScriptGenerated = (script, scriptType) => {} // Add new prop for script generation callback
+}: {
   isOpen: boolean
   onClose: () => void
   type: "email" | "phone"
   contact: string
   clientName: string
+  clientData?: ClientScriptData
+  onScriptGenerated?: (script: string, scriptType: 'call' | 'email') => void
 }) {
+  // Add state for script generation loading state
+  const [isGeneratingScript, setIsGeneratingScript] = useState(false)
+
+  // Function to handle script generation
+  const handleGenerateScript = async (scriptType: 'call' | 'email') => {
+    try {
+      setIsGeneratingScript(true)
+      
+      // Use the clientData directly from props
+      const contactLogs = clientData?.contactLogs || [];
+      
+      // Generate script using the existing function from lib/actions.ts
+      const script = await generateSalesScript({
+        scriptType,
+        clientName,
+        queryContext: `Contact ${clientName} via ${scriptType === 'call' ? 'phone' : 'email'} at ${contact}`,
+        contactLogs: contactLogs, // Pass the contact logs for personalization
+       
+      })
+      
+      // Close this modal first
+      onClose()
+      
+      // Pass the generated script back to parent component
+      onScriptGenerated(script, scriptType)
+    } catch (error) {
+      console.error("Error generating script:", error)
+      alert(`Error generating script: ${error instanceof Error ? error.message : "Unknown error"}`)
+    } finally {
+      setIsGeneratingScript(false)
+    }
+  }
+
   const actions = type === "email"
     ? [
         { label: "Draft Email", icon: <Mail size={16} />, action: () => alert("Opening email draft...") },
-        { label: "Generate Email Script", icon: <MessageSquare size={16} />, action: () => alert("Generating script...") },
+        { 
+          label: "Generate Email Script", 
+          icon: <MessageSquare size={16} />, 
+          action: () => handleGenerateScript('email')
+        },
         { label: "Schedule Follow-up", icon: <Clock size={16} />, action: () => alert("Scheduling...") },
       ]
     : [
         { label: "Initiate Call", icon: <Phone size={16} />, action: () => alert("Initiating call...") },
-        { label: "Generate Call Script", icon: <MessageSquare size={16} />, action: () => alert("Generating script...") },
+        { 
+          label: "Generate Call Script", 
+          icon: <MessageSquare size={16} />, 
+          action: () => handleGenerateScript('call')
+        },
         { label: "Schedule Follow-up", icon: <Clock size={16} />, action: () => alert("Scheduling...") },
       ]
 
@@ -39,9 +94,14 @@ export default function ContactModal({ isOpen, onClose, type, contact, clientNam
                 key={label}
                 onClick={action}
                 className="flex items-center gap-2 w-full bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md"
+                disabled={isGeneratingScript && label.includes("Generate")}
               >
-                {icon}
-                {label}
+                {isGeneratingScript && label.includes("Generate") ? (
+                  <div className="animate-spin h-4 w-4 border-2 border-gray-500 border-t-transparent rounded-full mr-2"></div>
+                ) : (
+                  icon
+                )}
+                {isGeneratingScript && label.includes("Generate") ? "Generating..." : label}
               </button>
             ))}
           </div>
