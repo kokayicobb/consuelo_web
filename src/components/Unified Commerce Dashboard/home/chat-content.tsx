@@ -9,15 +9,17 @@ import {
   generateChartConfig,
   explainQuery,
   generateActionSuggestions,
-} from "@/lib/actions";
+  // No need to import generateSalesScript here, it's called by SideArtifactPanel
+} from "@/lib/actions"; // Assuming this is your server actions file path
 
-import { ChatMessage, ChatMessageData } from "@/types/chats"; // Using your specified path
-import { SegmentationForm, ExampleQueries } from "../segmentation"; // Using your specified path
-import ChatMessageItem from "./components/chat-message-item"; // Using your specified path
-import SideArtifactPanel from "./components/side.panel"; // Using your specified path
+import { ChatMessage, ChatMessageData } from "@/types/chats";
+import { SegmentationForm, ExampleQueries } from "../segmentation";
+import ChatMessageItem from "./components/chat-message-item";
+import SideArtifactPanel from "./components/side.panel"; // Ensure this path is correct
 
 
 const EXAMPLE_QUERIES = [
+  // ... your example queries (no change needed here)
   {
     name: "🚀 Member Engagement & Retention",
     description: "Keep your members active, identify churn risks, and celebrate milestones.",
@@ -80,9 +82,10 @@ export default function ChatContent() {
   const [isInChatMode, setIsInChatMode] = useState(false);
 
   const [sideArtifactData, setSideArtifactData] = useState<ChatMessageData | null>(null);
-  const [currentMessageIdForPanel, setCurrentMessageIdForPanel] = useState<string | null>(null); // To track which message's data is in panel
+  const [currentMessageIdForPanel, setCurrentMessageIdForPanel] = useState<string | null>(null);
   const [isSideArtifactOpen, setIsSideArtifactOpen] = useState(false);
   const [isSideArtifactExpanded, setIsSideArtifactExpanded] = useState(false);
+  const [lastUserQueryForPanel, setLastUserQueryForPanel] = useState<string>(""); // Store userQuery for the panel
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
@@ -92,33 +95,33 @@ export default function ChatContent() {
     }
   }, [chatMessages, isInChatMode]);
 
-  // Modified addMessage to return the full message object
   const addMessage = (message: Omit<ChatMessage, 'id' | 'timestamp'>): ChatMessage => {
     const newMessage = { ...message, id: uuidv4(), timestamp: new Date() };
     setChatMessages(prev => [...prev, newMessage]);
-    return newMessage; // Return the full message with ID and timestamp
+    return newMessage;
   };
 
-  const handleOpenSideArtifact = (data: ChatMessageData, messageId: string) => {
+  const handleOpenSideArtifact = (data: ChatMessageData, messageId: string, userQueryContext: string) => {
     setSideArtifactData(data);
-    setCurrentMessageIdForPanel(messageId); // Track which message's data is open
+    setCurrentMessageIdForPanel(messageId);
+    setLastUserQueryForPanel(userQueryContext); // Store the user query associated with this panel's data
     setIsSideArtifactOpen(true);
-     // Ensure it's not expanded when newly opened, unless it was already expanded for this item
-    if (sideArtifactData !== data) { // Only reset expansion if data is different
+    if (sideArtifactData !== data) {
         setIsSideArtifactExpanded(false);
     }
   };
 
   const handleCloseSideArtifact = () => {
     setIsSideArtifactOpen(false);
-    setCurrentMessageIdForPanel(null); // Clear tracker when panel is closed
-    setIsSideArtifactExpanded(false); 
+    setCurrentMessageIdForPanel(null);
+    setIsSideArtifactExpanded(false);
+    // setLastUserQueryForPanel(""); // Optionally clear it
   };
 
   const handleToggleSideArtifactExpand = () => {
     setIsSideArtifactExpanded(prev => !prev);
   };
-  
+
   const handleArtifactViewModeChange = (newMode: "table" | "chart" | "actions") => {
     setSideArtifactData(prevData => prevData ? { ...prevData, viewMode: newMode } : null);
   };
@@ -130,21 +133,29 @@ export default function ChatContent() {
       setIsInChatMode(true);
       addMessage({ role: 'assistant', content: "Hello! I'm Consuelo. Let's find those clients for you." });
     }
-    
+
     setTimeout(() => { addMessage({ role: 'user', content: userQuery }); }, 0);
-    setInputValue(""); 
+    setInputValue("");
     setIsLoading(true);
-    handleCloseSideArtifact(); // Close any existing panel when new query starts
-    const tempResponseData: ChatMessageData = { viewMode: "cards" }; // Default to cards
+    handleCloseSideArtifact();
+
+    // Store the userQuery that initiated this process
+    const currentQueryContext = userQuery;
+
+    // Initialize tempResponseData with the userQuery
+    const tempResponseData: ChatMessageData = {
+      viewMode: "cards",
+      userQuery: currentQueryContext, // <<<< STORE userQuery HERE
+    };
 
     try {
-      addMessage({ role: 'system', content: `Thinking about: "${userQuery}"...` });
+      addMessage({ role: 'system', content: `Thinking about: "${currentQueryContext}"...` });
+      tempResponseData.aiThoughts = `To answer "${currentQueryContext}", I'm starting by formulating a precise database query.`;
       addMessage({ role: 'system', content: "1. Translating your request into a database query..."});
-      tempResponseData.aiThoughts = `To answer "${userQuery}", I'm starting by formulating a precise database query.`;
-      const generatedSql = await generateQuery(userQuery);
+      const generatedSql = await generateQuery(currentQueryContext); // Pass currentQueryContext
       tempResponseData.sqlQuery = generatedSql;
       addMessage({ role: 'system', content: "   - SQL Generated." });
-      
+
       addMessage({ role: 'system', content: "2. Running the query against the database..."});
       let results = await runGeneratedSQLQuery(generatedSql);
       addMessage({ role: 'system', content: "   - Query Executed." });
@@ -161,14 +172,14 @@ export default function ChatContent() {
 
         try {
           const [chartResult, actionResult, explanationResult] = await Promise.allSettled([
-            generateChartConfig(results, userQuery),
-            generateActionSuggestions(results, userQuery),
-            explainQuery(userQuery, generatedSql)
+            generateChartConfig(results, currentQueryContext), // Pass currentQueryContext
+            generateActionSuggestions(results, currentQueryContext), // Pass currentQueryContext
+            explainQuery(currentQueryContext, generatedSql) // Pass currentQueryContext
           ]);
           if (chartResult.status === "fulfilled") tempResponseData.chartConfig = chartResult.value;
           if (actionResult.status === "fulfilled") tempResponseData.actionSuggestions = actionResult.value;
           if (explanationResult.status === "fulfilled") tempResponseData.explanations = explanationResult.value;
-        } catch (vizError) { 
+        } catch (vizError) {
           console.error("Viz/Action/Explanation error:", vizError);
           addMessage({role: 'system', content: "Error during result analysis."});
         } finally {
@@ -179,17 +190,16 @@ export default function ChatContent() {
         tempResponseData.queryResults = []; tempResponseData.columns = [];
         addMessage({role: 'system', content: "No specific data found, but here's the SQL I tried:"});
       }
-      
-      // Capture the full message object returned by addMessage
+
       const finalAssistantMessage = addMessage({
         role: 'assistant',
-        content: `I've processed your request for "${userQuery}".`,
-        data: { ...tempResponseData } 
+        content: `I've processed your request for "${currentQueryContext}".`,
+        data: { ...tempResponseData } // tempResponseData already includes userQuery
       });
 
-      // Automatically open side panel for this new assistant message
       if (finalAssistantMessage.data && !finalAssistantMessage.data.error) {
-        handleOpenSideArtifact(finalAssistantMessage.data, finalAssistantMessage.id); // Pass message ID
+        // Pass the currentQueryContext when opening the panel
+        handleOpenSideArtifact(finalAssistantMessage.data, finalAssistantMessage.id, currentQueryContext);
       }
 
     } catch (err) {
@@ -198,7 +208,7 @@ export default function ChatContent() {
       addMessage({
         role: 'assistant',
         content: "I encountered an issue processing your request.",
-        data: { error: errorMsg }
+        data: { error: errorMsg, userQuery: currentQueryContext } // Also include userQuery in error data
       });
     } finally {
       setIsLoading(false);
@@ -206,16 +216,16 @@ export default function ChatContent() {
   };
 
   const handleExampleQuerySelection = (query: string) => {
-    const prefixedQuery = `Search: ${query}`;
-    setInputValue(prefixedQuery);
+    // const prefixedQuery = `Search: ${query}`; // If you want a prefix
+    setInputValue(query); // Set directly for cleaner input
     const targetTextareaId = isInChatMode ? '#chat-input-form textarea' : '#research-textarea';
-    // Ensure the element exists before trying to focus
     const targetTextarea = document.querySelector<HTMLTextAreaElement>(targetTextareaId);
     targetTextarea?.focus();
   };
 
   if (!isInChatMode) {
-    return (
+    // ... (Initial view, no changes needed here)
+     return (
       <div className="min-h-screen flex flex-col items-center bg-white text-gray-900 px-4 py-10 sm:py-16">
         <main className="w-full max-w-3xl flex flex-col items-center space-y-10 sm:space-y-12">
           <header className="text-center">
@@ -227,8 +237,8 @@ export default function ChatContent() {
             </p>
           </header>
           <div className="w-full">
-            {/* Ensure SegmentationForm has an id for its textarea if handleExampleQuerySelection needs to focus it */}
             <SegmentationForm
+             
               inputValue={inputValue}
               setInputValue={setInputValue}
               handleSubmit={handleSubmit}
@@ -253,26 +263,24 @@ export default function ChatContent() {
       </div>
     );
   }
-  
-  // Adjusted main chat area width calculation when panel is open and not expanded
-  const chatAreaMarginRight = isSideArtifactOpen && !isSideArtifactExpanded 
-    ? 'mr-[80vw] sm:mr-[60vw] md:mr-[calc(100vw*7/12)] lg:mr-[50vw] xl:mr-[calc(100vw*5/12)]' 
+
+  const chatAreaMarginRight = isSideArtifactOpen && !isSideArtifactExpanded
+    ? 'mr-[80vw] sm:mr-[60vw] md:mr-[calc(100vw*7/12)] lg:mr-[50vw] xl:mr-[calc(100vw*5/12)]'
     : '';
 
   return (
     <div className="relative flex w-full h-screen overflow-hidden">
-        {/* Main Chat Area */}
         <div className={`flex flex-col flex-grow h-full transition-all duration-300 ease-in-out ${chatAreaMarginRight}`}>
-            {/* <header className="py-3 px-4 sm:px-6 bg-white border-b border-gray-200 text-center sticky top-0 z-20">
-                <h1 className="text-xl font-semibold text-gray-800">Consuelo AI Chat</h1>
-            </header> */}
             <div ref={chatContainerRef} className="flex-grow overflow-y-auto p-4 sm:p-6 space-y-4 bg-gray-50">
                 {chatMessages.map((msg) => (
-                <ChatMessageItem 
-                    key={msg.id} 
+                <ChatMessageItem
+                    key={msg.id}
                     message={msg}
-                    // Pass correct handlers to ChatMessageItem
-                    onViewDetailsRequest={msg.role === 'assistant' && msg.data && !msg.data.error ? (data) => handleOpenSideArtifact(data, msg.id) : undefined}
+                    onViewDetailsRequest={
+                      msg.role === 'assistant' && msg.data && !msg.data.error
+                        ? (data) => handleOpenSideArtifact(data, msg.id, msg.data?.userQuery || lastUserQueryForPanel || "")
+                        : undefined
+                    }
                     onClosePanelRequest={isSideArtifactOpen && currentMessageIdForPanel === msg.id ? handleCloseSideArtifact : undefined}
                     isDisplayedInPanel={isSideArtifactOpen && currentMessageIdForPanel === msg.id}
                 />
@@ -284,13 +292,14 @@ export default function ChatContent() {
                   setInputValue={setInputValue}
                   handleSubmit={handleSubmit}
                   isLoading={isLoading}
+                  // Add an ID to the textarea inside SegmentationForm if not already present for focusing
                 />
             </div>
         </div>
 
-        {/* Side Artifact Panel */}
         <SideArtifactPanel
             data={sideArtifactData}
+            userQuery={lastUserQueryForPanel} // Pass the stored userQuery
             isOpen={isSideArtifactOpen}
             isExpanded={isSideArtifactExpanded}
             onClose={handleCloseSideArtifact}

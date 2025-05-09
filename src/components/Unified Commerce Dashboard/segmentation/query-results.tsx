@@ -1,11 +1,11 @@
-// src/app/chat/segmentation/query-results.tsx
 "use client";
 
 import { useState } from "react";
+
 import type { Config } from "@/types/otf";
 import {
   Download,
-  Table, // Keeping Table icon for Cards view
+  Table,
   ListChecks,
   ChevronRight,
   User,
@@ -18,44 +18,37 @@ import {
   Clock,
   Tag,
 } from "lucide-react";
-// Remove BarChart icon as Chart view is removed
-
-// ChartVisualization imports removed
-// import ChartVisualization, {
-//   ChartLoading,
-//   ChartError,
-// } from "./chart-visualization";
 
 import ActionSuggestions, {
   ActionSuggestionsLoading,
+  type SuggestedAction // <<--- 1. IMPORT SuggestedAction TYPE
 } from "./action-suggestions";
 import ContactModal from "./contact-modal";
 
-// Updated viewMode types to only reflect the modes we are supporting/button options
 interface QueryResultsProps {
-  results: any[]; // This might be [item1, item2] OR [[item1, item2]]
+  results: any[];
   columns: string[];
-  // viewMode can be 'table' (for cards) or 'actions'
-  // Keep 'cards' in the type if the parent SideArtifactPanel might initially send it
-  viewMode: "table" | "actions" | "cards"| "chart"; // Parent might send 'cards', buttons set 'table' or 'actions'
-  setViewMode: (mode: "table" | "actions") => void; // Buttons will only set these two modes
-  chartConfig: Config | null; // Still needed for potential chart data, even if view is removed
-  isLoadingChart: boolean; // Still needed for potential chart data
-  actionSuggestions: any | null;
+  viewMode: "table" | "actions" | "cards"| "chart";
+  setViewMode: (mode: "table" | "actions") => void;
+  chartConfig: Config | null;
+  isLoadingChart: boolean;
+  actionSuggestions: { actions: SuggestedAction[]; summary: string } | null; // <-- Use SuggestedAction[] here
   isLoadingActions: boolean;
   isCompactView?: boolean;
+  onInitiateAction: (action: SuggestedAction) => void; // <<--- 2. ADD onInitiateAction TO PROPS INTERFACE
 }
 
 export default function QueryResults({
-  results: initialResults, // Rename incoming prop
+  results: initialResults,
   columns,
   viewMode,
   setViewMode,
-  chartConfig, // Keep prop for potential future use or data handling
-  isLoadingChart, // Keep prop for potential future use or data handling
+  chartConfig,
+  isLoadingChart,
   actionSuggestions,
   isLoadingActions,
   isCompactView = false,
+  onInitiateAction, 
 }: QueryResultsProps) {
 
   // Determine the actual list of client items for display and counting
@@ -543,9 +536,7 @@ export default function QueryResults({
           ) : actionSuggestions ? (
             <ActionSuggestions
                 actions={actionSuggestions.actions}
-                summary={actionSuggestions.summary} onInitiateAction={function (action: ({})): void {
-                  throw new Error("Function not implemented.");
-                } }            />
+                summary={actionSuggestions.summary} onInitiateAction={onInitiateAction}          />
           ) : (
             <div className="rounded-lg border border-gray-200 bg-white p-6 text-center shadow-sm">
               <p className="text-gray-500">Unable to generate action suggestions for this data</p>

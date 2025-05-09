@@ -4,7 +4,7 @@ import { streamText } from "ai"
 import { groq } from "@ai-sdk/groq"
 import { supabaseAdmin } from "@/lib/supabase/client"
 import { SQL_EXPLANATION_PROMPT } from "@/lib/prompts/sql-prompts"
-import type { QueryExplanation } from "@/types/otf"
+import type { OtfContactLog, QueryExplanation } from "@/types/otf"
 
 const AI_TASK_TIMEOUT = 120000 // 2 minutes
 
@@ -98,7 +98,7 @@ async function safeStreamText(params: any) {
 
     debugLog(context, "Raw stream response received", {
       rawTextLength: fullText.length,
-      rawTextSample: fullText.slice(0, 200),
+      rawTextSample: fullText.slice(0, 200), // Log a sample, not the whole potentially large raw text
     })
 
     // Step 1: Remove all common non-SQL metadata patterns
@@ -126,6 +126,8 @@ async function safeStreamText(params: any) {
       debugLog(context, "Extracted token contents", {
         tokenCount: tokens.length,
         extractedPreview: extractedSQL.slice(0, 100),
+        // Optionally log a sample of the extracted content before final cleaning
+        // extractedContentSample: extractedSQL.slice(0, 500),
       })
     } else {
       // Not a tokenized response, use the processed text
@@ -172,18 +174,21 @@ async function safeStreamText(params: any) {
       .replace(/(\botf-[a-z-]+\b)(?!")/g, '$1"')
       .replace(/"otf-/g, '"otf-')
 
-    debugLog(context, "Final cleaned SQL", {
+    // *** MODIFIED DEBUG LOG STATEMENT HERE ***
+    debugLog(context, "Successfully extracted and cleaned SQL query", {
       textLength: cleanSQL.length,
-      sqlText: cleanSQL,
+      sqlText: cleanSQL, // This is the actual cleaned SQL query string
     })
+    // *** END OF MODIFIED DEBUG LOG STATEMENT ***
 
-    return cleanSQL
+
+    return cleanSQL // This function returns the cleaned SQL string
   } catch (error) {
-    debugLog(context, "AI request failed", {
+    debugLog(context, "AI request failed during text processing", {
       error: error instanceof Error ? error.message : "Unknown error",
       duration: Date.now() - startTime,
     })
-    throw error
+    throw error // Re-throw the error
   }
 }
 
@@ -715,4 +720,103 @@ function hashString(str: string): string {
     hash |= 0
   }
   return hash.toString(16)
+}
+export async function generateSalesScript({
+  contactLogs,
+  scriptType,
+  clientName,
+  queryContext,
+  businessName = "Orange Theory Fitness" // Default to Orange Theory, can be overridden
+}: {
+  contactLogs?: OtfContactLog[];
+  scriptType: 'call' | 'email';
+  clientName?: string;
+  queryContext?: string;
+  businessName?: string;
+}): Promise<string> {
+  const context = "generateSalesScript";
+  const startTime = Date.now();
+  debugLog(context, "Script generation started", { 
+    scriptType, 
+    clientName, 
+    hasLogs: !!contactLogs?.length,
+    logCount: contactLogs?.length || 0,
+    queryContextPreview: queryContext?.slice(0, 50) 
+  });
+
+  let promptContent = `You are an expert sales scriptwriter for ${businessName}.
+Your task is to generate a compelling and effective ${scriptType} script.`;
+
+  if (clientName) {
+    promptContent += `\nThe script is specifically for a client named ${clientName}. Personalize the script for them.`;
+  } else if (queryContext) {
+    promptContent += `\nThe script should be generally applicable to clients related to the following context or query: "${queryContext}".`;
+  }
+
+  if (contactLogs && contactLogs.length > 0) {
+    promptContent += `\n\nTo help you tailor the script, here's a summary or examples of recent contact logs (up to 5 shown):\n`;
+    // Provide a sample of logs to guide the LLM without overwhelming it
+    const logsSample = contactLogs.slice(0, 5); // Show up to 5 logs
+    const formattedLogs = logsSample.map(log => {
+      let logEntry = `- Log Date: ${log["Log Date"] || 'N/A'}`;
+      if (log["Client"]) logEntry += `, Client: ${log["Client"]}`; // Include client name if available in log
+      logEntry += `, Method: ${log["Contact Method"] || 'N/A'}`;
+      logEntry += `, Type: ${log["Log Type"] || 'N/A'}`;
+      if (log["Contact Log"]) logEntry += `, Note: "${log["Contact Log"]}"`;
+      return logEntry;
+    }).join("\n");
+    promptContent += formattedLogs;
+    promptContent += `\n\nBased on these interactions (if available) and the overall context, craft the ${scriptType} script.`;
+    
+    if (scriptType === 'call') {
+      promptContent += ` The call script should be engaging, empathetic, aim to understand the client's current needs or situation, address potential concerns hinted at in the logs (if any), and guide them towards a clear positive action (e.g., booking a class, discussing membership options, reactivating an account).`;
+    } else { // email
+      promptContent += ` The email script should be concise, professional, personalized, and have a clear call to action. Ensure it's easy to read and encourages a response or desired action.`;
+    }
+  } else {
+    promptContent += `\n\nSince no specific contact logs are provided for this request, generate a more general ${scriptType} script for ${businessName}.`;
+    if (scriptType === 'call') {
+      promptContent += ` This call script should be welcoming, clearly articulate the value of ${businessName}, and motivate the listener to take the next step (e.g., schedule a visit, learn more).`;
+    } else { // email
+      promptContent += ` This email script should effectively introduce or re-engage with ${businessName}, highlight key benefits, and include a strong call to action (e.g., visit website, book an intro class).`;
+    }
+  }
+
+  promptContent += `\n\nKey objectives:
+  - For call scripts: Be conversational, clear, and goal-oriented. Include a strong opening and closing.
+  - For email scripts: Be professional, skimmable, with a clear subject line (if you were to suggest one, though only provide the body), and a compelling call-to-action.
+  - Adapt the tone appropriately for ${businessName}.
+  
+  Output *only* the complete script text. Do not include any preambles, explanations, or markdown formatting like \`\`\` around the script. Just the raw script.`;
+
+  try {
+    // Using the existing safeStreamText utility. It should handle plain text output reasonably well.
+    // If issues arise with script formatting due to SQL-specific cleaning in safeStreamText,
+    // a simpler text extraction method from the stream might be needed.
+    const script = await safeStreamText({
+      model: groq("llama3-8b-8192"), // Or your preferred model, e.g., "deepseek-r1-distill-llama-70b"
+      system: `You are an expert sales scriptwriter for ${businessName}. Your goal is to produce high-quality, ready-to-use scripts.`,
+      prompt: promptContent,
+      maxTokens: 700, // Increased for potentially longer scripts
+      // temperature: 0.7, // Optional: Adjust for creativity vs. predictability
+    });
+
+    debugLog(context, "Script generated successfully", { 
+      scriptType, 
+      clientName, 
+      scriptLength: script.length,
+      processingTime: Date.now() - startTime 
+    });
+    return script; // safeStreamText already trims and processes the text
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    debugLog(context, "Script generation failed", {
+      error: errorMessage,
+      scriptType,
+      clientName,
+      duration: Date.now() - startTime,
+    });
+    // Consider re-throwing a more user-friendly error or a specific error type
+    throw new Error(`Failed to generate ${scriptType} script: ${errorMessage}`);
+  }
 }
