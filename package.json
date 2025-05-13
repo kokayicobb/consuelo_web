@@ -87,6 +87,7 @@
     "resend": "^4.0.1",
     "sanity": "^3.64.1",
     "simplex-noise": "^4.0.3",
+    "snoowrap": "^1.23.0",
     "stripe": "^14.7.0",
     "styled-components": "^6.1.13",
     "tailgrids": "^2.1.0",

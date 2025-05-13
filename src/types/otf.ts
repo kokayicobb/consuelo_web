@@ -13,6 +13,7 @@ export interface OtfClient {
   "Visit Type": string | null;
   "Booking Method": string | null;
   "Referral Type": string | null;
+  [key: string]: any; 
 }
 
 // Contact log from otf-contact-logs table
