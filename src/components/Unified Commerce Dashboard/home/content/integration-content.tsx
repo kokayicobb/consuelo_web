@@ -79,7 +79,7 @@ import {
   IntegrationStatus,
   Integration,
   useIntegrations,
-} from "../integrations/klayvio-integration";
+} from "../../integrations/klayvio-integration";
 import { useToast } from "@/hooks/use-toast";
 
 // Platform icon map

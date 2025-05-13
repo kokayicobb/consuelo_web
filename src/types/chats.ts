@@ -3,6 +3,7 @@ import type { QueryExplanation, Config } from "./otf"; // Assuming your otf type
 
 export interface ChatMessageData {
   sqlQuery?: string;
+  userQuery?: string;
   explanations?: QueryExplanation[];
   queryResults?: any[];
   columns?: string[];
