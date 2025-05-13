@@ -15,15 +15,15 @@ import {
   Send,
 } from "lucide-react";
 import Header from "./header";
-import ChannelsContent from "../home/channels-content";
-import HomeContent from "../home/home-content";
-import InventoryContent from "../home/inventory-content";
-import CustomersContent from "../home/customer-content";
-import MarketingContent from "../home/marketing-content";
-import AIInsightsContent from "../home/ai-insights";
-import IntegrationsContent from "../home/integration-content";
-import SettingsContent from "../home/settings-content";
-import ChatContent from "../home/chat-content";
+import ChannelsContent from "../home/content/channels-content";
+import HomeContent from "../home/content/home-content";
+import InventoryContent from "../home/content/inventory-content";
+import CustomersContent from "../home/content/customer-content";
+import MarketingContent from "../home/content/marketing-content";
+import AIInsightsContent from "../home/content/ai-insights";
+import IntegrationsContent from "../home/content/integration-content";
+import SettingsContent from "../home/content/settings-content";
+
 import {
   ExpandableChat,
   ExpandableChatHeader,
@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/expandable-chat";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import ChatContent from "../chat";
 
 // Chat Interface Component for use with ExpandableChat
 const ChatInterface = () => {

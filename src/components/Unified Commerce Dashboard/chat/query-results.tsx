@@ -146,7 +146,9 @@ export default function QueryResults({
         isOpen: true,
         type: scriptType,
         clientName: contactModal?.clientName || "Client",
-        script
+        script,
+        contactLogs: contactModal?.clientData?.contactLogs || [],
+        clientData: contactModal?.clientData // Pass the full client data
       });
     };
 
@@ -309,27 +311,33 @@ export default function QueryResults({
                                 : ""
                             }`}
                             onClick={() => {
-                              if (
-                                typeof key === 'string' && (key.toLowerCase().includes("email") || key.toLowerCase().includes("phone"))
-                              ) {
-                                // Extract client data for the modal
+                              if (typeof key === 'string' && (key.toLowerCase().includes("email") || key.toLowerCase().includes("phone"))) {
+                                // Extract full client data based on the database schema
                                 const clientData: ClientScriptData = {
-                                  // Store the full client information
-                                  clientInfo: item as Partial<OtfClient>,
-                                  // Extract contact logs with proper typing
+                                  clientInfo: {
+                                    "Client ID": item["Client ID"] || "",
+                                    "Client": clientName,
+                                    // Support both cases since data might come in different formats
+                                    "Email": item["email"] || item["Email"] || "",
+                                    "Phone": item["phone"] || item["Phone"] || "",
+                                    "Last Visit": item["Last Visit"] || "",
+                                    "# Visits": item["# Visits"] || "",
+                                    "Pricing Option": item["Pricing Option"] || "",
+                                    "Expiration Date": item["Expiration Date"] || "",
+                                    "Staff": item["Staff"] || ""
+                                  },
                                   contactLogs: (item.contact_logs || []) as OtfContactLog[],
-                                  // Extract specific fields for convenience
-                                  membershipType: item["Membership Type"] || "Orange 60 - Tornado",
-                                  coach: item["Coach"] || item["Staff"] || "",
+                                  membershipType: item["Pricing Option"] || "",
+                                  coach: item["Staff"] || "",
                                   joinDate: item["Join Date"] || "",
                                   lastVisit: item["Last Visit"] || ""
                                 };
-                                
+                                                            
                                 setContactModal({
                                   type: key.toLowerCase().includes("email") ? "email" : "phone",
-                                  contact: String(value), // Ensure value is a string
+                                  contact: String(value),
                                   clientName,
-                                  clientData // Pass clientData directly through the modal state
+                                  clientData
                                 });
                               }
                             }}
@@ -599,14 +607,17 @@ export default function QueryResults({
 
       {/* Script Modal - Render when scriptModal state is not null */}
       {scriptModal && (
-        <ScriptModal
-          isOpen={scriptModal.isOpen}
-          onClose={() => setScriptModal(null)}
-          scriptType={scriptModal.type}
-          clientName={scriptModal.clientName}
-          script={scriptModal.script}
-        />
-      )}
+  <ScriptModal
+    isOpen={scriptModal.isOpen}
+    onClose={() => setScriptModal(null)}
+    scriptType={scriptModal.type}
+    clientName={scriptModal.clientName}
+    script={scriptModal.script}
+    contactLogs={scriptModal.contactLogs || []}
+    clientData={scriptModal.clientData}
+    queryContext=""
+  />
+)}
     </div>
   );
 }

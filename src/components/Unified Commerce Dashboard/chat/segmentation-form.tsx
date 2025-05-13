@@ -95,8 +95,8 @@ export default function SegmentationForm({
               onClick={handleResearchPrefix}
               disabled={isLoading} // No longer disabled by empty input
               className="
-                flex items-center px-3 py-1.5 text-sm font-medium text-teal-700 bg-white
-                border border-teal-500 rounded-lg hover:bg-teal-50 focus:outline-none focus:ring-2 focus:ring-teal-500
+                flex items-center px-3 py-1.5 text-sm font-medium text-orange-700 bg-white
+                border border-orange-500 rounded-lg hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-orange-500
                 disabled:opacity-60 disabled:cursor-not-allowed transition-colors
               "
             >
@@ -126,8 +126,8 @@ export default function SegmentationForm({
               type="submit" // This is the actual submit button
               disabled={isLoading || !inputValue.trim()} // Still disabled if loading or input is empty
               className="
-                p-2 bg-teal-500 text-white rounded-lg 
-                hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-1
+                p-2 bg-orange-500 text-white rounded-lg 
+                hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1
                 disabled:opacity-60 disabled:cursor-not-allowed transition-colors group
               "
               aria-label="Submit research query"

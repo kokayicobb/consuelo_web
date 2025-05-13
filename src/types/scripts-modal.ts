@@ -67,8 +67,10 @@ export interface ScriptGenerationParams {
 export interface ScriptModalState {
   isOpen: boolean;
   type: 'call' | 'email';
-  clientName?: string;
-  script: string;
+  clientName: string;
+  script?: string;
+  contactLogs?: OtfContactLog[];
+  clientData?: ClientScriptData;
 }
 
 /**

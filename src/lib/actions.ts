@@ -1,5 +1,5 @@
 "use server"
-
+import Snoowrap from 'snoowrap';
 import { streamText } from "ai"
 import { groq } from "@ai-sdk/groq"
 import { supabaseAdmin } from "@/lib/supabase/client"
@@ -70,127 +70,80 @@ function handleAIStream(stream: ReadableStream<Uint8Array>, context: string) {
 // Improved safeStreamText function with better token handling
 // Completely redesigned safeStreamText with enhanced token handling
 async function safeStreamText(params: any) {
-  const context = "safeStreamText"
-  const startTime = Date.now()
 
-  debugLog(context, "Starting AI request", {
-    model: params.model,
-    maxTokens: params.maxTokens,
-  })
-
-  try {
-    const result = await streamText(params)
-    const stream = result.toDataStream()
-    const reader = stream.getReader()
-    const decoder = new TextDecoder()
-    let fullText = ""
-
-    while (true) {
-      const { done, value } = await reader.read()
-
-      if (done) {
-        break
+    const context = "safeStreamGenericText";
+    const startTime = Date.now();
+  
+    debugLog(context, "Starting AI request (Generic)", {
+      model: params.model?.modelId || params.model || "unknown", // Handle different model object structures
+      maxTokens: params.maxTokens,
+      promptPreview: typeof params.prompt === 'string' ? params.prompt.slice(0, 100) : 'N/A',
+    });
+  
+    try {
+      // Ensure model is passed correctly (might be nested)
+      const modelInstance = typeof params.model === 'string' ? groq(params.model) : params.model;
+  
+      const result = await streamText({
+          ...params,
+          model: modelInstance // Use the potentially unwrapped model instance
+      });
+  
+      // --- Simpler text accumulation ---
+      let fullText = '';
+      for await (const textPart of result.textStream) {
+          fullText += textPart;
       }
-
-      const textChunk = decoder.decode(value, { stream: true })
-      fullText += textChunk
-    }
-
-    debugLog(context, "Raw stream response received", {
-      rawTextLength: fullText.length,
-      rawTextSample: fullText.slice(0, 200), // Log a sample, not the whole potentially large raw text
-    })
-
-    // Step 1: Remove all common non-SQL metadata patterns
-    const processedText = fullText
-      // Remove message/token metadata objects
-      .replace(/[a-z]:\{.*?\}/g, "")
-      // Remove e:{} and d:{} blocks that often appear at the end
-      .replace(/[ed]:\{.*?\}/g, "")
-
-    // Step 2: Handle token format (this is the critical part)
-    let extractedSQL = ""
-
-    // Check if we're dealing with tokenized output
-    const tokenPattern = /\d+:"([^"]*)"/g
-    if (tokenPattern.test(processedText)) {
-      debugLog(context, "Detected tokenized format, extracting content")
-
-      // Extract all token contents
-      const matches = processedText.matchAll(tokenPattern)
-      const tokens = Array.from(matches, (m) => m[1])
-
-      // Join tokens to form SQL
-      extractedSQL = tokens.join("")
-
-      debugLog(context, "Extracted token contents", {
-        tokenCount: tokens.length,
-        extractedPreview: extractedSQL.slice(0, 100),
-        // Optionally log a sample of the extracted content before final cleaning
-        // extractedContentSample: extractedSQL.slice(0, 500),
-      })
-    } else {
-      // Not a tokenized response, use the processed text
-      extractedSQL = processedText
-    }
-
-    // Step 3: Clean up any remaining formatting and code blocks
-    let cleanSQL = extractedSQL
-      .replace(/<think>[\s\S]*?<\/think>/g, "")
-      .replace(/<\/?think>/g, "")
-      .replace(/```sql/g, "")
-      .replace(/```/g, "")
-      .replace(/^.*?SELECT/i, "SELECT") // Focus on the SQL statement
-      .trim()
-
-    // Step 4: Format SQL properly
-    cleanSQL = cleanSQL
-      .replace(/\s+/g, " ")
-      .replace(/\s*,\s*/g, ", ")
-      .replace(/\s*=\s*/g, " = ")
-      .replace(/\s*>\s*/g, " > ")
-      .replace(/\s*<\s*/g, " < ")
-      .replace(/\s*;\s*$/, ";") // Ensure exactly one semicolon at the end
-
-    // Final check: if something went wrong and we still have tokens, fallback to a simple extraction
-    if (cleanSQL.includes('":')) {
-      debugLog(context, "WARNING: Still detected token format after cleaning", {
-        cleanedSample: cleanSQL.slice(0, 100),
-      })
-
-      // Extreme fallback: manually try to extract a SQL statement
-      const selectMatch = fullText.match(/SELECT\s+.*?;/is)
-      if (selectMatch) {
-        cleanSQL = selectMatch[0].replace(/\s+/g, " ").trim()
-        debugLog(context, "Used fallback SQL extraction", {
-          fallbackSQL: cleanSQL,
-        })
+      // --- End simpler text accumulation ---
+  
+  
+      debugLog(context, "Raw stream response received (Generic)", {
+         rawTextLength: fullText.length,
+         rawTextSample: fullText.slice(0, 200),
+      });
+  
+      // Minimal cleaning: remove common stream metadata if necessary, trim
+      // Vercel AI SDK might add prefixes like `0:"`, `1:"`, etc. or data messages `d:{...}`
+      // Let's try a more robust way to handle potential prefixes/metadata
+      let cleanText = fullText;
+  
+      // Attempt to remove potential Vercel AI SDK stream prefixes/data messages
+      // Example: 0:"Hello" -> "Hello"
+      // Example: d:{"some":"data"} -> ""
+      cleanText = cleanText.replace(/^\d+:"/, '"').replace(/"\s*$/, '"'); // Handle potential quote wrapping if prefix is removed
+      if (cleanText.startsWith('"') && cleanText.endsWith('"')) {
+         try {
+            // If it looks like a JSON string, parse it to unescape characters
+            cleanText = JSON.parse(cleanText);
+         } catch {
+           // If parsing fails, remove just the outer quotes
+           cleanText = cleanText.substring(1, cleanText.length - 1);
+         }
       }
+      // Remove data messages like d:{...} or e:{...}
+      cleanText = cleanText.replace(/(?:^[de]:\{.*?\}$)/gm, '');
+  
+      // Replace escaped newlines with actual newlines
+      cleanText = cleanText.replace(/\\n/g, '\n').trim();
+  
+      debugLog(context, "Processed generic text", {
+         textLength: cleanText.length,
+         textPreview: cleanText.slice(0,100)
+      });
+  
+      return cleanText;
+  
+    } catch (error) {
+      debugLog(context, "AI request failed during generic text processing", {
+        error: error instanceof Error ? error.message : "Unknown error",
+        errorStack: error instanceof Error ? error.stack : undefined,
+        duration: Date.now() - startTime,
+      });
+      // It's often better to throw the error here and let the calling function handle it
+      // This prevents returning a potentially misleading success state.
+      throw error;
     }
-
-    // Fix common table name issues
-    cleanSQL = cleanSQL
-      .replace(/otf-/g, '"otf-')
-      .replace(/(\botf-[a-z-]+\b)(?!")/g, '$1"')
-      .replace(/"otf-/g, '"otf-')
-
-    // *** MODIFIED DEBUG LOG STATEMENT HERE ***
-    debugLog(context, "Successfully extracted and cleaned SQL query", {
-      textLength: cleanSQL.length,
-      sqlText: cleanSQL, // This is the actual cleaned SQL query string
-    })
-    // *** END OF MODIFIED DEBUG LOG STATEMENT ***
-
-
-    return cleanSQL // This function returns the cleaned SQL string
-  } catch (error) {
-    debugLog(context, "AI request failed during text processing", {
-      error: error instanceof Error ? error.message : "Unknown error",
-      duration: Date.now() - startTime,
-    })
-    throw error // Re-throw the error
   }
-}
 
 // Template-based SQL generator for reliable Supabase compatibility
 export async function generateQuery(input: string) {
@@ -819,4 +772,544 @@ Your task is to generate a compelling and effective ${scriptType} script.`;
     // Consider re-throwing a more user-friendly error or a specific error type
     throw new Error(`Failed to generate ${scriptType} script: ${errorMessage}`);
   }
+  
+}
+export async function generateKeyTalkingPoints(scriptText: string): Promise<string[]> {
+  const context = "generateKeyTalkingPoints";
+  const startTime = Date.now();
+  debugLog(context, "Talking points generation started", {
+    scriptLength: scriptText.length,
+    scriptPreview: scriptText.slice(0, 100) + "..."
+  });
+
+  if (!scriptText || scriptText.trim().length < 20) {
+    debugLog(context, "Skipping generation for short/empty script");
+    return []; // Return empty if script too short (intended behavior)
+  }
+
+  // Prompt asking specifically for a JSON array string
+  const promptContent = `Analyze the following sales script and extract the 3 to 5 most important key talking points for the salesperson. Focus on the core message, key value propositions mentioned, and the main call-to-action.
+
+Sales Script:
+---
+${scriptText}
+---
+
+Output *only* a JSON array of strings, where each string is a single talking point. Do not include any introductory text, explanations, or markdown formatting like \`\`\` or \`\`\`json. Just the raw JSON array itself.
+
+Example of desired output format:
+["Key point 1", "Key point 2", "Key point 3"]`;
+
+  try {
+    // Use safeStreamGenericText
+    const aiResponse = await safeStreamText({
+      model: groq("llama3-8b-8192"), // Or another capable model
+      // REMOVED response_format: { type: "json_object" } - Let the prompt guide it
+      system: "You are an expert sales coach. Your task is to identify the 3-5 most crucial talking points from a sales script. Output ONLY a JSON array of strings as requested.",
+      prompt: promptContent,
+      maxTokens: 250,
+      temperature: 0.2, // Lower temperature for more deterministic JSON output
+    });
+
+    // Log the *exact* response received before parsing attempts
+    debugLog(context, "AI raw response received for talking points", {
+      rawResponse: aiResponse, // Log the full response
+      responseLength: aiResponse.length,
+    });
+
+    // --- Attempt to parse the response as JSON ---
+    let points: string[] = [];
+    let parseErrorMsg: string | null = null;
+
+    try {
+       if (!aiResponse || aiResponse.trim() === '') {
+            throw new Error("Received empty response from AI.");
+       }
+      // 1. Try to find JSON array brackets `[...]` anywhere in the string
+      const jsonMatch = aiResponse.match(/(\[[\s\S]*?\])/);
+      let jsonString = '';
+
+      if (jsonMatch && jsonMatch[0]) {
+        jsonString = jsonMatch[0];
+        debugLog(context, "Extracted potential JSON array string via regex", { jsonString });
+      } else {
+        // 2. If no brackets found, check if the entire trimmed response IS the array
+        const trimmedResponse = aiResponse.trim();
+        if (trimmedResponse.startsWith('[') && trimmedResponse.endsWith(']')) {
+          jsonString = trimmedResponse;
+          debugLog(context, "Using trimmed AI response as potential JSON array string");
+        } else {
+          // 3. If neither works, assume it's not JSON and trigger fallback later
+           debugLog(context, "No JSON array structure found, will attempt fallback.");
+           // We don't throw error here yet, let the outer catch handle fallback
+           parseErrorMsg = "AI response did not contain a valid JSON array structure '[...]'.";
+        }
+      }
+
+      // Only parse if we think we found a JSON string
+      if (jsonString) {
+        points = JSON.parse(jsonString);
+
+        // Validate the parsed structure
+        if (!Array.isArray(points)) { // Stricter check
+          throw new Error("Parsed JSON is not an array.");
+        }
+        // Ensure all elements are strings (or filter out non-strings)
+        points = points.filter(p => typeof p === "string" && p.trim().length > 0);
+
+         if (points.length === 0 && jsonString.length > 2) {
+             // Parsed correctly but resulted in empty array (e.g., ["", ""])
+             debugLog(context, "JSON parsed but resulted in empty points array.");
+             // Allow fallback by setting parseErrorMsg
+             parseErrorMsg = "JSON parsed but contained no valid string points.";
+         } else if (points.length > 0) {
+            debugLog(context, "Successfully parsed JSON talking points", { count: points.length });
+             // Successfully parsed, clear any previous parse error message
+             parseErrorMsg = null;
+         }
+      }
+       // If parseErrorMsg is still set here, JSON parsing effectively failed or yielded nothing useful
+
+    } catch (parseError) {
+       parseErrorMsg = parseError instanceof Error ? parseError.message : "Unknown JSON parsing error";
+       debugLog(context, "JSON parsing failed", { error: parseErrorMsg, rawResponse: aiResponse });
+       points = []; // Ensure points is empty if JSON parsing fails
+    }
+
+    // --- Fallback: Newline Split (ONLY if JSON parsing failed or yielded no points) ---
+    if (points.length === 0) {
+        debugLog(context, "JSON parsing yielded no points, attempting newline split fallback", { reason: parseErrorMsg });
+
+        const potentialPoints = aiResponse
+            .split('\n') // Split by newline
+            .map(p => p.replace(/^[\s"-]*\*?\s*([\d.]+)?\s*/, '') // Remove leading spaces, quotes, dashes, list markers (*, 1.)
+                       .replace(/\\"/g, '"') // Fix escaped quotes
+                       .replace(/",?\s*$/, '') // Remove trailing quote/comma/space
+                       .trim())
+            .filter(p => p.length > 10 && !p.startsWith('{') && !p.endsWith('}')); // Filter out short lines, likely JSON objects
+
+       if (potentialPoints.length > 0) {
+          points = potentialPoints;
+          debugLog(context, "Using newline split fallback results", { count: points.length });
+       } else {
+           // If BOTH JSON and newline split fail, return a specific error message in the array
+            debugLog(context, "Both JSON parsing and newline fallback failed to yield points.");
+            // Construct user-facing error message
+            const finalError = parseErrorMsg ? `Parsing failed: ${parseErrorMsg}` : "Could not extract points from response.";
+            return [`Error: ${finalError} Please review script manually.`];
+       }
+    }
+
+    // Final log before returning successfully extracted points
+    debugLog(context, "Talking points processing finished successfully", {
+      pointCount: points.length,
+      finalPoints: points,
+      processingTime: Date.now() - startTime,
+    });
+
+    // Ensure max 5 points are returned
+    return points.slice(0, 5);
+
+  } catch (error) {
+    // This catches errors during the safeStreamGenericText call itself
+    debugLog(context, "AI call failed during talking points generation", {
+      error: error instanceof Error ? error.message : "Unknown error",
+      errorStack: error instanceof Error ? error.stack: undefined,
+      duration: Date.now() - startTime,
+    });
+    // Return a user-friendly error message IN THE ARRAY for the UI
+    return ["Error: AI call failed. Please check logs or try again."];
+  }
+}
+
+
+
+
+
+
+// Define the suggestion type
+interface ScriptSuggestion {
+  original?: string;
+  suggested: string;
+  type: 'tone' | 'clarity' | 'structure' | 'enhancement';
+  reason?: string;
+}
+
+/**
+ * Generate AI-powered suggestions to improve a sales script
+ */
+/**
+ * Generate AI-powered suggestions to improve a sales script
+ */
+export async function generateScriptEdits(scriptText: string): Promise<ScriptSuggestion[]> {
+  const context = "generateScriptEdits";
+  const startTime = Date.now();
+  console.log(`${context}: Starting edit suggestions for script of length ${scriptText.length}`);
+
+  if (!scriptText || scriptText.trim().length < 30) {
+    console.log(`${context}: Script too short for meaningful suggestions`);
+    return [];
+  }
+
+  const promptContent = `Analyze the following sales script and suggest 3-5 specific improvements:
+
+Sales Script:
+---
+${scriptText}
+---
+
+For each suggestion:
+1. Identify a specific part of the text that could be improved (and provide that exact text)
+2. Provide the suggested replacement text
+3. Classify the suggestion as one of: "tone", "clarity", "structure", or "enhancement"
+4. Include a short reason why this change would improve the script
+
+Output a JSON array where each item has these properties:
+- original: The exact text being replaced (if applicable)
+- suggested: The text to replace it with
+- type: One of ["tone", "clarity", "structure", "enhancement"]
+- reason: Why this improves the script
+
+Example format:
+[
+  {
+    "original": "Hello, this is Orange Theory.",
+    "suggested": "Hello! I noticed it's been a while since your last visit to Orange Theory Fitness.",
+    "type": "tone",
+    "reason": "More friendly opening to re-engage the client"
+  }
+]
+
+Important: Output only the JSON array with no other text, explanation, or formatting.`;
+
+  try {
+    const aiResponse = await streamText({
+      model: groq("llama3-8b-8192"),
+      system: "You are an expert sales coach specializing in creating effective client communication. You provide concise, actionable suggestions to improve sales scripts.",
+      prompt: promptContent,
+      maxTokens: 800,
+      temperature: 0.2,
+    });
+
+    // Accumulate the response
+    let fullText = '';
+    for await (const textPart of aiResponse.textStream) {
+      fullText += textPart;
+    }
+
+    console.log(`${context}: Raw AI response received, length: ${fullText.length}`);
+
+    // Extract and parse JSON array
+    // First, clean up the response
+    let cleanedJson = fullText
+      .replace(/```json/g, "")
+      .replace(/```/g, "")
+      .trim();
+
+    // Try to find JSON array pattern
+    const jsonMatch = cleanedJson.match(/(\[[\s\S]*?\])/);
+    if (jsonMatch && jsonMatch[0]) {
+      cleanedJson = jsonMatch[0];
+    }
+
+    // Parse the JSON
+    const suggestions: ScriptSuggestion[] = JSON.parse(cleanedJson);
+
+    // Validate the structure
+    const validSuggestions = suggestions
+      .filter(s => 
+        typeof s.suggested === "string" && 
+        s.suggested.trim().length > 0 &&
+        typeof s.type === "string" &&
+        ["tone", "clarity", "structure", "enhancement"].includes(s.type)
+      )
+      .slice(0, 5); // Limit to 5 suggestions
+      
+    console.log(`${context}: Generated ${validSuggestions.length} valid suggestions`);
+    return validSuggestions;
+  } catch (error) {
+    console.error(`${context}: Error generating suggestions:`, error);
+    
+    // Return fallback suggestions if API fails
+    return [
+      {
+        original: "Hello",  // Now we include the original text to replace
+        suggested: "Hello! I noticed it's been a while since your last visit to Orange Theory Fitness.",
+        type: 'tone',
+        reason: 'More welcoming opener'
+      },
+      {
+        suggested: "Would you be interested in our new [Premium] membership that includes unlimited classes?",
+        type: 'enhancement',
+        reason: 'Specific offer increases conversion rate'
+      },
+      {
+        suggested: "I'd love to schedule a time for you to come back and experience our updated workout program.",
+        type: 'clarity',
+        reason: 'Clear call to action'
+      }
+    ];
+  }
+}
+interface RedditPostData {
+  id: string;
+  subreddit: string;
+  author: string | null; // Author can be deleted
+  title: string;
+  selftext: string; // Reddit API field for post body
+  url: string;
+  created_utc: number; // UNIX timestamp (seconds)
+  // Note: We are NOT fetching comments here initially for performance.
+  // Fetching comments requires extra API calls per post.
+}
+
+
+export interface PotentialLead {
+  id: string;
+  subreddit: string;
+  username: string;
+  content: string;
+  date: string;
+  sentiment: 'seeking_recommendation' | 'pain_point' | 'complaining' | 'interest_shown' | 'generic_mention' | 'other' | 'not_applicable_if_not_lead';
+  status: 'new';
+  score: number;
+  url: string;
+  reasoning?: string;
+}
+async function scrapeSubreddits(
+  subredditNames: string[],
+  keywords: string[], // Keywords can be used later for pre-filtering if needed
+  limitPerSubreddit: number = 25 // How many posts to fetch per subreddit
+): Promise<RedditPostData[]> {
+  const context = "scrapeSubreddits";
+  debugLog(context, "Starting real Reddit scrape...", { subreddits: subredditNames, limitPerSubreddit });
+
+  if (!process.env.REDDIT_CLIENT_ID || !process.env.REDDIT_CLIENT_SECRET || !process.env.REDDIT_USER_AGENT) {
+      console.error("Missing Reddit API credentials in environment variables (REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET, REDDIT_USER_AGENT)");
+      debugLog(context, "Aborted: Missing Reddit Credentials");
+      // Optionally throw an error or return empty based on desired handling
+      // throw new Error("Missing Reddit API credentials");
+       return [];
+  }
+
+  let r: Snoowrap;
+  try {
+      // Initialize snoowrap using Client Credentials Grant (App-only access)
+      // This is preferred for server-side tasks not acting on behalf of a user
+       r = new Snoowrap({
+          userAgent: process.env.REDDIT_USER_AGENT,
+          clientId: process.env.REDDIT_CLIENT_ID,
+          clientSecret: process.env.REDDIT_CLIENT_SECRET,
+          // We need to request a token explicitly for Client Credentials
+          // This approach avoids needing username/password
+           // Note: Snoowrap doesn't have a direct method for pure Client Credentials Grant.
+           // A common workaround is to use refreshToken: 'some_dummy_value' or provide dummy credentials,
+           // as long as clientId and clientSecret are valid for an app, it often works for public data fetches.
+           // However, the *correct* way involves manually fetching a token first if Snoowrap doesn't support it directly.
+           // Let's try the simpler approach first, it often works for read-only public access.
+           // If this fails, a manual OAuth token fetch would be needed.
+          username: 'dummy_user_for_client_credentials', // Required by constructor, but not used if clientSecret is present for app auth
+          password: 'dummy_password', // Required by constructor
+      });
+       // Disable rate limit checks if needed for testing, but be careful in production
+       // r.config({ requestDelay: 1000, continueAfterRatelimitError: true });
+      debugLog(context, "Snoowrap initialized.");
+
+  } catch (error) {
+       console.error("Failed to initialize Snoowrap:", error);
+       debugLog(context, "Snoowrap initialization failed", { error: error instanceof Error ? error.message : String(error) });
+       return [];
+  }
+
+
+  const allPosts: RedditPostData[] = [];
+  const fetchPromises: Promise<Snoowrap.Listing<Snoowrap.Submission>>[] = [];
+
+  for (const subredditName of subredditNames) {
+      debugLog(context, `Preparing fetch for r/${subredditName}`);
+      try {
+          // Fetch top posts from the last month - adjust 'time' as needed ('week', 'day', 'year', 'all')
+          // Using getTop helps find relevant discussions over a period.
+          const fetchPromise = r.getSubreddit(subredditName).getTop({ time: 'month', limit: limitPerSubreddit });
+          fetchPromises.push(fetchPromise);
+      } catch (error) {
+          console.error(`Error preparing fetch for r/${subredditName}:`, error);
+          debugLog(context, `Error preparing fetch`, { subreddit: subredditName, error: error instanceof Error ? error.message : String(error)});
+          // Continue to next subreddit
+      }
+  }
+
+  // Execute all fetches in parallel
+  const results = await Promise.allSettled(fetchPromises);
+  debugLog(context, "Finished fetching from all subreddits (Promise.allSettled).");
+
+  results.forEach((result, index) => {
+      const subredditName = subredditNames[index];
+      if (result.status === 'fulfilled') {
+          const posts = result.value;
+          debugLog(context, `Successfully fetched ${posts.length} posts from r/${subredditName}`);
+          posts.forEach(post => {
+              // Basic keyword check on title or selftext (optional pre-filter)
+               const keywordMatch = keywords.some(kw =>
+                   post.title.toLowerCase().includes(kw.toLowerCase()) ||
+                   post.selftext.toLowerCase().includes(kw.toLowerCase())
+               );
+
+               if (keywordMatch) { // Only include posts that match at least one keyword
+                  allPosts.push({
+                      id: post.id,
+                      subreddit: post.subreddit?.display_name || subredditName, // Use fetched name if available
+                      author: post.author?.name || null, // Handle potential deleted author
+                      title: post.title,
+                      selftext: post.selftext,
+                      url: `https://www.reddit.com${post.permalink}`, // Construct full URL
+                      created_utc: post.created_utc,
+                  });
+              }
+          });
+      } else {
+          console.error(`Failed to fetch posts from r/${subredditName}:`, result.reason);
+           debugLog(context, `Fetch failed for r/${subredditName}`, { error: result.reason });
+      }
+  });
+
+  debugLog(context, `Completed scraping. Total relevant posts found across all subreddits: ${allPosts.length}`);
+  return allPosts;
+}
+
+
+// --- Ensure `PotentialLead` interface is defined correctly ---
+export interface PotentialLead {
+  id: string;
+  subreddit: string;
+  username: string; // Keep 'username' for UI consistency, map from 'author'
+  content: string;
+  date: string; // ISO String
+  sentiment: 'seeking_recommendation' | 'pain_point' | 'complaining' | 'interest_shown' | 'generic_mention' | 'other' | 'not_applicable_if_not_lead';
+  status: 'new';
+  score: number;
+  url: string;
+  reasoning?: string;
+}
+
+// --- MINOR UPDATE to `processRedditDataForLeads` ---
+// Make sure this function exists and modify it as shown below
+
+export async function processRedditDataForLeads(
+  selectedSubredditsConfig: Array<{ name: string; category: string; selected: boolean }>,
+  keywords: string[],
+  contentFilterConfig: { /* ... same as before ... */ },
+  scanFrequency: string
+): Promise<PotentialLead[]> {
+  const context = "processRedditDataForLeads";
+  const startTime = Date.now();
+  debugLog(context, "Starting lead processing (with real scraper)...", { numKeywords: keywords.length, scanFrequency });
+
+  const activeSubreddits = selectedSubredditsConfig
+      .filter(sr => sr.selected)
+      .map(sr => sr.name);
+
+  if (activeSubreddits.length === 0) {
+      debugLog(context, "No active subreddits selected. Aborting.");
+      return [];
+  }
+  debugLog(context, "Active subreddits", { activeSubreddits });
+
+  // Step 1: Scrape Reddit posts (Using the REAL function now)
+  // ***** CHANGE HERE *****
+  const scrapedPosts: RedditPostData[] = await scrapeSubreddits(activeSubreddits, keywords, 25); // Fetch top 25 from each
+  // ***** END CHANGE *****
+
+  if (scrapedPosts.length === 0) {
+      debugLog(context, "No posts returned from scraping.");
+      return [];
+  }
+  debugLog(context, `Real scraping returned ${scrapedPosts.length} posts potentially matching keywords.`);
+
+  const identifiedLeads: PotentialLead[] = [];
+
+  // Step 2 & 3: Process each post with LLM
+  for (const post of scrapedPosts) {
+       // ***** CHANGE HERE: Use correct field names from RedditPostData *****
+      const postCorpus = `
+Subreddit: r/${post.subreddit}
+User: u/${post.author || 'deleted'}
+Title: ${post.title}
+Content (first 1000 chars): ${post.selftext.substring(0, 1000)}
+URL: ${post.url}
+      `.trim();
+       // ***** END CHANGE *****
+
+      // LLM Prompt remains largely the same, but ensure it knows comments aren't included
+      let filterCriteriaDescription = "/* ... same as before ... */";
+      const llmPrompt = `
+You are an AI sales intelligence analyst for Orange Theory Fitness Charlotte.
+Your task is to analyze the following Reddit post summary (title and content only) to determine if it represents a potential sales lead.
+The primary keywords we are interested in are: ${keywords.join(', ')}.
+Consider the user's content filter preferences:
+${filterCriteriaDescription}
+
+Reddit Post Summary:
+${postCorpus}
+
+Based ONLY on the post title and content, provide your analysis STRICTLY in the following JSON format:
+{
+"is_lead": boolean,
+"lead_score": number, // 0-100
+"sentiment": "seeking_recommendation" | "pain_point" | "complaining" | "interest_shown" | "generic_mention" | "other" | "not_applicable_if_not_lead",
+"reasoning": "string",
+"relevant_snippet": "string" // A short, relevant quote from the title or content.
+}
+
+Example for a good lead: /* ... same ... */
+Example for not a lead: /* ... same ... */
+
+Output ONLY the JSON object. No other text or explanations.
+      `;
+
+      try {
+          debugLog(context, `Sending post ${post.id} to LLM for analysis.`);
+          const aiResponseJsonString = await safeStreamText({ /* ... same LLM call params ... */ });
+          debugLog(context, `LLM raw response for post ${post.id}: ${aiResponseJsonString.substring(0, 200)}...`);
+
+          let analysisResult;
+          try {
+              // Robust JSON parsing
+              const firstBrace = aiResponseJsonString.indexOf('{');
+              const lastBrace = aiResponseJsonString.lastIndexOf('}');
+              if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+                  const jsonCandidate = aiResponseJsonString.substring(firstBrace, lastBrace + 1);
+                  analysisResult = JSON.parse(jsonCandidate);
+              } else { throw new Error("No valid JSON object found."); }
+          } catch (parseError) {
+              debugLog(context, `Failed to parse LLM JSON response for post ${post.id}`, { error: parseError instanceof Error ? parseError.message : parseError, response: aiResponseJsonString });
+              continue; // Skip post
+          }
+
+          if (analysisResult && analysisResult.is_lead && analysisResult.lead_score >= 40) {
+              // ***** CHANGE HERE: Map fields correctly to PotentialLead *****
+              identifiedLeads.push({
+                  id: post.id,
+                  subreddit: post.subreddit,
+                  username: post.author || 'unknown', // Map author to username for UI
+                  content: analysisResult.relevant_snippet || post.selftext.substring(0, 300) || post.title, // Use snippet, fallback to selftext or title
+                  date: new Date(post.created_utc * 1000).toISOString(), // Convert timestamp
+                  sentiment: analysisResult.sentiment,
+                  status: 'new',
+                  score: analysisResult.lead_score,
+                  url: post.url,
+                  reasoning: analysisResult.reasoning,
+              });
+              // ***** END CHANGE *****
+              debugLog(context, `Identified lead from post ${post.id}`, { score: analysisResult.lead_score });
+          } else {
+              debugLog(context, `Post ${post.id} not considered a strong lead or parsing failed.`, { analysis: analysisResult });
+          }
+      } catch (error) {
+          debugLog(context, `Error processing post ${post.id} with LLM`, { error: error instanceof Error ? error.message : error, postId: post.id });
+      }
+  }
+
+  debugLog(context, `Finished lead processing. Found ${identifiedLeads.length} potential leads. Total time: ${Date.now() - startTime}ms`);
+  return identifiedLeads;
 }

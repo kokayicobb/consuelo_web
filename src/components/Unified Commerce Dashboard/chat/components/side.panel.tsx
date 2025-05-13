@@ -3,12 +3,14 @@
 import React, { useState } from 'react';
 import { XMarkIcon, ArrowsPointingOutIcon, ArrowsPointingInIcon, ArrowLeftIcon, ClipboardDocumentIcon, CheckIcon } from '@heroicons/react/24/outline';
 import type { ChatMessageData } from '@/types/chats';
-import { QueryResults } from '../../segmentation';
+
 
 import type { OtfContactLog } from '@/types/otf';
 import { generateSalesScript } from '@/lib/actions';
-import { SuggestedAction } from '../../segmentation/action-suggestions';
-import ScriptModal from '../../segmentation/script-modal';
+import { SuggestedAction } from '../action-suggestions';
+import QueryResults from '../query-results';
+import ScriptModal from '../script-modal';
+
 
 
 interface SideArtifactPanelProps {

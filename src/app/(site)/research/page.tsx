@@ -1,5 +1,4 @@
-
-import ChatContent from "@/components/Unified Commerce Dashboard/home/chat-content";
+import OrangeSalesAgent from "@/components/Unified Commerce Dashboard/research";
 import { Metadata } from "next";
 
 
@@ -10,14 +9,14 @@ export const metadata: Metadata = {
   description: "This is About page description",
 };
 
-const VirtualTryOn = () => {
+const SalesAgent = () => {
   return (
     <main>
      
-        <ChatContent />
+        <OrangeSalesAgent />
       
     </main>
   );
 };
 
-export default VirtualTryOn;
+export default SalesAgent;
