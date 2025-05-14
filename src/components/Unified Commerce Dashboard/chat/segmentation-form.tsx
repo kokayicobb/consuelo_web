@@ -100,7 +100,7 @@ export default function SegmentationForm({
               "
             >
               <SparklesIcon className="w-4 h-4 mr-1.5" />
-              OTF Lead Generator
+              Lead Generator
             </button>
           </div>
 
