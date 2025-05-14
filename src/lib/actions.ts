@@ -1051,19 +1051,22 @@ Important: Output only the JSON array with no other text, explanation, or format
     ];
   }
 }
+// In your actions.ts file
+
+
+
+// Interface for posts from Reddit API
 interface RedditPostData {
   id: string;
   subreddit: string;
-  author: string | null; // Author can be deleted
+  author: string | null;
   title: string;
-  selftext: string; // Reddit API field for post body
+  selftext: string;
   url: string;
-  created_utc: number; // UNIX timestamp (seconds)
-  // Note: We are NOT fetching comments here initially for performance.
-  // Fetching comments requires extra API calls per post.
+  created_utc: number;
 }
 
-
+// Interface for potential leads
 export interface PotentialLead {
   id: string;
   subreddit: string;
@@ -1076,240 +1079,458 @@ export interface PotentialLead {
   url: string;
   reasoning?: string;
 }
-async function scrapeSubreddits(
+
+// Function to scrape Reddit data
+// Looser timeframe for Reddit scraping
+async function scrapeSubredditsWithFetch(
   subredditNames: string[],
-  keywords: string[], // Keywords can be used later for pre-filtering if needed
-  limitPerSubreddit: number = 25 // How many posts to fetch per subreddit
+  keywords: string[],
+  limitPerSubreddit: number = 25,
+  timeframe: 'day' | 'week' | 'month' | 'year' | 'all' = 'year' // Changed default from 'month' to 'year'
 ): Promise<RedditPostData[]> {
-  const context = "scrapeSubreddits";
-  debugLog(context, "Starting real Reddit scrape...", { subreddits: subredditNames, limitPerSubreddit });
-
-  if (!process.env.REDDIT_CLIENT_ID || !process.env.REDDIT_CLIENT_SECRET || !process.env.REDDIT_USER_AGENT) {
-      console.error("Missing Reddit API credentials in environment variables (REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET, REDDIT_USER_AGENT)");
-      debugLog(context, "Aborted: Missing Reddit Credentials");
-      // Optionally throw an error or return empty based on desired handling
-      // throw new Error("Missing Reddit API credentials");
-       return [];
-  }
-
-  let r: Snoowrap;
-  try {
-      // Initialize snoowrap using Client Credentials Grant (App-only access)
-      // This is preferred for server-side tasks not acting on behalf of a user
-       r = new Snoowrap({
-          userAgent: process.env.REDDIT_USER_AGENT,
-          clientId: process.env.REDDIT_CLIENT_ID,
-          clientSecret: process.env.REDDIT_CLIENT_SECRET,
-          // We need to request a token explicitly for Client Credentials
-          // This approach avoids needing username/password
-           // Note: Snoowrap doesn't have a direct method for pure Client Credentials Grant.
-           // A common workaround is to use refreshToken: 'some_dummy_value' or provide dummy credentials,
-           // as long as clientId and clientSecret are valid for an app, it often works for public data fetches.
-           // However, the *correct* way involves manually fetching a token first if Snoowrap doesn't support it directly.
-           // Let's try the simpler approach first, it often works for read-only public access.
-           // If this fails, a manual OAuth token fetch would be needed.
-          username: 'dummy_user_for_client_credentials', // Required by constructor, but not used if clientSecret is present for app auth
-          password: 'dummy_password', // Required by constructor
-      });
-       // Disable rate limit checks if needed for testing, but be careful in production
-       // r.config({ requestDelay: 1000, continueAfterRatelimitError: true });
-      debugLog(context, "Snoowrap initialized.");
-
-  } catch (error) {
-       console.error("Failed to initialize Snoowrap:", error);
-       debugLog(context, "Snoowrap initialization failed", { error: error instanceof Error ? error.message : String(error) });
-       return [];
-  }
-
-
-  const allPosts: RedditPostData[] = [];
-  const fetchPromises: Promise<Snoowrap.Listing<Snoowrap.Submission>>[] = [];
-
-  for (const subredditName of subredditNames) {
-      debugLog(context, `Preparing fetch for r/${subredditName}`);
-      try {
-          // Fetch top posts from the last month - adjust 'time' as needed ('week', 'day', 'year', 'all')
-          // Using getTop helps find relevant discussions over a period.
-          const fetchPromise = r.getSubreddit(subredditName).getTop({ time: 'month', limit: limitPerSubreddit });
-          fetchPromises.push(fetchPromise);
-      } catch (error) {
-          console.error(`Error preparing fetch for r/${subredditName}:`, error);
-          debugLog(context, `Error preparing fetch`, { subreddit: subredditName, error: error instanceof Error ? error.message : String(error)});
-          // Continue to next subreddit
-      }
-  }
-
-  // Execute all fetches in parallel
-  const results = await Promise.allSettled(fetchPromises);
-  debugLog(context, "Finished fetching from all subreddits (Promise.allSettled).");
-
-  results.forEach((result, index) => {
-      const subredditName = subredditNames[index];
-      if (result.status === 'fulfilled') {
-          const posts = result.value;
-          debugLog(context, `Successfully fetched ${posts.length} posts from r/${subredditName}`);
-          posts.forEach(post => {
-              // Basic keyword check on title or selftext (optional pre-filter)
-               const keywordMatch = keywords.some(kw =>
-                   post.title.toLowerCase().includes(kw.toLowerCase()) ||
-                   post.selftext.toLowerCase().includes(kw.toLowerCase())
-               );
-
-               if (keywordMatch) { // Only include posts that match at least one keyword
-                  allPosts.push({
-                      id: post.id,
-                      subreddit: post.subreddit?.display_name || subredditName, // Use fetched name if available
-                      author: post.author?.name || null, // Handle potential deleted author
-                      title: post.title,
-                      selftext: post.selftext,
-                      url: `https://www.reddit.com${post.permalink}`, // Construct full URL
-                      created_utc: post.created_utc,
-                  });
-              }
-          });
-      } else {
-          console.error(`Failed to fetch posts from r/${subredditName}:`, result.reason);
-           debugLog(context, `Fetch failed for r/${subredditName}`, { error: result.reason });
-      }
+  const context = "scrapeSubredditsWithFetch";
+  debugLog(context, `Starting Reddit scrape with direct fetch for ${timeframe} timeframe...`, { 
+    subreddits: subredditNames, 
+    keywordsCount: keywords.length,
+    limitPerSubreddit
   });
 
-  debugLog(context, `Completed scraping. Total relevant posts found across all subreddits: ${allPosts.length}`);
+  const allPosts: RedditPostData[] = [];
+  const USER_AGENT = process.env.REDDIT_USER_AGENT || 'OrangeSalesAgent/1.0';
+
+  // Process each subreddit
+  for (const subredditName of subredditNames) {
+    try {
+      debugLog(context, `Fetching r/${subredditName}...`);
+      
+      // For Charlotte-specific subreddits, we'll be MORE inclusive with keywords
+      const isCharlotteSubreddit = ['charlotte', 'charlottenc', 'queencity', 'clt'].includes(subredditName.toLowerCase());
+      
+      // More inclusive search for Charlotte subreddits, standard for others
+      const endpointType = 'top'; // Use 'new' for Charlotte subreddits to get more recent content
+      
+      // Reddit's JSON API endpoint
+      const url = `https://www.reddit.com/r/${subredditName}/${endpointType}.json?limit=${limitPerSubreddit}&t=${timeframe}`;
+      
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': USER_AGENT
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (!data.data || !data.data.children) {
+        debugLog(context, `No valid data returned for r/${subredditName}`);
+        continue;
+      }
+      
+      // Process posts
+      const posts = data.data.children;
+      debugLog(context, `Successfully fetched ${posts.length} posts from r/${subredditName}`);
+      
+      for (const post of posts) {
+        const postData = post.data;
+        
+        // For Charlotte subreddits, be more lenient with keyword matching
+        let includePost = false;
+        
+        if (isCharlotteSubreddit) {
+          // For Charlotte subreddits, include posts that might relate to fitness/gyms even loosely
+          const fitnessKeywords = ['gym', 'fitness', 'workout', 'exercise', 'class', 'weight', 'trainer', 
+            'orange theory', 'orangetheory', 'hiit', 'training', 'cardio', 'health',
+            'strength', 'sweat', 'tone', 'muscle', 'wellness', 'studio', 'personal',
+            'coach', 'membership', 'burn', 'body', 'heart rate'];
+          
+          includePost = fitnessKeywords.some(kw => 
+            postData.title.toLowerCase().includes(kw.toLowerCase()) || 
+            (postData.selftext && postData.selftext.toLowerCase().includes(kw.toLowerCase()))
+          );
+          
+          // If we can't find fitness keywords, even include posts where people are looking for recommendations
+          // These could be potential leads where people are seeking various services
+          if (!includePost) {
+            const recommendationKeywords = ['looking for', 'recommend', 'suggestion', 'advice', 'best', 
+                                          'where to', 'where can', 'new to charlotte', 'just moved'];
+            
+            includePost = recommendationKeywords.some(kw => 
+              postData.title.toLowerCase().includes(kw.toLowerCase()) || 
+              (postData.selftext && postData.selftext.toLowerCase().includes(kw.toLowerCase()))
+            );
+          }
+        } else {
+          // For non-Charlotte subreddits, use the original keyword matching
+          includePost = keywords.some(kw => 
+            postData.title.toLowerCase().includes(kw.toLowerCase()) || 
+            (postData.selftext && postData.selftext.toLowerCase().includes(kw.toLowerCase()))
+          );
+        }
+        
+        if (includePost) {
+          allPosts.push({
+            id: postData.id,
+            subreddit: postData.subreddit,
+            author: postData.author,
+            title: postData.title,
+            selftext: postData.selftext || '',
+            url: `https://www.reddit.com${postData.permalink}`,
+            created_utc: postData.created_utc
+          });
+        }
+      }
+    } catch (error) {
+      console.error(`Error fetching r/${subredditName}:`, error);
+      debugLog(context, `Error fetching r/${subredditName}`, { 
+        error: error instanceof Error ? error.message : String(error) 
+      });
+    }
+  }
+  
+  debugLog(context, `Completed scraping. Found ${allPosts.length} relevant posts`);
   return allPosts;
 }
 
-
-// --- Ensure `PotentialLead` interface is defined correctly ---
-export interface PotentialLead {
-  id: string;
-  subreddit: string;
-  username: string; // Keep 'username' for UI consistency, map from 'author'
-  content: string;
-  date: string; // ISO String
-  sentiment: 'seeking_recommendation' | 'pain_point' | 'complaining' | 'interest_shown' | 'generic_mention' | 'other' | 'not_applicable_if_not_lead';
-  status: 'new';
-  score: number;
-  url: string;
-  reasoning?: string;
+// More balanced lead analysis with Charlotte focus
+async function analyzePotentialLead(postContent: string, keywords: string[]): Promise<{
+  is_lead: boolean;
+  lead_score: number;
+  sentiment: string;
+  reasoning: string;
+  relevant_snippet: string;
+}> {
+  // Extract key information from the post content
+  const subreddit = postContent.match(/Subreddit: r\/([^\s]+)/)?.[1] || '';
+  const title = postContent.match(/Title: ([^\n]+)/)?.[1] || '';
+  const content = postContent.match(/Content \(first 1000 chars\): ([^]*?)(?:URL:|$)/s)?.[1]?.trim() || '';
+  const combinedText = (title + ' ' + content).toLowerCase();
+  
+  // Initialize score
+  let score = 0;
+  let isLead = false;
+  let sentiment = 'other';
+  let reasoning = '';
+  let relevant_snippet = content.substring(0, 200);
+  
+  // --- SUBREDDIT RELEVANCE ---
+  const isCharlotteSubreddit = ['charlotte', 'charlottenc', 'clt', 'queencity'].includes(subreddit.toLowerCase());
+  
+  // Give a baseline score for Charlotte subreddits - we're interested in almost anything related to fitness here
+  if (isCharlotteSubreddit) {
+    score += 25; // Give a strong starting boost to Charlotte subreddits
+    reasoning += `Post in Charlotte subreddit r/${subreddit}. `;
+  } else if (subreddit.toLowerCase() === 'northcarolina') {
+    score += 10;
+    reasoning += `Post in North Carolina subreddit. `;
+  }
+  
+  // --- LOCATION RELEVANCE ---
+  // Score higher for Charlotte-specific posts
+  const charlotteLocationTerms = ['charlotte', 'south end', 'uptown', 'north carolina', 'nc', 'ballantyne', 
+                                 'plaza midwood', 'noda', 'university', 'southpark', 'south charlotte', 
+                                 'north charlotte', 'matthews', 'pineville', 'huntersville', 'dilworth'];
+  
+  const locationMatches = charlotteLocationTerms.filter(term => combinedText.includes(term.toLowerCase()));
+  
+  // Location boost
+  if (locationMatches.length > 0) {
+    const locationBoost = Math.min(locationMatches.length * 5, 25);
+    score += locationBoost;
+    reasoning += `Mentions Charlotte-area locations: ${locationMatches.join(', ')}. `;
+  }
+  
+  // --- FITNESS RELEVANCE ---
+  // More comprehensive fitness-related terms
+  const fitnessTerms = [
+    'gym', 'fitness', 'workout', 'exercise', 'class', 'training', 'orange theory', 'orangetheory', 
+    'hiit', 'weight loss', 'lose weight', 'cardio', 'strength', 'personal train', 'group class', 
+    'group fitness', 'bootcamp', 'interval training', 'health club', 'trainer', 'spin class',
+    'membership', 'pilates', 'yoga', 'crossfit', 'coach', 'zumba', 'aerobics', 'treadmill'
+  ];
+  
+  const fitnessMatches = fitnessTerms.filter(term => combinedText.includes(term.toLowerCase()));
+  
+  // Fitness boost - even a single match gets points, more matches get more points
+  if (fitnessMatches.length > 0) {
+    const fitnessBoost = Math.min(fitnessMatches.length * 5, 35);
+    score += fitnessBoost;
+    reasoning += `Contains fitness-related terms: ${fitnessMatches.join(', ')}. `;
+  }
+  
+  // --- INTENT SIGNALS ---
+  // Keywords indicating someone is looking for services
+  const intentTerms = [
+    'looking for', 'recommendation', 'recommend', 'suggest', 'advice', 'best', 'where to',
+    'new to', 'just moved', 'relocated', 'visiting', 'check out', 'try', 'looking to join',
+    'where should', 'opinion on', 'thoughts on', 'compare', 'vs', 'versus', 'better than',
+    'alternative to', 'instead of', 'switch from', 'want to sign up'
+  ];
+  
+  const intentMatches = intentTerms.filter(term => combinedText.includes(term.toLowerCase()));
+  
+  // Intent boost
+  if (intentMatches.length > 0) {
+    const intentBoost = Math.min(intentMatches.length * 5, 30);
+    score += intentBoost;
+    reasoning += `Shows intent to find services: ${intentMatches.join(', ')}. `;
+    sentiment = 'seeking_recommendation';
+  }
+  
+  // --- SPECIAL CASE BOOSTS ---
+  
+  // Direct Orange Theory mentions
+  if (combinedText.includes('orange theory') || combinedText.includes('orangetheory')) {
+    score += 25;
+    reasoning += 'Directly mentions Orange Theory. ';
+    sentiment = combinedText.includes('vs') || combinedText.includes('versus') ? 'comparing' : 'interest_shown';
+  }
+  
+  // Looking for HIIT specifically
+  if (combinedText.includes('hiit') || combinedText.includes('high intensity interval')) {
+    score += 15;
+    reasoning += 'Interested in HIIT workouts (Orange Theory specialty). ';
+  }
+  
+  // New to area is highly valuable
+  if (combinedText.includes('new to charlotte') || combinedText.includes('just moved') || 
+      combinedText.includes('relocated to') || (combinedText.includes('moved') && combinedText.includes('charlotte'))) {
+    score += 20;
+    reasoning += 'Recently moved to Charlotte area. ';
+    sentiment = 'seeking_recommendation';
+  }
+  
+  // --- NEGATIVE SIGNALS ---
+  
+  // Automated/mod posts (less penalty than before)
+  if (title.includes('Daily') || title.includes('Weekly') || title.includes('Thread') || 
+      title.includes('Megathread') || title.toLowerCase().includes('automod')) {
+    score = Math.max(score - 25, 0);
+    reasoning += "Automated or recurring thread. ";
+  }
+  
+  // If it's from the Charlotte subreddit and mentions fitness, it's likely relevant
+  // so we'll add a bonus to counter potential penalties
+  if (isCharlotteSubreddit && fitnessMatches.length > 0) {
+    score += 10;
+    reasoning += "Charlotte fitness post bonus. ";
+  }
+  
+  // --- FINAL SCORING & CATEGORIZATION ---
+  
+  // Cap score at 100
+  score = Math.min(Math.max(score, 0), 100);
+  
+  // Lower threshold for Charlotte subreddits
+  const leadThreshold = isCharlotteSubreddit ? 30 : 40;
+  
+  if (score >= leadThreshold) {
+    isLead = true;
+    
+    // Set sentiment if not already specified
+    if (sentiment === 'other') {
+      if (score >= 75) {
+        sentiment = 'seeking_recommendation';
+      } else if (score >= 50) {
+        sentiment = 'interest_shown';
+      } else {
+        sentiment = 'generic_mention';
+      }
+    }
+    
+    // Final assessment
+    if (score >= 75) {
+      reasoning += "High-quality lead with specific Charlotte fitness interests.";
+    } else if (score >= 50) {
+      reasoning += "Good potential lead interested in fitness in Charlotte area.";
+    } else {
+      reasoning += "Potential lead with some Charlotte fitness relevance.";
+    }
+  } else {
+    isLead = false;
+    sentiment = 'not_applicable_if_not_lead';
+    reasoning += "Insufficient indicators of interest in Charlotte-area fitness solutions.";
+  }
+  
+  // Extract a relevant snippet that shows why this is a good lead
+  if (isLead) {
+    // Try to extract the most relevant sentence
+    const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    
+    // If fitness and Charlotte are both mentioned, prioritize sentences with both
+    const bothTerms = sentences.find(s => {
+      const lower = s.toLowerCase();
+      return charlotteLocationTerms.some(t => lower.includes(t.toLowerCase())) && 
+             fitnessTerms.some(t => lower.includes(t.toLowerCase()));
+    });
+    
+    if (bothTerms) {
+      relevant_snippet = bothTerms.trim();
+    } else {
+      // Otherwise prioritize: fitness intent first, then location, then just fitness terms
+      const fitnessIntent = sentences.find(s => {
+        const lower = s.toLowerCase();
+        return fitnessTerms.some(t => lower.includes(t.toLowerCase())) && 
+               intentTerms.some(t => lower.includes(t.toLowerCase()));
+      });
+      
+      if (fitnessIntent) {
+        relevant_snippet = fitnessIntent.trim();
+      } else if (locationMatches.length > 0) {
+        const locationSentence = sentences.find(s => 
+          charlotteLocationTerms.some(t => s.toLowerCase().includes(t.toLowerCase()))
+        );
+        if (locationSentence) relevant_snippet = locationSentence.trim();
+      } else if (fitnessMatches.length > 0) {
+        const fitnessSentence = sentences.find(s => 
+          fitnessTerms.some(t => s.toLowerCase().includes(t.toLowerCase()))
+        );
+        if (fitnessSentence) relevant_snippet = fitnessSentence.trim();
+      }
+    }
+  }
+  
+  return {
+    is_lead: isLead,
+    lead_score: score,
+    sentiment: sentiment,
+    reasoning: reasoning,
+    relevant_snippet: relevant_snippet || title // Fall back to title if no good snippet found
+  };
 }
 
-// --- MINOR UPDATE to `processRedditDataForLeads` ---
-// Make sure this function exists and modify it as shown below
-
+// Update your processRedditDataForLeads function with these more inclusive parameters
 export async function processRedditDataForLeads(
   selectedSubredditsConfig: Array<{ name: string; category: string; selected: boolean }>,
   keywords: string[],
-  contentFilterConfig: { /* ... same as before ... */ },
+  contentFilterConfig: any,
   scanFrequency: string
 ): Promise<PotentialLead[]> {
   const context = "processRedditDataForLeads";
   const startTime = Date.now();
-  debugLog(context, "Starting lead processing (with real scraper)...", { numKeywords: keywords.length, scanFrequency });
+  
+  console.log("==== REDDIT LEAD PROCESSING STARTED ====");
+  debugLog(context, "Starting lead processing...", { 
+    numKeywords: keywords.length, 
+    scanFrequency,
+    subredditsCount: selectedSubredditsConfig.length
+  });
 
+  // Get active subreddits
   const activeSubreddits = selectedSubredditsConfig
-      .filter(sr => sr.selected)
-      .map(sr => sr.name);
+    .filter(sr => sr.selected)
+    .map(sr => sr.name);
 
   if (activeSubreddits.length === 0) {
-      debugLog(context, "No active subreddits selected. Aborting.");
-      return [];
+    debugLog(context, "No active subreddits selected. Aborting.");
+    return [];
   }
+  
   debugLog(context, "Active subreddits", { activeSubreddits });
 
-  // Step 1: Scrape Reddit posts (Using the REAL function now)
-  // ***** CHANGE HERE *****
-  const scrapedPosts: RedditPostData[] = await scrapeSubreddits(activeSubreddits, keywords, 25); // Fetch top 25 from each
-  // ***** END CHANGE *****
+  // Step 1: Scrape Reddit posts - use 'year' timeframe to get more historical posts
+  const scrapedPosts = await scrapeSubredditsWithFetch(activeSubreddits, keywords, 100, 'month');
+  debugLog(context, `Scraping returned ${scrapedPosts.length} posts`);
+
+  // For debugging
+  if (scrapedPosts.length > 0) {
+    console.log("SAMPLE POST:", JSON.stringify(scrapedPosts[0], null, 2));
+  }
 
   if (scrapedPosts.length === 0) {
-      debugLog(context, "No posts returned from scraping.");
-      return [];
+    console.log("==== NO POSTS RETURNED FROM SCRAPING ====");
+    return [];
   }
-  debugLog(context, `Real scraping returned ${scrapedPosts.length} posts potentially matching keywords.`);
 
   const identifiedLeads: PotentialLead[] = [];
 
-  // Step 2 & 3: Process each post with LLM
+  // Step 2: Process each post with improved analysis
   for (const post of scrapedPosts) {
-       // ***** CHANGE HERE: Use correct field names from RedditPostData *****
-      const postCorpus = `
+    // Create a corpus from the post content
+    const postCorpus = `
 Subreddit: r/${post.subreddit}
 User: u/${post.author || 'deleted'}
 Title: ${post.title}
 Content (first 1000 chars): ${post.selftext.substring(0, 1000)}
 URL: ${post.url}
-      `.trim();
-       // ***** END CHANGE *****
+    `.trim();
 
-      // LLM Prompt remains largely the same, but ensure it knows comments aren't included
-      let filterCriteriaDescription = "/* ... same as before ... */";
-      const llmPrompt = `
-You are an AI sales intelligence analyst for Orange Theory Fitness Charlotte.
-Your task is to analyze the following Reddit post summary (title and content only) to determine if it represents a potential sales lead.
-The primary keywords we are interested in are: ${keywords.join(', ')}.
-Consider the user's content filter preferences:
-${filterCriteriaDescription}
-
-Reddit Post Summary:
-${postCorpus}
-
-Based ONLY on the post title and content, provide your analysis STRICTLY in the following JSON format:
-{
-"is_lead": boolean,
-"lead_score": number, // 0-100
-"sentiment": "seeking_recommendation" | "pain_point" | "complaining" | "interest_shown" | "generic_mention" | "other" | "not_applicable_if_not_lead",
-"reasoning": "string",
-"relevant_snippet": "string" // A short, relevant quote from the title or content.
-}
-
-Example for a good lead: /* ... same ... */
-Example for not a lead: /* ... same ... */
-
-Output ONLY the JSON object. No other text or explanations.
-      `;
-
-      try {
-          debugLog(context, `Sending post ${post.id} to LLM for analysis.`);
-          const aiResponseJsonString = await safeStreamText({ /* ... same LLM call params ... */ });
-          debugLog(context, `LLM raw response for post ${post.id}: ${aiResponseJsonString.substring(0, 200)}...`);
-
-          let analysisResult;
-          try {
-              // Robust JSON parsing
-              const firstBrace = aiResponseJsonString.indexOf('{');
-              const lastBrace = aiResponseJsonString.lastIndexOf('}');
-              if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-                  const jsonCandidate = aiResponseJsonString.substring(firstBrace, lastBrace + 1);
-                  analysisResult = JSON.parse(jsonCandidate);
-              } else { throw new Error("No valid JSON object found."); }
-          } catch (parseError) {
-              debugLog(context, `Failed to parse LLM JSON response for post ${post.id}`, { error: parseError instanceof Error ? parseError.message : parseError, response: aiResponseJsonString });
-              continue; // Skip post
-          }
-
-          if (analysisResult && analysisResult.is_lead && analysisResult.lead_score >= 40) {
-              // ***** CHANGE HERE: Map fields correctly to PotentialLead *****
-              identifiedLeads.push({
-                  id: post.id,
-                  subreddit: post.subreddit,
-                  username: post.author || 'unknown', // Map author to username for UI
-                  content: analysisResult.relevant_snippet || post.selftext.substring(0, 300) || post.title, // Use snippet, fallback to selftext or title
-                  date: new Date(post.created_utc * 1000).toISOString(), // Convert timestamp
-                  sentiment: analysisResult.sentiment,
-                  status: 'new',
-                  score: analysisResult.lead_score,
-                  url: post.url,
-                  reasoning: analysisResult.reasoning,
-              });
-              // ***** END CHANGE *****
-              debugLog(context, `Identified lead from post ${post.id}`, { score: analysisResult.lead_score });
-          } else {
-              debugLog(context, `Post ${post.id} not considered a strong lead or parsing failed.`, { analysis: analysisResult });
-          }
-      } catch (error) {
-          debugLog(context, `Error processing post ${post.id} with LLM`, { error: error instanceof Error ? error.message : error, postId: post.id });
+    try {
+      // Use the updated analysis function
+      const analysisResult = await analyzePotentialLead(postCorpus, keywords);
+      
+      // Determine if we should include based on post score and content filters
+      const scoreThreshold = post.subreddit.toLowerCase() === 'charlotte' ? 25 : 35;
+      
+      if (analysisResult.is_lead && analysisResult.lead_score >= scoreThreshold) {
+        // Apply content filters based on user preferences
+        let includeBasedOnFilters = true;
+        
+        if (!contentFilterConfig.seekingRecommendations && analysisResult.sentiment === 'seeking_recommendation') {
+          includeBasedOnFilters = false;
+        }
+        
+        // Extract "new to area" signal for filtering
+        const isNewToArea = analysisResult.reasoning.includes('Recently moved') || 
+                            analysisResult.reasoning.includes('new to Charlotte');
+                            
+        if (!contentFilterConfig.newToArea && isNewToArea) {
+          includeBasedOnFilters = false;
+        }
+        
+        // Extract complaining signal for filtering
+        const isComplaining = analysisResult.sentiment === 'complaining';
+        if (!contentFilterConfig.complaining && isComplaining) {
+          includeBasedOnFilters = false;
+        }
+        
+        // Extract price discussion signal
+        const isPriceDiscussion = postCorpus.toLowerCase().includes('price') || 
+                                 postCorpus.toLowerCase().includes('cost') ||
+                                 postCorpus.toLowerCase().includes('expensive') ||
+                                 postCorpus.toLowerCase().includes('cheap');
+                                 
+        if (!contentFilterConfig.priceDiscussion && isPriceDiscussion) {
+          includeBasedOnFilters = false;
+        }
+        
+        // Extract weight loss goals signal
+        const isWeightLoss = postCorpus.toLowerCase().includes('weight loss') || 
+                            postCorpus.toLowerCase().includes('lose weight');
+                            
+        if (!contentFilterConfig.weightLossGoals && isWeightLoss) {
+          includeBasedOnFilters = false;
+        }
+        
+        // If passes all filters, add to leads
+        if (includeBasedOnFilters) {
+          identifiedLeads.push({
+            id: post.id,
+            subreddit: post.subreddit,
+            username: post.author || 'unknown',
+            content: analysisResult.relevant_snippet || post.title,
+            date: new Date(post.created_utc * 1000).toISOString(),
+            sentiment: analysisResult.sentiment as any,
+            status: 'new',
+            score: analysisResult.lead_score,
+            url: post.url,
+            reasoning: analysisResult.reasoning,
+          });
+        }
       }
+    } catch (error) {
+      console.error(`Error processing post ${post.id}:`, error);
+    }
   }
 
-  debugLog(context, `Finished lead processing. Found ${identifiedLeads.length} potential leads. Total time: ${Date.now() - startTime}ms`);
+  // Sort leads by score descending
+  identifiedLeads.sort((a, b) => b.score - a.score);
+
+  const totalTime = Date.now() - startTime;
+  debugLog(context, `Finished lead processing. Found ${identifiedLeads.length} potential leads. Total time: ${totalTime}ms`);
+  console.log("==== REDDIT LEAD PROCESSING COMPLETED ====");
+  
   return identifiedLeads;
 }

@@ -187,7 +187,10 @@ export default function ChatContent() {
 
   const handleSubmit = async (userQuery: string) => {
     if (!userQuery.trim()) return;
-
+  
+    // Debug log to see exactly what query we're processing
+    console.log("handleSubmit processing query:", userQuery);
+  
     if (!isInChatMode) {
       setIsInChatMode(true);
       addMessage({
@@ -195,21 +198,78 @@ export default function ChatContent() {
         content: "Hello! I'm Consuelo. Let's find those clients for you.",
       });
     }
-
+  
     setTimeout(() => {
       addMessage({ role: "user", content: userQuery });
     }, 0);
     setInputValue("");
     setIsLoading(true);
     handleCloseSideArtifact();
-
+  
+    // Check for lead generator triggers:
+    // 1. "OPEN_OTF_FORM" special command
+    // 2. "Research:" prefixed queries
+    if (userQuery.trim() === "OPEN_OTF_FORM" || userQuery.trim().startsWith("Research:")) {
+      console.log("Lead generator trigger detected:", userQuery);
+      
+      try {
+        // Extract actual query for Research: prefix
+        const actualQuery = userQuery.trim().startsWith("Research:") 
+          ? userQuery.substring(userQuery.indexOf(":") + 1).trim()
+          : "Lead Generator";
+          
+        // Add a system message about opening lead generator
+        addMessage({
+          role: "system",
+          content: `Opening Lead Generator tool${actualQuery !== "Lead Generator" ? ` for: "${actualQuery}"` : ''}...`,
+        });
+        
+        // Create message with leadGenerator viewMode - this is critical!
+        const leadGenMessage = addMessage({
+          role: "assistant",
+          content: `I've opened the Lead Generator tool${actualQuery !== "Lead Generator" ? ` for: "${actualQuery}"` : ''}.`,
+          data: { 
+            viewMode: "leadGenerator", // This is what triggers the lead generator view
+            queryContext: actualQuery,
+            userQuery: actualQuery  // Store the query for reference
+          } 
+        });
+        
+        console.log("Created lead generator message:", leadGenMessage);
+        
+        // Open side panel with lead generator data
+        if (leadGenMessage.data) {
+          handleOpenSideArtifact(
+            leadGenMessage.data,
+            leadGenMessage.id,
+            actualQuery
+          );
+        }
+        
+      } catch (err) {
+        console.error("Error opening lead generator:", err);
+        const errorMsg = err instanceof Error ? err.message : "An unknown error occurred";
+        addMessage({ role: "system", content: `Error: ${errorMsg}` });
+        addMessage({
+          role: "assistant",
+          content: "I encountered an issue opening the Lead Generator tool.",
+          data: { error: errorMsg }
+        });
+      } finally {
+        setIsLoading(false);
+      }
+      
+      return; // Exit early - don't process as regular search
+    }
+  
+    // If we reach here, it's a regular search query - continue with your existing code
     // Store the userQuery that initiated this process
     const currentQueryContext = userQuery;
-
+  
     // Initialize tempResponseData with the userQuery
     const tempResponseData: ChatMessageData = {
       viewMode: "cards",
-      userQuery: currentQueryContext, // <<<< STORE userQuery HERE
+      userQuery: currentQueryContext,
     };
 
     try {
