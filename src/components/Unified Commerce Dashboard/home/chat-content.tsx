@@ -14,7 +14,8 @@ import {
 import { ChatMessage, ChatMessageData } from "@/types/chats"; // Using your specified path
 import { SegmentationForm, ExampleQueries } from "../segmentation"; // Using your specified path
 import ChatMessageItem from "./components/chat-message-item"; // Using your specified path
-import SideArtifactPanel from "./components/side.panel"; // Using your specified path
+import SideArtifactPanel from "../chat/components/side.panel";
+
 
 
 const EXAMPLE_QUERIES = [
@@ -125,85 +126,106 @@ export default function ChatContent() {
 
   const handleSubmit = async (userQuery: string) => {
     if (!userQuery.trim()) return;
-
+  
+    // Debug the incoming query
+    console.log("handleSubmit received query:", userQuery);
+  
     if (!isInChatMode) {
       setIsInChatMode(true);
       addMessage({ role: 'assistant', content: "Hello! I'm Consuelo. Let's find those clients for you." });
     }
     
+    // Add user message to chat
     setTimeout(() => { addMessage({ role: 'user', content: userQuery }); }, 0);
     setInputValue(""); 
     setIsLoading(true);
     handleCloseSideArtifact(); // Close any existing panel when new query starts
-    const tempResponseData: ChatMessageData = { viewMode: "cards" }; // Default to cards
-
-    try {
-      addMessage({ role: 'system', content: `Thinking about: "${userQuery}"...` });
-      addMessage({ role: 'system', content: "1. Translating your request into a database query..."});
-      tempResponseData.aiThoughts = `To answer "${userQuery}", I'm starting by formulating a precise database query.`;
-      const generatedSql = await generateQuery(userQuery);
-      tempResponseData.sqlQuery = generatedSql;
-      addMessage({ role: 'system', content: "   - SQL Generated." });
-      
-      addMessage({ role: 'system', content: "2. Running the query against the database..."});
-      let results = await runGeneratedSQLQuery(generatedSql);
-      addMessage({ role: 'system', content: "   - Query Executed." });
-
-      if (results && results.length > 0) {
-        if (typeof results[0] === "string" && (results[0].startsWith("{") || results[0].startsWith("["))) {
-          results = results.map((item) => { try { return JSON.parse(item); } catch { return item; } });
+    
+    // Special case for OPEN_OTF_FORM - This needs to be EXACT and case sensitive
+    if (userQuery.trim() === "OPEN_OTF_FORM") {
+      console.log("SPECIAL COMMAND DETECTED: OPEN_OTF_FORM");
+      try {
+        // Add a system message
+        addMessage({ role: 'system', content: `Opening the lead generator tool...` });
+        
+        // Create assistant message with leadGenerator viewMode
+        const finalAssistantMessage = addMessage({
+          role: 'assistant',
+          content: `I've opened the lead generator tool for you.`,
+          data: { 
+            viewMode: "leadGenerator", // Must match exactly the type in ChatMessageData
+            queryContext: "Lead Generator" 
+          } 
+        });
+        
+        // Debugging the created message
+        console.log("Created lead generator message:", finalAssistantMessage);
+        
+        // Open the side panel
+        if (finalAssistantMessage.data) {
+          console.log("Opening side panel with:", finalAssistantMessage.data);
+          handleOpenSideArtifact(finalAssistantMessage.data, finalAssistantMessage.id);
         }
-        tempResponseData.queryResults = results;
-        const firstResult = results[0];
-        tempResponseData.columns = typeof firstResult === "object" && firstResult !== null ? Object.keys(firstResult) : ["value"];
-        addMessage({ role: 'system', content: "3. Analyzing results and preparing visualizations/actions..."});
-        tempResponseData.isLoadingChart = true; tempResponseData.isLoadingActions = true;
-
-        try {
-          const [chartResult, actionResult, explanationResult] = await Promise.allSettled([
-            generateChartConfig(results, userQuery),
-            generateActionSuggestions(results, userQuery),
-            explainQuery(userQuery, generatedSql)
-          ]);
-          if (chartResult.status === "fulfilled") tempResponseData.chartConfig = chartResult.value;
-          if (actionResult.status === "fulfilled") tempResponseData.actionSuggestions = actionResult.value;
-          if (explanationResult.status === "fulfilled") tempResponseData.explanations = explanationResult.value;
-        } catch (vizError) { 
-          console.error("Viz/Action/Explanation error:", vizError);
-          addMessage({role: 'system', content: "Error during result analysis."});
-        } finally {
-          tempResponseData.isLoadingChart = false; tempResponseData.isLoadingActions = false;
-        }
-        addMessage({ role: 'system', content: "   - Analysis Complete." });
-      } else {
-        tempResponseData.queryResults = []; tempResponseData.columns = [];
-        addMessage({role: 'system', content: "No specific data found, but here's the SQL I tried:"});
+        
+      } catch (err) {
+        console.error("Error during lead generator setup:", err);
+        const errorMsg = err instanceof Error ? err.message : "An unknown error occurred";
+        addMessage({ role: 'system', content: `Error: ${errorMsg}`});
+        addMessage({
+          role: 'assistant',
+          content: "I encountered an issue opening the lead generator.",
+          data: { error: errorMsg }
+        });
+      } finally {
+        setIsLoading(false);
       }
       
-      // Capture the full message object returned by addMessage
-      const finalAssistantMessage = addMessage({
-        role: 'assistant',
-        content: `I've processed your request for "${userQuery}".`,
-        data: { ...tempResponseData } 
-      });
-
-      // Automatically open side panel for this new assistant message
-      if (finalAssistantMessage.data && !finalAssistantMessage.data.error) {
-        handleOpenSideArtifact(finalAssistantMessage.data, finalAssistantMessage.id); // Pass message ID
-      }
-
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : "An unknown error occurred";
-      addMessage({ role: 'system', content: `Error: ${errorMsg}`});
-      addMessage({
-        role: 'assistant',
-        content: "I encountered an issue processing your request.",
-        data: { error: errorMsg }
-      });
-    } finally {
-      setIsLoading(false);
+      return; // Exit early
     }
-  };
+    
+    // Check for Research prefix
+    if (userQuery.trim().startsWith("Research:")) {
+      console.log("RESEARCH PREFIX DETECTED");
+      try {
+        const actualQuery = userQuery.substring(userQuery.indexOf(":") + 1).trim();
+        
+        // Add a system message
+        addMessage({ role: 'system', content: `Opening lead generator for: "${actualQuery}"...` });
+        
+        // Create assistant message with leadGenerator viewMode
+        const finalAssistantMessage = addMessage({
+          role: 'assistant',
+          content: `I've opened the lead generator for: "${actualQuery}"`,
+          data: { 
+            viewMode: "leadGenerator", 
+            queryContext: actualQuery 
+          } 
+        });
+        
+        // Open the side panel
+        if (finalAssistantMessage.data) {
+          handleOpenSideArtifact(finalAssistantMessage.data, finalAssistantMessage.id);
+        }
+        
+      } catch (err) {
+        console.error("Error during research setup:", err);
+        const errorMsg = err instanceof Error ? err.message : "An unknown error occurred";
+        addMessage({ role: 'system', content: `Error: ${errorMsg}`});
+        addMessage({
+          role: 'assistant',
+          content: "I encountered an issue preparing the lead generator.",
+          data: { error: errorMsg }
+        });
+      } finally {
+        setIsLoading(false);
+      }
+      
+      return; // Exit early
+    }
+    
+    // If we get here, it's a regular search query
+    console.log("Processing as regular search query");
+    const tempResponseData: ChatMessageData = { viewMode: "cards" }; // Default to cards
 
   const handleExampleQuerySelection = (query: string) => {
     const prefixedQuery = `Search: ${query}`;
@@ -213,7 +235,28 @@ export default function ChatContent() {
     const targetTextarea = document.querySelector<HTMLTextAreaElement>(targetTextareaId);
     targetTextarea?.focus();
   };
-
+  const handleOpenLeadGenerator = () => {
+    console.log("Opening lead generator directly");
+    
+    // Close any existing side panel
+    handleCloseSideArtifact();
+    
+    // Create a message specifically for the lead generator
+    const message = addMessage({
+      role: 'assistant',
+      content: "Lead generator tool is ready to use.",
+      data: {
+        viewMode: "leadGenerator",
+        queryContext: "Lead Generation"
+      }
+    });
+    
+    // Directly open the side panel
+    if (message.data) {
+      console.log("Opening side panel with lead generator data:", message.data);
+      handleOpenSideArtifact(message.data, message.id);
+    }
+  };
   if (!isInChatMode) {
     return (
       <div className="min-h-screen flex flex-col items-center bg-white text-gray-900 px-4 py-10 sm:py-16">
@@ -235,6 +278,7 @@ export default function ChatContent() {
               isLoading={isLoading}
             />
           </div>
+          
           {!isLoading && (
             <div className="w-full">
               <ExampleQueries
@@ -287,6 +331,20 @@ export default function ChatContent() {
                 />
             </div>
         </div>
+        
+        {isInChatMode && (
+  <div className="fixed bottom-24 right-6 z-30">
+    <button
+      onClick={handleOpenLeadGenerator}
+      className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg shadow-lg flex items-center space-x-2"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+      </svg>
+      <span>Open Lead Generator</span>
+    </button>
+  </div>
+)}
 
         {/* Side Artifact Panel */}
         <SideArtifactPanel
@@ -299,4 +357,4 @@ export default function ChatContent() {
         />
     </div>
   );
-}
+}}

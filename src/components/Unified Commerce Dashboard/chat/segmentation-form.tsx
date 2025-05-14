@@ -1,15 +1,14 @@
 "use client";
 
 import type React from "react";
-// Using Heroicons. Ensure you have them: npm install @heroicons/react
 import { 
   MagnifyingGlassIcon, 
   SparklesIcon, 
   GlobeAltIcon,
   PaperClipIcon,
   MicrophoneIcon,
-  ChevronUpIcon as ChevronUpIconSolid // Renamed for clarity as it's solid
-} from '@heroicons/react/24/solid'; // Using solid for more prominent action icons
+  ChevronUpIcon as ChevronUpIconSolid
+} from '@heroicons/react/24/solid';
 
 interface SegmentationFormProps {
   inputValue: string;
@@ -32,31 +31,31 @@ export default function SegmentationForm({
     }
   };
 
-  // Placeholder actions for the new icon buttons
+  // Placeholder actions for the icon buttons
   const handleGlobeClick = () => console.log("Globe clicked - for future source selection");
   const handlePaperclipClick = () => console.log("Paperclip clicked - for future file attachment");
   const handleMicrophoneClick = () => console.log("Microphone clicked - for future voice input");
 
+  // Enhanced search button functionality
   const handleSearchPrefix = () => {
     setInputValue(`Search: ${inputValue.startsWith("Search: ") || inputValue.startsWith("Research: ") ? inputValue.substring(inputValue.indexOf(":") + 2) : inputValue}`);
-    // Optionally, focus the textarea after clicking
-    // document.getElementById('research-textarea')?.focus(); 
   };
 
+  // Enhanced OTF Lead Generator button functionality
+  // Directly opens the OTF form without requiring any input
   const handleResearchPrefix = () => {
-    setInputValue(`Research: ${inputValue.startsWith("Search: ") || inputValue.startsWith("Research: ") ? inputValue.substring(inputValue.indexOf(":") + 2) : inputValue}`);
-    // document.getElementById('research-textarea')?.focus();
+    // Special trigger value to directly open the OTF form
+    handleSubmit("OPEN_OTF_FORM");
   };
-
 
   return (
     <div className="w-full bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
       <form onSubmit={internalFormSubmit}>
         <textarea
-          id="research-textarea" // Added ID for potential focus
+          id="research-textarea"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          placeholder="What would you like to know?" // Updated placeholder
+          placeholder="What would you like to know about Orange Theory leads?"
           className="
             w-full p-4 text-base sm:text-lg text-gray-800 placeholder-gray-500 
             bg-transparent border-none focus:ring-0 resize-none 
@@ -72,15 +71,15 @@ export default function SegmentationForm({
             }
           }}
           disabled={isLoading}
-          aria-label="Describe client segment or research query"
+          aria-label="Describe what you'd like to know about Orange Theory leads"
         />
         
         <div className="flex justify-between items-center px-3 py-2.5 border-t border-gray-200 bg-white">
           <div className="flex items-center space-x-2">
             <button
-              type="button" // Important: Not type="submit"
+              type="button"
               onClick={handleSearchPrefix}
-              disabled={isLoading} // No longer disabled by empty input
+              disabled={isLoading}
               className="
                 flex items-center px-3 py-1.5 text-sm font-medium text-gray-600 bg-gray-100 
                 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-sky-500
@@ -91,9 +90,9 @@ export default function SegmentationForm({
               Search
             </button>
             <button
-              type="button" // Important: Not type="submit"
+              type="button"
               onClick={handleResearchPrefix}
-              disabled={isLoading} // No longer disabled by empty input
+              disabled={isLoading}
               className="
                 flex items-center px-3 py-1.5 text-sm font-medium text-orange-700 bg-white
                 border border-orange-500 rounded-lg hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-orange-500
@@ -101,7 +100,7 @@ export default function SegmentationForm({
               "
             >
               <SparklesIcon className="w-4 h-4 mr-1.5" />
-              Research
+              Lead Generator
             </button>
           </div>
 
@@ -123,14 +122,14 @@ export default function SegmentationForm({
               </button>
             ))}
             <button
-              type="submit" // This is the actual submit button
-              disabled={isLoading || !inputValue.trim()} // Still disabled if loading or input is empty
+              type="submit"
+              disabled={isLoading || !inputValue.trim()}
               className="
                 p-2 bg-orange-500 text-white rounded-lg 
                 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1
                 disabled:opacity-60 disabled:cursor-not-allowed transition-colors group
               "
-              aria-label="Submit research query"
+              aria-label="Submit query"
             >
               {isLoading ? (
                 <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
