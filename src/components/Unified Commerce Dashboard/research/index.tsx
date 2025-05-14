@@ -22,10 +22,12 @@ interface Lead {
   url: string;
   reasoning?: string;
 }
-
+interface OrangeSalesAgentProps {
+  userQuery?: string;
+}
 
 // Main application component
-const OrangeSalesAgent = () => {
+const OrangeSalesAgent: React.FC<OrangeSalesAgentProps> = ({ userQuery }) => {
   // State for multi-step form
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
@@ -56,13 +58,14 @@ const OrangeSalesAgent = () => {
       weightLossGoals: true
     }
   });
-
+  // Initialize search term from userQuery if provided
+  const [searchTerm, setSearchTerm] = useState('');
   // Sample leads data - updated to match Lead interface
   const [leads, setLeads] = useState<Lead[]>([
     {
       id: 1,
       subreddit: 'charlottenc',
-      username: 'user123',
+      username: 'user123 EXAMPLE',
       content: "Just moved to Charlotte and looking for a good gym in the South End area. Preferably something with classes as I'm not good at motivating myself.",
       date: '2025-05-10T14:22:00Z',
       sentiment: 'seeking_recommendation',
@@ -73,7 +76,7 @@ const OrangeSalesAgent = () => {
     {
       id: 2,
       subreddit: 'fitness',
-      username: 'fit_for_life',
+      username: 'fit_for_life EXAMPLE',
       content: "I've tried several HIIT workouts but can't find one that works with my schedule in Charlotte. Ideally looking for something near Uptown with early morning and late evening classes.",
       date: '2025-05-11T09:17:00Z',
       sentiment: 'pain_point',
@@ -83,8 +86,7 @@ const OrangeSalesAgent = () => {
     },
   ]);
 
-  // State for search/filter functionality
-  const [searchTerm, setSearchTerm] = useState('');
+
   const [filterStatus, setFilterStatus] = useState('all');
   const [isProcessing, setIsProcessing] = useState(false); // Renamed from isScanning for broader use
 
@@ -239,7 +241,7 @@ const OrangeSalesAgent = () => {
 
     const matchesStatus = filterStatus === 'all' || lead.status === filterStatus;
     return matchesSearch && matchesStatus;
-  }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()); // Sort by newest first
+  }).sort((a, b) => b.score - a.score); // Sort by newest first
 
 
   const openScriptModalForLead = async (lead: Lead) => {
