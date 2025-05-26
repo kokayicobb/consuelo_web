@@ -1,24 +1,24 @@
 
-// import ChatContent from "@/components/Unified Commerce Dashboard/home/chat-content";
-// import { Metadata } from "next";
+import ChatContent from "@/components/Unified Commerce Dashboard/home/chat-content";
+import { Metadata } from "next";
 
 
 
 
-// export const metadata: Metadata = {
-//   title: "Body Measurment | Consuelo - AI-Powered Fit Technology",
-//   description: "This is About page description",
-// };
+export const metadata: Metadata = {
+  title: "Body Measurment | Consuelo - AI-Powered Fit Technology",
+  description: "This is About page description",
+};
 
-// const VirtualTryOn = () => {
-//   return (
-//     <main>
+const VirtualTryOn = () => {
+  return (
+    <main>
      
-//         <ChatContent />
+       
       
-//     </main>
-//   );
-// };
+    </main>
+  );
+};
 
-// export default VirtualTryOn;
+export default VirtualTryOn;
 
