@@ -1,4 +1,4 @@
-"use client";
+"use client"; // This must be at the very top of the file
 
 import type React from "react";
 import { useState, useEffect } from "react";
@@ -77,7 +77,10 @@ export default function ExampleQueries({
   );
 
   return (
-    <div className="w-full pb-2 pt-6">
+    // You can adjust the 'pt-24' value here to move the entire section lower or higher.
+    // pt-X where X is a Tailwind spacing unit (e.g., pt-16, pt-20, pt-24, pt-32, etc.)
+    // Larger 'pt-X' means more space above, pushing the content down.
+    <div className="w-full pb-2 pt-24"> 
       <div className="mb-5 flex items-center justify-between sm:mb-6">
         <div>
           <h2 className="text-center text-xl font-semibold text-gray-800 sm:text-left sm:text-2xl">
