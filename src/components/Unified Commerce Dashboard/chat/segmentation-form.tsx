@@ -1,14 +1,18 @@
 "use client";
 
 import type React from "react";
-import { 
-  MagnifyingGlassIcon, 
-  SparklesIcon, 
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import {
+  MagnifyingGlassIcon,
+  SparklesIcon,
   GlobeAltIcon,
   PaperClipIcon,
   MicrophoneIcon,
-  ChevronUpIcon as ChevronUpIconSolid
-} from '@heroicons/react/24/solid';
+  ChevronUpIcon as ChevronUpIconSolid,
+} from "@heroicons/react/24/solid";
+
+import { cn } from "@/lib/utils"; // Make sure this path is correct for your project
 
 interface SegmentationFormProps {
   inputValue: string;
@@ -23,70 +27,229 @@ export default function SegmentationForm({
   handleSubmit,
   isLoading,
 }: SegmentationFormProps) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [animationState, setAnimationState] = useState<"idle" | "animating">(
+    "idle",
+  );
+  const [isFocused, setIsFocused] = useState(false);
+
+  const placeholders = [
+    "What would you like to know about Orange Theory leads?",
+    "Show me clients who haven't attended a class in 30 days...",
+    "Identify members at high risk of churning...",
+    "List new leads from 'Website Trial Form'...",
+    "Which coach has the highest attendance rate this month?",
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (animationState === "idle" && !inputValue && !isFocused) {
+        setAnimationState("animating");
+        setTimeout(() => {
+          setCurrentIndex((prev) => (prev + 1) % placeholders.length);
+          setAnimationState("idle");
+        }, 1000);
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [animationState, placeholders.length, inputValue, isFocused]);
 
   const internalFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!isLoading && inputValue.trim()) {
-      handleSubmit(inputValue); 
+      handleSubmit(inputValue);
     }
   };
 
-  // Placeholder actions for the icon buttons
-  const handleGlobeClick = () => console.log("Globe clicked - for future source selection");
-  const handlePaperclipClick = () => console.log("Paperclip clicked - for future file attachment");
-  const handleMicrophoneClick = () => console.log("Microphone clicked - for future voice input");
+  const handleGlobeClick = () =>
+    console.log("Globe clicked - for future source selection");
+  const handlePaperclipClick = () =>
+    console.log("Paperclip clicked - for future file attachment");
+  const handleMicrophoneClick = () =>
+    console.log("Microphone clicked - for future voice input");
 
-  // Enhanced search button functionality
   const handleSearchPrefix = () => {
-    setInputValue(`Search: ${inputValue.startsWith("Search: ") || inputValue.startsWith("Research: ") ? inputValue.substring(inputValue.indexOf(":") + 2) : inputValue}`);
+    setInputValue(
+      `Search: ${inputValue.startsWith("Search: ") || inputValue.startsWith("Research: ") ? inputValue.substring(inputValue.indexOf(":") + 2) : inputValue}`,
+    );
   };
 
-  // Enhanced OTF Lead Generator button functionality
-  // Directly opens the OTF form without requiring any input
   const handleResearchPrefix = () => {
-    // Special trigger value to directly open the OTF form
     handleSubmit("OPEN_OTF_FORM");
   };
 
   return (
-    <div className="w-full bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+    <div
+      className={cn(
+        "relative w-full overflow-hidden rounded-xl border border-gray-200 bg-white",
+        "shadow-[0_0_15px_rgba(0,0,0,0.05)]",
+        isFocused
+          ? "shadow-[0_0_0_1px_rgba(0,0,0,0.08),0_4px_20px_rgba(0,0,0,0.08)] ring-1 ring-black/5"
+          : "hover:shadow-[0_0_0_1px_rgba(0,0,0,0.05),0_2px_8px_rgba(0,0,0,0.05)]",
+      )}
+    >
       <form onSubmit={internalFormSubmit}>
-        <textarea
-          id="research-textarea"
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          placeholder="What would you like to know about Orange Theory leads?"
-          className="
-            w-full p-4 text-base sm:text-lg text-gray-800 placeholder-gray-500 
-            bg-transparent border-none focus:ring-0 resize-none 
-            transition-colors duration-150 ease-in-out
-          "
-          rows={3}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              if (!isLoading && inputValue.trim()) {
-                handleSubmit(inputValue);
+        <div className="relative min-h-[80px] w-full px-4 py-4">
+          <textarea
+            id="research-textarea"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+            // --- CRITICAL CHANGE HERE ---
+            // Provide a native placeholder attribute to the textarea
+            placeholder={inputValue ? "" : placeholders[currentIndex]}
+            // Remove 'placeholder-transparent' if you want the native placeholder to be visible
+            // If you want the animation to fully control visibility, keep 'placeholder-transparent'
+            // and rely on the extension detecting the *presence* of the attribute.
+            className="
+              // // Consider removing this if
+              you want native placeholder to show min-h-[80px] w-full resize-none bg-transparent text-gray-800 placeholder-transparent outline-none
+              transition-colors duration-150 ease-in-out
+            "
+            rows={3}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                if (!isLoading && inputValue.trim()) {
+                  handleSubmit(inputValue);
+                }
               }
-            }
-          }}
-          disabled={isLoading}
-          aria-label="Describe what you'd like to know about Orange Theory leads"
-        />
-        
-        <div className="flex justify-between items-center px-3 py-2.5 border-t border-gray-200 bg-white">
+            }}
+            disabled={isLoading}
+            aria-label="Describe what you'd like to know about Orange Theory leads"
+          />
+
+          {/* Placeholder Animation - Now only renders if inputValue is empty AND textarea is not focused */}
+          {!inputValue &&
+            !isFocused && ( // Added !isFocused to prevent animation during user input
+              <div className="pointer-events-none absolute inset-0 px-4 py-4 text-gray-500">
+                <div className="relative h-full">
+                  <motion.div
+                    key={`current-${currentIndex}`}
+                    initial={{ y: 0, opacity: 1 }}
+                    animate={{
+                      y: animationState === "animating" ? -20 : 0,
+                      opacity: animationState === "animating" ? 0 : 1,
+                    }}
+                    transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                    className="absolute inset-0"
+                  >
+                    {placeholders[currentIndex]}
+                  </motion.div>
+
+                  <motion.div
+                    key={`next-${currentIndex}`}
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{
+                      y: animationState === "animating" ? 0 : 20,
+                      opacity: animationState === "animating" ? 1 : 0,
+                    }}
+                    transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                    className="absolute inset-0"
+                  >
+                    {placeholders[(currentIndex + 1) % placeholders.length]}
+                  </motion.div>
+                </div>
+              </div>
+            )}
+
+          {/* Buttons at the bottom right of the textarea area */}
+          <div className="absolute bottom-4 right-4 z-10 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handlePaperclipClick}
+              disabled={isLoading}
+              className="
+                      rounded-full p-1.5 text-gray-500 transition-colors hover:bg-gray-100
+                      hover:text-gray-700 focus:outline-none focus:ring-1 focus:ring-sky-500 disabled:opacity-50
+                  "
+              aria-label="Attach File"
+            >
+              <PaperClipIcon className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
+              onClick={handleMicrophoneClick}
+              disabled={isLoading}
+              className="
+                      rounded-full p-1.5 text-gray-500 transition-colors hover:bg-gray-100
+                      hover:text-gray-700 focus:outline-none focus:ring-1 focus:ring-sky-500 disabled:opacity-50
+                  "
+              aria-label="Voice Input"
+            >
+              <MicrophoneIcon className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
+              onClick={handleGlobeClick}
+              disabled={isLoading}
+              className="
+                      rounded-full p-1.5 text-gray-500 transition-colors hover:bg-gray-100
+                      hover:text-gray-700 focus:outline-none focus:ring-1 focus:ring-sky-500 disabled:opacity-50
+                  "
+              aria-label="Select Source"
+            >
+              <GlobeAltIcon className="h-5 w-5" />
+            </button>
+            <button
+              type="submit"
+              disabled={isLoading || !inputValue.trim()}
+              className="
+   rounded-lg bg-sky-500 p-2 text-white transition-colors hover:bg-sky-600 focus:outline-none
+    focus:ring-2
+    focus:ring-sky-500
+    focus:ring-offset-1
+    disabled:cursor-not-allowed
+    disabled:opacity-60
+  "
+              aria-label="Submit query"
+            >
+              {isLoading ? (
+                <svg
+                  className="h-5 w-5 animate-spin text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+              ) : (
+                // The ChevronUpIconSolid component automatically inherits 'currentColor'
+                // from its parent, which is 'text-white' on the button.
+                <ChevronUpIconSolid className="h-5 w-5 transform transition-transform" />
+              )}
+            </button>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-2.5">
           <div className="flex items-center space-x-2">
             <button
               type="button"
               onClick={handleSearchPrefix}
               disabled={isLoading}
               className="
-                flex items-center px-3 py-1.5 text-sm font-medium text-gray-600 bg-gray-100 
-                rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-sky-500
-                disabled:opacity-60 disabled:cursor-not-allowed transition-colors
-              "
+                  flex items-center rounded-lg border border-gray-300 bg-white
+                  px-3 py-1.5
+                  text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-sky-500
+                  disabled:cursor-not-allowed disabled:opacity-60
+                "
             >
-              <MagnifyingGlassIcon className="w-4 h-4 mr-1.5" />
+              <MagnifyingGlassIcon className="mr-1.5 h-4 w-4" />
               Search
             </button>
             <button
@@ -94,51 +257,14 @@ export default function SegmentationForm({
               onClick={handleResearchPrefix}
               disabled={isLoading}
               className="
-                flex items-center px-3 py-1.5 text-sm font-medium text-sky-700 bg-white
-                border border-sky-500 rounded-lg hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-sky-500
-                disabled:opacity-60 disabled:cursor-not-allowed transition-colors
-              "
+                  flex items-center rounded-lg border border-sky-500 bg-sky-500
+                  px-3 py-1.5
+                  text-sm font-medium text-white transition-colors hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-sky-500
+                  disabled:cursor-not-allowed disabled:opacity-60
+                "
             >
-              <SparklesIcon className="w-4 h-4 mr-1.5" />
+              <SparklesIcon className="mr-1.5 h-4 w-4" />
               Lead Generator
-            </button>
-          </div>
-
-          <div className="flex items-center space-x-1 sm:space-x-2">
-            {[
-              { icon: GlobeAltIcon, action: handleGlobeClick, label: "Select Source" },
-              { icon: PaperClipIcon, action: handlePaperclipClick, label: "Attach File" },
-              { icon: MicrophoneIcon, action: handleMicrophoneClick, label: "Voice Input" },
-            ].map((item, index) => (
-              <button
-                key={index}
-                type="button"
-                onClick={item.action}
-                disabled={isLoading}
-                className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md focus:outline-none focus:ring-1 focus:ring-sky-500 disabled:opacity-50 transition-colors"
-                aria-label={item.label}
-              >
-                <item.icon className="w-5 h-5" />
-              </button>
-            ))}
-            <button
-              type="submit"
-              disabled={isLoading || !inputValue.trim()}
-              className="
-                p-2 bg-sky-500 text-white rounded-lg 
-                hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-1
-                disabled:opacity-60 disabled:cursor-not-allowed transition-colors group
-              "
-              aria-label="Submit query"
-            >
-              {isLoading ? (
-                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-              ) : (
-                <ChevronUpIconSolid className="w-5 h-5 transform transition-transform" /> 
-              )}
             </button>
           </div>
         </div>

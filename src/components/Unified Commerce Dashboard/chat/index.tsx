@@ -1,4 +1,4 @@
-"use client"
+"use client" // This directive must be at the very top of the file
 
 import { useState, useEffect, useRef } from "react"
 import { v4 as uuidv4 } from "uuid"
@@ -20,7 +20,6 @@ import ExampleQueries from "./example-queries"
 import SegmentationForm from "./segmentation-form"
 
 const EXAMPLE_QUERIES = [
-  // ... your example queries (no change needed here)
   {
     name: "🚀 Member Engagement & Retention",
     description: "Keep your members active, identify churn risks, and celebrate milestones.",
@@ -352,41 +351,44 @@ export default function ChatContent() {
   if (!isInChatMode) {
     // Updated initial view with centered chat and visible cards
     return (
-      <div className="flex min-h-screen flex-col bg-white text-gray-900 overflow-y-auto">
-        {/* Top spacer to push content to middle */}
-        <div className="flex-shrink-0 h-[20vh] min-h-[120px]"></div>
+      <div className="flex min-h-screen flex-col justify-between bg-white text-gray-900 overflow-y-auto">
+        {/* Wrapper for content that should be towards the top/middle */}
+        <div>
+          {/* Top spacer to push content to middle */}
+          <div className="flex-shrink-0 h-[20vh] min-h-[120px]"></div>
 
-        <main className="flex w-full max-w-7xl mx-auto flex-col items-center space-y-6 px-4">
-          {/* Compact header section */}
-          <header className="text-center">
-            <h1 className="text-3xl font-bold text-gray-800 sm:text-4xl">Who would you like to contact?</h1>
-            <p className="mx-auto mt-2 max-w-2xl text-base text-gray-600 sm:text-lg">
-              Describe the client segment, or use the research button to find leads.
-            </p>
-          </header>
+          <main className="flex w-full max-w-7xl mx-auto flex-col items-center space-y-6 px-4">
+            {/* Compact header section */}
+            <header className="text-center">
+              <h1 className="text-3xl font-bold text-gray-800 sm:text-4xl">Who would you like to contact?</h1>
+              <p className="mx-auto mt-2 max-w-2xl text-base text-gray-600 sm:text-lg">
+                Describe the client segment, or use the research button to find leads.
+              </p>
+            </header>
 
-          {/* Compact input form section */}
-          <div className="w-full max-w-4xl [&>*]:focus-within:ring-0 [&>*]:focus-within:border-transparent">
-            <SegmentationForm
-              inputValue={inputValue}
-              setInputValue={setInputValue}
-              handleSubmit={handleSubmit}
-              isLoading={isLoading}
-            />
-          </div>
-
-          {/* Loading state */}
-          {isLoading && (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-sky-200 border-t-sky-500"></div>
-              <p className="text-lg font-semibold text-gray-700">Processing your first query...</p>
+            {/* Compact input form section */}
+            <div className="w-full max-w-4xl [&>*]:focus-within:ring-0 [&>*]:focus-within:border-transparent">
+              <SegmentationForm
+                inputValue={inputValue}
+                setInputValue={setInputValue}
+                handleSubmit={handleSubmit}
+                isLoading={isLoading}
+              />
             </div>
-          )}
-        </main>
 
-        {/* Full-width examples section with more horizontal space - always visible */}
+            {/* Loading state */}
+            {isLoading && (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-sky-200 border-t-sky-500"></div>
+                <p className="text-lg font-semibold text-gray-700">Processing your first query...</p>
+              </div>
+            )}
+          </main>
+        </div> {/* End of wrapper for top/middle content */}
+
+        {/* Full-width examples section with more horizontal space - will be pushed lower by justify-between */}
         {!isLoading && (
-          <div className="w-full max-w-full px-8 mt-8 pb-8">
+          <div className="w-full max-w-full px-8 pt-8 pb-16"> {/* Changed mt-8 to pt-8 */}
             <ExampleQueries
               categorizedQueries={EXAMPLE_QUERIES}
               onSelectQuery={handleExampleQuerySelection}
