@@ -336,7 +336,7 @@ export default function ChatContent() {
   <div className="fixed bottom-24 right-6 z-30">
     <button
       onClick={handleOpenLeadGenerator}
-      className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg shadow-lg flex items-center space-x-2"
+      className="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded-lg shadow-lg flex items-center space-x-2"
     >
       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />

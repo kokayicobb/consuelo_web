@@ -2,17 +2,17 @@ import { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Consuelo: The CRM You Need',
-  description: 'The personalized virtual fitting solution for Ecommerce retailers. Our innovative SaaS platform enables customers to try on clothes online ensuring the perfect fit and reducing returns.',
+  description: 'The AI Native business management platform that just works.',
   metadataBase: new URL('https://www.consuelohq.com'),
   applicationName: 'Consuelo',
-  keywords: ['AI', 'Virtual Fitting Room', 'Fashion', 'Fit Technology'],
+  keywords: ['AI', 'CRM', 'Sales Automation', 'Lead Management'],
   openGraph: {
     type: 'website',
     locale: 'en_US',
     url: 'https://www.consuelohq.com',
     siteName: 'Consuelo',
     title: 'Consuelo: The CRM You Need',
-    description: 'The personalized virtual fitting solution for Ecommerce retailers.',
+    description: 'The AI Native business management platform that just works.',
     images: [{
       url: '/images/transparent.png', // Use absolute URL
       width: 1200,
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     site: '@YourTwitterHandle',
     creator: '@YourTwitterHandle',
     title: 'Consuelo - AI-Powered Fit Technology',
-    description: 'The personalized virtual fitting solution for Ecommerce retailers.',
+    description: 'The AI Native business management platform that just works.',
     images: ['/images/transparent.png'] // Use absolute URL // Remove 'public' from path
   },
   icons: {
