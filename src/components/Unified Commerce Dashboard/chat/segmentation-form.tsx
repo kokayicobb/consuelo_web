@@ -94,8 +94,8 @@ export default function SegmentationForm({
               onClick={handleResearchPrefix}
               disabled={isLoading}
               className="
-                flex items-center px-3 py-1.5 text-sm font-medium text-orange-700 bg-white
-                border border-orange-500 rounded-lg hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-orange-500
+                flex items-center px-3 py-1.5 text-sm font-medium text-sky-700 bg-white
+                border border-sky-500 rounded-lg hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-sky-500
                 disabled:opacity-60 disabled:cursor-not-allowed transition-colors
               "
             >
@@ -125,8 +125,8 @@ export default function SegmentationForm({
               type="submit"
               disabled={isLoading || !inputValue.trim()}
               className="
-                p-2 bg-orange-500 text-white rounded-lg 
-                hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1
+                p-2 bg-sky-500 text-white rounded-lg 
+                hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-1
                 disabled:opacity-60 disabled:cursor-not-allowed transition-colors group
               "
               aria-label="Submit query"
