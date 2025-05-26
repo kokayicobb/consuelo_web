@@ -116,7 +116,7 @@ export default function ActionSuggestions({ actions, summary, onInitiateAction }
               className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between"
             >
               <div className="flex items-start gap-3 flex-grow">
-                <div className="p-2 bg-orange-100 text-orange-600 rounded-full flex-shrink-0">
+                <div className="p-2 bg-sky-500 text-sky-500 rounded-full flex-shrink-0">
                   {getIcon(action.icon, action.type)}
                   </div>
                 <div className="flex-1">
@@ -153,7 +153,7 @@ export default function ActionSuggestions({ actions, summary, onInitiateAction }
 export function ActionSuggestionsLoading() {
   return (
     <div className="flex flex-col items-center justify-center py-12">
-      <div className="mb-4 w-12 h-12 rounded-full border-4 border-orange-200 border-t-orange-500 animate-spin"></div>
+      <div className="mb-4 w-12 h-12 rounded-full border-4 border-sky-500 border-t-sky-500 animate-spin"></div>
       <p className="text-gray-600 text-sm">Generating action suggestions...</p>
     </div>
   )

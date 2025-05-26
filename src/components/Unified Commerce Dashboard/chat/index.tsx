@@ -1,7 +1,7 @@
-"use client";
+"use client"
 
-import React, { useState, useEffect, useRef } from "react";
-import { v4 as uuidv4 } from "uuid";
+import { useState, useEffect, useRef } from "react"
+import { v4 as uuidv4 } from "uuid"
 
 import {
   generateQuery,
@@ -10,21 +10,20 @@ import {
   explainQuery,
   generateActionSuggestions,
   // No need to import generateSalesScript here, it's called by SideArtifactPanel
-} from "@/lib/actions"; // Assuming this is your server actions file path
+} from "@/lib/actions" // Assuming this is your server actions file path
 
-import { ChatMessage, ChatMessageData } from "@/types/chats";
+import type { ChatMessage, ChatMessageData } from "@/types/chats"
 
-import ChatMessageItem from "./components/chat-message-item";
-import SideArtifactPanel from "./components/side.panel"; // Ensure this path is correct
-import ExampleQueries from "./example-queries";
-import SegmentationForm from "./segmentation-form";
+import ChatMessageItem from "./components/chat-message-item"
+import SideArtifactPanel from "./components/side.panel" // Ensure this path is correct
+import ExampleQueries from "./example-queries"
+import SegmentationForm from "./segmentation-form"
 
 const EXAMPLE_QUERIES = [
   // ... your example queries (no change needed here)
   {
     name: "🚀 Member Engagement & Retention",
-    description:
-      "Keep your members active, identify churn risks, and celebrate milestones.",
+    description: "Keep your members active, identify churn risks, and celebrate milestones.",
     queries: [
       {
         text: "Show me clients who haven't attended a class in 30 days but still have an active membership.",
@@ -48,8 +47,7 @@ const EXAMPLE_QUERIES = [
   },
   {
     name: "🎯 Lead Management & New Member Onboarding",
-    description:
-      "Convert prospects effectively and welcome new members smoothly.",
+    description: "Convert prospects effectively and welcome new members smoothly.",
     queries: [
       {
         text: "Show me clients who signed up recently but haven't attended a class yet.",
@@ -65,8 +63,7 @@ const EXAMPLE_QUERIES = [
   },
   {
     name: "💳 Membership & Package Insights",
-    description:
-      "Manage memberships, renewals, and identify upsell opportunities.",
+    description: "Manage memberships, renewals, and identify upsell opportunities.",
     queries: [
       {
         text: "Find members whose membership is expiring in the next 14 days.",
@@ -82,8 +79,7 @@ const EXAMPLE_QUERIES = [
   },
   {
     name: "📊 Class & Instructor Performance",
-    description:
-      "Analyze attendance, class popularity, and instructor effectiveness.",
+    description: "Analyze attendance, class popularity, and instructor effectiveness.",
     queries: [
       { text: "Which coach has the highest attendance rate this month?" },
       {
@@ -100,8 +96,7 @@ const EXAMPLE_QUERIES = [
   },
   {
     name: "💡 Operational & Communication Segments",
-    description:
-      "Create targeted lists for specific actions and communications.",
+    description: "Create targeted lists for specific actions and communications.",
     queries: [
       {
         text: "Show me clients who had late cancellations in the last 30 days.",
@@ -117,296 +112,261 @@ const EXAMPLE_QUERIES = [
       },
     ],
   },
-];
+]
 
 export default function ChatContent() {
-  const [inputValue, setInputValue] = useState("");
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isInChatMode, setIsInChatMode] = useState(false);
+  const [inputValue, setInputValue] = useState("")
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [isInChatMode, setIsInChatMode] = useState(false)
 
-  const [sideArtifactData, setSideArtifactData] =
-    useState<ChatMessageData | null>(null);
-  const [currentMessageIdForPanel, setCurrentMessageIdForPanel] = useState<
-    string | null
-  >(null);
-  const [isSideArtifactOpen, setIsSideArtifactOpen] = useState(false);
-  const [isSideArtifactExpanded, setIsSideArtifactExpanded] = useState(false);
-  const [lastUserQueryForPanel, setLastUserQueryForPanel] =
-    useState<string>(""); // Store userQuery for the panel
+  const [sideArtifactData, setSideArtifactData] = useState<ChatMessageData | null>(null)
+  const [currentMessageIdForPanel, setCurrentMessageIdForPanel] = useState<string | null>(null)
+  const [isSideArtifactOpen, setIsSideArtifactOpen] = useState(false)
+  const [isSideArtifactExpanded, setIsSideArtifactExpanded] = useState(false)
+  const [lastUserQueryForPanel, setLastUserQueryForPanel] = useState<string>("") // Store userQuery for the panel
 
-  const chatContainerRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (isInChatMode && chatContainerRef.current) {
-      chatContainerRef.current.scrollTop =
-        chatContainerRef.current.scrollHeight;
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight
     }
-  }, [chatMessages, isInChatMode]);
+  }, [chatMessages, isInChatMode])
 
-  const addMessage = (
-    message: Omit<ChatMessage, "id" | "timestamp">,
-  ): ChatMessage => {
-    const newMessage = { ...message, id: uuidv4(), timestamp: new Date() };
-    setChatMessages((prev) => [...prev, newMessage]);
-    return newMessage;
-  };
+  const addMessage = (message: Omit<ChatMessage, "id" | "timestamp">): ChatMessage => {
+    const newMessage = { ...message, id: uuidv4(), timestamp: new Date() }
+    setChatMessages((prev) => [...prev, newMessage])
+    return newMessage
+  }
 
-  const handleOpenSideArtifact = (
-    data: ChatMessageData,
-    messageId: string,
-    userQueryContext: string,
-  ) => {
-    setSideArtifactData(data);
-    setCurrentMessageIdForPanel(messageId);
-    setLastUserQueryForPanel(userQueryContext); // Store the user query associated with this panel's data
-    setIsSideArtifactOpen(true);
+  const handleOpenSideArtifact = (data: ChatMessageData, messageId: string, userQueryContext: string) => {
+    setSideArtifactData(data)
+    setCurrentMessageIdForPanel(messageId)
+    setLastUserQueryForPanel(userQueryContext) // Store the user query associated with this panel's data
+    setIsSideArtifactOpen(true)
     if (sideArtifactData !== data) {
-      setIsSideArtifactExpanded(false);
+      setIsSideArtifactExpanded(false)
     }
-  };
+  }
 
   const handleCloseSideArtifact = () => {
-    setIsSideArtifactOpen(false);
-    setCurrentMessageIdForPanel(null);
-    setIsSideArtifactExpanded(false);
+    setIsSideArtifactOpen(false)
+    setCurrentMessageIdForPanel(null)
+    setIsSideArtifactExpanded(false)
     // setLastUserQueryForPanel(""); // Optionally clear it
-  };
+  }
 
   const handleToggleSideArtifactExpand = () => {
-    setIsSideArtifactExpanded((prev) => !prev);
-  };
+    setIsSideArtifactExpanded((prev) => !prev)
+  }
 
-  const handleArtifactViewModeChange = (
-    newMode: "table" | "chart" | "actions",
-  ) => {
-    setSideArtifactData((prevData) =>
-      prevData ? { ...prevData, viewMode: newMode } : null,
-    );
-  };
+  const handleArtifactViewModeChange = (newMode: "table" | "chart" | "actions") => {
+    setSideArtifactData((prevData) => (prevData ? { ...prevData, viewMode: newMode } : null))
+  }
 
   const handleSubmit = async (userQuery: string) => {
-    if (!userQuery.trim()) return;
-  
+    if (!userQuery.trim()) return
+
     // Debug log to see exactly what query we're processing
-    console.log("handleSubmit processing query:", userQuery);
-  
+    console.log("handleSubmit processing query:", userQuery)
+
     if (!isInChatMode) {
-      setIsInChatMode(true);
+      setIsInChatMode(true)
       addMessage({
         role: "assistant",
         content: "Hello! I'm Consuelo. Let's find those clients for you.",
-      });
+      })
     }
-  
+
     setTimeout(() => {
-      addMessage({ role: "user", content: userQuery });
-    }, 0);
-    setInputValue("");
-    setIsLoading(true);
-    handleCloseSideArtifact();
-  
+      addMessage({ role: "user", content: userQuery })
+    }, 0)
+    setInputValue("")
+    setIsLoading(true)
+    handleCloseSideArtifact()
+
     // Check for lead generator triggers:
     // 1. "OPEN_OTF_FORM" special command
     // 2. "Research:" prefixed queries
     if (userQuery.trim() === "OPEN_OTF_FORM" || userQuery.trim().startsWith("Research:")) {
-      console.log("Lead generator trigger detected:", userQuery);
-      
+      console.log("Lead generator trigger detected:", userQuery)
+
       try {
         // Extract actual query for Research: prefix
-        const actualQuery = userQuery.trim().startsWith("Research:") 
+        const actualQuery = userQuery.trim().startsWith("Research:")
           ? userQuery.substring(userQuery.indexOf(":") + 1).trim()
-          : "Lead Generator";
-          
+          : "Lead Generator"
+
         // Add a system message about opening lead generator
         addMessage({
           role: "system",
-          content: `Opening Lead Generator tool${actualQuery !== "Lead Generator" ? ` for: "${actualQuery}"` : ''}...`,
-        });
-        
+          content: `Opening Lead Generator tool${actualQuery !== "Lead Generator" ? ` for: "${actualQuery}"` : ""}...`,
+        })
+
         // Create message with leadGenerator viewMode - this is critical!
         const leadGenMessage = addMessage({
           role: "assistant",
-          content: `I've opened the Lead Generator tool${actualQuery !== "Lead Generator" ? ` for: "${actualQuery}"` : ''}.`,
-          data: { 
+          content: `I've opened the Lead Generator tool${actualQuery !== "Lead Generator" ? ` for: "${actualQuery}"` : ""}.`,
+          data: {
             viewMode: "leadGenerator", // This is what triggers the lead generator view
             queryContext: actualQuery,
-            userQuery: actualQuery  // Store the query for reference
-          } 
-        });
-        
-        console.log("Created lead generator message:", leadGenMessage);
-        
+            userQuery: actualQuery, // Store the query for reference
+          },
+        })
+
+        console.log("Created lead generator message:", leadGenMessage)
+
         // Open side panel with lead generator data
         if (leadGenMessage.data) {
-          handleOpenSideArtifact(
-            leadGenMessage.data,
-            leadGenMessage.id,
-            actualQuery
-          );
+          handleOpenSideArtifact(leadGenMessage.data, leadGenMessage.id, actualQuery)
         }
-        
       } catch (err) {
-        console.error("Error opening lead generator:", err);
-        const errorMsg = err instanceof Error ? err.message : "An unknown error occurred";
-        addMessage({ role: "system", content: `Error: ${errorMsg}` });
+        console.error("Error opening lead generator:", err)
+        const errorMsg = err instanceof Error ? err.message : "An unknown error occurred"
+        addMessage({ role: "system", content: `Error: ${errorMsg}` })
         addMessage({
           role: "assistant",
           content: "I encountered an issue opening the Lead Generator tool.",
-          data: { error: errorMsg }
-        });
+          data: { error: errorMsg },
+        })
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
-      
-      return; // Exit early - don't process as regular search
+
+      return // Exit early - don't process as regular search
     }
-  
+
     // If we reach here, it's a regular search query - continue with your existing code
     // Store the userQuery that initiated this process
-    const currentQueryContext = userQuery;
-  
+    const currentQueryContext = userQuery
+
     // Initialize tempResponseData with the userQuery
     const tempResponseData: ChatMessageData = {
       viewMode: "cards",
       userQuery: currentQueryContext,
-    };
+    }
 
     try {
       addMessage({
         role: "system",
         content: `Thinking about: "${currentQueryContext}"...`,
-      });
-      tempResponseData.aiThoughts = `To answer "${currentQueryContext}", I'm starting by formulating a precise database query.`;
+      })
+      tempResponseData.aiThoughts = `To answer "${currentQueryContext}", I'm starting by formulating a precise database query.`
       addMessage({
         role: "system",
         content: "1. Translating your request into a database query...",
-      });
-      const generatedSql = await generateQuery(currentQueryContext); // Pass currentQueryContext
-      tempResponseData.sqlQuery = generatedSql;
-      addMessage({ role: "system", content: "   - SQL Generated." });
+      })
+      const generatedSql = await generateQuery(currentQueryContext) // Pass currentQueryContext
+      tempResponseData.sqlQuery = generatedSql
+      addMessage({ role: "system", content: "   - SQL Generated." })
 
       addMessage({
         role: "system",
         content: "2. Running the query against the database...",
-      });
-      let results = await runGeneratedSQLQuery(generatedSql);
-      addMessage({ role: "system", content: "   - Query Executed." });
+      })
+      let results = await runGeneratedSQLQuery(generatedSql)
+      addMessage({ role: "system", content: "   - Query Executed." })
 
       if (results && results.length > 0) {
-        if (
-          typeof results[0] === "string" &&
-          (results[0].startsWith("{") || results[0].startsWith("["))
-        ) {
+        if (typeof results[0] === "string" && (results[0].startsWith("{") || results[0].startsWith("["))) {
           results = results.map((item) => {
             try {
-              return JSON.parse(item);
+              return JSON.parse(item)
             } catch {
-              return item;
+              return item
             }
-          });
+          })
         }
-        tempResponseData.queryResults = results;
-        const firstResult = results[0];
+        tempResponseData.queryResults = results
+        const firstResult = results[0]
         tempResponseData.columns =
-          typeof firstResult === "object" && firstResult !== null
-            ? Object.keys(firstResult)
-            : ["value"];
+          typeof firstResult === "object" && firstResult !== null ? Object.keys(firstResult) : ["value"]
         addMessage({
           role: "system",
-          content:
-            "3. Analyzing results and preparing visualizations/actions...",
-        });
-        tempResponseData.isLoadingChart = true;
-        tempResponseData.isLoadingActions = true;
+          content: "3. Analyzing results and preparing visualizations/actions...",
+        })
+        tempResponseData.isLoadingChart = true
+        tempResponseData.isLoadingActions = true
 
         try {
-          const [chartResult, actionResult, explanationResult] =
-            await Promise.allSettled([
-              generateChartConfig(results, currentQueryContext), // Pass currentQueryContext
-              generateActionSuggestions(results, currentQueryContext), // Pass currentQueryContext
-              explainQuery(currentQueryContext, generatedSql), // Pass currentQueryContext
-            ]);
-          if (chartResult.status === "fulfilled")
-            tempResponseData.chartConfig = chartResult.value;
-          if (actionResult.status === "fulfilled")
-            tempResponseData.actionSuggestions = actionResult.value;
-          if (explanationResult.status === "fulfilled")
-            tempResponseData.explanations = explanationResult.value;
+          const [chartResult, actionResult, explanationResult] = await Promise.allSettled([
+            generateChartConfig(results, currentQueryContext), // Pass currentQueryContext
+            generateActionSuggestions(results, currentQueryContext), // Pass currentQueryContext
+            explainQuery(currentQueryContext, generatedSql), // Pass currentQueryContext
+          ])
+          if (chartResult.status === "fulfilled") tempResponseData.chartConfig = chartResult.value
+          if (actionResult.status === "fulfilled") tempResponseData.actionSuggestions = actionResult.value
+          if (explanationResult.status === "fulfilled") tempResponseData.explanations = explanationResult.value
         } catch (vizError) {
-          console.error("Viz/Action/Explanation error:", vizError);
+          console.error("Viz/Action/Explanation error:", vizError)
           addMessage({
             role: "system",
             content: "Error during result analysis.",
-          });
+          })
         } finally {
-          tempResponseData.isLoadingChart = false;
-          tempResponseData.isLoadingActions = false;
+          tempResponseData.isLoadingChart = false
+          tempResponseData.isLoadingActions = false
         }
-        addMessage({ role: "system", content: "   - Analysis Complete." });
+        addMessage({ role: "system", content: "   - Analysis Complete." })
       } else {
-        tempResponseData.queryResults = [];
-        tempResponseData.columns = [];
+        tempResponseData.queryResults = []
+        tempResponseData.columns = []
         addMessage({
           role: "system",
           content: "No specific data found, but here's the SQL I tried:",
-        });
+        })
       }
 
       const finalAssistantMessage = addMessage({
         role: "assistant",
         content: `I've processed your request for "${currentQueryContext}".`,
         data: { ...tempResponseData }, // tempResponseData already includes userQuery
-      });
+      })
 
       if (finalAssistantMessage.data && !finalAssistantMessage.data.error) {
         // Pass the currentQueryContext when opening the panel
-        handleOpenSideArtifact(
-          finalAssistantMessage.data,
-          finalAssistantMessage.id,
-          currentQueryContext,
-        );
+        handleOpenSideArtifact(finalAssistantMessage.data, finalAssistantMessage.id, currentQueryContext)
       }
     } catch (err) {
-      const errorMsg =
-        err instanceof Error ? err.message : "An unknown error occurred";
-      addMessage({ role: "system", content: `Error: ${errorMsg}` });
+      const errorMsg = err instanceof Error ? err.message : "An unknown error occurred"
+      addMessage({ role: "system", content: `Error: ${errorMsg}` })
       addMessage({
         role: "assistant",
         content: "I encountered an issue processing your request.",
         data: { error: errorMsg, userQuery: currentQueryContext }, // Also include userQuery in error data
-      });
+      })
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const handleExampleQuerySelection = (query: string) => {
     // const prefixedQuery = `Search: ${query}`; // If you want a prefix
-    setInputValue(query); // Set directly for cleaner input
-    const targetTextareaId = isInChatMode
-      ? "#chat-input-form textarea"
-      : "#research-textarea";
-    const targetTextarea =
-      document.querySelector<HTMLTextAreaElement>(targetTextareaId);
-    targetTextarea?.focus();
-  };
+    setInputValue(query) // Set directly for cleaner input
+    const targetTextareaId = isInChatMode ? "#chat-input-form textarea" : "#research-textarea"
+    const targetTextarea = document.querySelector<HTMLTextAreaElement>(targetTextareaId)
+    targetTextarea?.focus()
+  }
 
   if (!isInChatMode) {
-    // ... (Initial view, no changes needed here)
+    // Updated initial view with centered chat and visible cards
     return (
-      <div className="flex min-h-screen flex-col items-center bg-white px-4 py-10 text-gray-900 sm:py-16">
-        <main className="flex w-full max-w-3xl flex-col items-center space-y-10 sm:space-y-12">
+      <div className="flex min-h-screen flex-col bg-white text-gray-900 overflow-y-auto">
+        {/* Top spacer to push content to middle */}
+        <div className="flex-shrink-0 h-[20vh] min-h-[120px]"></div>
+
+        <main className="flex w-full max-w-7xl mx-auto flex-col items-center space-y-6 px-4">
+          {/* Compact header section */}
           <header className="text-center">
-            <h1 className="text-3xl font-bold text-gray-800 sm:text-4xl lg:text-5xl">
-              Who would you like to contact?
-            </h1>
-            <p className="mx-auto mt-2 max-w-xl text-base text-gray-600 sm:mt-3 sm:text-lg">
-              Describe the client segment, or use the research button to find
-              leads.
+            <h1 className="text-3xl font-bold text-gray-800 sm:text-4xl">Who would you like to contact?</h1>
+            <p className="mx-auto mt-2 max-w-2xl text-base text-gray-600 sm:text-lg">
+              Describe the client segment, or use the research button to find leads.
             </p>
           </header>
-          <div className="w-full">
+
+          {/* Compact input form section */}
+          <div className="w-full max-w-4xl [&>*]:focus-within:ring-0 [&>*]:focus-within:border-transparent">
             <SegmentationForm
               inputValue={inputValue}
               setInputValue={setInputValue}
@@ -414,77 +374,65 @@ export default function ChatContent() {
               isLoading={isLoading}
             />
           </div>
-          {!isLoading && (
-            <div className="w-full">
-              <ExampleQueries
-                categorizedQueries={EXAMPLE_QUERIES}
-                onSelectQuery={handleExampleQuerySelection}
-              />
-            </div>
-          )}
+
+          {/* Loading state */}
           {isLoading && (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="flex flex-col items-center justify-center py-12 text-center">
               <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-sky-200 border-t-sky-500"></div>
-              <p className="text-lg font-semibold text-gray-700">
-                Processing your first query...
-              </p>
+              <p className="text-lg font-semibold text-gray-700">Processing your first query...</p>
             </div>
           )}
         </main>
+
+        {/* Full-width examples section with more horizontal space - always visible */}
+        {!isLoading && (
+          <div className="w-full max-w-full px-8 mt-8 pb-8">
+            <ExampleQueries
+              categorizedQueries={EXAMPLE_QUERIES}
+              onSelectQuery={handleExampleQuerySelection}
+              onSeeAll={() => console.log("See all clicked")} // Add your desired functionality here
+            />
+          </div>
+        )}
       </div>
-    );
+    )
   }
 
   const chatAreaMarginRight =
     isSideArtifactOpen && !isSideArtifactExpanded
       ? "mr-[80vw] sm:mr-[60vw] md:mr-[calc(100vw*7/12)] lg:mr-[50vw] xl:mr-[calc(100vw*5/12)]"
-      : "";
+      : ""
 
   return (
     <div className="relative flex h-screen w-full overflow-hidden">
-      <div
-        className={`flex h-full flex-grow flex-col transition-all duration-300 ease-in-out ${chatAreaMarginRight}`}
-      >
-        <div
-          ref={chatContainerRef}
-          className="flex-grow space-y-4 overflow-y-auto bg-gray-50 p-4 sm:p-6"
-        >
+      <div className={`flex h-full flex-grow flex-col transition-all duration-300 ease-in-out ${chatAreaMarginRight}`}>
+        <div ref={chatContainerRef} className="flex-grow space-y-4 overflow-y-auto bg-gray-50 p-4 sm:p-6">
           {chatMessages.map((msg) => (
             <ChatMessageItem
               key={msg.id}
               message={msg}
               onViewDetailsRequest={
                 msg.role === "assistant" && msg.data && !msg.data.error
-                  ? (data) =>
-                      handleOpenSideArtifact(
-                        data,
-                        msg.id,
-                        msg.data?.userQuery || lastUserQueryForPanel || "",
-                      )
+                  ? (data) => handleOpenSideArtifact(data, msg.id, msg.data?.userQuery || lastUserQueryForPanel || "")
                   : undefined
               }
               onClosePanelRequest={
-                isSideArtifactOpen && currentMessageIdForPanel === msg.id
-                  ? handleCloseSideArtifact
-                  : undefined
+                isSideArtifactOpen && currentMessageIdForPanel === msg.id ? handleCloseSideArtifact : undefined
               }
-              isDisplayedInPanel={
-                isSideArtifactOpen && currentMessageIdForPanel === msg.id
-              }
+              isDisplayedInPanel={isSideArtifactOpen && currentMessageIdForPanel === msg.id}
             />
           ))}
         </div>
-        <div
-          id="chat-input-form"
-          className="sticky bottom-0 z-20 border-t border-gray-200 bg-white p-3 sm:p-4"
-        >
-          <SegmentationForm
-            inputValue={inputValue}
-            setInputValue={setInputValue}
-            handleSubmit={handleSubmit}
-            isLoading={isLoading}
-            // Add an ID to the textarea inside SegmentationForm if not already present for focusing
-          />
+        <div id="chat-input-form" className="sticky bottom-0 z-20 border-t border-gray-200 bg-white p-3 sm:p-4">
+          <div className="[&>*]:focus-within:ring-0 [&>*]:focus-within:border-transparent">
+            <SegmentationForm
+              inputValue={inputValue}
+              setInputValue={setInputValue}
+              handleSubmit={handleSubmit}
+              isLoading={isLoading}
+              // Add an ID to the textarea inside SegmentationForm if not already present for focusing
+            />
+          </div>
         </div>
       </div>
 
@@ -498,5 +446,5 @@ export default function ChatContent() {
         onViewModeChange={handleArtifactViewModeChange}
       />
     </div>
-  );
+  )
 }
