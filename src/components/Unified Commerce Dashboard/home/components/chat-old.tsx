@@ -16,9 +16,10 @@ import {
   SegmentationForm,
   ExampleQueries,
   LoadingState,
-  SqlDisplay,
+
   QueryResults,
 } from "../../segmentation";
+import SqlDisplay from "../../segmentation/sql-display";
 
 // Example segmentation queries to get users started
 const EXAMPLE_QUERIES = [
@@ -177,15 +178,7 @@ export default function PlatformPage() {
       />
 
       {/* Examples Section (shown when no query is active) */}
-      {!isLoading && !sqlQuery && (
-        <ExampleQueries
-          queries={EXAMPLE_QUERIES}
-          onSelectQuery={(query) => {
-            setInputValue(query);
-            handleSubmit(query);
-          }}
-        />
-      )}
+     
 
       {/* Loading Indicator */}
       {isLoading && <LoadingState activeStep={activeStep} />}
