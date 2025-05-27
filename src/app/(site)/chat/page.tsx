@@ -1,9 +1,5 @@
-
-import ChatContent from "@/components/Unified Commerce Dashboard/home/chat-content";
+import ChatContent from "@/components/Unified Commerce Dashboard/chat/chat-content";
 import { Metadata } from "next";
-
-
-
 
 export const metadata: Metadata = {
   title: "Body Measurment | Consuelo - AI-Powered Fit Technology",
@@ -11,14 +7,7 @@ export const metadata: Metadata = {
 };
 
 const VirtualTryOn = () => {
-  return (
-    <main>
-     
-       
-      
-    </main>
-  );
+  return <main></main>;
 };
 
 export default VirtualTryOn;
-

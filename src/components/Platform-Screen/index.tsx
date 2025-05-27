@@ -30,7 +30,7 @@ export default function PlatformSection() {
             <div className="mx-auto max-w-5xl px-6">
               <div className="sm:mx-auto lg:mr-auto lg:mt-0">
                 <h1 className="mt-8 max-w-2xl text-balance text-5xl font-medium md:text-6xl lg:mt-16">
-                  Muse: AI-Powered CRM
+                  Consuelo: AI Naitve CRM
                 </h1>
                 <p className="mt-8 max-w-2xl text-pretty text-lg">
                   Unify your data and unlock actionable insights with our

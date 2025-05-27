@@ -45,7 +45,7 @@ export function WavyBackgroundDemo() {
           className="mb-8 text-center"
         >
           <h1 className="text-4xl font-medium text-foreground">
-          What can I help with?
+          How can I help your team?
           </h1>
         </motion.div>
 

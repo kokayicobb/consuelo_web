@@ -12,7 +12,7 @@ import PlatformSection from "@/components/Platform-Screen";
 export const metadata: Metadata = {
   title: "Consuelo - See it. Try it. Buy it.",
   description:
-    "The personalized virtual fitting solution for Ecommerce retailers. Our innovative SaaS platform enables customers to try on clothes online ensuring the perfect fit and reducing returns.",
+    'The AI Native business management platform that just works.',
 };
 
 export default function Home() {
