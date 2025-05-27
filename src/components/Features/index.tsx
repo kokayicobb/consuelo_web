@@ -22,10 +22,10 @@ const BackgroundPattern: React.FC<BackgroundPatternProps> = ({ children, classNa
 
 export function Features() {
   // Get the hero item (using AI Commerce Suite which has md:col-span-2 in the original)
-  const heroItem = items.find((item) => item.title === "Introducing Muse: AI Powered CRM")
+  const heroItem = items.find((item) => item.title === "Introducing Consuelo: AI Naitve CRM")
 
   // Get all other items except the hero
-  const regularItems = items.filter((item) => item.title !== "Introducing Muse: AI Powered CRM")
+  const regularItems = items.filter((item) => item.title !== "Introducing Consuelo: AI Naitve CRM")
 
   // Ref for the section
   const sectionRef = useRef<HTMLElement>(null)
@@ -97,7 +97,7 @@ export function Features() {
 
 const items = [
   {
-    title: "Introducing Muse: AI Powered CRM",
+    title: "Introducing Consuelo: AI Naitve CRM",
     image: "/StablityBlue3.png",
     description: "Release | 8 min read",
     className: "md:col-span-2",

@@ -1,38 +1,34 @@
-"use client";
+"use client"
 
-import { cn } from "@/lib/utils";
-import Link, { LinkProps } from "next/link";
-import React, { useState, createContext, useContext } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { Menu, X, Lock, Unlock } from "lucide-react";
+import { cn } from "@/lib/utils"
+import Link, { type LinkProps } from "next/link"
+import React, { useState, createContext, useContext } from "react"
+import { AnimatePresence, motion } from "framer-motion"
+import { Menu, X, ChevronLeft, ChevronRight } from "lucide-react"
 
 interface Links {
-  label: string;
-  href: string;
-  icon: React.JSX.Element | React.ReactNode;
-  onClick?: () => void;
+  label: string
+  href: string
+  icon: React.JSX.Element | React.ReactNode
+  onClick?: () => void
 }
 
 interface SidebarContextProps {
-  open: boolean;
-  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  animate: boolean;
-  isMobile: boolean;
-  locked: boolean;
-  setLocked: React.Dispatch<React.SetStateAction<boolean>>;
+  open: boolean
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>
+  animate: boolean
+  isMobile: boolean
 }
 
-const SidebarContext = createContext<SidebarContextProps | undefined>(
-  undefined
-);
+const SidebarContext = createContext<SidebarContextProps | undefined>(undefined)
 
 export const useSidebar = () => {
-  const context = useContext(SidebarContext);
+  const context = useContext(SidebarContext)
   if (!context) {
-    throw new Error("useSidebar must be used within a SidebarProvider");
+    throw new Error("useSidebar must be used within a SidebarProvider")
   }
-  return context;
-};
+  return context
+}
 
 export const SidebarProvider = ({
   children,
@@ -40,36 +36,31 @@ export const SidebarProvider = ({
   setOpen: setOpenProp,
   animate = true,
 }: {
-  children: React.ReactNode;
-  open?: boolean;
-  setOpen?: React.Dispatch<React.SetStateAction<boolean>>;
-  animate?: boolean;
+  children: React.ReactNode
+  open?: boolean
+  setOpen?: React.Dispatch<React.SetStateAction<boolean>>
+  animate?: boolean
 }) => {
-  const [openState, setOpenState] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  const [locked, setLocked] = useState(false);
-  
+  const [openState, setOpenState] = useState(true) // Default to open
+  const [isMobile, setIsMobile] = useState(false)
+
   React.useEffect(() => {
     // Check if we're on mobile
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+      setIsMobile(window.innerWidth < 768)
+    }
 
-  const open = openProp !== undefined ? openProp : openState;
-  const setOpen = setOpenProp !== undefined ? setOpenProp : setOpenState;
+    checkMobile()
+    window.addEventListener("resize", checkMobile)
 
-  return (
-    <SidebarContext.Provider value={{ open, setOpen, animate, isMobile, locked, setLocked }}>
-      {children}
-    </SidebarContext.Provider>
-  );
-};
+    return () => window.removeEventListener("resize", checkMobile)
+  }, [])
+
+  const open = openProp !== undefined ? openProp : openState
+  const setOpen = setOpenProp !== undefined ? setOpenProp : setOpenState
+
+  return <SidebarContext.Provider value={{ open, setOpen, animate, isMobile }}>{children}</SidebarContext.Provider>
+}
 
 export const Sidebar = ({
   children,
@@ -77,117 +68,105 @@ export const Sidebar = ({
   setOpen,
   animate = true,
 }: {
-  children: React.ReactNode;
-  open?: boolean;
-  setOpen?: React.Dispatch<React.SetStateAction<boolean>>;
-  animate?: boolean;
+  children: React.ReactNode
+  open?: boolean
+  setOpen?: React.Dispatch<React.SetStateAction<boolean>>
+  animate?: boolean
 }) => {
   return (
     <SidebarProvider open={open} setOpen={setOpen} animate={animate}>
       {children}
     </SidebarProvider>
-  );
-};
+  )
+}
 
 export const SidebarBody = ({
   children,
   className,
   ...props
 }: {
-  children: React.ReactNode;
-  className?: string;
-  [key: string]: any;
+  children: React.ReactNode
+  className?: string
+  [key: string]: any
 }) => {
   return (
     <>
       <DesktopSidebar className={className} {...props}>
         {children}
       </DesktopSidebar>
-      <MobileSidebar className={className}>
-        {children}
-      </MobileSidebar>
+      <MobileSidebar className={className}>{children}</MobileSidebar>
     </>
-  );
-};
+  )
+}
 
 export const DesktopSidebar = ({
   className,
   children,
   ...props
 }: {
-  className?: string;
-  children: React.ReactNode;
-  [key: string]: any;
+  className?: string
+  children: React.ReactNode
+  [key: string]: any
 }) => {
-  const { open, setOpen, animate, locked, setLocked } = useSidebar();
-  
-  const handleMouseEnter = () => {
-    if (!locked) {
-      setOpen(true);
-    }
-  };
-  
-  const handleMouseLeave = () => {
-    if (!locked) {
-      setOpen(false);
-    }
-  };
+  const { open, setOpen, animate } = useSidebar()
 
   return (
-    <motion.div
-    className={cn(
-      "h-full px-4 py-4 hidden md:flex md:flex-col bg-gray-100 border-r border-gray-200 w-64 flex-shrink-0 relative",
-      className
-      )}
-      animate={{
-        width: animate ? (open ? "16rem" : "4rem") : "16rem",
-      }}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      {...props}
-    >
-      {children}
-      
-      {/* Lock Button */}
-      <div className="mt-auto pt-4 flex justify-center">
-        <button
-          onClick={() => {
-            setLocked(!locked);
-            if (!locked) {
-              // When locking, ensure sidebar is open
-              setOpen(true);
-            }
-          }}
-          className="p-2 rounded-md hover:bg-gray-200 text-gray-600 transition-colors"
-          title={locked ? "Unlock sidebar" : "Lock sidebar open"}
-        >
-          {locked ? <Unlock size={20} /> : <Lock size={20} />}
-        </button>
-      </div>
-    </motion.div>
-  );
-};
+    <>
+      {/* Main Sidebar */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: "16rem", opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className={cn(
+              "h-full hidden md:flex md:flex-col bg-white border-r border-gray-200 flex-shrink-0 relative group overflow-hidden",
+              className,
+            )}
+            {...props}
+          >
+            <div className="w-64 h-full">{children}</div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Floating Tab Button - Only show when sidebar is closed */}
+      <AnimatePresence>
+        {!open && (
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="fixed left-0 top-4 z-50 hidden md:block"
+          >
+            <button
+              onClick={() => setOpen(true)}
+              className="h-8 w-6 bg-white border border-gray-200 shadow-sm hover:bg-gray-50 rounded-r-md rounded-l-none flex items-center justify-center transition-colors duration-150"
+            >
+              <ChevronRight size={16} className="text-gray-600" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  )
+}
 
 export const MobileSidebar = ({
   className,
   children,
 }: {
-  className?: string;
-  children?: React.ReactNode;
+  className?: string
+  children?: React.ReactNode
 }) => {
-  const { open, setOpen } = useSidebar();
+  const { open, setOpen } = useSidebar()
   return (
     <>
-      <div
-       className={cn(
-        "h-10 px-4 py-4 flex flex-row md:hidden items-center justify-between bg-gray-50 w-full"
-      )}
-      >
+      <div className={cn("h-10 px-4 py-4 flex flex-row md:hidden items-center justify-between bg-gray-50 w-full")}>
         <div className="flex justify-end z-20 w-full">
-          <Menu
-           className="text-gray-700 opacity-50 cursor-pointer"
-            onClick={() => setOpen(!open)}
-          />
+          <Menu className="text-gray-700 opacity-50 cursor-pointer" onClick={() => setOpen(!open)} />
         </div>
         <AnimatePresence>
           {open && (
@@ -200,14 +179,11 @@ export const MobileSidebar = ({
                 ease: "easeInOut",
               }}
               className={cn(
-                "fixed h-screen w-full inset-0 bg-gray-100 p-4 z-[100] flex flex-col justify-between",
-                className
+                "fixed h-screen w-full inset-0 bg-white p-4 z-[100] flex flex-col justify-between",
+                className,
               )}
             >
-              <div
-                className="absolute right-4 top-4 z-50 text-gray-100 cursor-pointer"
-                onClick={() => setOpen(false)}
-              >
+              <div className="absolute right-4 top-4 z-50 text-gray-600 cursor-pointer" onClick={() => setOpen(false)}>
                 <X />
               </div>
               {children}
@@ -216,8 +192,8 @@ export const MobileSidebar = ({
         </AnimatePresence>
       </div>
     </>
-  );
-};
+  )
+}
 
 export const SidebarLink = ({
   link,
@@ -225,56 +201,65 @@ export const SidebarLink = ({
   onClick,
   ...props
 }: {
-  link: Links;
-  className?: string;
-  onClick?: () => void;
-  props?: LinkProps;
+  link: Links
+  className?: string
+  onClick?: () => void
+  props?: LinkProps
 }) => {
-  const { open, setOpen, animate, isMobile } = useSidebar();
-  
+  const { open, setOpen, animate, isMobile } = useSidebar()
+
   const handleClick = (e: React.MouseEvent) => {
     // Handle custom click events
     if (onClick) {
-      onClick();
+      onClick()
     }
-    
+
     if (link?.onClick) {
-      link.onClick();
+      link.onClick()
     }
-    
+
     // Close mobile sidebar after clicking a link
     if (isMobile) {
-      setOpen(false);
+      setOpen(false)
     }
-  };
-  
+  }
+
   // Add a safety check to ensure link exists
   if (!link) {
-    console.error("SidebarLink: link prop is undefined");
-    return null;
+    console.error("SidebarLink: link prop is undefined")
+    return null
   }
-  
+
   return (
     <Link
-      href={link.href || ""} 
+      href={link.href || ""}
       className={cn(
-        "flex items-center rounded-lg px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-800 transition-colors",
-        open ? "justify-start" : "justify-center",
-        className
+        "flex items-center rounded-md px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150",
+        "justify-start",
+        className,
       )}
       onClick={handleClick}
       {...props}
     >
-      {link.icon && <span className={open ? "mr-3" : "mr-0"}>{link.icon}</span>}
-      <motion.span
-        animate={{
-          display: animate ? (open ? "inline-block" : "none") : "inline-block",
-          opacity: animate ? (open ? 1 : 0) : 1,
-        }}
-        className="whitespace-pre inline-block"
-      >
-        {link.label || "Link"}
-      </motion.span>
+      {link.icon && <span className="mr-2">{link.icon}</span>}
+      <span className="whitespace-pre inline-block">{link.label || "Link"}</span>
     </Link>
-  );
-};
+  )
+}
+
+// Export a collapse button component for use in the sidebar header
+export const SidebarCollapseButton = ({ className }: { className?: string }) => {
+  const { setOpen } = useSidebar()
+
+  return (
+    <button
+      onClick={() => setOpen(false)}
+      className={cn(
+        "h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded flex items-center justify-center",
+        className,
+      )}
+    >
+      <ChevronLeft size={18} />
+    </button>
+  )
+}
