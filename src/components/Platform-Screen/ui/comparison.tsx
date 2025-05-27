@@ -9,43 +9,43 @@ const ecommerceData = [
   {
     feature: "Data Integration",
     traditional: "Basic integrations requiring manual setup",
-    muse: "Deep native integrations with Shopify, Klaviyo, and social selling channels",
+    consuelo: "Deep native integrations with Shopify, Klaviyo, and social selling channels",
     highlight: true,
   },
   {
     feature: "Inventory Intelligence",
     traditional: "Basic inventory reporting",
-    muse: "Predictive stock recommendations and seasonal trend analysis",
+    consuelo: "Predictive stock recommendations and seasonal trend analysis",
     highlight: true,
   },
   {
     feature: "Customer Journey",
     traditional: "Basic tracking of customer interactions",
-    muse: "Cross-channel attribution and personalized engagement recommendations",
+    consuelo: "Cross-channel attribution and personalized engagement recommendations",
     highlight: true,
   },
   {
     feature: "Marketing Campaigns",
     traditional: "Template-based campaigns",
-    muse: "AI-assisted email campaign creation through Klaviyo integration",
+    consuelo: "AI-assisted email campaign creation through Klaviyo integration",
     highlight: true,
   },
   {
     feature: "Data Analysis",
     traditional: "Standard reports and dashboards",
-    muse: "Natural language data queries and automated insight generation",
+    consuelo: "Natural language data queries and automated insight generation",
     highlight: true,
   },
   {
     feature: "Search Capability",
     traditional: "Basic keyword search",
-    muse: "Natural language search across all CRM data with contextual understanding",
+    consuelo: "Natural language search across all CRM data with contextual understanding",
     highlight: true,
   },
   {
     feature: "Content Generation",
     traditional: "Templates and manual creation",
-    muse: "AI-generated content aligned with brand voice and engagement patterns",
+    consuelo: "AI-generated content aligned with brand voice and engagement patterns",
     highlight: true,
   },
 ]
@@ -55,48 +55,48 @@ const fitnessData = [
   {
     feature: "Member Management",
     traditional: "Basic member profiles and history",
-    muse: "Attendance pattern analysis with personalized engagement strategies",
+    consuelo: "Attendance pattern analysis with personalized engagement strategies",
     highlight: true,
   },
   {
     feature: "Schedule Optimization",
     traditional: "Manual scheduling tools",
-    muse: "Class popularity prediction and instructor performance analysis",
+    consuelo: "Class popularity prediction and instructor performance analysis",
     highlight: true,
   },
   {
     feature: "Retention Tools",
     traditional: "Basic retention reporting",
-    muse: "Churn prediction model specific to fitness industry patterns",
+    consuelo: "Churn prediction model specific to fitness industry patterns",
     highlight: true,
   },
   {
     feature: "Community Building",
     traditional: "Standard communication tools",
-    muse: "Member community engagement recommendations and event suggestions",
+    consuelo: "Member community engagement recommendations and event suggestions",
     highlight: true,
   },
   {
     feature: "Mindbody Integration",
     traditional: "Basic or limited integration",
-    muse: "Deep native integration with specialized fitness metrics",
+    consuelo: "Deep native integration with specialized fitness metrics",
     highlight: true,
   },
   {
     feature: "Reporting",
     traditional: "Standard reporting templates",
-    muse: "AI-powered insights on class performance and member engagement",
+    consuelo: "AI-powered insights on class performance and member engagement",
     highlight: true,
   },
   {
     feature: "Client Communication",
     traditional: "Template messages",
-    muse: "Personalized communication based on attendance and preferences",
+    consuelo: "Personalized communication based on attendance and preferences",
     highlight: true,
   },
 ]
 
-export default function MuseCRMComparator() {
+export default function ConsueloCRMComparator() {
   const [activeTab, setActiveTab] = useState("ecommerce")
   const currentData = activeTab === "ecommerce" ? ecommerceData : fitnessData
 
@@ -139,7 +139,7 @@ export default function MuseCRMComparator() {
                 <tr className="*:py-4 *:text-left *:font-medium text-lg">
                   <th className="w-1/3 md:w-2/5 sticky left-0 z-10 bg-background"></th>
                   <th className="bg-muted rounded-t-(--radius) space-y-3 px-4 sm:px-6 md:px-4 w-1/3 md:w-auto">
-                    <span className="block font-bold text-xl">Muse AI-Powered CRM</span>
+                    <span className="block font-bold text-xl">Consuelo AI Naive CRM</span>
                     <Button asChild size="sm">
                       <Link href="#">Get Started</Link>
                     </Button>
@@ -182,10 +182,10 @@ export default function MuseCRMComparator() {
                                 />
                               </svg>
                             </div>
-                            <div className="text-base">{row.muse}</div>
+                            <div className="text-base">{row.consuelo}</div>
                           </div>
                         ) : (
-                          row.muse
+                          row.consuelo
                         )}
                       </div>
                     </td>
