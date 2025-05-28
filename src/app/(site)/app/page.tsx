@@ -2,17 +2,16 @@
 // File: pages/index.js
 import React, { useEffect } from "react";
 import { DollarSign, ShoppingBag, Calculator, BarChart3 } from "lucide-react";
-import CustomerSegmentsChart from "@/components/Unified Commerce Dashboard/home/charts/customer-segment-chart";
-import ProductsChart from "@/components/Unified Commerce Dashboard/home/charts/products-chart";
-import RevenueChart from "@/components/Unified Commerce Dashboard/home/charts/revenue-chart";
-import ConnectedPlatforms from "@/components/Unified Commerce Dashboard/home/content/connected-platforms";
-import AiInsightsSection from "@/components/Unified Commerce Dashboard/home/content/insights-section";
+import CustomerSegmentsChart from "@/components/Unified Commerce Dashboard/ui/charts/customer-segment-chart";
+import ProductsChart from "@/components/Unified Commerce Dashboard/ui/charts/products-chart";
+import RevenueChart from "@/components/Unified Commerce Dashboard/ui/charts/revenue-chart";
+import ConnectedPlatforms from "@/components/Unified Commerce Dashboard/tabs/connected-platforms";
+import AiInsightsSection from "@/components/Unified Commerce Dashboard/tabs/insights-section";
 
-
-import KpiCard from "@/components/Unified Commerce Dashboard/home/ui/kpi-card";
+import KpiCard from "@/components/Unified Commerce Dashboard/ui/kpi-card";
 import MainLayout from "@/components/Unified Commerce Dashboard/layout/main-layout";
-import InventoryStatus from "@/components/Unified Commerce Dashboard/home/content/inventory-status";
-import RecentActivity from "@/components/Unified Commerce Dashboard/home/content/recent-activity";
+import InventoryStatus from "@/components/Unified Commerce Dashboard/tabs/inventory-status";
+import RecentActivity from "@/components/Unified Commerce Dashboard/tabs/recent-activity";
 
 export default function CommerceDashboard() {
   useEffect(() => {

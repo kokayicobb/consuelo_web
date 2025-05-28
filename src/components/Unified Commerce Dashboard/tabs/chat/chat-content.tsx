@@ -12,8 +12,8 @@ import {
 } from "@/lib/actions";
 
 import { ChatMessage, ChatMessageData } from "@/types/chats"; // Using your specified path
-import { SegmentationForm, ExampleQueries } from "../segmentation"; // Using your specified path
-import ChatMessageItem from "../home/components/chat-message-item"; // Using your specified path
+import { SegmentationForm, ExampleQueries } from "../../segmentation"; // Using your specified path
+import ChatMessageItem from "../../components/chat-message-item"; // Using your specified path
 import SideArtifactPanel from "./components/side.panel";
 
 const EXAMPLE_QUERIES = [
