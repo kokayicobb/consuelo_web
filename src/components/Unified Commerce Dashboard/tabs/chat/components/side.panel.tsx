@@ -16,7 +16,7 @@ import { generateSalesScript } from "@/lib/actions";
 import { SuggestedAction } from "../action-suggestions";
 import QueryResults from "../query-results";
 import ScriptModal from "../script-modal";
-import OrangeSalesAgent from "../../research";
+import OrangeSalesAgent from "../../../research";
 
 interface SideArtifactPanelProps {
   data: ChatMessageData | null;
@@ -53,7 +53,7 @@ const SideArtifactPanel: React.FC<SideArtifactPanelProps> = ({
         viewMode: data.viewMode,
         queryContext: data.queryContext,
         hasQueryResults: !!data.queryResults && data.queryResults.length > 0,
-        hasSqlQuery: !!data.sqlQuery
+        hasSqlQuery: !!data.sqlQuery,
       });
     }
   }, [data]);
@@ -65,7 +65,8 @@ const SideArtifactPanel: React.FC<SideArtifactPanelProps> = ({
   }
 
   // Resolve userQuery: prefer prop, then from data object
-  const currentQueryContext = userQuery || data?.userQuery || data?.queryContext || "";
+  const currentQueryContext =
+    userQuery || data?.userQuery || data?.queryContext || "";
 
   // Handle copying script to clipboard
   const handleCopyToClipboard = () => {
@@ -79,26 +80,31 @@ const SideArtifactPanel: React.FC<SideArtifactPanelProps> = ({
   // Fixed renderContent function with proper function definition and return statement
   const renderContent = () => {
     console.log("renderContent called with viewMode:", data.viewMode);
-    
+
     // Explicitly check for leadGenerator mode
     if (data.viewMode === "leadGenerator") {
-      console.log("Should render OrangeSalesAgent with query:", currentQueryContext);
-      
+      console.log(
+        "Should render OrangeSalesAgent with query:",
+        currentQueryContext,
+      );
+
       // Return the OrangeSalesAgent component
       return (
-        <div className="w-full h-full">
+        <div className="h-full w-full">
           <OrangeSalesAgent userQuery={currentQueryContext} />
         </div>
       );
     }
-    
+
     console.log("Rendering regular QueryResults");
     // Regular query results
-    return (data.queryResults && data.queryResults.length > 0) || (data.sqlQuery && (!data.queryResults || data.queryResults.length === 0)) ? (
+    return (data.queryResults && data.queryResults.length > 0) ||
+      (data.sqlQuery &&
+        (!data.queryResults || data.queryResults.length === 0)) ? (
       <QueryResults
         results={data.queryResults || []}
         columns={data.columns || []}
-        viewMode={data.viewMode || 'cards'}
+        viewMode={data.viewMode || "cards"}
         setViewMode={onViewModeChange}
         chartConfig={data.chartConfig}
         isLoadingChart={!!data.isLoadingChart}
