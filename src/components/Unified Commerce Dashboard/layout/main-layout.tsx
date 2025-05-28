@@ -1,16 +1,25 @@
-"use client"
+"use client";
 
-import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 
-import { useState, useEffect } from "react"
-import { Sidebar, SidebarBody, SidebarLink, SidebarCollapseButton } from "@/components/ui/sidebar"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { useState, useEffect } from "react";
+import {
+  Sidebar,
+  SidebarBody,
+  SidebarLink,
+  SidebarCollapseButton,
+} from "@/components/ui/sidebar";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import {
   LayoutDashboard,
   BarChart3,
@@ -31,39 +40,41 @@ import {
   Monitor,
   Check,
   Workflow,
-  Route
-} from "lucide-react"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import Header from "./header"
-import ChannelsContent from "../home/content/channels-content"
-import HomeContent from "../home/content/home-content"
-import InventoryContent from "../home/content/inventory-content"
-import CustomersContent from "../home/content/customer-content"
-import MarketingContent from "../home/content/marketing-content"
-import AIInsightsContent from "../home/content/ai-insights"
-import IntegrationsContent from "../home/content/integration-content"
-import SettingsContent from "../home/content/settings-content"
+  Route,
+} from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import Header from "./header";
+import ChannelsContent from "../tabs/channels-content";
+import HomeContent from "../tabs/dashboard/home-content";
+import InventoryContent from "../tabs/inventory-content";
+import CustomersContent from "../tabs/customer-content";
+import MarketingContent from "../tabs/marketing-content";
+import AIInsightsContent from "../tabs/ai-insights";
+import IntegrationsContent from "../tabs/integration-content";
+import SettingsContent from "../tabs/settings-content";
 
 import {
   ExpandableChat,
   ExpandableChatHeader,
   ExpandableChatBody,
   ExpandableChatFooter,
-} from "@/components/ui/expandable-chat"
-import ChatContent from "../chat"
+} from "@/components/ui/expandable-chat";
+import ChatContent from "../tabs/chat";
 
 // Chat Interface Component for use with ExpandableChat
 const ChatInterface = () => {
-  const [messages, setMessages] = useState([{ text: "Hi there! How can I help you today?", sender: "bot" }])
-  const [inputValue, setInputValue] = useState("")
+  const [messages, setMessages] = useState([
+    { text: "Hi there! How can I help you today?", sender: "bot" },
+  ]);
+  const [inputValue, setInputValue] = useState("");
 
   const handleSend = () => {
-    if (inputValue.trim() === "") return
+    if (inputValue.trim() === "") return;
 
     // Add user message
-    setMessages([...messages, { text: inputValue, sender: "user" }])
-    setInputValue("")
+    setMessages([...messages, { text: inputValue, sender: "user" }]);
+    setInputValue("");
 
     // Simulate bot response (would be replaced with actual API call)
     setTimeout(() => {
@@ -73,21 +84,21 @@ const ChatInterface = () => {
           text: "Thanks for your message! I'll help you with that.",
           sender: "bot",
         },
-      ])
-    }, 1000)
-  }
+      ]);
+    }, 1000);
+  };
 
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
-      handleSend()
+      handleSend();
     }
-  }
+  };
 
   return (
     <>
-      <ExpandableChatHeader className="bg-white border-b border-gray-200">
+      <ExpandableChatHeader className="border-b border-gray-200 bg-white">
         <div className="flex items-center">
-          <div className="mr-2 h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center">
+          <div className="mr-2 flex h-8 w-8 items-center justify-center rounded-full bg-gray-100">
             <img
               src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/apple-touch-icon-OnEhJzRCthwLXcIuoeeWSqvvYynB9c.png"
               alt="Consuelo Logo"
@@ -98,14 +109,17 @@ const ChatInterface = () => {
         </div>
       </ExpandableChatHeader>
 
-      <ExpandableChatBody className="bg-white p-4 space-y-4 w-full">
+      <ExpandableChatBody className="w-full space-y-4 bg-white p-4">
         {messages.map((message, index) => (
-          <div key={index} className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}>
+          <div
+            key={index}
+            className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}
+          >
             <div
               className={`max-w-[80%] rounded-lg px-4 py-2 ${
                 message.sender === "user"
                   ? "bg-blue-500 text-white"
-                  : "bg-gray-100 text-gray-800 border border-gray-200"
+                  : "border border-gray-200 bg-gray-100 text-gray-800"
               }`}
             >
               {message.text}
@@ -114,8 +128,8 @@ const ChatInterface = () => {
         ))}
       </ExpandableChatBody>
 
-      <ExpandableChatFooter className="bg-white border-t border-gray-200">
-        <div className="flex items-center gap-2 w-full">
+      <ExpandableChatFooter className="border-t border-gray-200 bg-white">
+        <div className="flex w-full items-center gap-2">
           <Input
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
@@ -123,63 +137,67 @@ const ChatInterface = () => {
             placeholder="Type your message..."
             className="flex-1 border-gray-200"
           />
-          <Button onClick={handleSend} size="icon" className="bg-blue-500 hover:bg-blue-600">
+          <Button
+            onClick={handleSend}
+            size="icon"
+            className="bg-blue-500 hover:bg-blue-600"
+          >
             <Send size={16} />
           </Button>
         </div>
       </ExpandableChatFooter>
     </>
-  )
-}
+  );
+};
 
 const MainLayout = ({ children, title, hideSidebar = false }) => {
   // Create a state to track the active tab
-  const [activeTab, setActiveTab] = useState("home")
-  const [sidebarOpen, setSidebarOpen] = useState(!hideSidebar)
+  const [activeTab, setActiveTab] = useState("home");
+  const [sidebarOpen, setSidebarOpen] = useState(!hideSidebar);
 
   // Effect to sync URL hash with state
   useEffect(() => {
     // Function to handle hash change
     const handleHashChange = () => {
-      const hash = window.location.hash.replace("#", "") || "home"
-      setActiveTab(hash)
-    }
+      const hash = window.location.hash.replace("#", "") || "home";
+      setActiveTab(hash);
+    };
 
     // Set initial state based on current hash
-    handleHashChange()
+    handleHashChange();
 
     // Listen for hash changes
-    window.addEventListener("hashchange", handleHashChange)
+    window.addEventListener("hashchange", handleHashChange);
 
     // Clean up event listener
-    return () => window.removeEventListener("hashchange", handleHashChange)
-  }, [])
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, []);
 
   // Function to render the correct content based on activeTab
   const renderContent = () => {
     switch (activeTab) {
       case "home":
-        return <ChatContent />
+        return <ChatContent />;
       case "dashboard":
-        return <HomeContent />
+        return <HomeContent />;
       case "channels":
-        return <ChannelsContent />
+        return <ChannelsContent />;
       case "inventory":
-        return <InventoryContent />
+        return <InventoryContent />;
       case "accounts":
-        return <CustomersContent />
+        return <CustomersContent />;
       case "marketing":
-        return <MarketingContent />
+        return <MarketingContent />;
       case "ai-insights":
-        return <AIInsightsContent />
+        return <AIInsightsContent />;
       case "integrations":
-        return <IntegrationsContent />
+        return <IntegrationsContent />;
       case "settings":
-        return <SettingsContent />
+        return <SettingsContent />;
       default:
-        return <HomeContent />
+        return <HomeContent />;
     }
-  }
+  };
 
   // Define the main navigation items (Home and Dashboard)
   const mainNavItems = [
@@ -201,7 +219,7 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
       icon: <Workflow size={20} className="text-gray-600" />,
       onClick: () => setActiveTab("ai-insights"),
     },
-  ]
+  ];
 
   // Define the retention section items
   const retentionItems = [
@@ -223,7 +241,7 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
       icon: <Package size={20} className="text-gray-600" />,
       onClick: () => setActiveTab("inventory"),
     },
-  ]
+  ];
 
   // Define the prospecting section items
   const prospectingItems = [
@@ -245,7 +263,7 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
       icon: <PieChart size={20} className="text-gray-600" />,
       onClick: () => setActiveTab("marketing"),
     },
-  ]
+  ];
   const dialerItems = [
     {
       label: "Create Scripts",
@@ -253,8 +271,7 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
       icon: <Plus size={20} className="text-gray-600" />,
       onClick: () => {}, // No functionality for now
     },
-    
-  ]
+  ];
 
   // Define the standalone items (AI Recommendations only now)
   const standaloneItems = [
@@ -264,7 +281,7 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
     //   icon: <Lightbulb size={20} className="text-gray-600" />,
     //   onClick: () => setActiveTab("ai-insights"),
     // },
-  ]
+  ];
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-white md:flex-row">
@@ -272,12 +289,12 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
         <Sidebar open={sidebarOpen} setOpen={setSidebarOpen}>
           <SidebarBody className="bg-white">
             {/* Consuelo Logo with Dropdown */}
-            <div className="mb-4 flex items-center justify-center gap-2 px-3 pt-3 relative">
+            <div className="relative mb-4 flex items-center justify-center gap-2 px-3 pt-3">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
-                    className="flex items-center gap-2 p-2 bg-white hover:bg-gray-50 rounded-md w-full justify-start shadow-none text-sm"
+                    className="flex w-full items-center justify-start gap-2 rounded-md bg-white p-2 text-sm shadow-none hover:bg-gray-50"
                   >
                     <div className="h-6 w-6 flex-shrink-0">
                       <img
@@ -287,13 +304,13 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
                       />
                     </div>
                     <span className=" text-gray-900">Consuelo</span>
-                    <ChevronDown className="h-4 w-4 text-gray-500 ml-auto" />
+                    <ChevronDown className="ml-auto h-4 w-4 text-gray-500" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-80 p-0" align="start">
                   {/* Header Section */}
-                  <div className="p-4 border-b border-gray-100">
-                    <div className="flex items-center gap-3 mb-4">
+                  <div className="border-b border-gray-100 p-4">
+                    <div className="mb-4 flex items-center gap-3">
                       <div className="h-10 w-10 flex-shrink-0">
                         <img
                           src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/apple-touch-icon-OnEhJzRCthwLXcIuoeeWSqvvYynB9c.png"
@@ -302,8 +319,12 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
                         />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-gray-900">Consuelo</h3>
-                        <p className="text-sm text-gray-500">Free Plan · 1 member</p>
+                        <h3 className="font-semibold text-gray-900">
+                          Consuelo
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          Free Plan · 1 member
+                        </p>
                       </div>
                     </div>
 
@@ -312,14 +333,18 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="flex-1 bg-gray-50 shadow-none border-gray-800 text-gray-700 hover:bg-gray-100"
+                        className="flex-1 border-gray-800 bg-gray-50 text-gray-700 shadow-none hover:bg-gray-100"
                         onClick={() => setActiveTab("settings")}
                       >
-                        <Settings className="h-4 w-4 mr-2" />
+                        <Settings className="mr-2 h-4 w-4" />
                         Settings
                       </Button>
-                      <Button variant="outline" size="sm" className="flex-1 shadow-none bg-gray-50 border-gray-800 text-gray-700 hover:bg-gray-100">
-                        <UserPlus className="h-4 w-4 mr-2" />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 border-gray-800 bg-gray-50 text-gray-700 shadow-none hover:bg-gray-100"
+                      >
+                        <UserPlus className="mr-2 h-4 w-4" />
                         Invite team
                       </Button>
                     </div>
@@ -327,9 +352,11 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
 
                   {/* User Account Section */}
                   <div className="p-2">
-                    <div className="px-2 py-1 text-xs font-medium text-gray-500  hover:none mb-1">kokayi@consuelohq.com</div>
+                    <div className="hover:none mb-1 px-2 py-1 text-xs  font-medium text-gray-500">
+                      kokayi@consuelohq.com
+                    </div>
 
-                    <DropdownMenuItem className="flex items-center  justify-between p-3 rounded-lg  hover:bg-gray-100">
+                    <DropdownMenuItem className="flex items-center  justify-between rounded-lg p-3  hover:bg-gray-100">
                       <div className="flex items-center  gap-3">
                         <div className="h-6 w-6  flex-shrink-0">
                           <img
@@ -343,7 +370,7 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
                       <Check className="h-4 w-4 text-green-600" />
                     </DropdownMenuItem>
 
-                    <DropdownMenuItem className="flex items-center gap-3 p-3 rounded-lg">
+                    <DropdownMenuItem className="flex items-center gap-3 rounded-lg p-3">
                       <Plus className="h-4 w-4 text-gray-500" />
                       <span>New Sales Team</span>
                     </DropdownMenuItem>
@@ -354,23 +381,23 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
                   {/* Navigation Items */}
                   <div className="p-2">
                     <DropdownMenuItem
-                      className="flex items-center gap-3 p-3 rounded-lg"
+                      className="flex items-center gap-3 rounded-lg p-3"
                       onClick={() => setActiveTab("integrations")}
                     >
                       <Route className="h-4 w-4 text-gray-500" />
                       <span>Integrations</span>
                     </DropdownMenuItem>
 
-                    <DropdownMenuItem className="flex items-center gap-3 p-3 rounded-lg">
+                    <DropdownMenuItem className="flex items-center gap-3 rounded-lg p-3">
                       <span>Add another account</span>
                     </DropdownMenuItem>
 
-                    <DropdownMenuItem className="flex items-center gap-3 p-3 rounded-lg">
+                    <DropdownMenuItem className="flex items-center gap-3 rounded-lg p-3">
                       <LogOut className="h-4 w-4 text-gray-500" />
                       <span>Log out</span>
                     </DropdownMenuItem>
 
-                    <DropdownMenuItem className="flex items-center gap-3 p-3 rounded-lg">
+                    <DropdownMenuItem className="flex items-center gap-3 rounded-lg p-3">
                       <Monitor className="h-4 w-4 text-gray-500" />
                       <span>Get Mac app</span>
                     </DropdownMenuItem>
@@ -388,7 +415,7 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <Input
                   placeholder="Search..."
-                  className="pl-9 h-8 bg-gray-50 border-0 text-sm text-gray-700 placeholder-gray-500 focus-visible:ring-1 focus-visible:ring-gray-300"
+                  className="h-8 border-0 bg-gray-50 pl-9 text-sm text-gray-700 placeholder-gray-500 focus-visible:ring-1 focus-visible:ring-gray-300"
                 />
               </div>
             </div>
@@ -401,7 +428,7 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
                   link={item}
                   className={`${
                     activeTab === item.href.replace("#", "")
-                      ? "bg-gray-100 text-gray-900 font-medium"
+                      ? "bg-gray-100 font-medium text-gray-900"
                       : "text-gray-700 hover:bg-gray-50"
                   } transition-colors duration-150`}
                 />
@@ -410,18 +437,18 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
               {/* Retention Section */}
               <div className="pt-4">
                 <Collapsible defaultOpen className="group/collapsible">
-                  <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-800 transition-colors duration-150">
+                  <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm font-medium text-gray-600 transition-colors duration-150 hover:bg-gray-50 hover:text-gray-800">
                     Retention
                     <ChevronRight className="h-3 w-3 transition-transform group-data-[state=open]/collapsible:rotate-90" />
                   </CollapsibleTrigger>
-                  <CollapsibleContent className="space-y-1 pl-4 mt-1">
+                  <CollapsibleContent className="mt-1 space-y-1 pl-4">
                     {retentionItems.map((item) => (
                       <SidebarLink
                         key={item.href}
                         link={item}
                         className={`${
                           activeTab === item.href.replace("#", "")
-                            ? "bg-gray-100 text-gray-900 font-medium"
+                            ? "bg-gray-100 font-medium text-gray-900"
                             : "text-gray-700 hover:bg-gray-50"
                         } transition-colors duration-150`}
                       />
@@ -433,18 +460,18 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
               {/* Prospecting Section */}
               <div className="pt-4">
                 <Collapsible defaultOpen className="group/collapsible">
-                  <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-800 transition-colors duration-150">
+                  <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm font-medium text-gray-600 transition-colors duration-150 hover:bg-gray-50 hover:text-gray-800">
                     Prospecting
                     <ChevronRight className="h-3 w-3 transition-transform group-data-[state=open]/collapsible:rotate-90" />
                   </CollapsibleTrigger>
-                  <CollapsibleContent className="space-y-1 pl-4 mt-1">
+                  <CollapsibleContent className="mt-1 space-y-1 pl-4">
                     {prospectingItems.map((item) => (
                       <SidebarLink
                         key={item.href}
                         link={item}
                         className={`${
                           activeTab === item.href.replace("#", "")
-                            ? "bg-gray-100 text-gray-900 font-medium"
+                            ? "bg-gray-100 font-medium text-gray-900"
                             : "text-gray-700 hover:bg-gray-50"
                         } transition-colors duration-150`}
                       />
@@ -452,21 +479,21 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
                   </CollapsibleContent>
                 </Collapsible>
               </div>
-               {/* dialer Section */}
-               <div className="pt-4">
+              {/* dialer Section */}
+              <div className="pt-4">
                 <Collapsible defaultOpen className="group/collapsible">
-                  <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-800 transition-colors duration-150">
+                  <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm font-medium text-gray-600 transition-colors duration-150 hover:bg-gray-50 hover:text-gray-800">
                     Dialer
                     <ChevronRight className="h-3 w-3 transition-transform group-data-[state=open]/collapsible:rotate-90" />
                   </CollapsibleTrigger>
-                  <CollapsibleContent className="space-y-1 pl-4 mt-1">
+                  <CollapsibleContent className="mt-1 space-y-1 pl-4">
                     {dialerItems.map((item) => (
                       <SidebarLink
                         key={item.href}
                         link={item}
                         className={`${
                           activeTab === item.href.replace("#", "")
-                            ? "bg-gray-100 text-gray-900 font-medium"
+                            ? "bg-gray-100 font-medium text-gray-900"
                             : "text-gray-700 hover:bg-gray-50"
                         } transition-colors duration-150`}
                       />
@@ -482,7 +509,7 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
                   link={item}
                   className={`${
                     activeTab === item.href.replace("#", "")
-                      ? "bg-gray-100 text-gray-900 font-medium"
+                      ? "bg-gray-100 font-medium text-gray-900"
                       : "text-gray-700 hover:bg-gray-50"
                   } transition-colors duration-150`}
                 />
@@ -492,11 +519,20 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
         </Sidebar>
       )}
 
-      <div className={`flex flex-1 flex-col overflow-y-auto bg-gray-50 ${hideSidebar ? "w-full" : ""}`}>
+      <div
+        className={`flex flex-1 flex-col overflow-y-auto bg-gray-50 ${hideSidebar ? "w-full" : ""}`}
+      >
         {activeTab !== "home" && !hideSidebar && (
-          <Header title={activeTab.charAt(0).toUpperCase() + activeTab.slice(1).replace("-", " ")} />
+          <Header
+            title={
+              activeTab.charAt(0).toUpperCase() +
+              activeTab.slice(1).replace("-", " ")
+            }
+          />
         )}
-        <main className={`flex-1 ${activeTab === "home" && !hideSidebar ? "p-0" : "p-4 md:p-6"} bg-gray-50`}>
+        <main
+          className={`flex-1 ${activeTab === "home" && !hideSidebar ? "p-0" : "p-4 md:p-6"} bg-gray-50`}
+        >
           {hideSidebar ? children : renderContent()}
         </main>
 
@@ -508,7 +544,7 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default MainLayout
+export default MainLayout;

@@ -1,4 +1,4 @@
-import ChatContent from "@/components/Unified Commerce Dashboard/chat/chat-content";
+import ChatContent from "@/components/Unified Commerce Dashboard/tabs/chat/chat-content";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
