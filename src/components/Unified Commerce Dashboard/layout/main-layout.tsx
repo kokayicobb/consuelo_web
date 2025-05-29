@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 
@@ -90,9 +90,9 @@ const ChatInterface = () => {
 
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
-      handleSend()
+      handleSend();
     }
-  }
+  };
 
   return (
     <>
@@ -105,7 +105,6 @@ const ChatInterface = () => {
               className="h-6 w-6"
             />
           </div>
-          <span className="font-medium text-gray-900">Consuelo</span>
           <span className="font-medium text-gray-900">Consuelo</span>
         </div>
       </ExpandableChatHeader>
@@ -137,7 +136,6 @@ const ChatInterface = () => {
             onKeyPress={handleKeyPress}
             placeholder="Type your message..."
             className="flex-1 border-gray-200"
-            className="flex-1 border-gray-200"
           />
           <Button
             onClick={handleSend}
@@ -149,60 +147,58 @@ const ChatInterface = () => {
         </div>
       </ExpandableChatFooter>
     </>
-  )
-}
+  );
+};
 
 const MainLayout = ({ children, title, hideSidebar = false }) => {
   // Create a state to track the active tab
-  const [activeTab, setActiveTab] = useState("home")
-  const [sidebarOpen, setSidebarOpen] = useState(!hideSidebar)
+  const [activeTab, setActiveTab] = useState("home");
+  const [sidebarOpen, setSidebarOpen] = useState(!hideSidebar);
 
   // Effect to sync URL hash with state
   useEffect(() => {
     // Function to handle hash change
     const handleHashChange = () => {
-      const hash = window.location.hash.replace("#", "") || "home"
-      setActiveTab(hash)
-    }
+      const hash = window.location.hash.replace("#", "") || "home";
+      setActiveTab(hash);
+    };
 
     // Set initial state based on current hash
-    handleHashChange()
+    handleHashChange();
 
     // Listen for hash changes
-    window.addEventListener("hashchange", handleHashChange)
+    window.addEventListener("hashchange", handleHashChange);
 
     // Clean up event listener
-    return () => window.removeEventListener("hashchange", handleHashChange)
-  }, [])
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, []);
 
   // Function to render the correct content based on activeTab
   const renderContent = () => {
     switch (activeTab) {
       case "home":
-        return <ChatContent />
+        return <ChatContent />;
       case "dashboard":
-        return <HomeContent />
+        return <HomeContent />;
       case "channels":
-        return <ChannelsContent />
+        return <ChannelsContent />;
       case "inventory":
-        return <InventoryContent />
+        return <InventoryContent />;
       case "accounts":
-        return <CustomersContent />
+        return <CustomersContent />;
       case "marketing":
-        return <MarketingContent />
+        return <MarketingContent />;
       case "ai-insights":
-        return <AIInsightsContent />
+        return <AIInsightsContent />;
       case "integrations":
-        return <IntegrationsContent />
+        return <IntegrationsContent />;
       case "settings":
-        return <SettingsContent />
+        return <SettingsContent />;
       default:
-        return <HomeContent />
+        return <HomeContent />;
     }
-  }
+  };
 
-  // Define the main navigation items (Home and Dashboard)
-  const mainNavItems = [
   // Define the main navigation items (Home and Dashboard)
   const mainNavItems = [
     {
@@ -241,7 +237,6 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
     },
     {
       label: "Product Insights",
-      label: "Product Insights",
       href: "#inventory",
       icon: <Package size={20} className="text-gray-600" />,
       onClick: () => setActiveTab("inventory"),
@@ -259,26 +254,17 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
     {
       label: "Lead Cohorts",
       href: "#leads",
-      label: "Pipeline Builder",
-      href: "#pipeline-builder",
-      icon: <BarChart3 size={20} className="text-gray-600" />,
-      onClick: () => {}, // No functionality for now
-    },
-    {
-      label: "Lead Cohorts",
-      href: "#leads",
       icon: <Users size={20} className="text-gray-600" />,
       onClick: () => {}, // No functionality for now
-      onClick: () => {}, // No functionality for now
     },
     {
-      label: "Channel Insights",
       label: "Channel Insights",
       href: "#marketing",
       icon: <PieChart size={20} className="text-gray-600" />,
       onClick: () => setActiveTab("marketing"),
     },
   ];
+
   const dialerItems = [
     {
       label: "Create Scripts",
@@ -299,7 +285,6 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
   ];
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-white md:flex-row">
     <div className="flex h-screen flex-col overflow-hidden bg-white md:flex-row">
       {!hideSidebar && (
         <Sidebar open={sidebarOpen} setOpen={setSidebarOpen}>
@@ -439,10 +424,6 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
             <nav className="flex-1 space-y-1 px-3">
               {/* Main Navigation (Home & Dashboard) */}
               {mainNavItems.map((item) => (
-
-            <nav className="flex-1 space-y-1 px-3">
-              {/* Main Navigation (Home & Dashboard) */}
-              {mainNavItems.map((item) => (
                 <SidebarLink
                   key={item.href}
                   link={item}
@@ -499,7 +480,8 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
                   </CollapsibleContent>
                 </Collapsible>
               </div>
-              {/* dialer Section */}
+
+              {/* Dialer Section */}
               <div className="pt-4">
                 <Collapsible defaultOpen className="group/collapsible">
                   <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm font-medium text-gray-600 transition-colors duration-150 hover:bg-gray-50 hover:text-gray-800">
@@ -543,12 +525,18 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
         className={`flex flex-1 flex-col overflow-y-auto bg-gray-50 ${hideSidebar ? "w-full" : ""}`}
       >
         {activeTab !== "home" && !hideSidebar && (
-          <Header title={activeTab.charAt(0).toUpperCase() + activeTab.slice(1).replace("-", " ")} />
+          <Header
+            title={
+              activeTab.charAt(0).toUpperCase() +
+              activeTab.slice(1).replace("-", " ")
+            }
+          />
         )}
-        <main className={`flex-1 ${activeTab === "home" && !hideSidebar ? "p-0" : "p-4 md:p-6"} bg-gray-50`}>
+        <main
+          className={`flex-1 ${activeTab === "home" && !hideSidebar ? "p-0" : "p-4 md:p-6"} bg-gray-50`}
+        >
           {hideSidebar ? children : renderContent()}
         </main>
-
 
         {/* Expandable Chat - Only show when not on home or settings page and sidebar is visible */}
         {activeTab !== "home" && activeTab !== "settings" && !hideSidebar && (
@@ -558,7 +546,7 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
 export default MainLayout;
