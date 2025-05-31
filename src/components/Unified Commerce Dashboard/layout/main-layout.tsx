@@ -40,27 +40,30 @@ import {
   Monitor,
   Check,
   Workflow,
-  Route,
-} from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import Header from "./header";
-import ChannelsContent from "../tabs/channels-content";
-import HomeContent from "../tabs/dashboard/home-content";
-import InventoryContent from "../tabs/inventory-content";
-import CustomersContent from "../tabs/customer-content";
-import MarketingContent from "../tabs/marketing-content";
-import AIInsightsContent from "../tabs/ai-insights";
-import IntegrationsContent from "../tabs/integration-content";
-import SettingsContent from "../tabs/settings-content";
+  Route
+} from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import Header from "./header"
+
 
 import {
   ExpandableChat,
   ExpandableChatHeader,
   ExpandableChatBody,
   ExpandableChatFooter,
-} from "@/components/ui/expandable-chat";
-import ChatContent from "../tabs/chat";
+} from "@/components/ui/expandable-chat"
+
+import AIInsightsContent from "../tabs/ai-insights"
+import ChannelsContent from "../tabs/channels-content"
+import ChatContent from "../tabs/chat"
+import CustomersContent from "../tabs/customer-content"
+import IntegrationsContent from "../tabs/integration-content"
+import InventoryContent from "../tabs/inventory-content"
+import MarketingContent from "../tabs/marketing-content"
+import SettingsContent from "../tabs/settings-content"
+import HomeContent from "../tabs/dashboard/home-content"
+
 
 // Chat Interface Component for use with ExpandableChat
 const ChatInterface = () => {
@@ -136,8 +139,8 @@ const ChatInterface = () => {
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Type your message..."
-            className="flex-1 border-gray-200"
-            className="flex-1 border-gray-200"
+            className="flex-1 border-gray-200 "
+          
           />
           <Button
             onClick={handleSend}
@@ -203,8 +206,7 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
 
   // Define the main navigation items (Home and Dashboard)
   const mainNavItems = [
-  // Define the main navigation items (Home and Dashboard)
-  const mainNavItems = [
+ 
     {
       label: "Home",
       href: "#home",
@@ -241,7 +243,7 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
     },
     {
       label: "Product Insights",
-      label: "Product Insights",
+     
       href: "#inventory",
       icon: <Package size={20} className="text-gray-600" />,
       onClick: () => setActiveTab("inventory"),
@@ -259,8 +261,7 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
     {
       label: "Lead Cohorts",
       href: "#leads",
-      label: "Pipeline Builder",
-      href: "#pipeline-builder",
+     
       icon: <BarChart3 size={20} className="text-gray-600" />,
       onClick: () => {}, // No functionality for now
     },
@@ -269,11 +270,11 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
       href: "#leads",
       icon: <Users size={20} className="text-gray-600" />,
       onClick: () => {}, // No functionality for now
-      onClick: () => {}, // No functionality for now
+    
     },
     {
       label: "Channel Insights",
-      label: "Channel Insights",
+     
       href: "#marketing",
       icon: <PieChart size={20} className="text-gray-600" />,
       onClick: () => setActiveTab("marketing"),
@@ -299,7 +300,7 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
   ];
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-white md:flex-row">
+    
     <div className="flex h-screen flex-col overflow-hidden bg-white md:flex-row">
       {!hideSidebar && (
         <Sidebar open={sidebarOpen} setOpen={setSidebarOpen}>
@@ -436,10 +437,7 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
               </div>
             </div>
 
-            <nav className="flex-1 space-y-1 px-3">
-              {/* Main Navigation (Home & Dashboard) */}
-              {mainNavItems.map((item) => (
-
+            
             <nav className="flex-1 space-y-1 px-3">
               {/* Main Navigation (Home & Dashboard) */}
               {mainNavItems.map((item) => (
@@ -561,4 +559,4 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
   )
 }
 
-export default MainLayout;
+export default MainLayout
