@@ -44,7 +44,7 @@ import {
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import Header from "./header"
+
 
 
 import {
@@ -62,7 +62,8 @@ import IntegrationsContent from "../tabs/integration-content"
 import InventoryContent from "../tabs/inventory-content"
 import MarketingContent from "../tabs/marketing-content"
 import SettingsContent from "../tabs/settings-content"
-import HomeContent from "../tabs/dashboard/home-content"
+import HomeContent from "../tabs/dashboard"
+import ActionSearchBar from "@/components/ui/action-search-bar";
 
 
 // Chat Interface Component for use with ExpandableChat
@@ -425,9 +426,9 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
               {/* Collapse Arrow - Only visible on hover */}
               <SidebarCollapseButton className="absolute -right-2 top-1/2 -translate-y-1/2" />
             </div>
-
+<ActionSearchBar/>
             {/* Search */}
-            <div className="mb-4 px-3">
+            {/* <div className="mb-4 px-3">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <Input
@@ -435,7 +436,7 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
                   className="h-8 border-0 bg-gray-50 pl-9 text-sm text-gray-700 placeholder-gray-500 focus-visible:ring-1 focus-visible:ring-gray-300"
                 />
               </div>
-            </div>
+            </div> */}
 
             
             <nav className="flex-1 space-y-1 px-3">
@@ -540,9 +541,9 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
       <div
         className={`flex flex-1 flex-col overflow-y-auto bg-gray-50 ${hideSidebar ? "w-full" : ""}`}
       >
-        {activeTab !== "home" && !hideSidebar && (
+        {/* {activeTab !== "home" && !hideSidebar && (
           <Header title={activeTab.charAt(0).toUpperCase() + activeTab.slice(1).replace("-", " ")} />
-        )}
+        )} */}
         <main className={`flex-1 ${activeTab === "home" && !hideSidebar ? "p-0" : "p-4 md:p-6"} bg-gray-50`}>
           {hideSidebar ? children : renderContent()}
         </main>
