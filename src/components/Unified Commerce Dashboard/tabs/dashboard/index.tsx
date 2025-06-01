@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState } from "react"
+import type React from "react";
+import { useState } from "react";
 import {
   ArrowRight,
   ArrowUp,
@@ -16,17 +16,35 @@ import {
   Download,
   AlertCircle,
   CheckCircle,
-} from "lucide-react"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Progress } from "@/components/ui/progress"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import AICRMSwipeableCards from "./components/swipeable-cards"
-import SalesPerformanceCard from "./components/chart"
-import { TopPerformingCohortCard } from "./components/top-cohorts"
-import LeadChannelPerformance from "./components/lead-performace"
-import FollowUpsTracker from "./components/follow-ups"
+} from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Progress } from "@/components/ui/progress";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import AICRMSwipeableCards from "./components/swipeable-cards";
+import SalesPerformanceCard from "./components/chart";
+import { TopPerformingCohortCard } from "./components/top-cohorts";
+import LeadChannelPerformance from "./components/lead-performace";
+import FollowUpsTracker from "./components/follow-ups";
 
 const salesData = {
   week: [
@@ -55,7 +73,7 @@ const salesData = {
     { name: "Q3", revenue: 289000, profit: 142000 },
     { name: "Q4", revenue: 352000, profit: 184000 },
   ],
-}
+};
 // Mock data for dashboard stats
 const overviewStats = [
   {
@@ -88,7 +106,7 @@ const overviewStats = [
     trend: "down",
     icon: <BarChart3 className="h-4 w-4" />,
   },
-]
+];
 // Mock data for recent orders
 const recentOrders = [
   {
@@ -131,7 +149,7 @@ const recentOrders = [
     status: "processing",
     items: 4,
   },
-]
+];
 
 // Mock data for channel performance
 const channelPerformance = [
@@ -139,7 +157,7 @@ const channelPerformance = [
   { channel: "Mobile App", sales: 89400, percentage: 28 },
   { channel: "Marketplaces", sales: 56800, percentage: 18 },
   { channel: "Social Commerce", sales: 28500, percentage: 9 },
-]
+];
 
 // Mock data for notifications
 const notifications = [
@@ -164,7 +182,7 @@ const notifications = [
     time: "Yesterday",
     icon: <Bell className="h-4 w-4 text-blue-500" />,
   },
-]
+];
 
 // Mock data for tasks
 const tasks = [
@@ -196,7 +214,7 @@ const tasks = [
     priority: "low",
     completed: false,
   },
-]
+];
 
 // Mock data for target metrics
 const targetMetrics = [
@@ -218,18 +236,22 @@ const targetMetrics = [
     target: 150,
     percentage: 83,
   },
-]
+];
 
 const HomeContent: React.FC = () => {
-  const [timeRange, setTimeRange] = useState("month")
+  const [timeRange, setTimeRange] = useState("month");
 
   return (
     <div className="space-y-6 bg-gray-50">
       {/* Page header with date selector */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-800">Dashboard</h1>
-          <p className="text-gray-600">Welcome back. Here's an overview of your store's performance.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-800">
+            Dashboard
+          </h1>
+          <p className="text-gray-600">
+            Welcome back. Here's an overview of your store's performance.
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex items-center rounded-md border px-3 py-2">
@@ -246,13 +268,23 @@ const HomeContent: React.FC = () => {
               </SelectContent>
             </Select>
           </div>
-          <Button variant="outline" size="icon">
-            <RefreshCw className="h-4 w-4" />
+          <Button
+            variant="outline"
+            size="icon"
+            className="bg-transparent shadow-none hover:bg-gray-100"
+          >
+            <RefreshCw className="h-4 w-4 text-black" />
           </Button>
-          <Button variant="outline" size="icon">
-            <Download className="h-4 w-4" />
+          <Button
+            variant="outline"
+            size="icon"
+            className="bg-transparent shadow-none hover:bg-gray-100"
+          >
+            <Download className="h-4 w-4 text-black" />
           </Button>
-          <Button>Generate Report</Button>
+          <Button className="bg-transparent text-black shadow-none hover:bg-gray-100">
+            Generate Report
+          </Button>
         </div>
       </div>
 
@@ -261,17 +293,27 @@ const HomeContent: React.FC = () => {
         {overviewStats.map((stat, index) => (
           <Card className="border-gray-200 bg-white" key={index}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                {stat.title}
+              </CardTitle>
               <div className="rounded-full bg-muted p-1">{stat.icon}</div>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stat.value}</div>
               <div className="flex items-center pt-1 text-xs">
-                <span className={`flex items-center ${stat.trend === "up" ? "text-green-600" : "text-red-600"}`}>
-                  {stat.trend === "up" ? <ArrowUp className="mr-1 h-3 w-3" /> : <ArrowDown className="mr-1 h-3 w-3" />}
+                <span
+                  className={`flex items-center ${stat.trend === "up" ? "text-green-600" : "text-red-600"}`}
+                >
+                  {stat.trend === "up" ? (
+                    <ArrowUp className="mr-1 h-3 w-3" />
+                  ) : (
+                    <ArrowDown className="mr-1 h-3 w-3" />
+                  )}
                   {Math.abs(stat.change)}%
                 </span>
-                <span className="ml-2 text-muted-foreground">compared to last {timeRange}</span>
+                <span className="ml-2 text-muted-foreground">
+                  compared to last {timeRange}
+                </span>
               </div>
             </CardContent>
           </Card>
@@ -281,19 +323,19 @@ const HomeContent: React.FC = () => {
       {/* Main Dashboard Content */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Left Side - Performance Charts and Recent Orders */}
-        <div className="lg:col-span-2 flex flex-col gap-6">
+        <div className="flex flex-col gap-6 lg:col-span-2">
           {/* Performance Charts */}
           <div className="h-auto">
             <SalesPerformanceCard />
           </div>
 
           <div className="h-auto">
-  <TopPerformingCohortCard />
-</div>
+            <TopPerformingCohortCard />
+          </div>
         </div>
 
         {/* Right Side - Target Metrics and Notifications */}
-        <div className="lg:col-span-1 flex flex-col gap-6">
+        <div className="flex flex-col gap-6 lg:col-span-1">
           {/* Target Metrics */}
           <div className="h-auto">
             <AICRMSwipeableCards />
@@ -301,17 +343,17 @@ const HomeContent: React.FC = () => {
 
           {/* Notifications */}
           <div className="h-auto">
-            <FollowUpsTracker/>
+            <FollowUpsTracker />
           </div>
         </div>
       </div>
 
       {/* Bottom Sections - 1 column */}
       <div className="grid grid-cols-1 gap-6">
-      <LeadChannelPerformance/>
+        <LeadChannelPerformance />
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default HomeContent
+export default HomeContent;
