@@ -64,6 +64,7 @@ import MarketingContent from "../tabs/marketing-content"
 import SettingsContent from "../tabs/settings-content"
 import HomeContent from "../tabs/dashboard"
 import ActionSearchBar from "@/components/ui/action-search-bar";
+import AutomationBuilder from "../automations";
 
 
 // Chat Interface Component for use with ExpandableChat
@@ -200,9 +201,12 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
         return <IntegrationsContent />
       case "settings":
         return <SettingsContent />
+        case "automations":
+        return <AutomationBuilder />
       default:
         return <HomeContent />
     }
+    
   }
 
   // Define the main navigation items (Home and Dashboard)
@@ -222,9 +226,9 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
     },
     {
       label: "Automations",
-      href: "#ai-insights",
+      href: "#automations",
       icon: <Workflow size={20} className="text-gray-600" />,
-      onClick: () => setActiveTab("ai-insights"),
+      onClick: () => setActiveTab("automations"),
     },
   ];
 
@@ -259,18 +263,12 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
       icon: <BarChart3 size={20} className="text-gray-600" />,
       onClick: () => {}, // No functionality for now
     },
-    {
-      label: "Lead Cohorts",
-      href: "#leads",
-     
-      icon: <BarChart3 size={20} className="text-gray-600" />,
-      onClick: () => {}, // No functionality for now
-    },
+   
     {
       label: "Lead Cohorts",
       href: "#leads",
       icon: <Users size={20} className="text-gray-600" />,
-      onClick: () => {}, // No functionality for now
+      onClick: () => setActiveTab("ai-insights"), // No functionality for now
     
     },
     {
