@@ -197,7 +197,7 @@ export function TopPerformingCohortCard() {
   }
 
   return (
-    <Card className="border-gray-200 bg-white">
+    <Card className="border-gray-200 bg-white shadow-none">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center">

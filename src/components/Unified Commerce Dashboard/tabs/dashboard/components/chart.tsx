@@ -95,7 +95,7 @@ export default function SalesPerformanceCard() {
   }
 
   return (
-    <Card className="border-gray-200 bg-white ">
+    <Card className="border-gray-200 bg-white shadow-none ">
       <div className="flex flex-col h-full">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
