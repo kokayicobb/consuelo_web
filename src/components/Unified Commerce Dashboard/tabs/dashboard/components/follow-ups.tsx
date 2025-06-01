@@ -215,7 +215,7 @@ export default function FollowUpsTracker() {
 
   return (
     <>
-      <Card className="border-gray-200 bg-white h-auto">
+      <Card className="border-gray-200 bg-white h-auto shadow-none">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <div>
             <CardTitle className="text-sm font-medium flex items-center gap-2">

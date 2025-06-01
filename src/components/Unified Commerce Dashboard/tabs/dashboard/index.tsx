@@ -291,7 +291,7 @@ const HomeContent: React.FC = () => {
       {/* Overview Stats */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {overviewStats.map((stat, index) => (
-          <Card className="border-gray-200 bg-white" key={index}>
+          <Card className="border-gray-200 bg-white shadow-none" key={index}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
                 {stat.title}
@@ -321,7 +321,7 @@ const HomeContent: React.FC = () => {
       </div>
 
       {/* Main Dashboard Content */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 shadow-none">
         {/* Left Side - Performance Charts and Recent Orders */}
         <div className="flex flex-col gap-6 lg:col-span-2">
           {/* Performance Charts */}
