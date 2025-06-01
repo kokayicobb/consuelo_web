@@ -249,7 +249,7 @@ export default function LeadChannelPerformance() {
 
   return (
     <>
-      <Card className="border-gray-200 bg-white">
+      <Card className="border-gray-200 bg-white shadow-none">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Target className="h-5 w-5" />
