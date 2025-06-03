@@ -335,7 +335,7 @@ const SideArtifactPanel: React.FC<SideArtifactPanelProps> = ({
             </button>
             <button
               onClick={onClose}
-              className="rounded-md p-1.5 text-gray-500 hover:bg-red-100 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500"
+              className="rounded-md p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500"
               title="Close"
             >
               <XMarkIcon className="h-5 w-5" />
