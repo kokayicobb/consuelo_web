@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Plus, Search, ChevronDown, AlertTriangle, Zap, Mail, Users, Star, Database, UserPlus, FileText, MessageSquare, X, Check, ArrowRight, Filter, Calendar, Clock, Settings, Save, Loader2, PlayCircle, PauseCircle } from 'lucide-react';
+import AutomationFlow from './automationFlow';
+import AutomationHeader from './header';
 
 // Mock data for automation templates
 const automationTemplates = [
@@ -370,6 +372,7 @@ export default function AutomationBuilder() {
   const [automationDescription, setAutomationDescription] = useState('');
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  
 
   // Filter templates based on search query and category
   const filteredTemplates = automationTemplates.filter(template => {
@@ -379,9 +382,9 @@ export default function AutomationBuilder() {
     return matchesSearch && matchesCategory;
   });
 
-  // Start a new automation from a template
   const startFromTemplate = (template) => {
     setSelectedTemplate(template);
+    // Ensure automationName is set BEFORE setIsBuilding(true)
     setAutomationName(`Copy of ${template.name}`);
     setAutomationDescription(template.description);
     setWorkflow([
@@ -392,10 +395,10 @@ export default function AutomationBuilder() {
     setIsBuilding(true);
   };
 
-  // Start a new blank automation
-  const startBlankAutomation = () => {
+  const startBlankAutomation = (nameFromHeaderButton = 'New Automation') => { // Accept potential name from header button if needed
     setSelectedTemplate(null);
-    setAutomationName('New Automation');
+    // Ensure automationName is set BEFORE setIsBuilding(true)
+    setAutomationName(nameFromHeaderButton); // Use "New Automation" or what's passed
     setAutomationDescription('');
     setWorkflow([
       { type: 'trigger', id: '', name: 'Select Trigger' }
@@ -403,6 +406,13 @@ export default function AutomationBuilder() {
     setShowTemplates(false);
     setIsBuilding(true);
   };
+  const handleTestAutomation = () => {
+    // The header's internal editableTitle should have updated `automationName`
+    // via the `setAutomationNameForSave` prop if you wired it that way,
+    // or you can pass automationName directly to any test function.
+    alert(`Testing automation: ${automationName}`);
+    // Implement actual test logic here
+ };
 
   // Add a new step to the workflow
   const addWorkflowStep = (type) => {
@@ -436,7 +446,7 @@ export default function AutomationBuilder() {
       <p className="text-sm text-gray-600 mb-3">{template.description}</p>
       <div className="flex gap-2 mt-2">
         {template.triggers.map(trigger => (
-          <span key={trigger} className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">
+          <span key={trigger} className="bg-sky-100 text-sky-800 text-xs px-2 py-1 rounded-full">
             {availableTriggers.find(t => t.id === trigger)?.name || trigger}
           </span>
         ))}
@@ -461,14 +471,14 @@ export default function AutomationBuilder() {
     return (
       <div className="relative">
         <div className="flex items-center mb-2">
-          <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 font-bold">
+          <div className="h-8 w-8 rounded-full bg-sky-100 flex items-center justify-center text-sky-700 font-bold">
             {index + 1}
           </div>
           <div className="ml-2 text-sm text-gray-500">{step.type === 'trigger' ? 'Trigger' : 'Action'}</div>
         </div>
         
         <div 
-          className="border rounded-lg p-4 mb-4 cursor-pointer hover:border-purple-500 transition-colors"
+          className="border rounded-lg p-4 mb-4 cursor-pointer hover:border-sky-500 transition-colors"
           onClick={() => setIsOpen(!isOpen)}
         >
           <div className="flex items-center justify-between">
@@ -502,7 +512,7 @@ export default function AutomationBuilder() {
                 <input
                   type="text"
                   placeholder={`Search ${step.type === 'trigger' ? 'triggers' : 'actions'}`}
-                  className="pl-8 pr-4 py-2 w-full border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="pl-8 pr-4 py-2 w-full border rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
                 />
               </div>
             </div>
@@ -556,7 +566,7 @@ export default function AutomationBuilder() {
             type="text"
             value={automationName}
             onChange={(e) => setAutomationName(e.target.value)}
-            className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
             placeholder="Enter a name for your automation"
           />
         </div>
@@ -569,7 +579,7 @@ export default function AutomationBuilder() {
             id="automation-description"
             value={automationDescription}
             onChange={(e) => setAutomationDescription(e.target.value)}
-            className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 min-h-[80px]"
+            className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 min-h-[80px]"
             placeholder="Briefly describe what this automation does"
           />
         </div>
@@ -584,7 +594,7 @@ export default function AutomationBuilder() {
           <button
             onClick={saveAutomation}
             disabled={isSaving || !automationName}
-            className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+            className="px-4 py-2 bg-sky-600 text-white rounded-md hover:bg-sky-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
           >
             {isSaving ? (
               <>
@@ -605,141 +615,114 @@ export default function AutomationBuilder() {
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b px-6 py-4">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center">
-            <h1 className="text-xl font-semibold text-gray-900">Automation Builder</h1>
-            {isBuilding && (
-              <div className="ml-4 text-sm text-gray-500">
-                {automationName || 'Untitled Automation'}
-                {automationName && <span className="ml-1">•</span>}
-                <span className="ml-1">Draft</span>
-              </div>
-            )}
-          </div>
-          
-          <div className="flex items-center gap-3">
-            {isBuilding ? (
-              <>
-                <button 
-                  onClick={() => {
-                    setShowTemplates(true);
-                    setIsBuilding(false);
-                  }}
-                  className="px-3 py-1.5 border rounded-md text-gray-700 text-sm hover:bg-gray-100"
-                >
-                  Cancel
-                </button>
-                <button 
-                  onClick={() => setShowSaveModal(true)}
-                  className="px-3 py-1.5 bg-purple-600 text-white rounded-md text-sm hover:bg-purple-700"
-                >
-                  Save
-                </button>
-              </>
-            ) : (
-              <button 
-                onClick={startBlankAutomation}
-                className="px-3 py-1.5 bg-purple-600 text-white rounded-md text-sm hover:bg-purple-700 flex items-center"
-              >
-                <Plus size={16} className="mr-2" /> New Automation
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
+    {/* Header <<<< 2. REPLACE OLD HEADER WITH NEW COMPONENT */}
+    <AutomationHeader
+      isBuilding={isBuilding}
+      setIsBuilding={setIsBuilding}
+      initialAutomationName={automationName} // `automationName` is set by startBlank/startFromTemplate
+      setShowSaveModal={setShowSaveModal}
+      // This prop in AutomationHeader is called `setAutomationNameForSave`
+      // We map it to `setAutomationName` so the header directly updates the parent's state
+      // before opening the modal.
+      setAutomationNameForSave={setAutomationName}
+      setShowTemplates={setShowTemplates} // Used by header's "Cancel" button
+      startBlankAutomation={() => startBlankAutomation("New Automation")} // Ensure "New Automation" is passed
+      // You can add a specific test handler if the header component expects one like `onTest`
+      // For the provided header, its internal `handleTest` calls alert.
+      // If you wanted the parent to handle it:
+      // onTest={handleTestAutomation}
+    />
       
       {/* Main Content */}
       <div className="flex-1 overflow-auto p-6">
         {showTemplates ? (
           <div>
-            {/* Tabs */}
-            <div className="mb-6 border-b">
-              <div className="flex space-x-8">
-                <button
-                  onClick={() => setActiveTab('templates')}
-                  className={`pb-4 px-1 font-medium text-sm ${activeTab === 'templates' 
-                    ? 'text-purple-600 border-b-2 border-purple-600' 
-                    : 'text-gray-500 hover:text-gray-700'}`}
-                >
-                  Templates
-                </button>
-                <button
-                  onClick={() => setActiveTab('my-automations')}
-                  className={`pb-4 px-1 font-medium text-sm ${activeTab === 'my-automations' 
-                    ? 'text-purple-600 border-b-2 border-purple-600' 
-                    : 'text-gray-500 hover:text-gray-700'}`}
-                >
-                  My Automations
-                </button>
-              </div>
-            </div>
-            
-            {/* Search and Filter */}
-            <div className="mb-6 flex flex-wrap gap-4">
-              <div className="relative flex-grow max-w-md">
-                <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search templates"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 py-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                />
-              </div>
-              
-              <div className="relative">
-                <select
-                  value={categoryFilter}
-                  onChange={(e) => setCategoryFilter(e.target.value)}
-                  className="appearance-none pl-4 pr-10 py-2 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                >
-                  <option value="All">All Categories</option>
-                  <option value="Finance">Finance</option>
-                  <option value="Lead Generation">Lead Generation</option>
-                  <option value="Nurturing">Nurturing</option>
-                </select>
-                <Filter className="absolute right-3 top-2.5 h-5 w-5 text-gray-400 pointer-events-none" />
-              </div>
-            </div>
-            
-            {activeTab === 'templates' ? (
-              <>
-                <h2 className="text-lg font-semibold mb-4">Finance Industry Templates</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {filteredTemplates.map(template => (
-                    <TemplateCard 
-                      key={template.id} 
-                      template={template} 
-                      onClick={startFromTemplate} 
-                    />
-                  ))}
-                </div>
-                
-                <div className="mt-8">
-                  <h2 className="text-lg font-semibold mb-4">Start from Scratch</h2>
-                  <button
-                    onClick={startBlankAutomation}
-                    className="border-2 border-dashed border-gray-300 rounded-lg p-4 w-full md:w-64 h-32 flex items-center justify-center hover:border-purple-500 hover:text-purple-600 transition-colors"
-                  >
-                    <div className="text-center">
-                      <Plus size={24} className="mx-auto mb-2" />
-                      <span className="font-medium">Blank Automation</span>
-                    </div>
-                  </button>
-                </div>
-              </>
-            ) : (
-              <div className="text-center py-12">
-                <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                  <Zap size={24} className="text-gray-400" />
-                </div>
-                <h3 className="text-lg font-medium mb-2">No automations yet</h3>
-                <p className="text-gray-500 mb-6">Create your first automation to start automating your workflow</p>
-                <button
-                  onClick={startBlankAutomation}
-                  className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 inline-flex items-center"
+           {/* Tabs */}
+         <div className="mb-6 border-b">
+           <div className="flex space-x-8">
+             <button
+               onClick={() => setActiveTab('templates')}
+               className={`pb-4 px-1 font-medium text-sm ${activeTab === 'templates'
+                 ? 'text-sky-600 border-b-2 border-sky-600'
+                 : 'text-gray-500 hover:text-gray-700'}`}
+             >
+               Templates
+             </button>
+             <button
+               onClick={() => setActiveTab('my-automations')}
+               className={`pb-4 px-1 font-medium text-sm ${activeTab === 'my-automations'
+                 ? 'text-sky-600 border-b-2 border-sky-600'
+                 : 'text-gray-500 hover:text-gray-700'}`}
+             >
+               My Automations
+             </button>
+           </div>
+         </div>
+
+         {/* Search and Filter */}
+         <div className="mb-6 flex flex-wrap gap-4">
+           <div className="relative flex-grow max-w-md shadow-none">
+             <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+             <input
+               type="text"
+               placeholder="Search templates"
+               value={searchQuery}
+               onChange={(e) => setSearchQuery(e.target.value)}
+               className="pl-10 pr-4 py-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+             />
+           </div>
+
+           <div className="relative">
+             <select
+               value={categoryFilter}
+               onChange={(e) => setCategoryFilter(e.target.value)}
+               className="appearance-none pl-4 pr-10 py-2 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+             >
+               <option value="All">All Categories</option>
+               <option value="Finance">Finance</option>
+               <option value="Lead Generation">Lead Generation</option>
+               <option value="Nurturing">Nurturing</option>
+             </select>
+             <Filter className="absolute right-3 top-2.5 h-5 w-5 text-gray-400 pointer-events-none" />
+           </div>
+         </div>
+
+         {activeTab === 'templates' ? (
+           <>
+             <h2 className="text-lg font-semibold mb-4">Finance Industry Templates</h2>
+             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 shadown-none">
+               {filteredTemplates.map(template => (
+                 <TemplateCard
+                   key={template.id}
+                   template={template}
+                   onClick={startFromTemplate}
+                 />
+               ))}
+             </div>
+
+             <div className="mt-8">
+               <h2 className="text-lg font-semibold mb-4">Start from Scratch</h2>
+               <button
+                 onClick={() => startBlankAutomation("New Automation")} // Ensure correct name
+                 className="border-2 border-dashed border-gray-300 rounded-lg p-4 w-full md:w-64 h-32 flex items-center justify-center hover:border-sky-500 hover:text-sky-600 transition-colors"
+               >
+                 <div className="text-center">
+                   <Plus size={24} className="mx-auto mb-2" />
+                   <span className="font-medium">Blank Automation</span>
+                 </div>
+               </button>
+             </div>
+           </>
+         ) : (
+           <div className="text-center py-12">
+             <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+               <Zap size={24} className="text-gray-400" />
+             </div>
+             <h3 className="text-lg font-medium mb-2">No automations yet</h3>
+             <p className="text-gray-500 mb-6">Create your first automation to start automating your workflow</p>
+             <button
+               onClick={() => startBlankAutomation("New Automation")}
+                  className="px-4 py-2 bg-sky-600 text-white rounded-md hover:bg-sky-700 inline-flex items-center"
                 >
                   <Plus size={16} className="mr-2" /> Create Automation
                 </button>
@@ -747,100 +730,12 @@ export default function AutomationBuilder() {
             )}
           </div>
         ) : (
-          <div className="max-w-3xl mx-auto">
-            <div className="bg-white border rounded-lg p-6 mb-6">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h2 className="text-lg font-semibold">Automation Steps</h2>
-                  <p className="text-sm text-gray-500 mt-1">Build your automation by adding triggers and actions</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button className="px-3 py-1.5 border rounded-md text-gray-700 text-sm hover:bg-gray-100 flex items-center">
-                    <PlayCircle size={16} className="mr-1.5 text-green-600" />
-                    Test
-                  </button>
-                </div>
-              </div>
-              
-              {/* Workflow Builder */}
-              <div className="mt-6">
-                {workflow.map((step, index) => (
-                  <WorkflowStep key={index} step={step} index={index} />
-                ))}
-                
-                {/* Add Step Button */}
-                <div className="mt-4 flex gap-2">
-                  <button
-                    onClick={() => addWorkflowStep('action')}
-                    className="px-3 py-2 border rounded-md text-gray-700 text-sm hover:bg-gray-100 flex items-center"
-                  >
-                    <Plus size={16} className="mr-2" /> Add Action
-                  </button>
-                  
-                  <button
-                    onClick={() => addWorkflowStep('condition')}
-                    className="px-3 py-2 border rounded-md text-gray-700 text-sm hover:bg-gray-100 flex items-center"
-                  >
-                    <Plus size={16} className="mr-2" /> Add Condition
-                  </button>
-                </div>
-              </div>
-            </div>
-            
-            {/* Automation Settings */}
-            <div className="bg-white border rounded-lg p-6">
-              <h3 className="text-md font-semibold mb-4">Automation Settings</h3>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1" htmlFor="status">
-                    Status
-                  </label>
-                  <div className="flex items-center">
-                    <select
-                      id="status"
-                      className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    >
-                      <option value="active">Active</option>
-                      <option value="draft" selected>Draft</option>
-                      <option value="paused">Paused</option>
-                    </select>
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium mb-1" htmlFor="segment">
-                    Target Segment
-                  </label>
-                  <select
-                    id="segment"
-                    className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  >
-                    <option value="">All Contacts</option>
-                    <option value="loan-applicants">Loan Applicants</option>
-                    <option value="mortgage-prospects">Mortgage Prospects</option>
-                    <option value="investment-clients">Investment Clients</option>
-                    <option value="credit-repair">Credit Repair Clients</option>
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="flex items-center text-sm">
-                    <input type="checkbox" className="rounded text-purple-600 focus:ring-purple-500 mr-2" />
-                    Track analytics for this automation
-                  </label>
-                </div>
-                
-                <div>
-                  <label className="flex items-center text-sm">
-                    <input type="checkbox" className="rounded text-purple-600 focus:ring-purple-500 mr-2" />
-                    Send notification when automation completes
-                  </label>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+          <AutomationFlow 
+          
+         
+        
+        />
+      )}
       </div>
       
       {/* Save Modal */}
