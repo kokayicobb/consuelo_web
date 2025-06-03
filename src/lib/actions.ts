@@ -1096,7 +1096,7 @@ async function scrapeSubredditsWithFetch(
   });
 
   const allPosts: RedditPostData[] = [];
-  const USER_AGENT = process.env.REDDIT_USER_AGENT || 'BusinessLendingAgent/1.0';
+  const USER_AGENT = process.env.REDDIT_USER_AGENT || 'OrangeSalesAgent/1.0';
 
   // Process each subreddit
   for (const subredditName of subredditNames) {
