@@ -7,6 +7,7 @@ import type { OtfClient, OtfContactLog } from "@/types/otf";
 
 import {
   Download,
+  Plus,
   Table,
   ListChecks,
   ChevronRight,
@@ -278,7 +279,7 @@ export default function QueryResults({
                 className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md"
               >
                 <div
-                  className="cursor-pointer border-b border-gray-100 bg-orange-50 p-4"
+                  className="cursor-pointer border-b border-gray-100 bg-sky-50 p-4"
                   onClick={() => {
                     toggleContactLogs(clientId);
                   }}
@@ -299,7 +300,7 @@ export default function QueryResults({
                   <div className="space-y-2">
                     {displayFields.map(([key, value]) => (
                       <div key={key} className="flex items-start gap-2">
-                        <div className="mt-0.5 text-orange-500">
+                        <div className="mt-0.5 text-sky-500">
                           {getCardIcon(key)}
                         </div>
                         <div>
@@ -368,7 +369,7 @@ export default function QueryResults({
                             e.stopPropagation();
                             toggleAddLogForm(clientId);
                           }}
-                          className="rounded bg-orange-100 px-2 py-1 text-xs text-orange-700 hover:bg-orange-200"
+                          className="rounded bg-sky-100 px-2 py-1 text-xs text-sky-700 hover:bg-sky-200"
                           title="Add Contact Log" // Add tooltip
                         >
                           Add Log
@@ -384,7 +385,7 @@ export default function QueryResults({
                     {expandedLogs[clientId] && (
                       <div className="mt-2 space-y-3 pl-1">
                         {showAddLogForm === clientId && (
-                          <div className="mb-3 rounded-md border border-orange-100 bg-orange-50 p-3">
+                          <div className="mb-3 rounded-md border border-sky-100 bg-sky-50 p-3">
                             <h5 className="mb-2 text-sm font-medium">Add Contact Log</h5>
                             <div className="space-y-2">
                               <div>
@@ -436,7 +437,7 @@ export default function QueryResults({
                                 </button>
                                 <button
                                   onClick={(e) => { e.stopPropagation(); handleAddLog(clientId, clientName); }}
-                                  className="rounded bg-orange-500 px-3 py-1 text-sm text-white hover:bg-orange-600"
+                                  className="rounded bg-sky-500 px-3 py-1 text-sm text-white hover:bg-sky-600"
                                 >
                                   Save Log
                                 </button>
@@ -458,7 +459,7 @@ export default function QueryResults({
                                     : 'Invalid Date'}
                                 </div>
                                 <div className="flex items-center gap-1 text-xs">
-                                  <div className="flex items-center gap-1 rounded-full bg-orange-100 px-1.5 py-0.5 text-orange-700">
+                                  <div className="flex items-center gap-1 rounded-full bg-sky-100 px-1.5 py-0.5 text-sky-700">
                                     {getContactLogIcon(log && typeof log["Contact Method"] === 'string' ? log["Contact Method"] : '')}
                                     {/* Safely access Contact Method */}
                                     <span>{log && typeof log["Contact Method"] === 'string' ? log["Contact Method"] : 'Unknown Method'}</span>
@@ -504,7 +505,7 @@ export default function QueryResults({
           <div className="mt-6 flex justify-center">
             <button
               onClick={handleShowMore}
-              className="rounded-md bg-orange-100 px-4 py-2 font-medium text-orange-700 transition-colors hover:bg-orange-200"
+              className="rounded-md bg-sky-100 px-4 py-2 font-medium text-sky-700 transition-colors hover:bg-sky-200"
             >
               Show More ({visibleCards} of {normalizedData.length})
             </button>
@@ -537,9 +538,9 @@ export default function QueryResults({
         <div className="flex flex-col gap-2 sm:flex-row">
           <button
             onClick={exportCSV}
-            className="flex items-center justify-center gap-1 rounded-md bg-green-100 px-3 py-1 text-sm text-green-700 hover:bg-green-200"
+            className="flex items-center justify-center gap-1 rounded-md border-none bg-white px-3 py-1 text-sm text-black hover:bg-gray-200"
           >
-            <Download size={14} /> Export CSV
+            <Plus size={12} /> Add Cohort
           </button>
           <div className="flex rounded-md bg-gray-100 p-1">
             {/* Button for Cards View (using Table icon, setting mode 'table') */}

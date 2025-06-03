@@ -1056,6 +1056,7 @@ Important: Output only the JSON array with no other text, explanation, or format
 
 
 // Interface for posts from Reddit API
+// Interface for posts from Reddit API
 interface RedditPostData {
   id: string;
   subreddit: string;
@@ -1073,7 +1074,7 @@ export interface PotentialLead {
   username: string;
   content: string;
   date: string;
-  sentiment: 'seeking_recommendation' | 'pain_point' | 'complaining' | 'interest_shown' | 'generic_mention' | 'other' | 'not_applicable_if_not_lead';
+  sentiment: 'seeking_funding' | 'cash_flow_issues' | 'expansion_plans' | 'equipment_needs' | 'inventory_funding' | 'growth_opportunity' | 'generic_mention' | 'other' | 'not_applicable_if_not_lead';
   status: 'new';
   score: number;
   url: string;
@@ -1081,12 +1082,11 @@ export interface PotentialLead {
 }
 
 // Function to scrape Reddit data
-// Looser timeframe for Reddit scraping
 async function scrapeSubredditsWithFetch(
   subredditNames: string[],
   keywords: string[],
   limitPerSubreddit: number = 25,
-  timeframe: 'day' | 'week' | 'month' | 'year' | 'all' = 'year' // Changed default from 'month' to 'year'
+  timeframe: 'day' | 'week' | 'month' | 'year' | 'all' = 'month'
 ): Promise<RedditPostData[]> {
   const context = "scrapeSubredditsWithFetch";
   debugLog(context, `Starting Reddit scrape with direct fetch for ${timeframe} timeframe...`, { 
@@ -1096,18 +1096,19 @@ async function scrapeSubredditsWithFetch(
   });
 
   const allPosts: RedditPostData[] = [];
-  const USER_AGENT = process.env.REDDIT_USER_AGENT || 'OrangeSalesAgent/1.0';
+  const USER_AGENT = process.env.REDDIT_USER_AGENT || 'BusinessLendingAgent/1.0';
 
   // Process each subreddit
   for (const subredditName of subredditNames) {
     try {
       debugLog(context, `Fetching r/${subredditName}...`);
       
-      // For Charlotte-specific subreddits, we'll be MORE inclusive with keywords
-      const isCharlotteSubreddit = ['charlotte', 'charlottenc', 'queencity', 'clt'].includes(subredditName.toLowerCase());
+      // For loan/borrow subreddits, be VERY inclusive since these are direct requests
+      const isDirectLoanSubreddit = ['borrow', 'simpleloans', 'donationrequest'].includes(subredditName.toLowerCase());
+      const isBusinessSubreddit = ['smallbusiness', 'entrepreneur', 'startups', 'business'].includes(subredditName.toLowerCase());
       
-      // More inclusive search for Charlotte subreddits, standard for others
-      const endpointType = 'top'; // Use 'new' for Charlotte subreddits to get more recent content
+      // Use 'new' for loan subreddits to get recent requests, 'top' for business subreddits
+      const endpointType = isDirectLoanSubreddit ? 'new' : (isBusinessSubreddit ? 'new' : 'top');
       
       // Reddit's JSON API endpoint
       const url = `https://www.reddit.com/r/${subredditName}/${endpointType}.json?limit=${limitPerSubreddit}&t=${timeframe}`;
@@ -1136,34 +1137,37 @@ async function scrapeSubredditsWithFetch(
       for (const post of posts) {
         const postData = post.data;
         
-        // For Charlotte subreddits, be more lenient with keyword matching
+        // For loan/borrow subreddits, include almost everything since it's all loan requests
         let includePost = false;
         
-        if (isCharlotteSubreddit) {
-          // For Charlotte subreddits, include posts that might relate to fitness/gyms even loosely
-          const fitnessKeywords = ['gym', 'fitness', 'workout', 'exercise', 'class', 'weight', 'trainer', 
-            'orange theory', 'orangetheory', 'hiit', 'training', 'cardio', 'health',
-            'strength', 'sweat', 'tone', 'muscle', 'wellness', 'studio', 'personal',
-            'coach', 'membership', 'burn', 'body', 'heart rate'];
+        if (isDirectLoanSubreddit) {
+          // For direct loan subreddits, include virtually all posts since they're requesting money
+          includePost = true; // These subreddits are specifically for loan requests
+        } else if (isBusinessSubreddit) {
+          // For business subreddits, include posts that might relate to funding/growth
+          const businessKeywords = ['funding', 'loan', 'capital', 'cash flow', 'revenue', 'investment', 
+            'equipment', 'inventory', 'expansion', 'grow', 'scale', 'money', 'finance', 
+            'credit', 'working capital', 'startup costs', 'business loan', 'line of credit',
+            'sba', 'bank', 'lender', 'financing', 'budget', 'expenses', 'profit', 'sales'];
           
-          includePost = fitnessKeywords.some(kw => 
+          includePost = businessKeywords.some(kw => 
             postData.title.toLowerCase().includes(kw.toLowerCase()) || 
             (postData.selftext && postData.selftext.toLowerCase().includes(kw.toLowerCase()))
           );
           
-          // If we can't find fitness keywords, even include posts where people are looking for recommendations
-          // These could be potential leads where people are seeking various services
+          // If we can't find business keywords, include posts where people are seeking advice or help
           if (!includePost) {
-            const recommendationKeywords = ['looking for', 'recommend', 'suggestion', 'advice', 'best', 
-                                          'where to', 'where can', 'new to charlotte', 'just moved'];
+            const helpKeywords = ['need help', 'advice needed', 'struggling with', 'how do i', 
+                                'looking for advice', 'need suggestions', 'cash problems', 'tight budget',
+                                'need money', 'financial help', 'business advice'];
             
-            includePost = recommendationKeywords.some(kw => 
+            includePost = helpKeywords.some(kw => 
               postData.title.toLowerCase().includes(kw.toLowerCase()) || 
               (postData.selftext && postData.selftext.toLowerCase().includes(kw.toLowerCase()))
             );
           }
         } else {
-          // For non-Charlotte subreddits, use the original keyword matching
+          // For other subreddits, use the original keyword matching
           includePost = keywords.some(kw => 
             postData.title.toLowerCase().includes(kw.toLowerCase()) || 
             (postData.selftext && postData.selftext.toLowerCase().includes(kw.toLowerCase()))
@@ -1194,7 +1198,7 @@ async function scrapeSubredditsWithFetch(
   return allPosts;
 }
 
-// More balanced lead analysis with Charlotte focus
+// Business funding lead analysis
 async function analyzePotentialLead(postContent: string, keywords: string[]): Promise<{
   is_lead: boolean;
   lead_score: number;
@@ -1216,106 +1220,208 @@ async function analyzePotentialLead(postContent: string, keywords: string[]): Pr
   let relevant_snippet = content.substring(0, 200);
   
   // --- SUBREDDIT RELEVANCE ---
-  const isCharlotteSubreddit = ['charlotte', 'charlottenc', 'clt', 'queencity'].includes(subreddit.toLowerCase());
+  const isDirectLoanSubreddit = ['borrow', 'simpleloans', 'donationrequest'].includes(subreddit.toLowerCase());
+  const isBusinessSubreddit = ['smallbusiness', 'entrepreneur', 'startups', 'business'].includes(subreddit.toLowerCase());
   
-  // Give a baseline score for Charlotte subreddits - we're interested in almost anything related to fitness here
-  if (isCharlotteSubreddit) {
-    score += 25; // Give a strong starting boost to Charlotte subreddits
-    reasoning += `Post in Charlotte subreddit r/${subreddit}. `;
-  } else if (subreddit.toLowerCase() === 'northcarolina') {
-    score += 10;
-    reasoning += `Post in North Carolina subreddit. `;
+  // Give highest score for direct loan subreddits
+  if (isDirectLoanSubreddit) {
+    score += 40; // Very high starting boost for direct loan requests
+    reasoning += `Post in direct loan subreddit r/${subreddit}. `;
+    sentiment = 'seeking_funding'; // Default sentiment for these subreddits
+  } else if (isBusinessSubreddit) {
+    score += 20; // Strong starting boost for business subreddits
+    reasoning += `Post in business subreddit r/${subreddit}. `;
   }
   
-  // --- LOCATION RELEVANCE ---
-  // Score higher for Charlotte-specific posts
-  const charlotteLocationTerms = ['charlotte', 'south end', 'uptown', 'north carolina', 'nc', 'ballantyne', 
-                                 'plaza midwood', 'noda', 'university', 'southpark', 'south charlotte', 
-                                 'north charlotte', 'matthews', 'pineville', 'huntersville', 'dilworth'];
-  
-  const locationMatches = charlotteLocationTerms.filter(term => combinedText.includes(term.toLowerCase()));
-  
-  // Location boost
-  if (locationMatches.length > 0) {
-    const locationBoost = Math.min(locationMatches.length * 5, 25);
-    score += locationBoost;
-    reasoning += `Mentions Charlotte-area locations: ${locationMatches.join(', ')}. `;
-  }
-  
-  // --- FITNESS RELEVANCE ---
-  // More comprehensive fitness-related terms
-  const fitnessTerms = [
-    'gym', 'fitness', 'workout', 'exercise', 'class', 'training', 'orange theory', 'orangetheory', 
-    'hiit', 'weight loss', 'lose weight', 'cardio', 'strength', 'personal train', 'group class', 
-    'group fitness', 'bootcamp', 'interval training', 'health club', 'trainer', 'spin class',
-    'membership', 'pilates', 'yoga', 'crossfit', 'coach', 'zumba', 'aerobics', 'treadmill'
+  // --- FUNDING/FINANCIAL NEED SIGNALS ---
+  // Direct funding-related terms
+  const fundingTerms = [
+    'need funding', 'need loan', 'need capital', 'need money', 'need cash', 'need financing',
+    'looking for funding', 'seeking funding', 'apply for loan', 'business loan', 'small business loan',
+    'working capital', 'line of credit', 'equipment financing', 'invoice factoring',
+    'cash flow problems', 'cash flow issues', 'short on cash', 'tight budget', 'financial struggle'
   ];
   
-  const fitnessMatches = fitnessTerms.filter(term => combinedText.includes(term.toLowerCase()));
+  // More subtle financial stress indicators
+  const financialStressTerms = [
+    'struggling financially', 'money tight', 'hard to pay', 'behind on payments', 'debt',
+    'can\'t afford', 'expensive', 'costly', 'budget constraints', 'limited funds',
+    'financial pressure', 'making ends meet', 'payroll', 'overhead costs'
+  ];
   
-  // Fitness boost - even a single match gets points, more matches get more points
-  if (fitnessMatches.length > 0) {
-    const fitnessBoost = Math.min(fitnessMatches.length * 5, 35);
-    score += fitnessBoost;
-    reasoning += `Contains fitness-related terms: ${fitnessMatches.join(', ')}. `;
+  const fundingMatches = fundingTerms.filter(term => combinedText.includes(term.toLowerCase()));
+  const stressMatches = financialStressTerms.filter(term => combinedText.includes(term.toLowerCase()));
+  
+  // High score for direct funding needs
+  if (fundingMatches.length > 0) {
+    const fundingBoost = Math.min(fundingMatches.length * 15, 40);
+    score += fundingBoost;
+    reasoning += `Direct funding needs mentioned: ${fundingMatches.join(', ')}. `;
+    sentiment = 'seeking_funding';
+  }
+  
+  // Medium score for financial stress indicators
+  if (stressMatches.length > 0) {
+    const stressBoost = Math.min(stressMatches.length * 10, 25);
+    score += stressBoost;
+    reasoning += `Financial stress indicators: ${stressMatches.join(', ')}. `;
+    if (sentiment === 'other') sentiment = 'cash_flow_issues';
+  }
+  
+  // --- GENERAL BUSINESS SIGNALS ---
+  // Even general business discussion can be valuable
+  const generalBusinessTerms = [
+    'small business', 'my business', 'our business', 'startup', 'company', 'llc', 'inc',
+    'entrepreneur', 'business owner', 'self employed', 'freelance', 'side business',
+    'business plan', 'business model', 'customer', 'client', 'market', 'competition'
+  ];
+  
+  const generalMatches = generalBusinessTerms.filter(term => combinedText.includes(term.toLowerCase()));
+  
+  if (generalMatches.length > 0) {
+    const generalBoost = Math.min(generalMatches.length * 3, 15);
+    score += generalBoost;
+    reasoning += `General business indicators present. `;
+  }
+  
+  // --- OPPORTUNITY SIGNALS ---
+  // Signals that suggest potential for growth/funding needs
+  const opportunityTerms = [
+    'opportunity', 'potential', 'could grow', 'want to expand', 'thinking about',
+    'considering', 'planning', 'dream', 'goal', 'vision', 'next step',
+    'big break', 'game changer', 'breakthrough', 'pivot', 'transition'
+  ];
+  
+  const opportunityMatches = opportunityTerms.filter(term => combinedText.includes(term.toLowerCase()));
+  
+  if (opportunityMatches.length > 0) {
+    const opportunityBoost = Math.min(opportunityMatches.length * 5, 20);
+    score += opportunityBoost;
+    reasoning += `Business opportunity signals: ${opportunityMatches.join(', ')}. `;
+    if (sentiment === 'other') sentiment = 'growth_opportunity';
+  }
+  const growthTerms = [
+    'expand', 'expansion', 'growing', 'scale up', 'scaling', 'new location', 'second location',
+    'hire employees', 'hiring', 'increase inventory', 'buy equipment', 'new equipment',
+    'purchase equipment', 'upgrade', 'invest in', 'opportunity', 'big order', 'large contract'
+  ];
+  
+  const growthMatches = growthTerms.filter(term => combinedText.includes(term.toLowerCase()));
+  
+  if (growthMatches.length > 0) {
+    const growthBoost = Math.min(growthMatches.length * 10, 30);
+    score += growthBoost;
+    reasoning += `Business growth indicators: ${growthMatches.join(', ')}. `;
+    if (sentiment === 'other') sentiment = 'expansion_plans';
+  }
+  
+  // --- CASH FLOW ISSUES ---
+  const cashFlowTerms = [
+    'cash flow', 'slow paying customers', 'accounts receivable', 'payment delays',
+    'seasonal business', 'feast or famine', 'inconsistent income', 'waiting for payment',
+    'invoice', 'net 30', 'net 60', 'collection issues'
+  ];
+  
+  const cashFlowMatches = cashFlowTerms.filter(term => combinedText.includes(term.toLowerCase()));
+  
+  if (cashFlowMatches.length > 0) {
+    const cashFlowBoost = Math.min(cashFlowMatches.length * 8, 25);
+    score += cashFlowBoost;
+    reasoning += `Cash flow concerns: ${cashFlowMatches.join(', ')}. `;
+    if (sentiment === 'other') sentiment = 'cash_flow_issues';
+  }
+  
+  // --- EQUIPMENT/INVENTORY NEEDS ---
+  const equipmentTerms = [
+    'need equipment', 'buy equipment', 'lease equipment', 'equipment financing',
+    'new machinery', 'tools', 'vehicle', 'truck', 'van', 'computer', 'software',
+    'inventory', 'stock', 'supplies', 'materials', 'bulk purchase'
+  ];
+  
+  const equipmentMatches = equipmentTerms.filter(term => combinedText.includes(term.toLowerCase()));
+  
+  if (equipmentMatches.length > 0) {
+    const equipmentBoost = Math.min(equipmentMatches.length * 7, 20);
+    score += equipmentBoost;
+    reasoning += `Equipment/inventory needs: ${equipmentMatches.join(', ')}. `;
+    if (sentiment === 'other') sentiment = 'equipment_needs';
+  }
+  
+  // --- BUSINESS TYPE INDICATORS ---
+  const businessTypes = [
+    'restaurant', 'retail', 'manufacturing', 'construction', 'contractor', 'service business',
+    'consulting', 'agency', 'ecommerce', 'online business', 'brick and mortar', 'franchise',
+    'salon', 'auto repair', 'cleaning service', 'landscaping', 'plumbing', 'electrical'
+  ];
+  
+  const businessTypeMatches = businessTypes.filter(term => combinedText.includes(term.toLowerCase()));
+  
+  if (businessTypeMatches.length > 0) {
+    score += 5; // Small boost for having identifiable business type
+    reasoning += `Business type identified: ${businessTypeMatches.join(', ')}. `;
+  }
+  
+  // --- REVENUE/SIZE INDICATORS ---
+  const revenueIndicators = [
+    'revenue', 'sales', 'profit', 'income', 'gross', 'net', '$', 'million', 'thousand',
+    'employees', 'staff', 'team size', 'years in business', 'established'
+  ];
+  
+  const revenueMatches = revenueIndicators.filter(term => combinedText.includes(term.toLowerCase()));
+  
+  if (revenueMatches.length > 0) {
+    score += Math.min(revenueMatches.length * 3, 15);
+    reasoning += `Business metrics mentioned. `;
   }
   
   // --- INTENT SIGNALS ---
-  // Keywords indicating someone is looking for services
   const intentTerms = [
-    'looking for', 'recommendation', 'recommend', 'suggest', 'advice', 'best', 'where to',
-    'new to', 'just moved', 'relocated', 'visiting', 'check out', 'try', 'looking to join',
-    'where should', 'opinion on', 'thoughts on', 'compare', 'vs', 'versus', 'better than',
-    'alternative to', 'instead of', 'switch from', 'want to sign up'
+    'need advice', 'looking for help', 'suggestions', 'recommendations', 'what should i do',
+    'how do i', 'where can i', 'best way to', 'anyone know', 'has anyone', 'experience with'
   ];
   
   const intentMatches = intentTerms.filter(term => combinedText.includes(term.toLowerCase()));
   
-  // Intent boost
   if (intentMatches.length > 0) {
-    const intentBoost = Math.min(intentMatches.length * 5, 30);
+    const intentBoost = Math.min(intentMatches.length * 5, 20);
     score += intentBoost;
-    reasoning += `Shows intent to find services: ${intentMatches.join(', ')}. `;
-    sentiment = 'seeking_recommendation';
+    reasoning += `Seeking advice/help: ${intentMatches.join(', ')}. `;
   }
   
-  // --- SPECIAL CASE BOOSTS ---
+  // --- URGENCY INDICATORS ---
+  const urgencyTerms = [
+    'urgent', 'asap', 'quickly', 'emergency', 'immediately', 'deadline', 'time sensitive',
+    'running out of time', 'need soon', 'by next week', 'by month end'
+  ];
   
-  // Direct Orange Theory mentions
-  if (combinedText.includes('orange theory') || combinedText.includes('orangetheory')) {
-    score += 25;
-    reasoning += 'Directly mentions Orange Theory. ';
-    sentiment = combinedText.includes('vs') || combinedText.includes('versus') ? 'comparing' : 'interest_shown';
-  }
+  const urgencyMatches = urgencyTerms.filter(term => combinedText.includes(term.toLowerCase()));
   
-  // Looking for HIIT specifically
-  if (combinedText.includes('hiit') || combinedText.includes('high intensity interval')) {
+  if (urgencyMatches.length > 0) {
     score += 15;
-    reasoning += 'Interested in HIIT workouts (Orange Theory specialty). ';
-  }
-  
-  // New to area is highly valuable
-  if (combinedText.includes('new to charlotte') || combinedText.includes('just moved') || 
-      combinedText.includes('relocated to') || (combinedText.includes('moved') && combinedText.includes('charlotte'))) {
-    score += 20;
-    reasoning += 'Recently moved to Charlotte area. ';
-    sentiment = 'seeking_recommendation';
+    reasoning += `Urgency indicators present. `;
   }
   
   // --- NEGATIVE SIGNALS ---
   
-  // Automated/mod posts (less penalty than before)
+  // Automated/mod posts
   if (title.includes('Daily') || title.includes('Weekly') || title.includes('Thread') || 
       title.includes('Megathread') || title.toLowerCase().includes('automod')) {
     score = Math.max(score - 25, 0);
     reasoning += "Automated or recurring thread. ";
   }
   
-  // If it's from the Charlotte subreddit and mentions fitness, it's likely relevant
-  // so we'll add a bonus to counter potential penalties
-  if (isCharlotteSubreddit && fitnessMatches.length > 0) {
-    score += 10;
-    reasoning += "Charlotte fitness post bonus. ";
+  // Posts about giving advice rather than seeking it
+  if (combinedText.includes('here\'s how') || combinedText.includes('my advice') || 
+      combinedText.includes('pro tip') || combinedText.includes('lesson learned')) {
+    score = Math.max(score - 10, 0);
+    reasoning += "Giving advice rather than seeking help. ";
+  }
+  
+  // Success stories (less likely to need funding immediately)
+  if (combinedText.includes('success story') || combinedText.includes('made it') || 
+      combinedText.includes('achieved') || combinedText.includes('milestone')) {
+    score = Math.max(score - 5, 0);
+    reasoning += "Success story - may not need immediate funding. ";
   }
   
   // --- FINAL SCORING & CATEGORIZATION ---
@@ -1323,35 +1429,46 @@ async function analyzePotentialLead(postContent: string, keywords: string[]): Pr
   // Cap score at 100
   score = Math.min(Math.max(score, 0), 100);
   
-  // Lower threshold for Charlotte subreddits
-  const leadThreshold = isCharlotteSubreddit ? 30 : 40;
+  // Different thresholds based on subreddit type
+  let leadThreshold;
+  if (isDirectLoanSubreddit) {
+    leadThreshold = 10; // Very low threshold for direct loan subreddits
+  } else if (isBusinessSubreddit) {
+    leadThreshold = 15; // Low threshold for business subreddits  
+  } else {
+    leadThreshold = 25; // Higher threshold for other subreddits
+  }
   
   if (score >= leadThreshold) {
     isLead = true;
     
     // Set sentiment if not already specified
     if (sentiment === 'other') {
-      if (score >= 75) {
-        sentiment = 'seeking_recommendation';
-      } else if (score >= 50) {
-        sentiment = 'interest_shown';
+      if (isDirectLoanSubreddit) {
+        sentiment = 'seeking_funding'; // Direct loan requests are always seeking funding
+      } else if (score >= 60) {
+        sentiment = 'seeking_funding';
+      } else if (score >= 35) {
+        sentiment = 'growth_opportunity';
       } else {
         sentiment = 'generic_mention';
       }
     }
     
     // Final assessment
-    if (score >= 75) {
-      reasoning += "High-quality lead with specific Charlotte fitness interests.";
-    } else if (score >= 50) {
-      reasoning += "Good potential lead interested in fitness in Charlotte area.";
+    if (isDirectLoanSubreddit) {
+      reasoning += "Direct loan request - high priority lead.";
+    } else if (score >= 60) {
+      reasoning += "High-quality lead with clear funding potential.";
+    } else if (score >= 35) {
+      reasoning += "Good potential lead with business growth indicators.";
     } else {
-      reasoning += "Potential lead with some Charlotte fitness relevance.";
+      reasoning += "Potential lead worth monitoring for business development.";
     }
   } else {
     isLead = false;
     sentiment = 'not_applicable_if_not_lead';
-    reasoning += "Insufficient indicators of interest in Charlotte-area fitness solutions.";
+    reasoning += "Limited indicators of immediate funding needs.";
   }
   
   // Extract a relevant snippet that shows why this is a good lead
@@ -1359,35 +1476,34 @@ async function analyzePotentialLead(postContent: string, keywords: string[]): Pr
     // Try to extract the most relevant sentence
     const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 0);
     
-    // If fitness and Charlotte are both mentioned, prioritize sentences with both
-    const bothTerms = sentences.find(s => {
+    // Prioritize sentences with funding terms
+    const fundingSentence = sentences.find(s => {
       const lower = s.toLowerCase();
-      return charlotteLocationTerms.some(t => lower.includes(t.toLowerCase())) && 
-             fitnessTerms.some(t => lower.includes(t.toLowerCase()));
+      return fundingTerms.some(t => lower.includes(t.toLowerCase()));
     });
     
-    if (bothTerms) {
-      relevant_snippet = bothTerms.trim();
+    if (fundingSentence) {
+      relevant_snippet = fundingSentence.trim();
     } else {
-      // Otherwise prioritize: fitness intent first, then location, then just fitness terms
-      const fitnessIntent = sentences.find(s => {
+      // Otherwise prioritize: growth indicators, then cash flow, then equipment needs
+      const growthSentence = sentences.find(s => {
         const lower = s.toLowerCase();
-        return fitnessTerms.some(t => lower.includes(t.toLowerCase())) && 
-               intentTerms.some(t => lower.includes(t.toLowerCase()));
+        return growthTerms.some(t => lower.includes(t.toLowerCase()));
       });
       
-      if (fitnessIntent) {
-        relevant_snippet = fitnessIntent.trim();
-      } else if (locationMatches.length > 0) {
-        const locationSentence = sentences.find(s => 
-          charlotteLocationTerms.some(t => s.toLowerCase().includes(t.toLowerCase()))
+      if (growthSentence) {
+        relevant_snippet = growthSentence.trim();
+      } else {
+        const cashFlowSentence = sentences.find(s => 
+          cashFlowTerms.some(t => s.toLowerCase().includes(t.toLowerCase()))
         );
-        if (locationSentence) relevant_snippet = locationSentence.trim();
-      } else if (fitnessMatches.length > 0) {
-        const fitnessSentence = sentences.find(s => 
-          fitnessTerms.some(t => s.toLowerCase().includes(t.toLowerCase()))
-        );
-        if (fitnessSentence) relevant_snippet = fitnessSentence.trim();
+        if (cashFlowSentence) relevant_snippet = cashFlowSentence.trim();
+        else {
+          const equipmentSentence = sentences.find(s => 
+            equipmentTerms.some(t => s.toLowerCase().includes(t.toLowerCase()))
+          );
+          if (equipmentSentence) relevant_snippet = equipmentSentence.trim();
+        }
       }
     }
   }
@@ -1401,7 +1517,7 @@ async function analyzePotentialLead(postContent: string, keywords: string[]): Pr
   };
 }
 
-// Update your processRedditDataForLeads function with these more inclusive parameters
+// Process Reddit data for business funding leads
 export async function processRedditDataForLeads(
   selectedSubredditsConfig: Array<{ name: string; category: string; selected: boolean }>,
   keywords: string[],
@@ -1411,7 +1527,7 @@ export async function processRedditDataForLeads(
   const context = "processRedditDataForLeads";
   const startTime = Date.now();
   
-  console.log("==== REDDIT LEAD PROCESSING STARTED ====");
+  console.log("==== BUSINESS FUNDING LEAD PROCESSING STARTED ====");
   debugLog(context, "Starting lead processing...", { 
     numKeywords: keywords.length, 
     scanFrequency,
@@ -1430,7 +1546,7 @@ export async function processRedditDataForLeads(
   
   debugLog(context, "Active subreddits", { activeSubreddits });
 
-  // Step 1: Scrape Reddit posts - use 'year' timeframe to get more historical posts
+  // Step 1: Scrape Reddit posts
   const scrapedPosts = await scrapeSubredditsWithFetch(activeSubreddits, keywords, 100, 'month');
   debugLog(context, `Scraping returned ${scrapedPosts.length} posts`);
 
@@ -1446,7 +1562,7 @@ export async function processRedditDataForLeads(
 
   const identifiedLeads: PotentialLead[] = [];
 
-  // Step 2: Process each post with improved analysis
+  // Step 2: Process each post with business funding analysis
   for (const post of scrapedPosts) {
     // Create a corpus from the post content
     const postCorpus = `
@@ -1458,49 +1574,39 @@ URL: ${post.url}
     `.trim();
 
     try {
-      // Use the updated analysis function
+      // Use the business funding analysis function
       const analysisResult = await analyzePotentialLead(postCorpus, keywords);
       
       // Determine if we should include based on post score and content filters
-      const scoreThreshold = post.subreddit.toLowerCase() === 'charlotte' ? 25 : 35;
+      const isDirectLoanSub = ['borrow', 'simpleloans', 'donationrequest'].includes(post.subreddit.toLowerCase());
+      const scoreThreshold = isDirectLoanSub ? 10 : (post.subreddit.toLowerCase() === 'smallbusiness' ? 15 : 25);
       
       if (analysisResult.is_lead && analysisResult.lead_score >= scoreThreshold) {
         // Apply content filters based on user preferences
         let includeBasedOnFilters = true;
         
-        if (!contentFilterConfig.seekingRecommendations && analysisResult.sentiment === 'seeking_recommendation') {
+        if (!contentFilterConfig.seekingFunding && analysisResult.sentiment === 'seeking_funding') {
           includeBasedOnFilters = false;
         }
         
-        // Extract "new to area" signal for filtering
-        const isNewToArea = analysisResult.reasoning.includes('Recently moved') || 
-                            analysisResult.reasoning.includes('new to Charlotte');
-                            
-        if (!contentFilterConfig.newToArea && isNewToArea) {
+        if (!contentFilterConfig.expansionPlans && analysisResult.sentiment === 'expansion_plans') {
           includeBasedOnFilters = false;
         }
         
-        // Extract complaining signal for filtering
-        const isComplaining = analysisResult.sentiment === 'complaining';
-        if (!contentFilterConfig.complaining && isComplaining) {
+        if (!contentFilterConfig.cashFlowIssues && analysisResult.sentiment === 'cash_flow_issues') {
           includeBasedOnFilters = false;
         }
         
-        // Extract price discussion signal
-        const isPriceDiscussion = postCorpus.toLowerCase().includes('price') || 
-                                 postCorpus.toLowerCase().includes('cost') ||
-                                 postCorpus.toLowerCase().includes('expensive') ||
-                                 postCorpus.toLowerCase().includes('cheap');
-                                 
-        if (!contentFilterConfig.priceDiscussion && isPriceDiscussion) {
+        if (!contentFilterConfig.equipmentNeeds && analysisResult.sentiment === 'equipment_needs') {
           includeBasedOnFilters = false;
         }
         
-        // Extract weight loss goals signal
-        const isWeightLoss = postCorpus.toLowerCase().includes('weight loss') || 
-                            postCorpus.toLowerCase().includes('lose weight');
-                            
-        if (!contentFilterConfig.weightLossGoals && isWeightLoss) {
+        // Extract revenue discussion signal
+        const isRevenueDiscussion = postCorpus.toLowerCase().includes('revenue') || 
+                                   postCorpus.toLowerCase().includes('sales') ||
+                                   postCorpus.toLowerCase().includes('profit');
+                                   
+        if (!contentFilterConfig.revenueDiscussion && isRevenueDiscussion) {
           includeBasedOnFilters = false;
         }
         
@@ -1530,7 +1636,7 @@ URL: ${post.url}
 
   const totalTime = Date.now() - startTime;
   debugLog(context, `Finished lead processing. Found ${identifiedLeads.length} potential leads. Total time: ${totalTime}ms`);
-  console.log("==== REDDIT LEAD PROCESSING COMPLETED ====");
+  console.log("==== BUSINESS FUNDING LEAD PROCESSING COMPLETED ====");
   
   return identifiedLeads;
 }
