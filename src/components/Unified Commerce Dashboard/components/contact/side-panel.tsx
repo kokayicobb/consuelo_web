@@ -1,5 +1,5 @@
 // src/components/SidePanel.jsx
-import React from 'react'; // Removed useState as it's now controlled by parent
+import React from 'react';
 import { ChevronLeft, Maximize, Minimize } from 'lucide-react';
 
 export function SidePanel({
@@ -7,11 +7,9 @@ export function SidePanel({
   onClose,
   children,
   title = "Details",
-  isFullScreen,         // Prop: current full-screen state
-  onToggleFullScreen    // Prop: function to call when toggle button is clicked
+  isFullScreen,
+  onToggleFullScreen
 }) {
-  // No local isFullScreen state here anymore
-
   return (
     <>
       <div
@@ -28,8 +26,8 @@ export function SidePanel({
         <div className="flex items-center justify-between p-4 border-b border-white bg-white flex-shrink-0 shadow-none">
           <div className="flex items-center">
             <button
-              onClick={onClose} // This should also reset the parent's isFullScreen state for this panel
-              className="p-2 rounded-md hover:bg-slate-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onClick={onClose}
+              className="p-2 rounded-md hover:bg-slate-100 transition-colors duration-200 focus:outline-none" // Removed focus:ring-2 focus:ring-blue-500
               aria-label="Close Panel"
             >
               <ChevronLeft className="h-5 w-5 text-slate-600" />
@@ -38,8 +36,8 @@ export function SidePanel({
           </div>
           
           <button
-            onClick={onToggleFullScreen} // Use the passed handler
-            className="p-2 rounded-md hover:bg-slate-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            onClick={onToggleFullScreen}
+            className="p-2 rounded-md hover:bg-slate-100 transition-colors duration-200 focus:outline-none" // Removed focus:ring-2 focus:ring-blue-500
             aria-label={isFullScreen ? "Exit Full Screen" : "Enter Full Screen"}
           >
             {isFullScreen ? (
@@ -52,7 +50,6 @@ export function SidePanel({
 
         {/* Content Area */}
         <div className={`overflow-y-auto flex-grow bg-white shadow-none ${isFullScreen ? '' : 'p-4 md:p-6'}`}>
-          {/* Conditionally remove padding if fullScreen to allow FullScreenContactView to manage its own padding */}
           {children}
         </div>
       </div>
