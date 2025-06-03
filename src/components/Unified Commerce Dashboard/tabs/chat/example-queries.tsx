@@ -31,19 +31,19 @@ interface ExampleQueriesProps {
 type CategoryDisplayInfo = { icon: React.ElementType; shortName: string };
 
 const categoryDisplayInfo: { [key: string]: CategoryDisplayInfo } = {
-  "🚀 Member Engagement & Retention": {
+  "🚀 Customer Engagement & Retention": {
     icon: UsersIcon,
     shortName: "Engagement",
   },
-  "🎯 Lead Management & New Member Onboarding": {
+  "🎯 Lead Management & New Customer Onboarding": {
     icon: TagIcon,
     shortName: "Leads",
   },
-  "💳 Membership & Package Insights": {
+  "💳 Loan & Account Insights": {
     icon: CalendarDaysIcon,
-    shortName: "Memberships",
+    shortName: "Loans",
   },
-  "📊 Class & Instructor Performance": {
+  "📊 Product & Advisor Performance": {
     icon: ChartBarIcon,
     shortName: "Performance",
   },
@@ -52,6 +52,7 @@ const categoryDisplayInfo: { [key: string]: CategoryDisplayInfo } = {
     shortName: "Operational",
   },
 };
+
 
 export default function ExampleQueries({
   categorizedQueries,

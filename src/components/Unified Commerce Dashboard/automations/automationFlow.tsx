@@ -20,7 +20,8 @@ import {
   BellRing,
   UserPlus,
   Database,
-  ArrowRightLeft
+  ArrowRightLeft,
+  Facebook,
 } from 'lucide-react';
 
 // Type Definitions
@@ -81,7 +82,7 @@ const AutomationFlow: React.FC = () => {
       appName: 'Facebook Lead Ads',
       event: 'New Lead',
       configured: true,
-      icon: '📘',
+      icon: <Facebook className="text-blue-600 bg-transparent" />,
       description: 'When a new lead is submitted via your Facebook Lead Ad form.'
     }
   ]);
@@ -93,7 +94,7 @@ const AutomationFlow: React.FC = () => {
 
   const appCategories: AppCategories = {
     'Triggers & Lead Sources': [
-      { id: 'facebook-ads', name: 'Facebook Lead Ads', icon: <UserPlus className="text-blue-600"/>, app_type: 'trigger', category: 'Triggers & Lead Sources', defaultEvent: 'New Lead', description: 'Start automation when a Facebook Lead Ad form is submitted.' },
+      { id: 'facebook-ads', name: 'Facebook Lead Ads', icon: <Facebook className="text-blue-600 bg-transparent"/>, app_type: 'trigger', category: 'Triggers & Lead Sources', defaultEvent: 'New Lead', description: 'Start automation when a Facebook Lead Ad form is submitted.' },
       { id: 'google-ads', name: 'Google Ads Lead Form', icon: <UserPlus className="text-green-500"/>, app_type: 'trigger', category: 'Triggers & Lead Sources', defaultEvent: 'New Lead Form Submission', description: 'Trigger when a new lead is captured from Google Ads.' },
       { id: 'web-forms', name: 'Website Forms', icon: <FileText className="text-indigo-500"/>, app_type: 'trigger', category: 'Triggers & Lead Sources', defaultEvent: 'New Form Submission', description: 'Initiate flow when a form on your website is submitted.' },
       { id: 'linkedin-ads', name: 'LinkedIn Lead Gen Forms', icon: <UserPlus className="text-sky-700"/>, app_type: 'trigger', category: 'Triggers & Lead Sources', defaultEvent: 'New Lead', description: 'Automate actions for new LinkedIn leads.' },
@@ -223,13 +224,13 @@ const AutomationFlow: React.FC = () => {
   const StepCard: React.FC<StepCardProps> = ({ step, index, isSelected, onClick, onRemove }) => (
     <div
       className={`relative bg-white border-2 rounded-lg p-4 cursor-pointer transition-all mb-4 group ${
-        isSelected ? 'border-blue-500 shadow-md' : 'border-gray-200 hover:border-gray-300'
+        isSelected ? 'border-gray-800 shadow-md' : 'border-gray-200 hover:border-gray-500'
       }`}
       onClick={onClick}
     >
       <div className="flex items-start justify-between">
         <div className="flex items-start gap-3">
-          <div className="flex-shrink-0 w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+          <div className="flex-shrink-0 w-10 h-10 bg-transparent rounded-full flex items-center justify-center">
             {renderIcon(step.icon, 24)}
           </div>
           <div>
@@ -378,7 +379,7 @@ const AutomationFlow: React.FC = () => {
                             onClick={() => handleAppSelected(appDef)}
                             className="flex items-start gap-3 p-3.5 border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50/50 transition-colors text-left focus:outline-none focus:ring-2 focus:ring-blue-400"
                           >
-                            <div className="flex-shrink-0 w-8 h-8 bg-gray-100 rounded-md flex items-center justify-center mt-0.5">
+                            <div className="flex-shrink-0 w-8 h-8 bg-transparent rounded-md flex items-center justify-center mt-0.5">
                                {renderIcon(appDef.icon, 20)}
                             </div>
                             <div>
@@ -404,7 +405,7 @@ const AutomationFlow: React.FC = () => {
             return (
               <div className="p-8">
                 <div className="flex items-center gap-3 mb-6 pb-6 border-b border-gray-200">
-                    <div className="flex-shrink-0 w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <div className="flex-shrink-0 w-12 h-12 bg-transparent rounded-lg flex items-center justify-center">
                         {renderIcon(currentStep.icon, 28)}
                     </div>
                   <div>
@@ -507,7 +508,7 @@ const AutomationFlow: React.FC = () => {
                   <div className="mt-8 pt-6 border-t border-gray-200">
                     <button 
                       onClick={() => updateStepConfiguration(selectedStepIndex, { event: `Updated: ${currentStep.event}` })}
-                      className="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm w-full sm:w-auto"
+                      className="px-5 py-2.5 bg-white text-black shadow-none rounded-lg hover:bg-gray-200 font-medium text-sm w-full sm:w-auto"
                     >
                       Save Configuration
                     </button>
