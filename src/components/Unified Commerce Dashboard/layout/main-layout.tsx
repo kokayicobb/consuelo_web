@@ -41,6 +41,7 @@ import {
   Check,
   Workflow,
   Route,
+  Building,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -61,6 +62,9 @@ import {
   ExpandableChatFooter,
 } from "@/components/ui/expandable-chat";
 import ChatContent from "../tabs/chat";
+
+// Import the Apollo Search Component
+import ApolloSearchComponent from "../components/apollo-search-component";
 
 // Chat Interface Component for use with ExpandableChat
 const ChatInterface = () => {
@@ -88,7 +92,7 @@ const ChatInterface = () => {
     }, 1000);
   };
 
-  const handleKeyPress = (e) => {
+  const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       handleSend();
     }
@@ -150,7 +154,17 @@ const ChatInterface = () => {
   );
 };
 
-const MainLayout = ({ children, title, hideSidebar = false }) => {
+interface MainLayoutProps {
+  children?: React.ReactNode;
+  title?: string;
+  hideSidebar?: boolean;
+}
+
+const MainLayout = ({
+  children,
+  title,
+  hideSidebar = false,
+}: MainLayoutProps) => {
   // Create a state to track the active tab
   const [activeTab, setActiveTab] = useState("home");
   const [sidebarOpen, setSidebarOpen] = useState(!hideSidebar);
@@ -180,6 +194,8 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
         return <ChatContent />;
       case "dashboard":
         return <HomeContent />;
+      case "apollo-search":
+        return <ApolloSearchComponent />;
       case "channels":
         return <ChannelsContent />;
       case "inventory":
@@ -199,7 +215,7 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
     }
   };
 
-  // Define the main navigation items (Home and Dashboard)
+  // Define the main navigation items (Home, Dashboard, Apollo Search, and Automations)
   const mainNavItems = [
     {
       label: "Home",
@@ -212,6 +228,12 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
       href: "#dashboard",
       icon: <LayoutDashboard size={20} className="text-gray-600" />,
       onClick: () => setActiveTab("dashboard"),
+    },
+    {
+      label: "Apollo Search",
+      href: "#apollo-search",
+      icon: <Building size={20} className="text-gray-600" />,
+      onClick: () => setActiveTab("apollo-search"),
     },
     {
       label: "Automations",
@@ -422,7 +444,7 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
             </div>
 
             <nav className="flex-1 space-y-1 px-3">
-              {/* Main Navigation (Home & Dashboard) */}
+              {/* Main Navigation (Home, Dashboard, Apollo Search, & Automations) */}
               {mainNavItems.map((item) => (
                 <SidebarLink
                   key={item.href}
@@ -527,8 +549,10 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
         {activeTab !== "home" && !hideSidebar && (
           <Header
             title={
-              activeTab.charAt(0).toUpperCase() +
-              activeTab.slice(1).replace("-", " ")
+              activeTab === "apollo-search"
+                ? "Apollo Search"
+                : activeTab.charAt(0).toUpperCase() +
+                  activeTab.slice(1).replace("-", " ")
             }
           />
         )}

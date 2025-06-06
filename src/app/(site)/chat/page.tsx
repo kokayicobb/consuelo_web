@@ -5,16 +5,7 @@ export const metadata: Metadata = {
   title: "Body Measurment | Consuelo - AI-Powered Fit Technology",
   description: "This is About page description",
 };
-export const metadata: Metadata = {
-  title: "Body Measurment | Consuelo - AI-Powered Fit Technology",
-  description: "This is About page description",
-};
 
-const VirtualTryOn = () => {
-  return <main></main>;
-};
-
-export default VirtualTryOn;
 const VirtualTryOn = () => {
   return <main></main>;
 };
