@@ -9,10 +9,8 @@ import type { OtfContactLog, QueryExplanation } from "@/types/otf"
 const AI_TASK_TIMEOUT = 120000 // 2 minutes
 
 // Enhanced logging with timestamps and structured data
-function debugLog(context: string, message: string, metadata?: object, data?: any) {
-  
+function debugLog(context: string, message: string, metadata?: object) {
   const timestamp = new Date().toISOString()
-  
   console.log(
     JSON.stringify({
       timestamp,
@@ -1060,978 +1058,592 @@ Important: Output only the JSON array with no other text, explanation, or format
 // Interface for posts from Reddit API
 // Interface for posts from Reddit API
 interface RedditPostData {
-  id: string
-  subreddit: string
-  author: string | null
-  title: string
-  selftext: string
-  url: string
-  created_utc: number
+  id: string;
+  subreddit: string;
+  author: string | null;
+  title: string;
+  selftext: string;
+  url: string;
+  created_utc: number;
 }
 
 // Interface for potential leads
 export interface PotentialLead {
-  id: string
-  subreddit: string
-  username: string
-  content: string
-  date: string
-  sentiment:
-    | "seeking_funding"
-    | "cash_flow_issues"
-    | "expansion_plans"
-    | "equipment_needs"
-    | "inventory_funding"
-    | "growth_opportunity"
-    | "generic_mention"
-    | "other"
-    | "not_applicable_if_not_lead"
-  status: "new"
-  score: number
-  url: string
-  reasoning?: string
+  id: string;
+  subreddit: string;
+  username: string;
+  content: string;
+  date: string;
+  sentiment: 'seeking_funding' | 'cash_flow_issues' | 'expansion_plans' | 'equipment_needs' | 'inventory_funding' | 'growth_opportunity' | 'generic_mention' | 'other' | 'not_applicable_if_not_lead';
+  status: 'new';
+  score: number;
+  url: string;
+  reasoning?: string;
 }
 
-// // Enhanced debug logging with production safety
-// function debugLog(context: string, message: string, data?: any) {
-//   const timestamp = new Date().toISOString()
-//   const logEntry = {
-//     timestamp,
-//     context,
-//     message,
-//     data: data || {},
-//   }
-
-//   // Always log to console in production for debugging
-//   console.log(`[${timestamp}] ${context}: ${message}`, data ? JSON.stringify(data, null, 2) : "")
-
-//   // In production, also log critical errors
-//   if (message.toLowerCase().includes("error") || message.toLowerCase().includes("failed")) {
-//     console.error(`[CRITICAL] ${context}: ${message}`, data)
-//   }
-// }
-
-// Enhanced Reddit scraping with better error handling and production fixes
+// Function to scrape Reddit data
 async function scrapeSubredditsWithFetch(
   subredditNames: string[],
   keywords: string[],
-  limitPerSubreddit = 25,
-  timeframe: "day" | "week" | "month" | "year" | "all" = "month",
+  limitPerSubreddit: number = 25,
+  timeframe: 'day' | 'week' | 'month' | 'year' | 'all' = 'month'
 ): Promise<RedditPostData[]> {
-  const context = "scrapeSubredditsWithFetch"
-  debugLog(context, `Starting Reddit scrape with direct fetch for ${timeframe} timeframe...`, {
-    subreddits: subredditNames,
+  const context = "scrapeSubredditsWithFetch";
+  debugLog(context, `Starting Reddit scrape with direct fetch for ${timeframe} timeframe...`, { 
+    subreddits: subredditNames, 
     keywordsCount: keywords.length,
-    limitPerSubreddit,
-    environment: process.env.NODE_ENV || "unknown",
-  })
+    limitPerSubreddit
+  });
 
-  const allPosts: RedditPostData[] = []
+  const allPosts: RedditPostData[] = [];
+  const USER_AGENT = process.env.REDDIT_USER_AGENT || 'BusinessLendingAgent/1.0';
 
-  // Enhanced User-Agent for production
-  const USER_AGENT = process.env.REDDIT_USER_AGENT || "web:business-lead-finder:v1.0.0 (by /u/YourUsername)"
-
-  // Add delay between requests to avoid rate limiting
-  const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
-
-  // Process each subreddit with enhanced error handling
-  for (let i = 0; i < subredditNames.length; i++) {
-    const subredditName = subredditNames[i]
-
+  // Process each subreddit
+  for (const subredditName of subredditNames) {
     try {
-      debugLog(context, `Fetching r/${subredditName} (${i + 1}/${subredditNames.length})...`)
-
-      // Add delay between requests (important for production)
-      if (i > 0) {
-        await delay(1000) // 1 second delay between subreddit requests
-      }
-
-      const isDirectLoanSubreddit = ["borrow", "simpleloans", "donationrequest"].includes(subredditName.toLowerCase())
-      const isBusinessSubreddit = ["smallbusiness", "entrepreneur", "startups", "business"].includes(
-        subredditName.toLowerCase(),
-      )
-
-      const endpointType = isDirectLoanSubreddit ? "new" : isBusinessSubreddit ? "new" : "top"
-
-      // Reddit's JSON API endpoint with .json extension
-      const url = `https://www.reddit.com/r/${subredditName}/${endpointType}.json?limit=${limitPerSubreddit}&t=${timeframe}&raw_json=1`
-
-      debugLog(context, `Making request to: ${url}`)
-
+      debugLog(context, `Fetching r/${subredditName}...`);
+      
+      // For loan/borrow subreddits, be VERY inclusive since these are direct requests
+      const isDirectLoanSubreddit = ['borrow', 'simpleloans', 'donationrequest'].includes(subredditName.toLowerCase());
+      const isBusinessSubreddit = ['smallbusiness', 'entrepreneur', 'startups', 'business'].includes(subredditName.toLowerCase());
+      
+      // Use 'new' for loan subreddits to get recent requests, 'top' for business subreddits
+      const endpointType = isDirectLoanSubreddit ? 'new' : (isBusinessSubreddit ? 'new' : 'top');
+      
+      // Reddit's JSON API endpoint
+      const url = `https://www.reddit.com/r/${subredditName}/${endpointType}.json?limit=${limitPerSubreddit}&t=${timeframe}`;
+      
       const response = await fetch(url, {
         headers: {
-          "User-Agent": USER_AGENT,
-          Accept: "application/json",
-          "Accept-Language": "en-US,en;q=0.9",
-          "Cache-Control": "no-cache",
-          Pragma: "no-cache",
-        },
-        // Add timeout for production
-        signal: AbortSignal.timeout(30000), // 30 second timeout
-      })
-
-      debugLog(context, `Response status for r/${subredditName}: ${response.status} ${response.statusText}`)
-
+          'User-Agent': USER_AGENT
+        }
+      });
+      
       if (!response.ok) {
-        const errorText = await response.text().catch(() => "Unable to read error response")
-        debugLog(context, `HTTP error for r/${subredditName}`, {
-          status: response.status,
-          statusText: response.statusText,
-          headers: Object.fromEntries(response.headers.entries()),
-          errorBody: errorText.substring(0, 500), // First 500 chars of error
-        })
-
-        // Handle specific Reddit errors
-        if (response.status === 429) {
-          debugLog(context, `Rate limited on r/${subredditName}. Waiting 60 seconds...`)
-          await delay(60000) // Wait 1 minute for rate limit
-          continue
-        } else if (response.status === 403) {
-          debugLog(context, `Access forbidden to r/${subredditName}. Subreddit may be private or banned.`)
-          continue
-        } else if (response.status === 404) {
-          debugLog(context, `Subreddit r/${subredditName} not found.`)
-          continue
-        }
-
-        throw new Error(`HTTP error! Status: ${response.status} - ${response.statusText}`)
+        throw new Error(`HTTP error! Status: ${response.status}`);
       }
-
-      // Check content type
-      const contentType = response.headers.get("content-type")
-      debugLog(context, `Content-Type for r/${subredditName}: ${contentType}`)
-
-      if (!contentType?.includes("application/json")) {
-        const responseText = await response.text()
-        debugLog(context, `Non-JSON response from r/${subredditName}`, {
-          contentType,
-          responsePreview: responseText.substring(0, 200),
-        })
-
-        // Check if it's an HTML error page
-        if (responseText.includes("<html>") || responseText.includes("<!DOCTYPE")) {
-          debugLog(context, `Received HTML instead of JSON for r/${subredditName}. Possible blocking or redirect.`)
-          continue
-        }
+      
+      const data = await response.json();
+      
+      if (!data.data || !data.data.children) {
+        debugLog(context, `No valid data returned for r/${subredditName}`);
+        continue;
       }
-
-      let data
-      try {
-        const responseText = await response.text()
-        debugLog(context, `Raw response length for r/${subredditName}: ${responseText.length} characters`)
-
-        if (responseText.length === 0) {
-          debugLog(context, `Empty response from r/${subredditName}`)
-          continue
-        }
-
-        data = JSON.parse(responseText)
-        debugLog(context, `Successfully parsed JSON for r/${subredditName}`)
-      } catch (parseError) {
-        const errorText = await response.text().catch(() => "Unable to read response")
-        debugLog(context, `JSON parse error for r/${subredditName}`, {
-          error: parseError instanceof Error ? parseError.message : String(parseError),
-          responsePreview: errorText.substring(0, 300),
-        })
-        continue
-      }
-
-      // Validate Reddit API response structure
-      if (!data) {
-        debugLog(context, `No data returned for r/${subredditName}`)
-        continue
-      }
-
-      if (data.error) {
-        debugLog(context, `Reddit API error for r/${subredditName}`, { error: data.error })
-        continue
-      }
-
-      if (!data.data) {
-        debugLog(context, `No data.data field for r/${subredditName}`, {
-          dataKeys: Object.keys(data),
-          dataType: typeof data,
-        })
-        continue
-      }
-
-      if (!data.data.children) {
-        debugLog(context, `No data.data.children field for r/${subredditName}`, {
-          dataDataKeys: Object.keys(data.data),
-          childrenType: typeof data.data.children,
-        })
-        continue
-      }
-
-      const posts = data.data.children
-      debugLog(context, `Successfully fetched ${posts.length} posts from r/${subredditName}`)
-
-      if (posts.length === 0) {
-        debugLog(context, `No posts returned from r/${subredditName} - subreddit may be empty or filtered`)
-        continue
-      }
-
-      // Process posts with enhanced validation
-      let processedCount = 0
+      
+      // Process posts
+      const posts = data.data.children;
+      debugLog(context, `Successfully fetched ${posts.length} posts from r/${subredditName}`);
+      
       for (const post of posts) {
-        try {
-          if (!post || !post.data) {
-            debugLog(context, `Invalid post structure in r/${subredditName}`, { post })
-            continue
+        const postData = post.data;
+        
+        // For loan/borrow subreddits, include almost everything since it's all loan requests
+        let includePost = false;
+        
+        if (isDirectLoanSubreddit) {
+          // For direct loan subreddits, include virtually all posts since they're requesting money
+          includePost = true; // These subreddits are specifically for loan requests
+        } else if (isBusinessSubreddit) {
+          // For business subreddits, include posts that might relate to funding/growth
+          const businessKeywords = ['funding', 'loan', 'capital', 'cash flow', 'revenue', 'investment', 
+            'equipment', 'inventory', 'expansion', 'grow', 'scale', 'money', 'finance', 
+            'credit', 'working capital', 'startup costs', 'business loan', 'line of credit',
+            'sba', 'bank', 'lender', 'financing', 'budget', 'expenses', 'profit', 'sales'];
+          
+          includePost = businessKeywords.some(kw => 
+            postData.title.toLowerCase().includes(kw.toLowerCase()) || 
+            (postData.selftext && postData.selftext.toLowerCase().includes(kw.toLowerCase()))
+          );
+          
+          // If we can't find business keywords, include posts where people are seeking advice or help
+          if (!includePost) {
+            const helpKeywords = ['need help', 'advice needed', 'struggling with', 'how do i', 
+                                'looking for advice', 'need suggestions', 'cash problems', 'tight budget',
+                                'need money', 'financial help', 'business advice'];
+            
+            includePost = helpKeywords.some(kw => 
+              postData.title.toLowerCase().includes(kw.toLowerCase()) || 
+              (postData.selftext && postData.selftext.toLowerCase().includes(kw.toLowerCase()))
+            );
           }
-
-          const postData = post.data
-
-          // Validate required fields
-          if (!postData.id || !postData.title) {
-            debugLog(context, `Post missing required fields in r/${subredditName}`, {
-              hasId: !!postData.id,
-              hasTitle: !!postData.title,
-              postData: Object.keys(postData),
-            })
-            continue
-          }
-
-          // Enhanced keyword matching logic
-          let includePost = false
-
-          if (isDirectLoanSubreddit) {
-            includePost = true // Include all posts from loan subreddits
-          } else if (isBusinessSubreddit) {
-            const businessKeywords = [
-              "funding",
-              "loan",
-              "capital",
-              "cash flow",
-              "revenue",
-              "investment",
-              "equipment",
-              "inventory",
-              "expansion",
-              "grow",
-              "scale",
-              "money",
-              "finance",
-              "credit",
-              "working capital",
-              "startup costs",
-              "business loan",
-              "line of credit",
-              "sba",
-              "bank",
-              "lender",
-              "financing",
-              "budget",
-              "expenses",
-              "profit",
-              "sales",
-            ]
-
-            const titleText = (postData.title || "").toLowerCase()
-            const bodyText = (postData.selftext || "").toLowerCase()
-
-            includePost = businessKeywords.some(
-              (kw) => titleText.includes(kw.toLowerCase()) || bodyText.includes(kw.toLowerCase()),
-            )
-
-            if (!includePost) {
-              const helpKeywords = [
-                "need help",
-                "advice needed",
-                "struggling with",
-                "how do i",
-                "looking for advice",
-                "need suggestions",
-                "cash problems",
-                "tight budget",
-                "need money",
-                "financial help",
-                "business advice",
-              ]
-
-              includePost = helpKeywords.some(
-                (kw) => titleText.includes(kw.toLowerCase()) || bodyText.includes(kw.toLowerCase()),
-              )
-            }
-          } else {
-            // For other subreddits, use the provided keywords
-            const titleText = (postData.title || "").toLowerCase()
-            const bodyText = (postData.selftext || "").toLowerCase()
-
-            includePost = keywords.some(
-              (kw) => titleText.includes(kw.toLowerCase()) || bodyText.includes(kw.toLowerCase()),
-            )
-          }
-
-          if (includePost) {
-            allPosts.push({
-              id: postData.id,
-              subreddit: postData.subreddit,
-              author: postData.author === "[deleted]" ? null : postData.author,
-              title: postData.title,
-              selftext: postData.selftext || "",
-              url: `https://www.reddit.com${postData.permalink}`,
-              created_utc: postData.created_utc,
-            })
-            processedCount++
-          }
-        } catch (postError) {
-          debugLog(context, `Error processing individual post in r/${subredditName}`, {
-            error: postError instanceof Error ? postError.message : String(postError),
-            post: post,
-          })
+        } else {
+          // For other subreddits, use the original keyword matching
+          includePost = keywords.some(kw => 
+            postData.title.toLowerCase().includes(kw.toLowerCase()) || 
+            (postData.selftext && postData.selftext.toLowerCase().includes(kw.toLowerCase()))
+          );
+        }
+        
+        if (includePost) {
+          allPosts.push({
+            id: postData.id,
+            subreddit: postData.subreddit,
+            author: postData.author,
+            title: postData.title,
+            selftext: postData.selftext || '',
+            url: `https://www.reddit.com${postData.permalink}`,
+            created_utc: postData.created_utc
+          });
         }
       }
-
-      debugLog(context, `Processed ${processedCount} relevant posts from r/${subredditName}`)
     } catch (error) {
-      debugLog(context, `Error fetching r/${subredditName}`, {
-        error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-        subreddit: subredditName,
-      })
-
-      // Continue with other subreddits even if one fails
-      continue
+      console.error(`Error fetching r/${subredditName}:`, error);
+      debugLog(context, `Error fetching r/${subredditName}`, { 
+        error: error instanceof Error ? error.message : String(error) 
+      });
     }
   }
-
-  debugLog(context, `Completed scraping. Found ${allPosts.length} relevant posts total`, {
-    postsBySubreddit: allPosts.reduce(
-      (acc, post) => {
-        acc[post.subreddit] = (acc[post.subreddit] || 0) + 1
-        return acc
-      },
-      {} as Record<string, number>,
-    ),
-  })
-
-  return allPosts
+  
+  debugLog(context, `Completed scraping. Found ${allPosts.length} relevant posts`);
+  return allPosts;
 }
 
 // Business funding lead analysis
-async function analyzePotentialLead(
-  postContent: string,
-  keywords: string[],
-): Promise<{
-  is_lead: boolean
-  lead_score: number
-  sentiment: string
-  reasoning: string
-  relevant_snippet: string
+async function analyzePotentialLead(postContent: string, keywords: string[]): Promise<{
+  is_lead: boolean;
+  lead_score: number;
+  sentiment: string;
+  reasoning: string;
+  relevant_snippet: string;
 }> {
   // Extract key information from the post content
-  const subreddit = postContent.match(/Subreddit: r\/([^\s]+)/)?.[1] || ""
-  const title = postContent.match(/Title: ([^\n]+)/)?.[1] || ""
-  const content = postContent.match(/Content $$first 1000 chars$$: ([^]*?)(?:URL:|$)/s)?.[1]?.trim() || ""
-  const combinedText = (title + " " + content).toLowerCase()
-
+  const subreddit = postContent.match(/Subreddit: r\/([^\s]+)/)?.[1] || '';
+  const title = postContent.match(/Title: ([^\n]+)/)?.[1] || '';
+  const content = postContent.match(/Content \(first 1000 chars\): ([^]*?)(?:URL:|$)/s)?.[1]?.trim() || '';
+  const combinedText = (title + ' ' + content).toLowerCase();
+  
   // Initialize score
-  let score = 0
-  let isLead = false
-  let sentiment = "other"
-  let reasoning = ""
-  let relevant_snippet = content.substring(0, 200)
-
+  let score = 0;
+  let isLead = false;
+  let sentiment = 'other';
+  let reasoning = '';
+  let relevant_snippet = content.substring(0, 200);
+  
   // --- SUBREDDIT RELEVANCE ---
-  const isDirectLoanSubreddit = ["borrow", "simpleloans", "donationrequest"].includes(subreddit.toLowerCase())
-  const isBusinessSubreddit = ["smallbusiness", "entrepreneur", "startups", "business"].includes(
-    subreddit.toLowerCase(),
-  )
-
+  const isDirectLoanSubreddit = ['borrow', 'simpleloans', 'donationrequest'].includes(subreddit.toLowerCase());
+  const isBusinessSubreddit = ['smallbusiness', 'entrepreneur', 'startups', 'business'].includes(subreddit.toLowerCase());
+  
   // Give highest score for direct loan subreddits
   if (isDirectLoanSubreddit) {
-    score += 40 // Very high starting boost for direct loan requests
-    reasoning += `Post in direct loan subreddit r/${subreddit}. `
-    sentiment = "seeking_funding" // Default sentiment for these subreddits
+    score += 40; // Very high starting boost for direct loan requests
+    reasoning += `Post in direct loan subreddit r/${subreddit}. `;
+    sentiment = 'seeking_funding'; // Default sentiment for these subreddits
   } else if (isBusinessSubreddit) {
-    score += 20 // Strong starting boost for business subreddits
-    reasoning += `Post in business subreddit r/${subreddit}. `
+    score += 20; // Strong starting boost for business subreddits
+    reasoning += `Post in business subreddit r/${subreddit}. `;
   }
-
+  
   // --- FUNDING/FINANCIAL NEED SIGNALS ---
   // Direct funding-related terms
   const fundingTerms = [
-    "need funding",
-    "need loan",
-    "need capital",
-    "need money",
-    "need cash",
-    "need financing",
-    "looking for funding",
-    "seeking funding",
-    "apply for loan",
-    "business loan",
-    "small business loan",
-    "working capital",
-    "line of credit",
-    "equipment financing",
-    "invoice factoring",
-    "cash flow problems",
-    "cash flow issues",
-    "short on cash",
-    "tight budget",
-    "financial struggle",
-  ]
-
+    'need funding', 'need loan', 'need capital', 'need money', 'need cash', 'need financing',
+    'looking for funding', 'seeking funding', 'apply for loan', 'business loan', 'small business loan',
+    'working capital', 'line of credit', 'equipment financing', 'invoice factoring',
+    'cash flow problems', 'cash flow issues', 'short on cash', 'tight budget', 'financial struggle'
+  ];
+  
   // More subtle financial stress indicators
   const financialStressTerms = [
-    "struggling financially",
-    "money tight",
-    "hard to pay",
-    "behind on payments",
-    "debt",
-    "can't afford",
-    "expensive",
-    "costly",
-    "budget constraints",
-    "limited funds",
-    "financial pressure",
-    "making ends meet",
-    "payroll",
-    "overhead costs",
-  ]
-
-  const fundingMatches = fundingTerms.filter((term) => combinedText.includes(term.toLowerCase()))
-  const stressMatches = financialStressTerms.filter((term) => combinedText.includes(term.toLowerCase()))
-
+    'struggling financially', 'money tight', 'hard to pay', 'behind on payments', 'debt',
+    'can\'t afford', 'expensive', 'costly', 'budget constraints', 'limited funds',
+    'financial pressure', 'making ends meet', 'payroll', 'overhead costs'
+  ];
+  
+  const fundingMatches = fundingTerms.filter(term => combinedText.includes(term.toLowerCase()));
+  const stressMatches = financialStressTerms.filter(term => combinedText.includes(term.toLowerCase()));
+  
   // High score for direct funding needs
   if (fundingMatches.length > 0) {
-    const fundingBoost = Math.min(fundingMatches.length * 15, 40)
-    score += fundingBoost
-    reasoning += `Direct funding needs mentioned: ${fundingMatches.join(", ")}. `
-    sentiment = "seeking_funding"
+    const fundingBoost = Math.min(fundingMatches.length * 15, 40);
+    score += fundingBoost;
+    reasoning += `Direct funding needs mentioned: ${fundingMatches.join(', ')}. `;
+    sentiment = 'seeking_funding';
   }
-
+  
   // Medium score for financial stress indicators
   if (stressMatches.length > 0) {
-    const stressBoost = Math.min(stressMatches.length * 10, 25)
-    score += stressBoost
-    reasoning += `Financial stress indicators: ${stressMatches.join(", ")}. `
-    if (sentiment === "other") sentiment = "cash_flow_issues"
+    const stressBoost = Math.min(stressMatches.length * 10, 25);
+    score += stressBoost;
+    reasoning += `Financial stress indicators: ${stressMatches.join(', ')}. `;
+    if (sentiment === 'other') sentiment = 'cash_flow_issues';
   }
-
+  
   // --- GENERAL BUSINESS SIGNALS ---
   // Even general business discussion can be valuable
   const generalBusinessTerms = [
-    "small business",
-    "my business",
-    "our business",
-    "startup",
-    "company",
-    "llc",
-    "inc",
-    "entrepreneur",
-    "business owner",
-    "self employed",
-    "freelance",
-    "side business",
-    "business plan",
-    "business model",
-    "customer",
-    "client",
-    "market",
-    "competition",
-  ]
-
-  const generalMatches = generalBusinessTerms.filter((term) => combinedText.includes(term.toLowerCase()))
-
+    'small business', 'my business', 'our business', 'startup', 'company', 'llc', 'inc',
+    'entrepreneur', 'business owner', 'self employed', 'freelance', 'side business',
+    'business plan', 'business model', 'customer', 'client', 'market', 'competition'
+  ];
+  
+  const generalMatches = generalBusinessTerms.filter(term => combinedText.includes(term.toLowerCase()));
+  
   if (generalMatches.length > 0) {
-    const generalBoost = Math.min(generalMatches.length * 3, 15)
-    score += generalBoost
-    reasoning += `General business indicators present. `
+    const generalBoost = Math.min(generalMatches.length * 3, 15);
+    score += generalBoost;
+    reasoning += `General business indicators present. `;
   }
-
+  
   // --- OPPORTUNITY SIGNALS ---
   // Signals that suggest potential for growth/funding needs
   const opportunityTerms = [
-    "opportunity",
-    "potential",
-    "could grow",
-    "want to expand",
-    "thinking about",
-    "considering",
-    "planning",
-    "dream",
-    "goal",
-    "vision",
-    "next step",
-    "big break",
-    "game changer",
-    "breakthrough",
-    "pivot",
-    "transition",
-  ]
-
-  const opportunityMatches = opportunityTerms.filter((term) => combinedText.includes(term.toLowerCase()))
-
+    'opportunity', 'potential', 'could grow', 'want to expand', 'thinking about',
+    'considering', 'planning', 'dream', 'goal', 'vision', 'next step',
+    'big break', 'game changer', 'breakthrough', 'pivot', 'transition'
+  ];
+  
+  const opportunityMatches = opportunityTerms.filter(term => combinedText.includes(term.toLowerCase()));
+  
   if (opportunityMatches.length > 0) {
-    const opportunityBoost = Math.min(opportunityMatches.length * 5, 20)
-    score += opportunityBoost
-    reasoning += `Business opportunity signals: ${opportunityMatches.join(", ")}. `
-    if (sentiment === "other") sentiment = "growth_opportunity"
+    const opportunityBoost = Math.min(opportunityMatches.length * 5, 20);
+    score += opportunityBoost;
+    reasoning += `Business opportunity signals: ${opportunityMatches.join(', ')}. `;
+    if (sentiment === 'other') sentiment = 'growth_opportunity';
   }
   const growthTerms = [
-    "expand",
-    "expansion",
-    "growing",
-    "scale up",
-    "scaling",
-    "new location",
-    "second location",
-    "hire employees",
-    "hiring",
-    "increase inventory",
-    "buy equipment",
-    "new equipment",
-    "purchase equipment",
-    "upgrade",
-    "invest in",
-    "opportunity",
-    "big order",
-    "large contract",
-  ]
-
-  const growthMatches = growthTerms.filter((term) => combinedText.includes(term.toLowerCase()))
-
+    'expand', 'expansion', 'growing', 'scale up', 'scaling', 'new location', 'second location',
+    'hire employees', 'hiring', 'increase inventory', 'buy equipment', 'new equipment',
+    'purchase equipment', 'upgrade', 'invest in', 'opportunity', 'big order', 'large contract'
+  ];
+  
+  const growthMatches = growthTerms.filter(term => combinedText.includes(term.toLowerCase()));
+  
   if (growthMatches.length > 0) {
-    const growthBoost = Math.min(growthMatches.length * 10, 30)
-    score += growthBoost
-    reasoning += `Business growth indicators: ${growthMatches.join(", ")}. `
-    if (sentiment === "other") sentiment = "expansion_plans"
+    const growthBoost = Math.min(growthMatches.length * 10, 30);
+    score += growthBoost;
+    reasoning += `Business growth indicators: ${growthMatches.join(', ')}. `;
+    if (sentiment === 'other') sentiment = 'expansion_plans';
   }
-
+  
   // --- CASH FLOW ISSUES ---
   const cashFlowTerms = [
-    "cash flow",
-    "slow paying customers",
-    "accounts receivable",
-    "payment delays",
-    "seasonal business",
-    "feast or famine",
-    "inconsistent income",
-    "waiting for payment",
-    "invoice",
-    "net 30",
-    "net 60",
-    "collection issues",
-  ]
-
-  const cashFlowMatches = cashFlowTerms.filter((term) => combinedText.includes(term.toLowerCase()))
-
+    'cash flow', 'slow paying customers', 'accounts receivable', 'payment delays',
+    'seasonal business', 'feast or famine', 'inconsistent income', 'waiting for payment',
+    'invoice', 'net 30', 'net 60', 'collection issues'
+  ];
+  
+  const cashFlowMatches = cashFlowTerms.filter(term => combinedText.includes(term.toLowerCase()));
+  
   if (cashFlowMatches.length > 0) {
-    const cashFlowBoost = Math.min(cashFlowMatches.length * 8, 25)
-    score += cashFlowBoost
-    reasoning += `Cash flow concerns: ${cashFlowMatches.join(", ")}. `
-    if (sentiment === "other") sentiment = "cash_flow_issues"
+    const cashFlowBoost = Math.min(cashFlowMatches.length * 8, 25);
+    score += cashFlowBoost;
+    reasoning += `Cash flow concerns: ${cashFlowMatches.join(', ')}. `;
+    if (sentiment === 'other') sentiment = 'cash_flow_issues';
   }
-
+  
   // --- EQUIPMENT/INVENTORY NEEDS ---
   const equipmentTerms = [
-    "need equipment",
-    "buy equipment",
-    "lease equipment",
-    "equipment financing",
-    "new machinery",
-    "tools",
-    "vehicle",
-    "truck",
-    "van",
-    "computer",
-    "software",
-    "inventory",
-    "stock",
-    "supplies",
-    "materials",
-    "bulk purchase",
-  ]
-
-  const equipmentMatches = equipmentTerms.filter((term) => combinedText.includes(term.toLowerCase()))
-
+    'need equipment', 'buy equipment', 'lease equipment', 'equipment financing',
+    'new machinery', 'tools', 'vehicle', 'truck', 'van', 'computer', 'software',
+    'inventory', 'stock', 'supplies', 'materials', 'bulk purchase'
+  ];
+  
+  const equipmentMatches = equipmentTerms.filter(term => combinedText.includes(term.toLowerCase()));
+  
   if (equipmentMatches.length > 0) {
-    const equipmentBoost = Math.min(equipmentMatches.length * 7, 20)
-    score += equipmentBoost
-    reasoning += `Equipment/inventory needs: ${equipmentMatches.join(", ")}. `
-    if (sentiment === "other") sentiment = "equipment_needs"
+    const equipmentBoost = Math.min(equipmentMatches.length * 7, 20);
+    score += equipmentBoost;
+    reasoning += `Equipment/inventory needs: ${equipmentMatches.join(', ')}. `;
+    if (sentiment === 'other') sentiment = 'equipment_needs';
   }
-
+  
   // --- BUSINESS TYPE INDICATORS ---
   const businessTypes = [
-    "restaurant",
-    "retail",
-    "manufacturing",
-    "construction",
-    "contractor",
-    "service business",
-    "consulting",
-    "agency",
-    "ecommerce",
-    "online business",
-    "brick and mortar",
-    "franchise",
-    "salon",
-    "auto repair",
-    "cleaning service",
-    "landscaping",
-    "plumbing",
-    "electrical",
-  ]
-
-  const businessTypeMatches = businessTypes.filter((term) => combinedText.includes(term.toLowerCase()))
-
+    'restaurant', 'retail', 'manufacturing', 'construction', 'contractor', 'service business',
+    'consulting', 'agency', 'ecommerce', 'online business', 'brick and mortar', 'franchise',
+    'salon', 'auto repair', 'cleaning service', 'landscaping', 'plumbing', 'electrical'
+  ];
+  
+  const businessTypeMatches = businessTypes.filter(term => combinedText.includes(term.toLowerCase()));
+  
   if (businessTypeMatches.length > 0) {
-    score += 5 // Small boost for having identifiable business type
-    reasoning += `Business type identified: ${businessTypeMatches.join(", ")}. `
+    score += 5; // Small boost for having identifiable business type
+    reasoning += `Business type identified: ${businessTypeMatches.join(', ')}. `;
   }
-
+  
   // --- REVENUE/SIZE INDICATORS ---
   const revenueIndicators = [
-    "revenue",
-    "sales",
-    "profit",
-    "income",
-    "gross",
-    "net",
-    "$",
-    "million",
-    "thousand",
-    "employees",
-    "staff",
-    "team size",
-    "years in business",
-    "established",
-  ]
-
-  const revenueMatches = revenueIndicators.filter((term) => combinedText.includes(term.toLowerCase()))
-
+    'revenue', 'sales', 'profit', 'income', 'gross', 'net', '$', 'million', 'thousand',
+    'employees', 'staff', 'team size', 'years in business', 'established'
+  ];
+  
+  const revenueMatches = revenueIndicators.filter(term => combinedText.includes(term.toLowerCase()));
+  
   if (revenueMatches.length > 0) {
-    score += Math.min(revenueMatches.length * 3, 15)
-    reasoning += `Business metrics mentioned. `
+    score += Math.min(revenueMatches.length * 3, 15);
+    reasoning += `Business metrics mentioned. `;
   }
-
+  
   // --- INTENT SIGNALS ---
   const intentTerms = [
-    "need advice",
-    "looking for help",
-    "suggestions",
-    "recommendations",
-    "what should i do",
-    "how do i",
-    "where can i",
-    "best way to",
-    "anyone know",
-    "has anyone",
-    "experience with",
-  ]
-
-  const intentMatches = intentTerms.filter((term) => combinedText.includes(term.toLowerCase()))
-
+    'need advice', 'looking for help', 'suggestions', 'recommendations', 'what should i do',
+    'how do i', 'where can i', 'best way to', 'anyone know', 'has anyone', 'experience with'
+  ];
+  
+  const intentMatches = intentTerms.filter(term => combinedText.includes(term.toLowerCase()));
+  
   if (intentMatches.length > 0) {
-    const intentBoost = Math.min(intentMatches.length * 5, 20)
-    score += intentBoost
-    reasoning += `Seeking advice/help: ${intentMatches.join(", ")}. `
+    const intentBoost = Math.min(intentMatches.length * 5, 20);
+    score += intentBoost;
+    reasoning += `Seeking advice/help: ${intentMatches.join(', ')}. `;
   }
-
+  
   // --- URGENCY INDICATORS ---
   const urgencyTerms = [
-    "urgent",
-    "asap",
-    "quickly",
-    "emergency",
-    "immediately",
-    "deadline",
-    "time sensitive",
-    "running out of time",
-    "need soon",
-    "by next week",
-    "by month end",
-  ]
-
-  const urgencyMatches = urgencyTerms.filter((term) => combinedText.includes(term.toLowerCase()))
-
+    'urgent', 'asap', 'quickly', 'emergency', 'immediately', 'deadline', 'time sensitive',
+    'running out of time', 'need soon', 'by next week', 'by month end'
+  ];
+  
+  const urgencyMatches = urgencyTerms.filter(term => combinedText.includes(term.toLowerCase()));
+  
   if (urgencyMatches.length > 0) {
-    score += 15
-    reasoning += `Urgency indicators present. `
+    score += 15;
+    reasoning += `Urgency indicators present. `;
   }
-
+  
   // --- NEGATIVE SIGNALS ---
-
+  
   // Automated/mod posts
-  if (
-    title.includes("Daily") ||
-    title.includes("Weekly") ||
-    title.includes("Thread") ||
-    title.includes("Megathread") ||
-    title.toLowerCase().includes("automod")
-  ) {
-    score = Math.max(score - 25, 0)
-    reasoning += "Automated or recurring thread. "
+  if (title.includes('Daily') || title.includes('Weekly') || title.includes('Thread') || 
+      title.includes('Megathread') || title.toLowerCase().includes('automod')) {
+    score = Math.max(score - 25, 0);
+    reasoning += "Automated or recurring thread. ";
   }
-
+  
   // Posts about giving advice rather than seeking it
-  if (
-    combinedText.includes("here's how") ||
-    combinedText.includes("my advice") ||
-    combinedText.includes("pro tip") ||
-    combinedText.includes("lesson learned")
-  ) {
-    score = Math.max(score - 10, 0)
-    reasoning += "Giving advice rather than seeking help. "
+  if (combinedText.includes('here\'s how') || combinedText.includes('my advice') || 
+      combinedText.includes('pro tip') || combinedText.includes('lesson learned')) {
+    score = Math.max(score - 10, 0);
+    reasoning += "Giving advice rather than seeking help. ";
   }
-
+  
   // Success stories (less likely to need funding immediately)
-  if (
-    combinedText.includes("success story") ||
-    combinedText.includes("made it") ||
-    combinedText.includes("achieved") ||
-    combinedText.includes("milestone")
-  ) {
-    score = Math.max(score - 5, 0)
-    reasoning += "Success story - may not need immediate funding. "
+  if (combinedText.includes('success story') || combinedText.includes('made it') || 
+      combinedText.includes('achieved') || combinedText.includes('milestone')) {
+    score = Math.max(score - 5, 0);
+    reasoning += "Success story - may not need immediate funding. ";
   }
-
+  
   // --- FINAL SCORING & CATEGORIZATION ---
-
+  
   // Cap score at 100
-  score = Math.min(Math.max(score, 0), 100)
-
+  score = Math.min(Math.max(score, 0), 100);
+  
   // Different thresholds based on subreddit type
-  let leadThreshold
+  let leadThreshold;
   if (isDirectLoanSubreddit) {
-    leadThreshold = 10 // Very low threshold for direct loan subreddits
+    leadThreshold = 10; // Very low threshold for direct loan subreddits
   } else if (isBusinessSubreddit) {
-    leadThreshold = 15 // Low threshold for business subreddits
+    leadThreshold = 15; // Low threshold for business subreddits  
   } else {
-    leadThreshold = 25 // Higher threshold for other subreddits
+    leadThreshold = 25; // Higher threshold for other subreddits
   }
-
+  
   if (score >= leadThreshold) {
-    isLead = true
-
+    isLead = true;
+    
     // Set sentiment if not already specified
-    if (sentiment === "other") {
+    if (sentiment === 'other') {
       if (isDirectLoanSubreddit) {
-        sentiment = "seeking_funding" // Direct loan requests are always seeking funding
+        sentiment = 'seeking_funding'; // Direct loan requests are always seeking funding
       } else if (score >= 60) {
-        sentiment = "seeking_funding"
+        sentiment = 'seeking_funding';
       } else if (score >= 35) {
-        sentiment = "growth_opportunity"
+        sentiment = 'growth_opportunity';
       } else {
-        sentiment = "generic_mention"
+        sentiment = 'generic_mention';
       }
     }
-
+    
     // Final assessment
     if (isDirectLoanSubreddit) {
-      reasoning += "Direct loan request - high priority lead."
+      reasoning += "Direct loan request - high priority lead.";
     } else if (score >= 60) {
-      reasoning += "High-quality lead with clear funding potential."
+      reasoning += "High-quality lead with clear funding potential.";
     } else if (score >= 35) {
-      reasoning += "Good potential lead with business growth indicators."
+      reasoning += "Good potential lead with business growth indicators.";
     } else {
-      reasoning += "Potential lead worth monitoring for business development."
+      reasoning += "Potential lead worth monitoring for business development.";
     }
   } else {
-    isLead = false
-    sentiment = "not_applicable_if_not_lead"
-    reasoning += "Limited indicators of immediate funding needs."
+    isLead = false;
+    sentiment = 'not_applicable_if_not_lead';
+    reasoning += "Limited indicators of immediate funding needs.";
   }
-
+  
   // Extract a relevant snippet that shows why this is a good lead
   if (isLead) {
     // Try to extract the most relevant sentence
-    const sentences = content.split(/[.!?]+/).filter((s) => s.trim().length > 0)
-
+    const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    
     // Prioritize sentences with funding terms
-    const fundingSentence = sentences.find((s) => {
-      const lower = s.toLowerCase()
-      return fundingTerms.some((t) => lower.includes(t.toLowerCase()))
-    })
-
+    const fundingSentence = sentences.find(s => {
+      const lower = s.toLowerCase();
+      return fundingTerms.some(t => lower.includes(t.toLowerCase()));
+    });
+    
     if (fundingSentence) {
-      relevant_snippet = fundingSentence.trim()
+      relevant_snippet = fundingSentence.trim();
     } else {
       // Otherwise prioritize: growth indicators, then cash flow, then equipment needs
-      const growthSentence = sentences.find((s) => {
-        const lower = s.toLowerCase()
-        return growthTerms.some((t) => lower.includes(t.toLowerCase()))
-      })
-
+      const growthSentence = sentences.find(s => {
+        const lower = s.toLowerCase();
+        return growthTerms.some(t => lower.includes(t.toLowerCase()));
+      });
+      
       if (growthSentence) {
-        relevant_snippet = growthSentence.trim()
+        relevant_snippet = growthSentence.trim();
       } else {
-        const cashFlowSentence = sentences.find((s) =>
-          cashFlowTerms.some((t) => s.toLowerCase().includes(t.toLowerCase())),
-        )
-        if (cashFlowSentence) relevant_snippet = cashFlowSentence.trim()
+        const cashFlowSentence = sentences.find(s => 
+          cashFlowTerms.some(t => s.toLowerCase().includes(t.toLowerCase()))
+        );
+        if (cashFlowSentence) relevant_snippet = cashFlowSentence.trim();
         else {
-          const equipmentSentence = sentences.find((s) =>
-            equipmentTerms.some((t) => s.toLowerCase().includes(t.toLowerCase())),
-          )
-          if (equipmentSentence) relevant_snippet = equipmentSentence.trim()
+          const equipmentSentence = sentences.find(s => 
+            equipmentTerms.some(t => s.toLowerCase().includes(t.toLowerCase()))
+          );
+          if (equipmentSentence) relevant_snippet = equipmentSentence.trim();
         }
       }
     }
   }
-
+  
   return {
     is_lead: isLead,
     lead_score: score,
     sentiment: sentiment,
     reasoning: reasoning,
-    relevant_snippet: relevant_snippet || title, // Fall back to title if no good snippet found
-  }
+    relevant_snippet: relevant_snippet || title // Fall back to title if no good snippet found
+  };
 }
 
-// Enhanced main processing function with better error handling
+// Process Reddit data for business funding leads
 export async function processRedditDataForLeads(
   selectedSubredditsConfig: Array<{ name: string; category: string; selected: boolean }>,
   keywords: string[],
   contentFilterConfig: any,
-  scanFrequency: string,
+  scanFrequency: string
 ): Promise<PotentialLead[]> {
-  const context = "processRedditDataForLeads"
-  const startTime = Date.now()
-
-  console.log("==== BUSINESS FUNDING LEAD PROCESSING STARTED ====")
-  console.log("Environment:", process.env.NODE_ENV)
-  console.log("User Agent:", process.env.REDDIT_USER_AGENT || "default")
-
-  debugLog(context, "Starting lead processing...", {
-    numKeywords: keywords.length,
+  const context = "processRedditDataForLeads";
+  const startTime = Date.now();
+  
+  console.log("==== BUSINESS FUNDING LEAD PROCESSING STARTED ====");
+  debugLog(context, "Starting lead processing...", { 
+    numKeywords: keywords.length, 
     scanFrequency,
-    subredditsCount: selectedSubredditsConfig.length,
-    environment: process.env.NODE_ENV,
-    timestamp: new Date().toISOString(),
-  })
+    subredditsCount: selectedSubredditsConfig.length
+  });
 
-  const activeSubreddits = selectedSubredditsConfig.filter((sr) => sr.selected).map((sr) => sr.name)
+  // Get active subreddits
+  const activeSubreddits = selectedSubredditsConfig
+    .filter(sr => sr.selected)
+    .map(sr => sr.name);
 
   if (activeSubreddits.length === 0) {
-    debugLog(context, "No active subreddits selected. Aborting.")
-    return []
+    debugLog(context, "No active subreddits selected. Aborting.");
+    return [];
+  }
+  
+  debugLog(context, "Active subreddits", { activeSubreddits });
+
+  // Step 1: Scrape Reddit posts
+  const scrapedPosts = await scrapeSubredditsWithFetch(activeSubreddits, keywords, 100, 'month');
+  console.log("==== SCRAPING DEBUG INFO ====");
+console.log("scrapeSubredditsWithFetch result:", {
+  length: scrapedPosts.length,
+  firstPost: scrapedPosts[0] || "No posts",
+  activeSubreddits,
+  keywords
+});
+  debugLog(context, `Scraping returned ${scrapedPosts.length} posts`);
+
+  // For debugging
+  if (scrapedPosts.length > 0) {
+    console.log("SAMPLE POST:", JSON.stringify(scrapedPosts[0], null, 2));
   }
 
-  debugLog(context, "Active subreddits", { activeSubreddits })
+  if (scrapedPosts.length === 0) {
+    console.log("==== NO POSTS RETURNED FROM SCRAPING ====");
+    return [];
+  }
 
-  try {
-    // Step 1: Scrape Reddit posts with enhanced error handling
-    const scrapedPosts = await scrapeSubredditsWithFetch(activeSubreddits, keywords, 25, "month")
+  const identifiedLeads: PotentialLead[] = [];
 
-    console.log("==== SCRAPING DEBUG INFO ====")
-    console.log("scrapeSubredditsWithFetch result:", {
-      length: scrapedPosts.length,
-      firstPost: scrapedPosts[0] || "No posts",
-      activeSubreddits,
-      keywords: keywords.slice(0, 5), // Only show first 5 keywords for brevity
-      environment: process.env.NODE_ENV,
-    })
-
-    debugLog(context, `Scraping returned ${scrapedPosts.length} posts`)
-
-    if (scrapedPosts.length > 0) {
-      console.log("SAMPLE POST:", JSON.stringify(scrapedPosts[0], null, 2))
-    } else {
-      console.log("==== NO POSTS RETURNED FROM SCRAPING ====")
-      console.log("This could be due to:")
-      console.log("1. Rate limiting from Reddit")
-      console.log("2. Subreddits being private/banned")
-      console.log("3. Network issues in production")
-      console.log("4. User-Agent being blocked")
-      console.log("5. Keywords not matching any posts")
-      return []
-    }
-
-    const identifiedLeads: PotentialLead[] = []
-
-    // Step 2: Process each post
-    for (const post of scrapedPosts) {
-      try {
-        const postCorpus = `
+  // Step 2: Process each post with business funding analysis
+  for (const post of scrapedPosts) {
+    // Create a corpus from the post content
+    const postCorpus = `
 Subreddit: r/${post.subreddit}
-User: u/${post.author || "deleted"}
+User: u/${post.author || 'deleted'}
 Title: ${post.title}
 Content (first 1000 chars): ${post.selftext.substring(0, 1000)}
 URL: ${post.url}
-        `.trim()
+    `.trim();
 
-        const analysisResult = await analyzePotentialLead(postCorpus, keywords)
-
-        const isDirectLoanSub = ["borrow", "simpleloans", "donationrequest"].includes(post.subreddit.toLowerCase())
-        const scoreThreshold = isDirectLoanSub ? 10 : post.subreddit.toLowerCase() === "smallbusiness" ? 15 : 25
-
-        if (analysisResult.is_lead && analysisResult.lead_score >= scoreThreshold) {
-          // Apply content filters
-          let includeBasedOnFilters = true
-
-          if (!contentFilterConfig.seekingFunding && analysisResult.sentiment === "seeking_funding") {
-            includeBasedOnFilters = false
-          }
-
-          if (!contentFilterConfig.expansionPlans && analysisResult.sentiment === "expansion_plans") {
-            includeBasedOnFilters = false
-          }
-
-          if (!contentFilterConfig.cashFlowIssues && analysisResult.sentiment === "cash_flow_issues") {
-            includeBasedOnFilters = false
-          }
-
-          if (!contentFilterConfig.equipmentNeeds && analysisResult.sentiment === "equipment_needs") {
-            includeBasedOnFilters = false
-          }
-
-          const isRevenueDiscussion =
-            postCorpus.toLowerCase().includes("revenue") ||
-            postCorpus.toLowerCase().includes("sales") ||
-            postCorpus.toLowerCase().includes("profit")
-
-          if (!contentFilterConfig.revenueDiscussion && isRevenueDiscussion) {
-            includeBasedOnFilters = false
-          }
-
-          if (includeBasedOnFilters) {
-            identifiedLeads.push({
-              id: post.id,
-              subreddit: post.subreddit,
-              username: post.author || "unknown",
-              content: analysisResult.relevant_snippet || post.title,
-              date: new Date(post.created_utc * 1000).toISOString(),
-              sentiment: analysisResult.sentiment as any,
-              status: "new",
-              score: analysisResult.lead_score,
-              url: post.url,
-              reasoning: analysisResult.reasoning,
-            })
-          }
+    try {
+      // Use the business funding analysis function
+      const analysisResult = await analyzePotentialLead(postCorpus, keywords);
+      
+      // Determine if we should include based on post score and content filters
+      const isDirectLoanSub = ['borrow', 'simpleloans', 'donationrequest'].includes(post.subreddit.toLowerCase());
+      const scoreThreshold = isDirectLoanSub ? 10 : (post.subreddit.toLowerCase() === 'smallbusiness' ? 15 : 25);
+      
+      if (analysisResult.is_lead && analysisResult.lead_score >= scoreThreshold) {
+        // Apply content filters based on user preferences
+        let includeBasedOnFilters = true;
+        
+        if (!contentFilterConfig.seekingFunding && analysisResult.sentiment === 'seeking_funding') {
+          includeBasedOnFilters = false;
         }
-      } catch (error) {
-        debugLog(context, `Error processing post ${post.id}`, {
-          error: error instanceof Error ? error.message : String(error),
-          postId: post.id,
-          subreddit: post.subreddit,
-        })
+        
+        if (!contentFilterConfig.expansionPlans && analysisResult.sentiment === 'expansion_plans') {
+          includeBasedOnFilters = false;
+        }
+        
+        if (!contentFilterConfig.cashFlowIssues && analysisResult.sentiment === 'cash_flow_issues') {
+          includeBasedOnFilters = false;
+        }
+        
+        if (!contentFilterConfig.equipmentNeeds && analysisResult.sentiment === 'equipment_needs') {
+          includeBasedOnFilters = false;
+        }
+        
+        // Extract revenue discussion signal
+        const isRevenueDiscussion = postCorpus.toLowerCase().includes('revenue') || 
+                                   postCorpus.toLowerCase().includes('sales') ||
+                                   postCorpus.toLowerCase().includes('profit');
+                                   
+        if (!contentFilterConfig.revenueDiscussion && isRevenueDiscussion) {
+          includeBasedOnFilters = false;
+        }
+        
+        // If passes all filters, add to leads
+        if (includeBasedOnFilters) {
+          identifiedLeads.push({
+            id: post.id,
+            subreddit: post.subreddit,
+            username: post.author || 'unknown',
+            content: analysisResult.relevant_snippet || post.title,
+            date: new Date(post.created_utc * 1000).toISOString(),
+            sentiment: analysisResult.sentiment as any,
+            status: 'new',
+            score: analysisResult.lead_score,
+            url: post.url,
+            reasoning: analysisResult.reasoning,
+          });
+        }
       }
+    } catch (error) {
+      console.error(`Error processing post ${post.id}:`, error);
     }
-
-    identifiedLeads.sort((a, b) => b.score - a.score)
-
-    const totalTime = Date.now() - startTime
-    debugLog(
-      context,
-      `Finished lead processing. Found ${identifiedLeads.length} potential leads. Total time: ${totalTime}ms`,
-    )
-    console.log("==== BUSINESS FUNDING LEAD PROCESSING COMPLETED ====")
-
-    return identifiedLeads
-  } catch (error) {
-    debugLog(context, "Critical error in lead processing", {
-      error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
-    })
-
-    console.error("==== CRITICAL ERROR IN LEAD PROCESSING ====")
-    console.error(error)
-
-    return []
   }
+
+  // Sort leads by score descending
+  identifiedLeads.sort((a, b) => b.score - a.score);
+
+  const totalTime = Date.now() - startTime;
+  debugLog(context, `Finished lead processing. Found ${identifiedLeads.length} potential leads. Total time: ${totalTime}ms`);
+  console.log("==== BUSINESS FUNDING LEAD PROCESSING COMPLETED ====");
+  
+  return identifiedLeads;
 }
