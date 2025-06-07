@@ -18,79 +18,79 @@ import SideArtifactPanel from "./components/side.panel";
 
 const EXAMPLE_QUERIES = [
   {
-    name: "🚀 Member Engagement & Retention",
+    name: "🚀 Customer Engagement & Retention",
     description:
-      "Keep your members active, identify churn risks, and celebrate milestones.",
+      "Keep your clients active, identify churn risks, and celebrate milestones.",
     queries: [
       {
-        text: "Show me clients who haven't attended a class in 30 days but still have an active membership.",
+        text: "Show me clients who haven't logged into their account in 30 days but still have an active loan or account.",
       },
       {
-        text: "Identify members at high risk of churning based on recent activity.",
+        text: "Identify customers at high risk of closing their accounts based on recent activity.",
       },
       {
-        text: "List members with upcoming birthdays this month who we should contact.",
+        text: "List clients with upcoming birthdays this month for personalized offers.",
       },
       {
-        text: "Show me clients who are approaching a class milestone (e.g., 50th, 100th class).",
+        text: "Show me clients approaching a loan payoff milestone (e.g., 50%, 75% paid off).",
       },
       {
-        text: "Find members whose engagement score has dropped significantly last month.",
+        text: "Find customers whose engagement score has dropped significantly in the last month.",
       },
       {
-        text: "List members celebrating a membership anniversary in the next 30 days.",
+        text: "List clients celebrating their account anniversary in the next 30 days.",
       },
     ],
   },
   {
-    name: "🎯 Lead Management & New Member Onboarding",
+    name: "🎯 Lead Management & New Customer Onboarding",
     description:
-      "Convert prospects effectively and welcome new members smoothly.",
+      "Convert prospects effectively and welcome new clients smoothly.",
     queries: [
       {
-        text: "Show me clients who signed up recently but haven't attended a class yet.",
+        text: "Show me leads who started a loan application but haven't completed it.",
       },
-      { text: "List new leads from 'Website Trial Form' in the last 7 days." },
+      { text: "List new leads from the 'Online Loan Inquiry Form' in the last 7 days." },
       {
-        text: "Identify trial class attendees from last week who haven't purchased a membership.",
+        text: "Identify prospects who requested a callback last week but haven't been contacted.",
       },
       {
-        text: "Find leads who expressed interest in 'Yoga' but haven't booked a consultation.",
+        text: "Find leads interested in 'Home Loans' but haven't scheduled a consultation.",
       },
     ],
   },
   {
-    name: "💳 Membership & Package Insights",
+    name: "💳 Loan & Account Insights",
     description:
-      "Manage memberships, renewals, and identify upsell opportunities.",
+      "Manage loans, renewals, and identify cross-sell or upsell opportunities.",
     queries: [
       {
-        text: "Find members whose membership is expiring in the next 14 days.",
+        text: "Find clients whose loan is expiring or due for renewal in the next 14 days.",
       },
       {
-        text: "List clients on a '10-Class Pass' with 2 or fewer credits remaining.",
+        text: "List clients with credit card balances above 80% of their limit.",
       },
-      { text: "Show members whose auto-renewal payment failed this month." },
+      { text: "Show customers whose auto-payment failed this month." },
       {
-        text: "Identify members eligible for an upgrade to a premium membership.",
+        text: "Identify clients eligible for an upgrade to a premium account or loan product.",
       },
     ],
   },
   {
-    name: "📊 Class & Instructor Performance",
+    name: "📊 Product & Advisor Performance",
     description:
-      "Analyze attendance, class popularity, and instructor effectiveness.",
+      "Analyze product uptake, advisor effectiveness, and customer preferences.",
     queries: [
-      { text: "Which coach has the highest attendance rate this month?" },
+      { text: "Which advisor has the highest loan origination rate this month?" },
       {
-        text: "Find clients who attended class with coach Kokayi in the past month.",
+        text: "Find clients who opened an account with advisor Alex in the past month.",
       },
-      { text: "What were the most popular class types last quarter?" },
+      { text: "What were the most popular loan products last quarter?" },
       {
-        text: "Show me classes with consistently low attendance for potential rescheduling.",
+        text: "Show me products with consistently low uptake for potential review.",
       },
       {
-        text: "Compare attendance for 'Morning Yoga' vs 'Evening Yoga' last month.",
+        text: "Compare uptake for 'Personal Loans' vs 'Auto Loans' last month.",
       },
     ],
   },
@@ -100,20 +100,20 @@ const EXAMPLE_QUERIES = [
       "Create targeted lists for specific actions and communications.",
     queries: [
       {
-        text: "Show me clients who had late cancellations in the last 30 days.",
+        text: "Show me clients who missed a payment in the last 30 days.",
       },
       {
-        text: "Generate a list of members who haven't opened our last three newsletters.",
+        text: "Generate a list of customers who haven't opened our last three email statements.",
       },
       {
-        text: "Find clients who live in the 'Downtown' area and prefer evening classes.",
+        text: "Find clients who live in the 'Downtown' area and have high credit scores.",
       },
       {
-        text: "List all members who have provided positive feedback via post-class surveys.",
+        text: "List all clients who have provided positive feedback via post-service surveys.",
       },
     ],
   },
-];
+]
 
 export default function ChatContent() {
   const [inputValue, setInputValue] = useState("");
