@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 
@@ -40,32 +40,31 @@ import {
   Monitor,
   Check,
   Workflow,
-  Route
-} from "lucide-react"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-
-
+  Route,
+  Building,
+} from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import Header from "./header";
+import ChannelsContent from "../tabs/channels-content";
+import HomeContent from "../tabs/dashboard/home-content";
+import InventoryContent from "../tabs/inventory-content";
+import CustomersContent from "../tabs/customer-content";
+import MarketingContent from "../tabs/marketing-content";
+import AIInsightsContent from "../tabs/ai-insights";
+import IntegrationsContent from "../tabs/integration-content";
+import SettingsContent from "../tabs/settings-content";
 
 import {
   ExpandableChat,
   ExpandableChatHeader,
   ExpandableChatBody,
   ExpandableChatFooter,
-} from "@/components/ui/expandable-chat"
+} from "@/components/ui/expandable-chat";
+import ChatContent from "../tabs/chat";
 
-import AIInsightsContent from "../tabs/ai-insights"
-import ChannelsContent from "../tabs/channels-content"
-import ChatContent from "../tabs/chat"
-import CustomersContent from "../tabs/customer-content"
-import IntegrationsContent from "../tabs/integration-content"
-import InventoryContent from "../tabs/inventory-content"
-import MarketingContent from "../tabs/marketing-content"
-import SettingsContent from "../tabs/settings-content"
-import HomeContent from "../tabs/dashboard"
-import ActionSearchBar from "@/components/ui/action-search-bar";
-import AutomationBuilder from "../automations";
-
+// Import the Apollo Search Component
+import ApolloSearchComponent from "../components/apollo-search-component";
 
 // Chat Interface Component for use with ExpandableChat
 const ChatInterface = () => {
@@ -93,11 +92,11 @@ const ChatInterface = () => {
     }, 1000);
   };
 
-  const handleKeyPress = (e) => {
+  const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
-      handleSend()
+      handleSend();
     }
-  }
+  };
 
   return (
     <>
@@ -110,7 +109,6 @@ const ChatInterface = () => {
               className="h-6 w-6"
             />
           </div>
-          <span className="font-medium text-gray-900">Consuelo</span>
           <span className="font-medium text-gray-900">Consuelo</span>
         </div>
       </ExpandableChatHeader>
@@ -141,8 +139,7 @@ const ChatInterface = () => {
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Type your message..."
-            className="flex-1 border-gray-200 "
-          
+            className="flex-1 border-gray-200"
           />
           <Button
             onClick={handleSend}
@@ -154,64 +151,72 @@ const ChatInterface = () => {
         </div>
       </ExpandableChatFooter>
     </>
-  )
+  );
+};
+
+interface MainLayoutProps {
+  children?: React.ReactNode;
+  title?: string;
+  hideSidebar?: boolean;
 }
 
-const MainLayout = ({ children, title, hideSidebar = false }) => {
+const MainLayout = ({
+  children,
+  title,
+  hideSidebar = false,
+}: MainLayoutProps) => {
   // Create a state to track the active tab
-  const [activeTab, setActiveTab] = useState("home")
-  const [sidebarOpen, setSidebarOpen] = useState(!hideSidebar)
+  const [activeTab, setActiveTab] = useState("home");
+  const [sidebarOpen, setSidebarOpen] = useState(!hideSidebar);
 
   // Effect to sync URL hash with state
   useEffect(() => {
     // Function to handle hash change
     const handleHashChange = () => {
-      const hash = window.location.hash.replace("#", "") || "home"
-      setActiveTab(hash)
-    }
+      const hash = window.location.hash.replace("#", "") || "home";
+      setActiveTab(hash);
+    };
 
     // Set initial state based on current hash
-    handleHashChange()
+    handleHashChange();
 
     // Listen for hash changes
-    window.addEventListener("hashchange", handleHashChange)
+    window.addEventListener("hashchange", handleHashChange);
 
     // Clean up event listener
-    return () => window.removeEventListener("hashchange", handleHashChange)
-  }, [])
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, []);
 
   // Function to render the correct content based on activeTab
   const renderContent = () => {
     switch (activeTab) {
       case "home":
-        return <ChatContent />
+        return <ChatContent />;
       case "dashboard":
-        return <HomeContent />
+        return <HomeContent />;
+      case "apollo-search":
+        return <ApolloSearchComponent />;
       case "channels":
-        return <ChannelsContent />
+        return <ChannelsContent />;
       case "inventory":
-        return <InventoryContent />
+        return <InventoryContent />;
       case "accounts":
-        return <CustomersContent />
+        return <CustomersContent />;
       case "marketing":
-        return <MarketingContent />
+        return <MarketingContent />;
       case "ai-insights":
-        return <AIInsightsContent />
+        return <AIInsightsContent />;
       case "integrations":
-        return <IntegrationsContent />
+        return <IntegrationsContent />;
       case "settings":
-        return <SettingsContent />
-        case "automations":
-        return <AutomationBuilder />
+        return <SettingsContent />;
       default:
-        return <HomeContent />
+        return <HomeContent />;
     }
-    
-  }
+  };
 
-  // Define the main navigation items (Home and Dashboard)
+  // Define the main navigation items (Home, Dashboard, Apollo Search, and Automations)
   const mainNavItems = [
- 
     {
       label: "Home",
       href: "#home",
@@ -225,10 +230,16 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
       onClick: () => setActiveTab("dashboard"),
     },
     {
+      label: "Apollo Search",
+      href: "#apollo-search",
+      icon: <Building size={20} className="text-gray-600" />,
+      onClick: () => setActiveTab("apollo-search"),
+    },
+    {
       label: "Automations",
-      href: "#automations",
+      href: "#ai-insights",
       icon: <Workflow size={20} className="text-gray-600" />,
-      onClick: () => setActiveTab("automations"),
+      onClick: () => setActiveTab("ai-insights"),
     },
   ];
 
@@ -248,7 +259,6 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
     },
     {
       label: "Product Insights",
-     
       href: "#inventory",
       icon: <Package size={20} className="text-gray-600" />,
       onClick: () => setActiveTab("inventory"),
@@ -263,22 +273,20 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
       icon: <BarChart3 size={20} className="text-gray-600" />,
       onClick: () => {}, // No functionality for now
     },
-   
     {
       label: "Lead Cohorts",
       href: "#leads",
       icon: <Users size={20} className="text-gray-600" />,
-      onClick: () => setActiveTab("ai-insights"), // No functionality for now
-    
+      onClick: () => {}, // No functionality for now
     },
     {
       label: "Channel Insights",
-     
       href: "#marketing",
       icon: <PieChart size={20} className="text-gray-600" />,
       onClick: () => setActiveTab("marketing"),
     },
   ];
+
   const dialerItems = [
     {
       label: "Create Scripts",
@@ -299,7 +307,6 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
   ];
 
   return (
-    
     <div className="flex h-screen flex-col overflow-hidden bg-white md:flex-row">
       {!hideSidebar && (
         <Sidebar open={sidebarOpen} setOpen={setSidebarOpen}>
@@ -424,9 +431,9 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
               {/* Collapse Arrow - Only visible on hover */}
               <SidebarCollapseButton className="absolute -right-2 top-1/2 -translate-y-1/2" />
             </div>
-<ActionSearchBar/>
+
             {/* Search */}
-            {/* <div className="mb-4 px-3">
+            <div className="mb-4 px-3">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <Input
@@ -434,11 +441,10 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
                   className="h-8 border-0 bg-gray-50 pl-9 text-sm text-gray-700 placeholder-gray-500 focus-visible:ring-1 focus-visible:ring-gray-300"
                 />
               </div>
-            </div> */}
+            </div>
 
-            
             <nav className="flex-1 space-y-1 px-3">
-              {/* Main Navigation (Home & Dashboard) */}
+              {/* Main Navigation (Home, Dashboard, Apollo Search, & Automations) */}
               {mainNavItems.map((item) => (
                 <SidebarLink
                   key={item.href}
@@ -496,7 +502,8 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
                   </CollapsibleContent>
                 </Collapsible>
               </div>
-              {/* dialer Section */}
+
+              {/* Dialer Section */}
               <div className="pt-4">
                 <Collapsible defaultOpen className="group/collapsible">
                   <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm font-medium text-gray-600 transition-colors duration-150 hover:bg-gray-50 hover:text-gray-800">
@@ -539,13 +546,21 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
       <div
         className={`flex flex-1 flex-col overflow-y-auto bg-gray-50 ${hideSidebar ? "w-full" : ""}`}
       >
-        {/* {activeTab !== "home" && !hideSidebar && (
-          <Header title={activeTab.charAt(0).toUpperCase() + activeTab.slice(1).replace("-", " ")} />
-        )} */}
-        <main className={`flex-1 ${activeTab === "home" && !hideSidebar ? "p-0" : "p-4 md:p-6"} bg-gray-50`}>
+        {activeTab !== "home" && !hideSidebar && (
+          <Header
+            title={
+              activeTab === "apollo-search"
+                ? "Apollo Search"
+                : activeTab.charAt(0).toUpperCase() +
+                  activeTab.slice(1).replace("-", " ")
+            }
+          />
+        )}
+        <main
+          className={`flex-1 ${activeTab === "home" && !hideSidebar ? "p-0" : "p-4 md:p-6"} bg-gray-50`}
+        >
           {hideSidebar ? children : renderContent()}
         </main>
-
 
         {/* Expandable Chat - Only show when not on home or settings page and sidebar is visible */}
         {activeTab !== "home" && activeTab !== "settings" && !hideSidebar && (
@@ -555,7 +570,7 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default MainLayout
+export default MainLayout;
