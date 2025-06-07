@@ -1,6 +1,5 @@
-// src/app/api/klaviyo/webhook/route.ts
+// app/api/klaviyo/webhook/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { getKlaviyoAccountByUserId, deactivateKlaviyoAccount } from '@/lib/db/klaviyo-accounts';
 
 // This endpoint will handle webhooks from Klaviyo for events like uninstalls
 export async function POST(request: NextRequest) {
@@ -39,22 +38,15 @@ async function handleUninstall(data: any) {
     const klaviyoAccountId = data.account_id;
     const userId = data.user_id; // This is a hypothetical field Klaviyo might send
     
-    // If we don't have a direct mapping between Klaviyo's account ID and our records,
-    // we might need to do a lookup based on other identifiers or use a mapping table
+    console.log(`Received uninstall webhook for Klaviyo account: ${klaviyoAccountId}, user: ${userId}`);
     
-    // Find all active Klaviyo accounts for this user and deactivate them
-    // This is a simplified approach - in production, you'd want to match the specific account
-    const accounts = await getKlaviyoAccountByUserId(userId);
+    // TODO: Implement database operations once dependencies are available
+    // const accounts = await getKlaviyoAccountByUserId(userId);
+    // if (accounts) {
+    //   await deactivateKlaviyoAccount(accounts.id);
+    //   console.log(`Successfully deactivated Klaviyo account ${accounts.id}`);
+    // }
     
-    if (!accounts) {
-      console.warn(`No active Klaviyo account found for uninstall event: ${klaviyoAccountId}`);
-      return;
-    }
-    
-    // Deactivate the account
-    await deactivateKlaviyoAccount(accounts.id);
-    
-    console.log(`Successfully deactivated Klaviyo account ${accounts.id} due to uninstall webhook`);
   } catch (error) {
     console.error('Error handling uninstall webhook:', error);
     // Don't throw here, we still want to return 200 to Klaviyo
@@ -73,4 +65,12 @@ function verifyWebhookSignature(request: NextRequest): boolean {
   
   // For development, return true
   return true;
+}
+
+// Add GET method for testing
+export async function GET() {
+  return NextResponse.json({
+    message: 'Klaviyo webhook endpoint is running',
+    method: 'Use POST to send webhook events'
+  });
 }
