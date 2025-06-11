@@ -3,8 +3,16 @@
 
 // Define the type for a single chat message
 interface ChatMessage {
-  role: "user" | "assistant";
-  content: string;
+  role: "user" | "assistant" | "system"
+  content: string
+  tool_calls?: Array<{
+    id: string
+    type: "function"
+    function: {
+      name: string
+      arguments: string
+    }
+  }>
 }
 // --- SYSTEM PROMPT V3: The Comprehensive AI Sales Agent for United Capital Source ---
 // This prompt synthesizes the entire product portfolio and multiple detailed product pages.
@@ -123,136 +131,126 @@ Your mission is to:
 *   **If User IS Qualified:** "Excellent! Based on what you've shared, it sounds like you are a very strong candidate for [Product Name]. Our clients love this option because [mention a key benefit]. The next step is a simple, no-obligation application to see the exact rates and terms our 75+ lenders can offer you."
 *   **If User is NOT Qualified:** Be kind, respectful, and helpful. Offer a path forward.
     *   "Thank you for being so transparent. It looks like we might not be the right fit at this exact moment, as our partners require at least [state the requirement they miss]. But that can change quickly! Many of our current clients started in a similar position. Once your [revenue/time in business] hits that mark, we would be thrilled to help. In the meantime, some people find success with tools like business credit cards to build their history."
-
-**4. Call to Action (CTA):** Be direct and clear.
+*4. Call to Action (CTA):** Be direct and clear.
 *   "Would you like me to guide you to our secure online application now?"
 *   "Would you prefer to schedule a free consultation with one of our human funding experts to go over the details?"
+*   **TOOL USAGE:** If the user agrees to schedule a consultation, you MUST use the 'get_available_times' tool to fetch scheduling options. Do not make up times. After presenting the times, wait for the user to select one.
 
 **5. CRITICAL 'DO NOTS':**
 *   **DO NOT** promise or guarantee approval.
 *   **DO NOT** give financial advice.
 *   **DO NOT** ask for SSN, bank account numbers, or other highly sensitive data.
-`;
+--- TOOL DEFINITIONS ---
+You have access to the following tool. Use it ONLY when the user has explicitly agreed to schedule a meeting.
 
-/**
- * Sends the entire chat history (including the system prompt) to the AI.
- * This function is now designed to handle a full conversation, not just a single message.
- *
- * @param messages The array of messages in the current conversation.
- * @param model The AI model to use.
- * @param maxTokens The maximum number of tokens for the response.
- * @param onStream A callback function to handle streaming response chunks.
- * @returns The complete response text from the AI.
- */
+--- TOOL DEFINITIONS ---
+You have access to the following tools. Use them ONLY when appropriate in the conversation flow.
+
+1. **Tool: get_available_times**
+   - **Description:** Fetches available time slots for booking a free consultation with a United Capital Source funding expert
+   - **Usage:** Call this when the user agrees to schedule a consultation or asks to see available times
+   - **Parameters:** None required
+
+When you use a tool, the system will provide the results, and you should present them in a user-friendly way with actionable buttons or options.
+`
+
 export async function sendChatMessage(
   messages: ChatMessage[],
   model = "llama3-70b-8192",
   maxTokens = 1024,
   onStream?: (chunk: string) => void,
+  onToolCall?: (toolCall: any) => void,
 ): Promise<string> {
   try {
-    const response = await fetch("/api/chat", { // Your API route
+    const response = await fetch("/api/chat", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        // The new structure includes the system prompt and all user/assistant messages
         messages: [
           {
             role: "system",
             content: systemPrompt,
           },
-          ...messages, // Spread the rest of the conversation history
+          ...messages,
         ],
         model: model,
         max_tokens: maxTokens,
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "get_available_times",
+              description: "Get available time slots for scheduling a consultation",
+              parameters: {
+                type: "object",
+                properties: {},
+                required: [],
+              },
+            },
+          },
+        ],
+        tool_choice: "auto",
       }),
-    });
+    })
 
     if (!response.ok) {
-      const errorBody = await response.text();
-      console.error("API Error Response:", errorBody);
-      throw new Error(
-        `Failed to get response from API: ${response.status} ${response.statusText}. ${errorBody}`,
-      );
+      const errorBody = await response.text()
+      console.error("API Error Response:", errorBody)
+      throw new Error(`Failed to get response from API: ${response.status} ${response.statusText}. ${errorBody}`)
     }
 
+    // Handle streaming with tool call support
     if (onStream && response.body) {
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let fullText = "";
-      let buffer = "";
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let fullText = ""
+      let buffer = ""
 
       while (true) {
-        const { done, value } = await reader.read();
-        if (done) {
-          if (buffer.trim()) {
-            const lines = buffer.split("\n").filter(line => line.trim() !== "");
-            for (const line of lines) {
-                 if (line.startsWith("0:")) {
-                    try {
-                        const content = JSON.parse(line.substring(2));
-                        if (typeof content === 'string') {
-                          fullText += content;
-                          onStream(content);
-                        }
-                    } catch (e) {
-                        console.warn("Skipping invalid JSON in stream chunk (done buffer):", line, e);
-                    }
-                }
+        const { done, value } = await reader.read()
+        if (done) break
+
+        buffer += decoder.decode(value, { stream: true })
+        let eolIndex
+
+        while ((eolIndex = buffer.indexOf("\n")) >= 0) {
+          const line = buffer.substring(0, eolIndex).trim()
+          buffer = buffer.substring(eolIndex + 1)
+
+          if (line.startsWith("0:")) {
+            try {
+              const content = JSON.parse(line.substring(2))
+              if (typeof content === "string") {
+                fullText += content
+                onStream(content)
+              }
+            } catch (e) {
+              console.warn("Skipping invalid JSON in stream chunk:", line, e)
+            }
+          } else if (line.startsWith("2:")) {
+            // Handle tool calls
+            try {
+              const toolCallData = JSON.parse(line.substring(2))
+              if (onToolCall) {
+                onToolCall(toolCallData)
+              }
+            } catch (e) {
+              console.warn("Skipping invalid tool call JSON:", line, e)
             }
           }
-          break;
-        }
-
-        buffer += decoder.decode(value, { stream: true });
-        let eolIndex;
-        while ((eolIndex = buffer.indexOf("\n")) >= 0) {
-            const line = buffer.substring(0, eolIndex).trim();
-            buffer = buffer.substring(eolIndex + 1);
-
-            if (line.startsWith("0:")) {
-                try {
-                  const content = JSON.parse(line.substring(2));
-                  if (typeof content === 'string') {
-                      fullText += content;
-                      onStream(content);
-                  }
-                } catch (e) {
-                  console.warn("Skipping invalid JSON in stream chunk:", line, e);
-                }
-            }
         }
       }
-      const finalChunk = decoder.decode();
-      if(finalChunk && finalChunk.trim()){
-        const lines = finalChunk.split("\n").filter(line => line.trim() !== "");
-        for (const line of lines) {
-             if (line.startsWith("0:")) {
-                try {
-                    const content = JSON.parse(line.substring(2));
-                    if (typeof content === 'string') {
-                      fullText += content;
-                      onStream(content);
-                    }
-                } catch (e) {
-                    console.warn("Skipping invalid JSON in stream chunk (final flush):", line, e);
-                }
-            }
-        }
-      }
-      return fullText;
+      return fullText
     } else {
-      const data = await response.json();
-      // Assuming the backend might return the response in a nested object for non-streaming
-      return data?.choices?.[0]?.message?.content || data.content || "No response received";
+      const data = await response.json()
+      return data?.choices?.[0]?.message?.content || data.content || "No response received"
     }
   } catch (error) {
-    console.error("Error sending chat message:", error);
+    console.error("Error sending chat message:", error)
     throw new Error(
-      "Failed to get response from AI service. " +
-      (error instanceof Error ? error.message : String(error)),
-    );
+      "Failed to get response from AI service. " + (error instanceof Error ? error.message : String(error)),
+    )
   }
 }
