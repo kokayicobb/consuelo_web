@@ -1,3 +1,4 @@
+// src/components/Unified Commerce Dashboard/tabs/automations/index.tsx
 "use client";
 
 import { useState, useEffect } from "react";
