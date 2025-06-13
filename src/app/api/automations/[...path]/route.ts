@@ -118,34 +118,80 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   console.log(`✅ Catch-all route running: POST /api/automations/${path.join('/')}`);
 
   // Handle /api/automations/flows (create flow)
-  if (path.length === 1 && path[0] === 'flows') {
-    console.log('📋 Handling flow creation');
+	// Handle /api/automations/flows (create flow)
+if (path.length === 1 && path[0] === 'flows') {
+  console.log('📋 Handling flow creation');
+  try {
+    let body;
     try {
-      let body;
-      try {
-        body = await request.json();
-        console.log('Request body:', JSON.stringify(body, null, 2));
-      } catch (parseError) {
-        console.error('❌ Failed to parse request body:', parseError);
-        return NextResponse.json(
-          { success: false, error: { message: 'Invalid JSON in request body' } },
-          { status: 400 }
-        );
+      body = await request.json();
+      console.log('Request body:', JSON.stringify(body, null, 2));
+    } catch (parseError) {
+      console.error('❌ Failed to parse request body:', parseError);
+      return NextResponse.json(
+        { success: false, error: { message: 'Invalid JSON in request body' } },
+        { status: 400 }
+      );
+    }
+    
+    // Extract data from the request
+    const createData = {
+      displayName: body.displayName || 'Untitled Automation',
+      // Store trigger type and description as metadata
+      metadata: {
+        description: body.description || '',
+        triggerType: body.triggerType || null
+      }
+    };
+    
+    console.log('Creating flow with data:', createData);
+    
+    try {
+      // Create the automation
+      const result = await activePieces.createFlow(createData);
+      
+      if (!result.success) {
+        console.error('❌ ActivePieces returned error:', result.error);
+        return NextResponse.json(result, { status: result.error?.statusCode || 400 });
       }
       
-      const result = await activePieces.createFlow({
-        displayName: body.displayName || 'Untitled Automation',
-      });
+      // If a trigger type was specified, update the flow with the appropriate trigger
+      if (body.triggerType && result.data) {
+        try {
+          // For now, we'll just add the trigger type to the flow metadata
+          // In a real implementation, you'd configure the actual trigger in n8n
+          console.log(`🔄 Adding ${body.triggerType} trigger to flow ${result.data.id}`);
+          
+          // This is where you'd update the flow with the trigger configuration
+          // For simplicity in this example, we'll just return the created flow
+        } catch (triggerError: any) {
+          console.warn(`⚠️ Failed to configure trigger, but flow was created:`, triggerError);
+        }
+      }
       
-      return NextResponse.json(result, { status: result.success ? 201 : 400 });
-    } catch (error: any) {
-      console.error('❌ Error creating flow:', error);
+      console.log('✅ Flow created successfully:', result.data?.id);
+      return NextResponse.json(result, { status: 201 });
+    } catch (apiError: any) {
+      console.error('❌ Unexpected error in activePieces.createFlow:', apiError);
       return NextResponse.json(
-        { success: false, error: { message: error.message || 'Failed to create flow' } },
+        { 
+          success: false, 
+          error: { 
+            message: apiError.message || 'Failed to create flow',
+            error: 'API processing error' 
+          } 
+        },
         { status: 500 }
       );
     }
+  } catch (error: any) {
+    console.error('❌ Error creating flow:', error);
+    return NextResponse.json(
+      { success: false, error: { message: error.message || 'Failed to create flow' } },
+      { status: 500 }
+    );
   }
+}
 
   // Handle /api/automations/:flowId (update flow)
   if (path.length === 1 && path[0] !== 'flows') {
