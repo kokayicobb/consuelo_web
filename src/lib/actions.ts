@@ -1548,6 +1548,13 @@ export async function processRedditDataForLeads(
 
   // Step 1: Scrape Reddit posts
   const scrapedPosts = await scrapeSubredditsWithFetch(activeSubreddits, keywords, 100, 'month');
+  console.log("==== SCRAPING DEBUG INFO ====");
+console.log("scrapeSubredditsWithFetch result:", {
+  length: scrapedPosts.length,
+  firstPost: scrapedPosts[0] || "No posts",
+  activeSubreddits,
+  keywords
+});
   debugLog(context, `Scraping returned ${scrapedPosts.length} posts`);
 
   // For debugging
