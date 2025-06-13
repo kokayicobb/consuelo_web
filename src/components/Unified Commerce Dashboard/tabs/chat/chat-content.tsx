@@ -9,7 +9,7 @@ import {
   generateChartConfig,
   explainQuery,
   generateActionSuggestions,
-} from "@/lib/actions";
+} from "@/components/Unified Commerce Dashboard/lib/actions/prompt_actions";
 
 import { ChatMessage, ChatMessageData } from "@/types/chats"; // Using your specified path
 import { SegmentationForm, ExampleQueries } from "../../segmentation"; // Using your specified path
@@ -50,7 +50,9 @@ const EXAMPLE_QUERIES = [
       {
         text: "Show me leads who started a loan application but haven't completed it.",
       },
-      { text: "List new leads from the 'Online Loan Inquiry Form' in the last 7 days." },
+      {
+        text: "List new leads from the 'Online Loan Inquiry Form' in the last 7 days.",
+      },
       {
         text: "Identify prospects who requested a callback last week but haven't been contacted.",
       },
@@ -81,7 +83,9 @@ const EXAMPLE_QUERIES = [
     description:
       "Analyze product uptake, advisor effectiveness, and customer preferences.",
     queries: [
-      { text: "Which advisor has the highest loan origination rate this month?" },
+      {
+        text: "Which advisor has the highest loan origination rate this month?",
+      },
       {
         text: "Find clients who opened an account with advisor Alex in the past month.",
       },
@@ -113,7 +117,7 @@ const EXAMPLE_QUERIES = [
       },
     ],
   },
-]
+];
 
 export default function ChatContent() {
   const [inputValue, setInputValue] = useState("");

@@ -19,14 +19,14 @@ import {
   ArrowUpRight,
   Mail,
   Save,
-  ChevronUp
+  ChevronUp,
 } from "lucide-react";
 import MicrosoftTeamsSVG from "@/components/ui/Logos/microsoft-teams";
 import {
   processRedditDataForLeads,
   generateSalesScript,
   generateKeyTalkingPoints,
-} from "@/lib/actions";
+} from "@/components/Unified Commerce Dashboard/lib/actions/prompt_actions";
 import {
   Card,
   CardContent,
@@ -90,8 +90,8 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
     // Reddit specific settings
     subreddits: [
       { name: "borrow", category: "lending", selected: true },
-  { name: "SimpleLoans", category: "lending", selected: true },
-  { name: "donationrequest", category: "lending", selected: true },
+      { name: "SimpleLoans", category: "lending", selected: true },
+      { name: "donationrequest", category: "lending", selected: true },
       { name: "smallbusiness", category: "business", selected: true },
       { name: "entrepreneur", category: "business", selected: true },
       { name: "startups", category: "business", selected: true },
@@ -106,7 +106,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
       { name: "consulting", category: "business", selected: false },
     ],
     customSubreddit: "",
-  
+
     // Facebook specific settings - UPDATE THESE TOO
     facebookGroups: [
       { name: "Small Business Owners Network", selected: true },
@@ -115,15 +115,15 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
       { name: "Startup Funding Community", selected: true },
     ],
     customFacebookGroup: "",
-  
-    // Instagram specific settings - UPDATE THESE TOO  
+
+    // Instagram specific settings - UPDATE THESE TOO
     instagramTags: [
       { name: "smallbusiness", selected: true },
       { name: "entrepreneur", selected: true },
       { name: "businessfunding", selected: false },
     ],
     customInstagramTag: "",
-  
+
     // UPDATED KEYWORDS FOR BUSINESS FUNDING
     keywords: [
       "funding",
@@ -145,38 +145,36 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
       "business advice",
       "need help",
       "struggling",
-     
-     
+
       "need loan",
-  "borrow money", 
-  "emergency loan",
-  "quick loan",
-  "personal loan",
-  "cash advance",
-  "financial help",
-  "need money",
-  "loan request",
-  "urgent",
-  "business loan",
-  "expansion",
-  "inventory",
-  "payroll",
+      "borrow money",
+      "emergency loan",
+      "quick loan",
+      "personal loan",
+      "cash advance",
+      "financial help",
+      "need money",
+      "loan request",
+      "urgent",
+      "business loan",
+      "expansion",
+      "inventory",
+      "payroll",
     ],
     customKeyword: "",
     scanFrequency: "daily",
     notificationType: "teams",
     emailAddress: "",
     teamsWebhook: "",
-    
+
     // UPDATED CONTENT FILTERS FOR BUSINESS CONTEXT
     contentFilter: {
-      seekingFunding: true,        // Changed from seekingRecommendations
-      expansionPlans: true,        // Changed from newToArea  
-      cashFlowIssues: true,        // Changed from complaining
-      equipmentNeeds: true,        // Changed from priceDiscussion
-      revenueDiscussion: true,     // Changed from weightLossGoals
+      seekingFunding: true, // Changed from seekingRecommendations
+      expansionPlans: true, // Changed from newToArea
+      cashFlowIssues: true, // Changed from complaining
+      equipmentNeeds: true, // Changed from priceDiscussion
+      revenueDiscussion: true, // Changed from weightLossGoals
     },
-  
 
     // Platform selection
     platforms: {
@@ -229,7 +227,6 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
       score: 87,
       url: "https://reddit.com/r/entrepreneur/comments/def456",
     },
-   
   ]);
   const statusColors = {
     new: "bg-blue-500",
@@ -708,25 +705,27 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
                 >
                   Add Custom Subreddit
                 </Label>
-                <div className="flex w-full items-center gap-2"> {/* Changed to 'gap-2' for spacing */}
-  <Input
-    id="custom-subreddit"
-    type="text"
-    name="customSubreddit"
-    value={formData.customSubreddit}
-    onChange={handleChange}
-    placeholder="Enter subreddit name"
-    className="flex-1" // This makes the input grow to fill available space
-  />
-  <Button
-    onClick={handleAddSubreddit}
-    variant="default"
-    size="default"
-    className="whitespace-nowrap bg-transparent shadow-none text-black-800 hover:bg-gray-100" // Ensures button text doesn't wrap
-  >
-    Add
-  </Button>
-</div>
+                <div className="flex w-full items-center gap-2">
+                  {" "}
+                  {/* Changed to 'gap-2' for spacing */}
+                  <Input
+                    id="custom-subreddit"
+                    type="text"
+                    name="customSubreddit"
+                    value={formData.customSubreddit}
+                    onChange={handleChange}
+                    placeholder="Enter subreddit name"
+                    className="flex-1" // This makes the input grow to fill available space
+                  />
+                  <Button
+                    onClick={handleAddSubreddit}
+                    variant="default"
+                    size="default"
+                    className="text-black-800 whitespace-nowrap bg-transparent shadow-none hover:bg-gray-100" // Ensures button text doesn't wrap
+                  >
+                    Add
+                  </Button>
+                </div>
               </div>
             </CollapsibleContent>
           </Collapsible>
@@ -754,7 +753,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
                     />
                     <Label
                       htmlFor={`facebook-group-${index}`}
-                      className="text-sm bg-white"
+                      className="bg-white text-sm"
                     >
                       {group.name}
                     </Label>
@@ -784,7 +783,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
                   onClick={handleAddFacebookGroup}
                   variant="default"
                   size="default"
-                  className="whitespace-nowrap bg-transparent shadow-none text-black-800 hover:bg-gray-100"
+                  className="text-black-800 whitespace-nowrap bg-transparent shadow-none hover:bg-gray-100"
                 >
                   Add
                 </Button>
@@ -845,7 +844,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
                   onClick={handleAddInstagramTag}
                   variant="default"
                   size="default"
-                  className="whitespace-nowrap bg-transparent shadow-none text-black-800 hover:bg-gray-100"
+                  className="text-black-800 whitespace-nowrap bg-transparent shadow-none hover:bg-gray-100"
                 >
                   Add
                 </Button>
@@ -857,7 +856,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
       <CardFooter className="flex justify-end pt-2">
         <Button
           onClick={() => setCurrentStep(2)}
-          className="bg-transparent shadow-none text-black-800 hover:bg-gray-100"
+          className="text-black-800 bg-transparent shadow-none hover:bg-gray-100"
         >
           Next <ChevronRight className="ml-2 h-4 w-4" />
         </Button>
@@ -873,52 +872,55 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-3">
-        <Collapsible
-      open={isOpen}
-      onOpenChange={setIsOpen}
-      className="w-full space-y-2"
-    >
-      <div className="flex items-center justify-between space-x-4">
-        <Label className="text-sm font-medium">
-          Keywords to Track ({formData.keywords.length})
-        </Label>
-        <CollapsibleTrigger asChild>
-          <Button variant="ghost" size="sm" className="w-9 p-0 bg-transparent shadow-none text-black-800 hover:bg-gray-100">
-            <ChevronDown className="h-4 w-4" />
-            <span className="sr-only">Toggle</span>
-          </Button>
-        </CollapsibleTrigger>
-      </div>
-
-      
-
-      <CollapsibleContent>
-        {/* You can add some padding/border to the content area if desired */}
-        <div className="mb-3 flex flex-wrap gap-2 rounded-md p-3">
-          {formData.keywords.length > 0 ? (
-            formData.keywords.map((keyword) => (
-              <Badge
-                key={keyword}
-                variant="secondary"
-                className="flex items-center gap-1 px-3 py-1.5"
-              >
-                {keyword}
-                <button
-                  onClick={() => handleRemoveKeyword(keyword)}
-                  className="ml-1 text-gray-500 hover:text-gray-700"
-                  aria-label={`Remove ${keyword}`}
+          <Collapsible
+            open={isOpen}
+            onOpenChange={setIsOpen}
+            className="w-full space-y-2"
+          >
+            <div className="flex items-center justify-between space-x-4">
+              <Label className="text-sm font-medium">
+                Keywords to Track ({formData.keywords.length})
+              </Label>
+              <CollapsibleTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-black-800 w-9 bg-transparent p-0 shadow-none hover:bg-gray-100"
                 >
-                  <X className="h-3 w-3" />
-                </button>
-              </Badge>
-            ))
-          ) : (
-            <p className="text-sm text-gray-500">No keywords to display.</p>
-          )}
-        </div>
-      </CollapsibleContent>
-    </Collapsible>
-  
+                  <ChevronDown className="h-4 w-4" />
+                  <span className="sr-only">Toggle</span>
+                </Button>
+              </CollapsibleTrigger>
+            </div>
+
+            <CollapsibleContent>
+              {/* You can add some padding/border to the content area if desired */}
+              <div className="mb-3 flex flex-wrap gap-2 rounded-md p-3">
+                {formData.keywords.length > 0 ? (
+                  formData.keywords.map((keyword) => (
+                    <Badge
+                      key={keyword}
+                      variant="secondary"
+                      className="flex items-center gap-1 px-3 py-1.5"
+                    >
+                      {keyword}
+                      <button
+                        onClick={() => handleRemoveKeyword(keyword)}
+                        className="ml-1 text-gray-500 hover:text-gray-700"
+                        aria-label={`Remove ${keyword}`}
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-500">
+                    No keywords to display.
+                  </p>
+                )}
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
 
           <div className="flex space-x-2">
             <Input
@@ -927,13 +929,13 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
               value={formData.customKeyword}
               onChange={handleChange}
               placeholder="Add keyword (e.g., loan help)"
-              className="flex-1 bg-white border border-gray-400"
+              className="flex-1 border border-gray-400 bg-white"
             />
             <Button
               onClick={handleAddKeyword}
               variant="default"
               size="default"
-              className="whitespace-nowrap bg-transparent shadow-none text-black-800 hover:bg-gray-100"
+              className="text-black-800 whitespace-nowrap bg-transparent shadow-none hover:bg-gray-100"
             >
               Add
             </Button>
@@ -974,12 +976,16 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
         </div>
       </CardContent>
       <CardFooter className="flex justify-between pt-2">
-        <Button onClick={() => setCurrentStep(1)} variant="outline" className="bg-transparent shadow-none text-black-800 hover:bg-gray-100">
+        <Button
+          onClick={() => setCurrentStep(1)}
+          variant="outline"
+          className="text-black-800 bg-transparent shadow-none hover:bg-gray-100"
+        >
           Back
         </Button>
         <Button
           onClick={() => setCurrentStep(3)}
-          className="bg-transparent shadow-none text-black-800 hover:bg-gray-100"
+          className="text-black-800 bg-transparent shadow-none hover:bg-gray-100"
         >
           Next <ChevronRight className="ml-2 h-4 w-4" />
         </Button>
@@ -1019,17 +1025,17 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
             </SelectContent>
           </Select>
         </div>
-  
+
         <Separator />
-  
+
         <div className="space-y-3">
-          <Label className="text-sm font-medium bg-white">
+          <Label className="bg-white text-sm font-medium">
             Notification Preferences
           </Label>
           <div className="space-y-4">
             <div className="flex items-center justify-between rounded-lg bg-white p-3">
               <div className="flex items-center gap-2">
-              <MicrosoftTeamsSVG className="h-5 w-5" />
+                <MicrosoftTeamsSVG className="h-5 w-5" />
                 <Label htmlFor="teams-notification" className="text-sm">
                   Teams Notifications
                 </Label>
@@ -1045,7 +1051,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
                 }
               />
             </div>
-  
+
             {formData.notificationType === "teams" && (
               <div className="space-y-2 pl-4">
                 <button
@@ -1060,7 +1066,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
                 </button>
               </div>
             )}
-  
+
             <div className="flex items-center justify-between rounded-lg bg-white p-3">
               <div className="flex items-center gap-2">
                 <Mail className="h-5 w-5" />
@@ -1079,7 +1085,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
                 }
               />
             </div>
-  
+
             {formData.notificationType === "email" && (
               <div className="space-y-2 pl-4">
                 <Label htmlFor="email-address" className="text-sm">
@@ -1095,7 +1101,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
                 />
               </div>
             )}
-  
+
             <div className="flex items-center justify-between rounded-lg bg-white p-3">
               <Label htmlFor="no-notification" className="text-sm ">
                 No Notifications
@@ -1111,92 +1117,99 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
           </div>
         </div>
         <Collapsible
-      open={isOpen}
-      onOpenChange={setIsOpen}
-      className="w-full space-y-2" // Adjust width as needed
-    >
-      <div className="flex items-center justify-between">
-        <h3 className="font-semibold text-sm text-sky-600">
-          Configuration Summary
-        </h3>
-        <CollapsibleTrigger asChild>
-          <Button 
-          variant="ghost"
-          size="sm"
-          className="w-9 p-0 bg-transparent shadow-none text-sky-600 hover:bg-gray-100">
-            {/* You can use ChevronsUpDown or conditionally render ChevronUp/ChevronDown */}
-            {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            <span className="sr-only">Toggle summary</span>
-          </Button>
-        </CollapsibleTrigger>
-      </div>
-
-      <CollapsibleContent>
-        {/* Your original Configuration Summary content goes here */}
-        <div className="rounded-lg border border-blue-100 bg-blue-50 p-4">
-          {/* Moved the H3 to the trigger section for better visibility when closed */}
-          <div className="space-y-1 text-sm text-blue-700">
-            <p>
-              <span className="font-medium">Platforms:</span>{" "}
-              {Object.entries(formData.platforms)
-                .filter(([_, enabled]) => enabled)
-                .map(
-                  ([platform]) =>
-                    platform.charAt(0).toUpperCase() + platform.slice(1),
-                )
-                .join(", ")}
-            </p>
-            {formData.platforms.reddit && (
-              <p>
-                <span className="font-medium">Reddit:</span>{" "}
-                {formData.subreddits.filter((sr) => sr.selected).length}{" "}
-                subreddits selected
-              </p>
-            )}
-            {formData.platforms.facebook && (
-              <p>
-                <span className="font-medium">Facebook:</span>{" "}
-                {formData.facebookGroups.filter((g) => g.selected).length}{" "}
-                groups selected
-              </p>
-            )}
-            {formData.platforms.instagram && (
-              <p>
-                <span className="font-medium">Instagram:</span>{" "}
-                {formData.instagramTags.filter((t) => t.selected).length}{" "}
-                hashtags selected
-              </p>
-            )}
-            <p>
-              <span className="font-medium">Keywords:</span>{" "}
-              {formData.keywords.length} keywords defined
-            </p>
-            <p>
-              <span className="font-medium">Scan Frequency:</span>{" "}
-              {formData.scanFrequency.charAt(0).toUpperCase() +
-                formData.scanFrequency.slice(1)}
-            </p>
-            <p>
-              <span className="font-medium">Notifications:</span>{" "}
-              {formData.notificationType === "none"
-                ? "Manual dashboard check"
-                : `${formData.notificationType.charAt(0).toUpperCase() + formData.notificationType.slice(1)}`}
-            </p>
+          open={isOpen}
+          onOpenChange={setIsOpen}
+          className="w-full space-y-2" // Adjust width as needed
+        >
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-sky-600">
+              Configuration Summary
+            </h3>
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-9 bg-transparent p-0 text-sky-600 shadow-none hover:bg-gray-100"
+              >
+                {/* You can use ChevronsUpDown or conditionally render ChevronUp/ChevronDown */}
+                {isOpen ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+                <span className="sr-only">Toggle summary</span>
+              </Button>
+            </CollapsibleTrigger>
           </div>
-        </div>
-      </CollapsibleContent>
-    </Collapsible>
-  
-        
+
+          <CollapsibleContent>
+            {/* Your original Configuration Summary content goes here */}
+            <div className="rounded-lg border border-blue-100 bg-blue-50 p-4">
+              {/* Moved the H3 to the trigger section for better visibility when closed */}
+              <div className="space-y-1 text-sm text-blue-700">
+                <p>
+                  <span className="font-medium">Platforms:</span>{" "}
+                  {Object.entries(formData.platforms)
+                    .filter(([_, enabled]) => enabled)
+                    .map(
+                      ([platform]) =>
+                        platform.charAt(0).toUpperCase() + platform.slice(1),
+                    )
+                    .join(", ")}
+                </p>
+                {formData.platforms.reddit && (
+                  <p>
+                    <span className="font-medium">Reddit:</span>{" "}
+                    {formData.subreddits.filter((sr) => sr.selected).length}{" "}
+                    subreddits selected
+                  </p>
+                )}
+                {formData.platforms.facebook && (
+                  <p>
+                    <span className="font-medium">Facebook:</span>{" "}
+                    {formData.facebookGroups.filter((g) => g.selected).length}{" "}
+                    groups selected
+                  </p>
+                )}
+                {formData.platforms.instagram && (
+                  <p>
+                    <span className="font-medium">Instagram:</span>{" "}
+                    {formData.instagramTags.filter((t) => t.selected).length}{" "}
+                    hashtags selected
+                  </p>
+                )}
+                <p>
+                  <span className="font-medium">Keywords:</span>{" "}
+                  {formData.keywords.length} keywords defined
+                </p>
+                <p>
+                  <span className="font-medium">Scan Frequency:</span>{" "}
+                  {formData.scanFrequency.charAt(0).toUpperCase() +
+                    formData.scanFrequency.slice(1)}
+                </p>
+                <p>
+                  <span className="font-medium">Notifications:</span>{" "}
+                  {formData.notificationType === "none"
+                    ? "Manual dashboard check"
+                    : `${formData.notificationType.charAt(0).toUpperCase() + formData.notificationType.slice(1)}`}
+                </p>
+              </div>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       </CardContent>
       <CardFooter className="flex justify-between pt-2">
-        <Button onClick={() => setCurrentStep(2)} variant="outline" className='bg-white shadow-none text-black-800 hover:bg-gray-100'>
+        <Button
+          onClick={() => setCurrentStep(2)}
+          variant="outline"
+          className="text-black-800 bg-white shadow-none hover:bg-gray-100"
+        >
           Back
         </Button>
         <Button
           onClick={handleSubmitConfiguration}
           disabled={isProcessing}
-          className="bg-white hover:bg-gray-100 disabled:bg-gray-300 disabled:text-gray-500 text-black shawdow-none"
+          className="shawdow-none bg-white text-black hover:bg-gray-100 disabled:bg-gray-300 disabled:text-gray-500"
         >
           {isProcessing ? (
             <>
@@ -1205,7 +1218,8 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
             </>
           ) : (
             <>
-              Start Monitoring <ArrowRightCircle className="ml-2 h-4 w-4 bg-white shadow-none text-black-800 hover:bg-gray-100 border: border-none" />
+              Start Monitoring{" "}
+              <ArrowRightCircle className="text-black-800 border: ml-2 h-4 w-4 border-none bg-white shadow-none hover:bg-gray-100" />
             </>
           )}
         </Button>
@@ -1227,7 +1241,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
               onClick={() => setCurrentStep(1)}
               variant="outline"
               size="sm"
-              className="flex items-center bg-transparent shadow-none text-black-800 hover:bg-gray-100"
+              className="text-black-800 flex items-center bg-transparent shadow-none hover:bg-gray-100"
             >
               <Settings className="mr-2 h-4 w-4" />
               Configure
@@ -1257,9 +1271,9 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
                 className="pl-9"
               />
             </div>
-            <div className="flex gap-2 shawdow-none">
+            <div className="shawdow-none flex gap-2">
               <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger className="w-[140px] shawdow-none">
+                <SelectTrigger className="shawdow-none w-[140px]">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -1273,9 +1287,9 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
               </Select>
               <Badge
                 variant="outline"
-                className="flex h-10 items-center gap-1 px-3 shawdow-none"
+                className="shawdow-none flex h-10 items-center gap-1 px-3"
               >
-                <Filter className="h-3.5 w-3.5 shawdow-none" />
+                <Filter className="shawdow-none h-3.5 w-3.5" />
                 {filteredLeads.length} leads
               </Badge>
             </div>
@@ -1311,18 +1325,19 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
         </TabsList>
 
         <TabsContent value="all" className="mt-2">
-        <ScrollArea className="h-[calc(100vh-280px)] w-full">
-        <div className="flex flex-col space-y-4 p-4">
-    {filteredLeads.length > 0 ? (
-      filteredLeads.map((lead) => (
-        <Card
-          key={lead.id}
-          // 4. Changed `w-80 md:w-96` to `w-full` so each card takes the full width
-          //    of the container. You can adjust this if you want a max-width or
-          //    specific width (e.g., `w-full max-w-md mx-auto` for a centered card with max width).
-          // 5. `flex-shrink-0` is usually for horizontal flex layouts to prevent shrinking.
-          //    It's less critical here but doesn't harm. Can be removed if not needed.
-          className="w-full max-w-md mx-auto shadow-none" >
+          <ScrollArea className="h-[calc(100vh-280px)] w-full">
+            <div className="flex flex-col space-y-4 p-4">
+              {filteredLeads.length > 0 ? (
+                filteredLeads.map((lead) => (
+                  <Card
+                    key={lead.id}
+                    // 4. Changed `w-80 md:w-96` to `w-full` so each card takes the full width
+                    //    of the container. You can adjust this if you want a max-width or
+                    //    specific width (e.g., `w-full max-w-md mx-auto` for a centered card with max width).
+                    // 5. `flex-shrink-0` is usually for horizontal flex layouts to prevent shrinking.
+                    //    It's less critical here but doesn't harm. Can be removed if not needed.
+                    className="mx-auto w-full max-w-md shadow-none"
+                  >
                     <CardHeader className="flex flex-row items-start justify-between p-3 pb-0">
                       <div className="flex items-center gap-2">
                         <PlatformIcon platform={lead.platform} />
@@ -1453,7 +1468,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
             <div className="space-y-3">
               {filteredLeads.length > 0 ? (
                 filteredLeads.map((lead) => (
-                  <Card key={lead.id} className="overflow-hidden w-full">
+                  <Card key={lead.id} className="w-full overflow-hidden">
                     <CardHeader className="flex flex-row items-start justify-between p-3 pb-0">
                       <div className="flex items-center gap-2">
                         <PlatformIcon platform={lead.platform} />
@@ -1816,7 +1831,6 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
           <DialogHeader>
             <DialogTitle className="flex items-start justify-between">
               <span>Outreach Script for {selectedLeadForScript?.username}</span>
-             
             </DialogTitle>
           </DialogHeader>
 

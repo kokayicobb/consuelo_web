@@ -1,4 +1,4 @@
-// src/lib/auth.ts
+//src/lib/auth.ts
 import { type User, type Session } from '@supabase/supabase-js';
 import { createPagesServerClient } from '@supabase/auth-helpers-nextjs';
 import type { GetServerSidePropsContext } from 'next';

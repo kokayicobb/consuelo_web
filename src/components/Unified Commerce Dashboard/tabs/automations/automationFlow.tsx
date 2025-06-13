@@ -1,390 +1,792 @@
-"use client"
-import { useRouter } from 'next/navigation';
-import React, { useState, useMemo, ReactElement } from 'react';
+"use client";
+
+import { useRouter, useParams } from "next/navigation";
+import React, { useState, useMemo, ReactElement, useEffect } from "react";
 import {
   Plus,
-  MoreVertical,
-  PlayCircle,
   X,
   Search,
   Zap,
-  MessageSquare, Mail, Phone, Calendar, Users, TrendingUp, FileText, Target, Bell, UserCheck,
+  MessageSquare,
+  Mail,
+  FileText,
+  Clock,
   ChevronLeft,
   Settings2,
-  Filter as FilterIcon,
-  Clock,
   GitFork,
-  RefreshCw,
-  ListChecks,
-  Tag as TagIcon,
-  BellRing,
-  UserPlus,
   Database,
-  ArrowRightLeft,
-  Facebook,
-} from 'lucide-react';
+  Loader2,
+  Save,
+  PlayCircle,
+  ToggleLeft,
+  ToggleRight,
+  AlertCircle,
+  Copy,
+  CheckCircle,
+} from "lucide-react";
+import { Flow, FlowVersion } from "../../lib/automations/types";
 
-// Type Definitions
+// App definitions and other interfaces remain the same
 interface AppDefinition {
   id: string;
   name: string;
-  icon: ReactElement | string;
-  app_type: 'trigger' | 'action' | 'condition';
+  icon: ReactElement;
+  app_type: "trigger" | "action" | "condition";
   category: string;
+  description: string;
   defaultEvent?: string;
   defaultAction?: string;
-  description: string;
 }
 
 interface AppCategories {
-  [categoryName: string]: AppDefinition[];
+  [category: string]: AppDefinition[];
 }
+
+const appCategories: AppCategories = {
+  "Triggers & Lead Sources": [
+    {
+      id: "webhook",
+      name: "Webhook",
+      icon: <Zap className="text-yellow-500" />,
+      app_type: "trigger",
+      category: "Triggers & Lead Sources",
+      defaultEvent: "On Webhook Received",
+      description: "Start when an HTTP request is sent to a URL.",
+    },
+    {
+      id: "schedule",
+      name: "Schedule",
+      icon: <Clock className="text-purple-500" />,
+      app_type: "trigger",
+      category: "Triggers & Lead Sources",
+      defaultEvent: "Every Hour",
+      description: "Run this workflow on a fixed schedule.",
+    },
+    {
+      id: "form",
+      name: "Form Submitted",
+      icon: <FileText className="text-indigo-500" />,
+      app_type: "trigger",
+      category: "Triggers & Lead Sources",
+      defaultEvent: "New Form Submission",
+      description: "Start when a form on your site is submitted.",
+    },
+  ],
+  Communication: [
+    {
+      id: "email",
+      name: "Send Email",
+      icon: <Mail className="text-red-500" />,
+      app_type: "action",
+      category: "Communication",
+      defaultAction: "Send an Email",
+      description: "Send a personalized email.",
+    },
+    {
+      id: "gmail",
+      name: "Send Gmail",
+      icon: <Mail className="text-red-600" />,
+      app_type: "action",
+      category: "Communication",
+      defaultAction: "Send Gmail",
+      description: "Send email via Gmail.",
+    },
+    {
+      id: "twilio",
+      name: "Send SMS (Twilio)",
+      icon: <MessageSquare className="text-lime-600" />,
+      app_type: "action",
+      category: "Communication",
+      defaultAction: "Send an SMS Message",
+      description: "Send an SMS text message via Twilio.",
+    },
+  ],
+  "Data & Storage": [
+    {
+      id: "http",
+      name: "HTTP Request",
+      icon: <Database className="text-blue-500" />,
+      app_type: "action",
+      category: "Data & Storage",
+      defaultAction: "Make HTTP Request",
+      description: "Make an HTTP request to any API.",
+    },
+    {
+      id: "database",
+      name: "Database Query",
+      icon: <Database className="text-green-500" />,
+      app_type: "action",
+      category: "Data & Storage",
+      defaultAction: "Execute Query",
+      description: "Query a database.",
+    },
+  ],
+  "Logic & Control": [
+    {
+      id: "if",
+      name: "IF Condition",
+      icon: <GitFork className="text-orange-500" />,
+      app_type: "condition",
+      category: "Logic & Control",
+      defaultAction: "Check Condition",
+      description: "Branch based on conditions.",
+    },
+    {
+      id: "wait",
+      name: "Wait/Delay",
+      icon: <Clock className="text-amber-600" />,
+      app_type: "condition",
+      category: "Logic & Control",
+      defaultAction: "Wait",
+      description: "Pause the workflow.",
+    },
+    {
+      id: "code",
+      name: "Code",
+      icon: <Settings2 className="text-gray-600" />,
+      app_type: "action",
+      category: "Logic & Control",
+      defaultAction: "Run Code",
+      description: "Execute custom JavaScript code.",
+    },
+  ],
+};
 
 interface WorkflowStep {
   id: string;
-  type: 'trigger' | 'action' | 'condition';
+  type: "trigger" | "action" | "condition";
   app: string;
   appName: string;
   event: string;
   configured: boolean;
-  icon: ReactElement | string;
+  icon: ReactElement;
   description?: string;
-  // Specific config fields can be added here using optional properties
-  // e.g., facebookAdAccount?: string; formId?: string;
-  // e.g., targetCohortId?: string; emailSubject?: string;
+  stepData?: any;
 }
 
-// Helper to generate unique IDs
-const generateId = (): string => Date.now().toString() + Math.random().toString(36).substring(2, 9);
-
-// Helper to render icons
-const renderIcon = (iconInput: ReactElement | string, defaultSize: number = 20, className?: string) => {
-  if (typeof iconInput === 'string') {
-    return <span className={`text-${defaultSize === 20 ? 'lg' : '2xl'} ${className}`}>{iconInput}</span>;
-  }
-  if (React.isValidElement(iconInput)) {
-    // Ensure className from AppDefinition is merged with any additional className
-    const existingClassName = (iconInput.props as any).className || '';
-    const combinedClassName = `${existingClassName} ${className || ''}`.trim();
-    return React.cloneElement(iconInput as React.ReactElement<{ size?: number; className?: string }>, { size: defaultSize, className: combinedClassName });
-  }
-  return <Zap size={defaultSize} className={className} />; // Fallback icon
+const renderIcon = (
+  iconInput: ReactElement,
+  defaultSize: number = 20,
+  className?: string,
+) => {
+  return React.cloneElement(iconInput, { size: defaultSize, className });
 };
 
-
-const AutomationFlow: React.FC = () => {
-  const [workflowName, setWorkflowName] = useState<string>('New Automation');
-  const [workflow, setWorkflow] = useState<WorkflowStep[]>([
-    {
-      id: generateId(),
-      type: 'trigger',
-      app: 'facebook-ads',
-      appName: 'Facebook Lead Ads',
-      event: 'New Lead',
-      configured: true,
-      icon: <Facebook className="text-blue-600 bg-transparent" />,
-      description: 'When a new lead is submitted via your Facebook Lead Ad form.'
-    }
-  ]);
+export default function AutomationFlowPage() {
   const router = useRouter();
-  const [selectedStepIndex, setSelectedStepIndex] = useState<number | null>(workflow.length > 0 ? 0 : null);
-  const [sidebarMode, setSidebarMode] = useState<'closed' | 'selectApp' | 'configure'>(workflow.length > 0 ? 'configure' : 'closed');
-  const [stepIndexToInsertAfter, setStepIndexToInsertAfter] = useState<number | null>(null);
-  const [searchTerm, setSearchTerm] = useState<string>('');
+  const params = useParams();
+  const flowId = params.flowId as string;
 
-  const appCategories: AppCategories = {
-    'Triggers & Lead Sources': [
-      { id: 'facebook-ads', name: 'Facebook Lead Ads', icon: <Facebook className="text-blue-600 bg-transparent"/>, app_type: 'trigger', category: 'Triggers & Lead Sources', defaultEvent: 'New Lead', description: 'Start automation when a Facebook Lead Ad form is submitted.' },
-      { id: 'google-ads', name: 'Google Ads Lead Form', icon: <UserPlus className="text-green-500"/>, app_type: 'trigger', category: 'Triggers & Lead Sources', defaultEvent: 'New Lead Form Submission', description: 'Trigger when a new lead is captured from Google Ads.' },
-      { id: 'web-forms', name: 'Website Forms', icon: <FileText className="text-indigo-500"/>, app_type: 'trigger', category: 'Triggers & Lead Sources', defaultEvent: 'New Form Submission', description: 'Initiate flow when a form on your website is submitted.' },
-      { id: 'linkedin-ads', name: 'LinkedIn Lead Gen Forms', icon: <UserPlus className="text-sky-700"/>, app_type: 'trigger', category: 'Triggers & Lead Sources', defaultEvent: 'New Lead', description: 'Automate actions for new LinkedIn leads.' },
-      { id: 'cohort-change', name: 'Cohort Change', icon: <ArrowRightLeft className="text-cyan-500"/>, app_type: 'trigger', category: 'Triggers & Lead Sources', defaultEvent: 'Contact Moves Cohort', description: 'Trigger when a contact is moved to a new cohort.' },
-    ],
-    'Communication': [
-      { id: 'email', name: 'Send Email', icon: <Mail className="text-red-500"/>, app_type: 'action', category: 'Communication', defaultAction: 'Send an Email', description: 'Send a personalized email to a contact.' },
-      { id: 'sms', name: 'Send SMS', icon: <MessageSquare className="text-lime-600"/>, app_type: 'action', category: 'Communication', defaultAction: 'Send an SMS Message', description: 'Send an SMS text message.' },
-      { id: 'whatsapp', name: 'Send WhatsApp Message', icon: <MessageSquare className="text-green-500"/>, app_type: 'action', category: 'Communication', defaultAction: 'Send WhatsApp', description: 'Engage contacts via WhatsApp.' },
-      { id: 'calendar-booking', name: 'Send Booking Link', icon: <Calendar className="text-purple-600"/>, app_type: 'action', category: 'Communication', defaultAction: 'Share Calendar Link', description: 'Send a link for contacts to book a meeting.' },
-    ],
-    'CRM Actions': [
-      { id: 'update-cohort', name: 'Update Cohort', icon: <Users className="text-yellow-500"/>, app_type: 'action', category: 'CRM Actions', defaultAction: 'Move to Cohort', description: 'Move a contact to a different cohort segment.' },
-      { id: 'add-tag', name: 'Add Tag', icon: <TagIcon className="text-pink-500"/>, app_type: 'action', category: 'CRM Actions', defaultAction: 'Add a Tag', description: 'Apply a tag to a contact for segmentation.' },
-      { id: 'update-lead-score', name: 'Update Lead Score', icon: <TrendingUp className="text-indigo-600"/>, app_type: 'action', category: 'CRM Actions', defaultAction: 'Adjust Score', description: 'Modify a contact\'s lead score.' },
-      { id: 'create-task', name: 'Create Task', icon: <ListChecks className="text-teal-500"/>, app_type: 'action', category: 'CRM Actions', defaultAction: 'Create a Follow-up Task', description: 'Assign a task to a team member.' },
-      { id: 'internal-notification', name: 'Notify Team', icon: <BellRing className="text-orange-500"/>, app_type: 'action', category: 'CRM Actions', defaultAction: 'Send Internal Alert', description: 'Send a notification to your team.' },
-    ],
-    'Logic & Conditions': [
-      { id: 'filter', name: 'Filter', icon: <FilterIcon className="text-gray-500"/>, app_type: 'condition', category: 'Logic & Conditions', defaultAction: 'Filter Contacts', description: 'Continue only if specific conditions are met.' },
-      { id: 'delay', name: 'Delay', icon: <Clock className="text-amber-600"/>, app_type: 'condition', category: 'Logic & Conditions', defaultAction: 'Wait for a Period', description: 'Pause the automation for a set duration.' },
-      { id: 'branch', name: 'Branch / If/Else', icon: <GitFork className="text-emerald-700"/>, app_type: 'condition', category: 'Logic & Conditions', defaultAction: 'Create Conditional Paths', description: 'Split the automation into different paths based on conditions.' },
-    ]
+  // State
+  const [flow, setFlow] = useState<Flow | null>(null);
+  const [workflowName, setWorkflowName] = useState("");
+  const [workflowStatus, setWorkflowStatus] = useState<"ENABLED" | "DISABLED">(
+    "DISABLED",
+  );
+  const [workflow, setWorkflow] = useState<WorkflowStep[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isToggling, setIsToggling] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedStepIndex, setSelectedStepIndex] = useState<number | null>(
+    null,
+  );
+  const [sidebarMode, setSidebarMode] = useState<
+    "closed" | "selectApp" | "configure"
+  >("closed");
+  const [stepIndexToInsertAfter, setStepIndexToInsertAfter] = useState<
+    number | null
+  >(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [webhookUrl, setWebhookUrl] = useState<string>("");
+  const [copiedWebhook, setCopiedWebhook] = useState(false);
+
+  // Parse flow to steps
+  const parseFlowToSteps = (
+    flowVersion: FlowVersion | undefined,
+  ): WorkflowStep[] => {
+    if (!flowVersion?.trigger) return [];
+
+    const steps: WorkflowStep[] = [];
+    let currentStepInFlow = flowVersion.trigger;
+    let isFirst = true;
+
+    while (currentStepInFlow) {
+      const appDef = Object.values(appCategories)
+        .flat()
+        .find((app) => app.id === currentStepInFlow.settings.pieceName);
+
+      steps.push({
+        id: currentStepInFlow.name,
+        type: isFirst
+          ? "trigger"
+          : currentStepInFlow.type.includes("ACTION")
+            ? "action"
+            : "condition",
+        app: currentStepInFlow.settings.pieceName || "unknown",
+        appName: appDef?.name || currentStepInFlow.displayName,
+        event:
+          currentStepInFlow.settings.triggerName ||
+          (currentStepInFlow.settings as any).actionName ||
+          "Configure",
+        configured: currentStepInFlow.valid,
+        icon: appDef?.icon || <Zap />,
+        description: appDef?.description,
+        stepData: currentStepInFlow,
+      });
+
+      isFirst = false;
+      currentStepInFlow = currentStepInFlow.nextAction;
+    }
+    return steps;
   };
 
-  const openAppSelector = (indexToInsertAfterValue: number) => {
-    setStepIndexToInsertAfter(indexToInsertAfterValue);
-    setSelectedStepIndex(null);
-    setSidebarMode('selectApp');
-    setSearchTerm('');
-  };
-
-  const handleAppSelected = (app: AppDefinition) => {
-    const isAddingTrigger = stepIndexToInsertAfter === -1;
-    let stepType: 'trigger' | 'action' | 'condition';
-
-    if (isAddingTrigger) {
-      if (app.app_type !== 'trigger') {
-        alert("Only Triggers (e.g., Lead Sources, Cohort Changes) can be the first step.");
-        return;
-      }
-      stepType = 'trigger';
-    } else {
-      if (app.app_type === 'trigger') {
-        alert("Triggers can only be the first step in an automation.");
-        return;
-      }
-      stepType = app.app_type;
+  // Fetch flow data
+  useEffect(() => {
+    if (!flowId) {
+      console.error("No flowId provided");
+      setError("No flow ID provided");
+      setIsLoading(false);
+      return;
     }
 
+    console.log(`Fetching flow with ID: ${flowId}`);
+    const fetchFlow = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        const response = await fetch(`/api/automations/${flowId}`);
+        console.log(`Flow fetch response status: ${response.status}`);
+
+        if (!response.ok) {
+          console.error(`Failed to fetch flow: ${response.status}`);
+          throw new Error(
+            `Failed to fetch automation details (${response.status})`,
+          );
+        }
+
+        const responseText = await response.text();
+        console.log("Raw flow response:", responseText);
+
+        // Try to parse as JSON
+        let result;
+        try {
+          result = JSON.parse(responseText);
+        } catch (parseError) {
+          console.error("Failed to parse flow response as JSON:", parseError);
+          throw new Error("Invalid response format from server");
+        }
+
+        if (result.success && result.data) {
+          console.log("Flow data received:", result.data);
+          setFlow(result.data);
+          setWorkflowName(result.data.version.displayName);
+          setWorkflowStatus(result.data.status);
+          const parsedSteps = parseFlowToSteps(result.data.version);
+          setWorkflow(parsedSteps);
+
+          // Generate webhook URL if webhook trigger exists
+          const webhookTrigger = parsedSteps.find(
+            (step) => step.app === "webhook",
+          );
+          if (webhookTrigger) {
+            // Simple webhook URL construction if activePieces.getWebhookUrl isn't working
+            const url = `${window.location.origin}/api/webhook/${flowId}`;
+            setWebhookUrl(url);
+          }
+
+          if (parsedSteps.length > 0) {
+            setSelectedStepIndex(0);
+            setSidebarMode("configure");
+          }
+        } else {
+          console.error("API returned error:", result.error);
+          throw new Error(result.error?.message || "Could not load automation");
+        }
+      } catch (err: any) {
+        console.error("Error in fetchFlow:", err);
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchFlow();
+  }, [flowId]);
+
+  // Copy webhook URL
+  const copyWebhookUrl = () => {
+    if (!webhookUrl) {
+      setError("No webhook URL available");
+      return;
+    }
+    navigator.clipboard.writeText(webhookUrl);
+    setCopiedWebhook(true);
+    setTimeout(() => setCopiedWebhook(false), 2000);
+  };
+
+  // Toggle workflow status
+  const handleToggleStatus = async () => {
+    if (!flowId) {
+      setError("No flow ID available");
+      return;
+    }
+
+    setIsToggling(true);
+    try {
+      const newStatus = workflowStatus === "ENABLED" ? "DISABLED" : "ENABLED";
+      console.log(`Toggling flow ${flowId} status to: ${newStatus}`);
+
+      // Instead of using /activate or /deactivate endpoints, update the status directly
+      const response = await fetch(`/api/automations/${flowId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          displayName: workflowName,
+          status: newStatus,
+        }),
+      });
+
+      console.log(`Toggle status response: ${response.status}`);
+
+      if (!response.ok) {
+        throw new Error(
+          `Failed to ${newStatus === "ENABLED" ? "enable" : "disable"} automation`,
+        );
+      }
+
+      const responseText = await response.text();
+      console.log("Raw toggle response:", responseText);
+
+      // Only try to parse if there's content
+      if (responseText.trim()) {
+        try {
+          const result = JSON.parse(responseText);
+          if (result.success && result.data) {
+            console.log("Toggle success, new data:", result.data);
+            setWorkflowStatus(result.data.status);
+          } else {
+            throw new Error(result.error?.message || "Failed to update status");
+          }
+        } catch (parseError) {
+          console.error("Failed to parse toggle response:", parseError);
+          throw new Error("Invalid response format from server");
+        }
+      } else {
+        // If empty response but status is ok, assume it worked
+        if (response.ok) {
+          setWorkflowStatus(newStatus);
+        } else {
+          throw new Error("Empty response from server");
+        }
+      }
+    } catch (err: any) {
+      console.error("Error toggling status:", err);
+      setError(err.message);
+    } finally {
+      setIsToggling(false);
+    }
+  };
+
+  // Save workflow
+  const handleSave = async () => {
+    if (!flowId) {
+      setError("No flow ID available");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      console.log(`Saving flow ${flowId} with name: ${workflowName}`);
+      const response = await fetch(`/api/automations/${flowId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ displayName: workflowName }),
+      });
+
+      console.log(`Save response status: ${response.status}`);
+
+      if (!response.ok) {
+        throw new Error(`Failed to save automation (${response.status})`);
+      }
+
+      const responseText = await response.text();
+      console.log("Raw save response:", responseText);
+
+      // Only try to parse if there's content
+      if (responseText.trim()) {
+        try {
+          const result = JSON.parse(responseText);
+          if (!result.success) {
+            throw new Error(result.error?.message || "Failed to save workflow");
+          }
+          console.log("Save successful:", result);
+        } catch (parseError) {
+          console.error("Failed to parse save response:", parseError);
+          // Don't throw here, the save might have worked even if parsing failed
+        }
+      }
+    } catch (err: any) {
+      console.error("Error saving workflow:", err);
+      setError(err.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Test workflow
+  const handleTest = async () => {
+    if (!flowId) {
+      setError("No flow ID available");
+      return;
+    }
+
+    try {
+      if (webhookUrl) {
+        alert(`To test this automation, send a POST request to: ${webhookUrl}`);
+      } else {
+        alert(
+          "Test feature coming soon! No webhook URL available for this workflow.",
+        );
+      }
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  // Other handler functions remain the same...
+  const handleAppSelected = (app: AppDefinition) => {
     const newStep: WorkflowStep = {
-      id: generateId(),
-      type: stepType,
+      id: `step_${workflow.length}`,
+      type: app.app_type,
       app: app.id,
       appName: app.name,
-      event: stepType === 'trigger' ? (app.defaultEvent || 'New Event') : (app.defaultAction || 'Perform Action'),
+      event: app.defaultAction || app.defaultEvent || "New Step",
       configured: false,
       icon: app.icon,
-      description: app.description
+      description: app.description,
+      stepData: {},
     };
 
     const newWorkflow = [...workflow];
-    const insertAt = stepIndexToInsertAfter === null ? 0 : stepIndexToInsertAfter + 1;
+    const insertAt =
+      stepIndexToInsertAfter === null ? 0 : stepIndexToInsertAfter + 1;
     newWorkflow.splice(insertAt, 0, newStep);
+
     setWorkflow(newWorkflow);
     setSelectedStepIndex(insertAt);
-    setSidebarMode('configure');
-  };
-  
-  const handleStepCardClick = (index: number) => {
-    setSelectedStepIndex(index);
-    setSidebarMode('configure');
+    setSidebarMode("configure");
   };
 
-  const removeStep = (indexToRemove: number) => {
+  const handleRemoveStep = (indexToRemove: number) => {
     const newWorkflow = workflow.filter((_, i) => i !== indexToRemove);
     setWorkflow(newWorkflow);
 
-    if (newWorkflow.length === 0) {
-      setSelectedStepIndex(null);
-      setSidebarMode('closed');
-    } else if (selectedStepIndex === indexToRemove) {
-      const newSelection = Math.max(0, indexToRemove - 1);
-      setSelectedStepIndex(newSelection);
-      setSidebarMode('configure');
-    } else if (selectedStepIndex !== null && selectedStepIndex > indexToRemove) {
+    if (selectedStepIndex === indexToRemove) {
+      setSelectedStepIndex(Math.max(0, indexToRemove - 1));
+      if (newWorkflow.length === 0) setSidebarMode("closed");
+    } else if (
+      selectedStepIndex !== null &&
+      selectedStepIndex > indexToRemove
+    ) {
       setSelectedStepIndex(selectedStepIndex - 1);
     }
   };
 
-  const updateStepConfiguration = (index: number, configUpdate: Partial<WorkflowStep>) => {
-    const newWorkflow = [...workflow];
-    if (newWorkflow[index]) {
-        newWorkflow[index] = { ...newWorkflow[index], ...configUpdate, configured: true };
-        setWorkflow(newWorkflow);
-    }
+  const openAppSelector = (indexToInsertAfter: number) => {
+    setStepIndexToInsertAfter(indexToInsertAfter);
+    setSelectedStepIndex(null);
+    setSidebarMode("selectApp");
+    setSearchTerm("");
   };
 
   const filteredApps = useMemo<AppCategories>(() => {
     if (!searchTerm) return appCategories;
-    
     const lowerSearchTerm = searchTerm.toLowerCase();
     const filtered: AppCategories = {};
     for (const categoryKey in appCategories) {
-      if (Object.prototype.hasOwnProperty.call(appCategories, categoryKey)) {
-        const appsInCategory = appCategories[categoryKey];
-        const appsFound = appsInCategory.filter(appDef => 
-          appDef.name.toLowerCase().includes(lowerSearchTerm) || 
-          (appDef.description && appDef.description.toLowerCase().includes(lowerSearchTerm))
-        );
-        if (appsFound.length > 0) {
-          filtered[categoryKey] = appsFound;
-        }
+      const appsInCategory = appCategories[categoryKey].filter(
+        (app) =>
+          app.name.toLowerCase().includes(lowerSearchTerm) ||
+          app.description.toLowerCase().includes(lowerSearchTerm),
+      );
+      if (appsInCategory.length > 0) {
+        filtered[categoryKey] = appsInCategory;
       }
     }
     return filtered;
-  }, [searchTerm, appCategories]);
+  }, [searchTerm]);
 
-  interface StepCardProps {
+  // UI Components
+  const StepCard: React.FC<{
     step: WorkflowStep;
     index: number;
     isSelected: boolean;
     onClick: () => void;
     onRemove: () => void;
-  }
-  
-  const StepCard: React.FC<StepCardProps> = ({ step, index, isSelected, onClick, onRemove }) => (
+  }> = ({ step, index, isSelected, onClick, onRemove }) => (
     <div
-      className={`relative bg-white border-2 rounded-lg p-4 cursor-pointer transition-all mb-4 group ${
-        isSelected ? 'border-gray-800 shadow-md' : 'border-gray-200 hover:border-gray-500'
+      className={`group relative mb-4 cursor-pointer rounded-lg border-2 bg-white p-4 transition-all ${
+        isSelected ? "border-gray-800" : "border-gray-200 hover:border-gray-400"
       }`}
       onClick={onClick}
     >
       <div className="flex items-start justify-between">
         <div className="flex items-start gap-3">
-          <div className="flex-shrink-0 w-10 h-10 bg-transparent rounded-full flex items-center justify-center">
+          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full">
             {renderIcon(step.icon, 24)}
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-gray-800">{step.appName}</span>
-              {step.configured && (
-                <span className="w-2.5 h-2.5 bg-green-500 rounded-full" title="Configured"></span>
-              )}
-              {!step.configured && (
-                <span className="w-2.5 h-2.5 bg-yellow-400 rounded-full" title="Needs Configuration"></span>
+              <span className="font-semibold text-gray-800">
+                {step.appName}
+              </span>
+              {step.configured ? (
+                <span
+                  className="h-2.5 w-2.5 rounded-full bg-green-500"
+                  title="Configured"
+                ></span>
+              ) : (
+                <span
+                  className="h-2.5 w-2.5 rounded-full bg-yellow-400"
+                  title="Needs Configuration"
+                ></span>
               )}
             </div>
-            <div className="text-sm text-gray-600 mt-0.5">
-              {index === 0 && step.type === 'trigger' ? 'Trigger: ' : `${index + 1}. Action: `} {step.event}
-            </div>
+            <p className="mt-0.5 text-sm text-gray-600">
+              {index === 0 ? "Trigger: " : `Action ${index}: `}
+              {step.event}
+            </p>
           </div>
         </div>
-        {( (step.type !== 'trigger' || workflow.length > 1)) && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onRemove();
-              }}
-              className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-              title="Remove step"
-            >
-              <X size={18} />
-            </button>
-           )
-        }
+        {(index > 0 || workflow.length > 1) && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemove();
+            }}
+            className="text-gray-400 opacity-0 transition-opacity hover:text-red-500 group-hover:opacity-100"
+            title="Remove step"
+          >
+            <X size={18} />
+          </button>
+        )}
       </div>
     </div>
   );
-
-  interface AddStepButtonProps {
-    onClick: () => void;
-    label?: string;
-  }
-  
-  const AddStepButton: React.FC<AddStepButtonProps> = ({ onClick, label = "Add an action" }) => (
-    <div className="relative h-10 flex items-center justify-center my-1">
-      <div className="absolute w-0.5 h-full bg-gray-300 top-0 left-1/2 transform -translate-x-1/2"></div>
+  const AddStepButton: React.FC<{ onClick: () => void; label?: string }> = ({
+    onClick,
+    label = "Add an action",
+  }) => (
+    <div className="relative my-1 flex h-10 items-center justify-center">
+      <div className="absolute left-1/2 top-0 h-full w-0.5 -translate-x-1/2 transform bg-gray-300"></div>
       <button
         onClick={onClick}
-        className="relative z-10 px-3 py-1.5 bg-white border-2 border-gray-300 rounded-full flex items-center justify-center text-xs font-medium text-gray-600 hover:border-blue-500 hover:text-blue-500 transition-colors"
+        className="relative z-10 flex items-center justify-center rounded-full border-2 border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:border-gray-800 hover:text-gray-800"
       >
         <Plus size={14} className="mr-1" /> {label}
       </button>
     </div>
   );
 
+  // Render
+  if (isLoading) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-gray-50">
+        <Loader2 className="h-10 w-10 animate-spin text-gray-400" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex h-screen w-screen flex-col items-center justify-center bg-gray-50">
+        <AlertCircle className="mb-2 h-10 w-10 text-red-500" />
+        <p className="text-red-600">{error}</p>
+        <button
+          onClick={() => router.push("/automations")}
+          className="mt-4 rounded-md border px-4 py-2"
+        >
+          Back to Automations
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* 
-        MAIN BACKGROUND of the page. 
-        The user wants a Zapier-like background. This could be a subtle pattern SVG,
-        a very light gradient, or textured image. For now, a simple gradient.
-        Example for later: style={{ backgroundImage: 'url("/path/to/subtle-pattern.svg")' }}
-      */}
-     
+    <div className="flex h-screen flex-col bg-slate-50">
+      {/* Header */}
+      <header className="flex-shrink-0 border-b border-gray-200 bg-white">
+        <div className="mx-auto flex max-w-full items-center justify-between p-3">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => router.push("/automations")}
+              className="rounded-md p-1 text-gray-500 hover:bg-gray-100"
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <span className="text-gray-300">/</span>
+            <input
+              type="text"
+              value={workflowName}
+              onChange={(e) => setWorkflowName(e.target.value)}
+              className="rounded-md p-1 font-semibold text-gray-800 outline-none hover:bg-gray-100 focus:bg-gray-100 focus:ring-1 focus:ring-gray-800"
+            />
+          </div>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={handleToggleStatus}
+              disabled={isToggling}
+              className="flex items-center gap-2 rounded-md p-2 text-sm font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+            >
+              {isToggling ? (
+                <Loader2 className="animate-spin" size={20} />
+              ) : workflowStatus === "ENABLED" ? (
+                <ToggleRight className="text-green-500" size={20} />
+              ) : (
+                <ToggleLeft className="text-gray-400" size={20} />
+              )}
+              {workflowStatus === "ENABLED" ? "Enabled" : "Disabled"}
+            </button>
+            <button
+              onClick={handleTest}
+              className="flex items-center gap-2 rounded-md p-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
+            >
+              <PlayCircle size={16} /> Test
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="flex items-center gap-2 rounded-lg bg-gray-800 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+            >
+              {isSaving ? (
+                <Loader2 className="animate-spin" size={16} />
+              ) : (
+                <Save size={16} />
+              )}
+              Save
+            </button>
+          </div>
+        </div>
+      </header>
 
+      {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
-        <div className="w-[480px] bg-slate-50 border-r border-gray-200 overflow-y-auto">
-          <div className="p-6 space-y-2">
+        {/* Left Panel: Steps */}
+        <div className="w-[480px] overflow-y-auto border-r border-gray-200 bg-slate-50">
+          <div className="space-y-2 p-6">
             {workflow.length === 0 && (
-              <div className="text-center py-12">
-                <Zap size={40} className="mx-auto text-gray-400 mb-3" />
-                <h3 className="font-semibold text-gray-700 mb-2">Create your automation</h3>
-                <p className="text-sm text-gray-500 mb-4">Start by adding a trigger to kick off your workflow.</p>
+              <div className="py-12 text-center">
+                <Zap size={40} className="mx-auto mb-3 text-gray-300" />
+                <h3 className="mb-2 font-semibold text-gray-700">
+                  Create your automation
+                </h3>
+                <p className="mb-4 text-sm text-gray-500">
+                  Start by adding a trigger.
+                </p>
                 <button
                   onClick={() => openAppSelector(-1)}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm flex items-center gap-2 mx-auto"
+                  className="mx-auto flex items-center gap-2 rounded-lg bg-gray-800 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700"
                 >
                   <Plus size={16} /> Add Trigger
                 </button>
               </div>
             )}
-
             {workflow.map((step, index) => (
               <React.Fragment key={step.id}>
                 <StepCard
                   step={step}
                   index={index}
-                  isSelected={selectedStepIndex === index && sidebarMode === 'configure'}
-                  onClick={() => handleStepCardClick(index)}
-                  onRemove={() => removeStep(index)}
+                  isSelected={
+                    selectedStepIndex === index && sidebarMode === "configure"
+                  }
+                  onClick={() => {
+                    setSelectedStepIndex(index);
+                    setSidebarMode("configure");
+                  }}
+                  onRemove={() => handleRemoveStep(index)}
                 />
-                 <AddStepButton onClick={() => openAppSelector(index)} />
+                <AddStepButton onClick={() => openAppSelector(index)} />
               </React.Fragment>
             ))}
           </div>
         </div>
 
-        <div className="flex-1 bg-white overflow-y-auto shadow-inner">
-          {sidebarMode === 'closed' && selectedStepIndex === null && (
-            <div className="p-8 h-full flex flex-col items-center justify-center text-center text-gray-500">
+        {/* Right Panel: Configuration / App Selection */}
+        <div className="flex-1 overflow-y-auto bg-white shadow-inner">
+          {sidebarMode === "closed" && (
+            <div className="flex h-full flex-col items-center justify-center p-8 text-center text-gray-500">
               <Database size={48} className="mx-auto mb-4 opacity-50" />
-              <h2 className="text-xl font-semibold mb-2 text-gray-700">Automation Hub</h2>
-              <p className="max-w-sm">
-                {workflow.length > 0 
-                  ? "Select a step from the left to configure it, or add a new step to your workflow."
-                  : "Your automation is currently empty. Add a trigger to begin." }
-              </p>
+              <h2 className="mb-2 text-xl font-semibold text-gray-700">
+                Automation Editor
+              </h2>
+              <p>Select a step to configure it, or add a new one.</p>
             </div>
           )}
 
-          {sidebarMode === 'selectApp' && (
+          {sidebarMode === "selectApp" && (
             <div className="p-6">
-              <div className="flex items-center mb-6">
-                <button 
-                    onClick={() => setSidebarMode(selectedStepIndex !== null ? 'configure' : (workflow.length > 0 ? 'configure' : 'closed'))} 
-                    className="mr-3 text-gray-500 hover:text-gray-700"
+              <div className="mb-6 flex items-center">
+                <button
+                  onClick={() =>
+                    setSidebarMode(
+                      selectedStepIndex !== null ? "configure" : "closed",
+                    )
+                  }
+                  className="mr-3 text-gray-500 hover:text-gray-700"
                 >
                   <ChevronLeft size={24} />
                 </button>
                 <h2 className="text-xl font-semibold text-gray-800">
-                  {stepIndexToInsertAfter === -1 ? 'Choose a Trigger' : 'Choose an Action'}
+                  {stepIndexToInsertAfter === -1
+                    ? "Choose a Trigger"
+                    : "Choose an Action"}
                 </h2>
               </div>
-              <div className="mb-6 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <div className="relative mb-6">
+                <Search
+                  className="absolute left-3 top-1/2 -translate-y-1/2 transform text-gray-400"
+                  size={20}
+                />
                 <input
                   type="text"
                   placeholder="Search apps & actions..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-lg border border-gray-300 py-2.5 pl-10 pr-4 focus:outline-none focus:ring-1 focus:ring-gray-800"
                 />
               </div>
-              
-              <div className="space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto pr-2">
+              <div className="max-h-[calc(100vh-250px)] space-y-6 overflow-y-auto pr-2">
                 {Object.entries(filteredApps).map(([category, apps]) => {
-                  const relevantApps = apps.filter(appDef => 
-                    stepIndexToInsertAfter === -1 ? appDef.app_type === 'trigger' : appDef.app_type !== 'trigger'
+                  const relevantApps = apps.filter((appDef) =>
+                    stepIndexToInsertAfter === -1
+                      ? appDef.app_type === "trigger"
+                      : appDef.app_type !== "trigger",
                   );
                   if (relevantApps.length === 0) return null;
-
                   return (
                     <div key={category}>
-                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">{category}</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        {category}
+                      </h3>
+                      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                         {relevantApps.map((appDef) => (
                           <button
                             key={appDef.id}
                             onClick={() => handleAppSelected(appDef)}
-                            className="flex items-start gap-3 p-3.5 border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50/50 transition-colors text-left focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            className="flex items-start gap-3 rounded-lg border border-gray-200 p-3.5 text-left transition-colors hover:border-gray-800 hover:bg-gray-50/50 focus:outline-none focus:ring-1 focus:ring-gray-800"
                           >
-                            <div className="flex-shrink-0 w-8 h-8 bg-transparent rounded-md flex items-center justify-center mt-0.5">
-                               {renderIcon(appDef.icon, 20)}
+                            <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md">
+                              {renderIcon(appDef.icon, 20)}
                             </div>
                             <div>
-                                <span className="font-medium text-gray-800 text-sm">{appDef.name}</span>
-                                <p className="text-xs text-gray-500 mt-0.5">{appDef.description}</p>
+                              <span className="text-sm font-medium text-gray-800">
+                                {appDef.name}
+                              </span>
+                              <p className="mt-0.5 text-xs text-gray-500">
+                                {appDef.description}
+                              </p>
                             </div>
                           </button>
                         ))}
@@ -393,134 +795,359 @@ const AutomationFlow: React.FC = () => {
                   );
                 })}
                 {Object.keys(filteredApps).length === 0 && searchTerm && (
-                    <p className="text-gray-500 text-center py-4">No apps found for "{searchTerm}".</p>
+                  <p className="py-4 text-center text-gray-500">
+                    No apps found for "{searchTerm}".
+                  </p>
                 )}
               </div>
             </div>
           )}
 
-          {sidebarMode === 'configure' && selectedStepIndex !== null && workflow[selectedStepIndex] && (() => {
-            const currentStep = workflow[selectedStepIndex];
-            if (!currentStep) return null; // Should not happen if selectedStepIndex is valid
-            return (
-              <div className="p-8">
-                <div className="flex items-center gap-3 mb-6 pb-6 border-b border-gray-200">
-                    <div className="flex-shrink-0 w-12 h-12 bg-transparent rounded-lg flex items-center justify-center">
-                        {renderIcon(currentStep.icon, 28)}
+          {sidebarMode === "configure" &&
+            selectedStepIndex !== null &&
+            workflow[selectedStepIndex] &&
+            (() => {
+              const currentStep = workflow[selectedStepIndex];
+              return (
+                <div className="p-8">
+                  <div className="mb-6 flex items-center gap-3 border-b border-gray-200 pb-6">
+                    <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg">
+                      {renderIcon(currentStep.icon, 28)}
                     </div>
-                  <div>
-                    <h3 className="text-xl font-semibold text-gray-800">{currentStep.appName}</h3>
-                    <p className="text-sm text-gray-600">
-                      {currentStep.type === 'trigger' ? 'Configure Trigger:' : `Configure Action ${selectedStepIndex + 1}:`} {currentStep.event}
-                    </p>
+                    <div>
+                      <h3 className="text-xl font-semibold text-gray-800">
+                        {currentStep.appName}
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        {currentStep.type === "trigger"
+                          ? "Configure Trigger"
+                          : `Configure Action ${selectedStepIndex + 1}`}
+                      </p>
+                    </div>
                   </div>
-                </div>
 
-                <div className="space-y-5">
-                  {currentStep.app === 'facebook-ads' && (
-                    <>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Ad Account</label>
-                        <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                          <option>Select Ad Account...</option>
-                          <option>Main Business Account (123456789)</option>
-                          <option>Finance Campaign Account (987654321)</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Form</label>
-                        <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                          <option>All Forms</option>
-                          <option>Mortgage Pre-Qual Form</option>
-                          <option>Investment Guide Download Form</option>
-                        </select>
-                      </div>
-                    </>
-                  )}
-                  {currentStep.app === 'cohort-change' && (
-                    <>
-                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Trigger Condition</label>
-                        <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                          <option>When contact ENTERS a cohort</option>
-                          <option>When contact LEAVES a cohort</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Target Cohort</label>
-                        <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                          <option>Select Cohort...</option>
-                          <option>Engaged Prospects (Finance)</option>
-                        </select>
-                      </div>
-                    </>
-                  )}
-                  {currentStep.app === 'email' && (
-                     <>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">To</label>
-                        <input type="text" defaultValue="{{contact.email}}" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
-                        <input type="text" placeholder="Welcome {{contact.first_name}}!" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Email Template / Body</label>
-                        <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2">
-                          <option>Select Template...</option>
-                          <option>Welcome Series - Email 1 (Finance)</option>
-                        </select>
-                        <textarea placeholder="Or compose your email here..." rows={4} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
-                      </div>
-                    </>
-                  )}
-                  {currentStep.app === 'update-cohort' && (
-                    <>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Move Contact To Cohort</label>
-                        <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                          <option>Select Cohort...</option>
-                          <option>Hot Lead</option>
-                          <option>Scheduled Consultation (Finance)</option>
-                        </select>
-                      </div>
-                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Conditions for Move (Optional)</label>
-                        <div className="space-y-2 p-3 bg-slate-50 rounded-lg border border-gray-200">
-                          <p className="text-xs text-gray-500 mb-1">Only move if ALL checked conditions are met:</p>
-                          <label className="flex items-center gap-2 text-sm text-gray-700">
-                            <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                          
+                  <div className="space-y-5">
+                    {/* Webhook Configuration */}
+                    {currentStep.app === "webhook" && (
+                      <>
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-gray-700">
+                            Webhook URL
                           </label>
-                          <label className="flex items-center gap-2 text-sm text-gray-700">
-                            <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                            Expressed interest in "Mortgage Products"
-                          </label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              readOnly
+                              value={webhookUrl || "Loading..."}
+                              className="flex-1 rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700"
+                            />
+                            <button
+                              onClick={copyWebhookUrl}
+                              className="flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 hover:bg-gray-50"
+                              title="Copy to clipboard"
+                            >
+                              {copiedWebhook ? (
+                                <CheckCircle
+                                  size={16}
+                                  className="text-green-500"
+                                />
+                              ) : (
+                                <Copy size={16} />
+                              )}
+                            </button>
+                          </div>
+                          <p className="mt-1 text-xs text-gray-500">
+                            Send a POST request to this URL to trigger the
+                            automation.
+                          </p>
                         </div>
-                      </div>
-                    </>
-                  )}
-                  {!['facebook-ads', 'cohort-change', 'email', 'update-cohort'].includes(currentStep.app) && (
-                    <p className="text-gray-600">Configuration options for "{currentStep.appName}" will be available soon.</p>
-                  )}
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-gray-700">
+                            Response Mode
+                          </label>
+                          <select className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-1 focus:ring-gray-800">
+                            <option value="onReceived">
+                              Respond Immediately
+                            </option>
+                            <option value="lastNode">
+                              Wait for Workflow Completion
+                            </option>
+                          </select>
+                        </div>
+                      </>
+                    )}
 
-                  <div className="mt-8 pt-6 border-t border-gray-200">
-                    <button 
-                      onClick={() => updateStepConfiguration(selectedStepIndex, { event: `Updated: ${currentStep.event}` })}
-                      className="px-5 py-2.5 bg-white text-black shadow-none rounded-lg hover:bg-gray-200 font-medium text-sm w-full sm:w-auto"
-                    >
-                      Save Configuration
-                    </button>
+                    {/* Schedule Configuration */}
+                    {currentStep.app === "schedule" && (
+                      <>
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-gray-700">
+                            Schedule Type
+                          </label>
+                          <select className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-1 focus:ring-gray-800">
+                            <option value="interval">Interval</option>
+                            <option value="cron">Cron Expression</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-gray-700">
+                            Run Every
+                          </label>
+                          <div className="flex gap-2">
+                            <input
+                              type="number"
+                              defaultValue="1"
+                              min="1"
+                              className="w-24 rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-1 focus:ring-gray-800"
+                            />
+                            <select className="flex-1 rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-1 focus:ring-gray-800">
+                              <option value="minutes">Minutes</option>
+                              <option value="hours">Hours</option>
+                              <option value="days">Days</option>
+                              <option value="weeks">Weeks</option>
+                              <option value="months">Months</option>
+                            </select>
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Email Configuration */}
+                    {(currentStep.app === "email" ||
+                      currentStep.app === "gmail") && (
+                      <>
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-gray-700">
+                            From Email
+                          </label>
+                          <input
+                            type="email"
+                            placeholder="sender@example.com"
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-1 focus:ring-gray-800"
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-gray-700">
+                            To Email
+                          </label>
+                          <input
+                            type="text"
+                            defaultValue="{{trigger.body.email}}"
+                            placeholder="recipient@example.com or use data from previous steps"
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-1 focus:ring-gray-800"
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-gray-700">
+                            Subject
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Welcome to our service!"
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-1 focus:ring-gray-800"
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-gray-700">
+                            Body
+                          </label>
+                          <textarea
+                            placeholder="Hi {{trigger.body.name}},&#10;&#10;Welcome to our service..."
+                            rows={6}
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-1 focus:ring-gray-800"
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    {/* HTTP Request Configuration */}
+                    {currentStep.app === "http" && (
+                      <>
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-gray-700">
+                            Method
+                          </label>
+                          <select className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-1 focus:ring-gray-800">
+                            <option value="GET">GET</option>
+                            <option value="POST">POST</option>
+                            <option value="PUT">PUT</option>
+                            <option value="DELETE">DELETE</option>
+                            <option value="PATCH">PATCH</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-gray-700">
+                            URL
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="https://api.example.com/endpoint"
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-1 focus:ring-gray-800"
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-gray-700">
+                            Headers (JSON)
+                          </label>
+                          <textarea
+                            placeholder='{"Content-Type": "application/json"}'
+                            rows={3}
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 font-mono text-sm focus:outline-none focus:ring-1 focus:ring-gray-800"
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-gray-700">
+                            Body
+                          </label>
+                          <textarea
+                            placeholder='{"key": "value"}'
+                            rows={4}
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 font-mono text-sm focus:outline-none focus:ring-1 focus:ring-gray-800"
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    {/* IF Condition Configuration */}
+                    {currentStep.app === "if" && (
+                      <>
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-gray-700">
+                            Condition
+                          </label>
+                          <div className="space-y-2">
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                placeholder="{{trigger.body.amount}}"
+                                className="flex-1 rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-1 focus:ring-gray-800"
+                              />
+                              <select className="rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-1 focus:ring-gray-800">
+                                <option value="equals">Equals</option>
+                                <option value="notEquals">Not Equals</option>
+                                <option value="contains">Contains</option>
+                                <option value="greater">Greater Than</option>
+                                <option value="less">Less Than</option>
+                              </select>
+                              <input
+                                type="text"
+                                placeholder="100"
+                                className="w-32 rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-1 focus:ring-gray-800"
+                              />
+                            </div>
+                          </div>
+                          <button className="mt-2 text-sm text-gray-600 hover:text-gray-800">
+                            + Add Condition
+                          </button>
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-gray-700">
+                            Combine Conditions
+                          </label>
+                          <select className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-1 focus:ring-gray-800">
+                            <option value="all">
+                              All conditions must be true (AND)
+                            </option>
+                            <option value="any">
+                              Any condition must be true (OR)
+                            </option>
+                          </select>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Wait/Delay Configuration */}
+                    {currentStep.app === "wait" && (
+                      <>
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-gray-700">
+                            Wait Type
+                          </label>
+                          <select className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-1 focus:ring-gray-800">
+                            <option value="timeInterval">Fixed Time</option>
+                            <option value="dateTime">
+                              Until Specific Date/Time
+                            </option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-gray-700">
+                            Duration
+                          </label>
+                          <div className="flex gap-2">
+                            <input
+                              type="number"
+                              defaultValue="5"
+                              min="1"
+                              className="w-24 rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-1 focus:ring-gray-800"
+                            />
+                            <select className="flex-1 rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-1 focus:ring-gray-800">
+                              <option value="seconds">Seconds</option>
+                              <option value="minutes">Minutes</option>
+                              <option value="hours">Hours</option>
+                              <option value="days">Days</option>
+                            </select>
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Code Configuration */}
+                    {currentStep.app === "code" && (
+                      <>
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-gray-700">
+                            JavaScript Code
+                          </label>
+                          <textarea
+                            placeholder={
+                              "// Access input data with $input.all()\n// Return data with return items;\n\nconst items = $input.all();\n\n// Your code here\n\nreturn items;"
+                            }
+                            rows={12}
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 font-mono text-sm focus:outline-none focus:ring-1 focus:ring-gray-800"
+                          />
+                          <p className="mt-1 text-xs text-gray-500">
+                            Available: $input, $json, $node, $workflow, $now,
+                            $today
+                          </p>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Generic fallback for unhandled apps */}
+                    {![
+                      "webhook",
+                      "schedule",
+                      "email",
+                      "gmail",
+                      "http",
+                      "if",
+                      "wait",
+                      "code",
+                    ].includes(currentStep.app) && (
+                      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                        <p className="text-gray-600">
+                          Configuration for "{currentStep.appName}" is not yet
+                          implemented in this UI.
+                        </p>
+                        <p className="mt-2 text-sm text-gray-500">
+                          Please use the n8n editor directly for advanced
+                          configuration.
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="mt-8 border-t border-gray-200 pt-6">
+                      <button className="w-full rounded-lg bg-gray-100 px-5 py-2.5 text-sm font-medium text-black hover:bg-gray-200 sm:w-auto">
+                        Save Configuration
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })()}
+              );
+            })()}
         </div>
       </div>
     </div>
   );
-};
-
-export default AutomationFlow;
+}
