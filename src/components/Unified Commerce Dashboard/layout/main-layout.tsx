@@ -3,6 +3,7 @@
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 
 import { useState, useEffect, useRef } from "react";
+
 import {
   Sidebar,
   SidebarBody,
@@ -208,7 +209,31 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
         return <HomeContent />
     }
     
+    
   }
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const chatRef = useRef(null);
+  // ADD THIS ENTIRE useEffect BLOCK:
+  useEffect(() => {
+    // Function to handle clicks outside the chat
+    const handleClickOutside = (event) => {
+      // If the ref is attached and the click is outside the ref's element
+      if (chatRef.current && !chatRef.current.contains(event.target)) {
+        setIsChatOpen(false); // Close the chat
+      }
+    };
+
+    // Add the event listener only if the chat is open
+    if (isChatOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    // Cleanup function to remove the listener when the component unmounts
+    // or when the chat is closed.
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isChatOpen]);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const chatRef = useRef(null);
   // ADD THIS ENTIRE useEffect BLOCK:
@@ -251,7 +276,9 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
     {
       label: "Automations",
       href: "#automations",
+      href: "#automations",
       icon: <Workflow size={20} className="text-gray-600" />,
+      onClick: () => setActiveTab("automations"),
       onClick: () => setActiveTab("automations"),
     },
   ];
@@ -288,10 +315,12 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
       onClick: () => {}, // No functionality for now
     },
    
+   
     {
       label: "Lead Cohorts",
       href: "#leads",
       icon: <Users size={20} className="text-gray-600" />,
+      onClick: () => setActiveTab("ai-insights"), // No functionality for now
       onClick: () => setActiveTab("ai-insights"), // No functionality for now
     
     },
@@ -320,6 +349,27 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
     //   icon: <Lightbulb size={20} className="text-gray-600" />,
     //   onClick: () => setActiveTab("ai-insights"),
     // },
+  ];
+   const unitedCapitalSourceConfig = {
+        name: "United Capital Source",
+        logoUrl: "/chatbot/unitedcap.webp", // Replace with your actual logo path
+        agentAvatars: [
+            "/path/to/agent1.jpg", // Replace with actual avatar images
+            "/path/to/agent2.jpg",
+        ],
+    };
+    
+    const ucsWelcomeMessage = {
+        title: "Hi there",
+        subtitle: "How can we help your business grow?",
+    };
+
+    const ucsHelpTopics = [
+        { title: "What types of loans do you offer?", question: "What types of business loans do you offer?" },
+        { title: "How long does the process take?", question: "How long does it take to get a loan?" },
+        { title: "What documents do I need to apply?", question: "What documents do I need to prepare for a loan application?" },
+        { title: "Am I eligible with my credit score?", question: "I'm worried about my credit score. Can I still get a loan?" },
+    ];
   ];
    const unitedCapitalSourceConfig = {
         name: "United Capital Source",
@@ -594,6 +644,7 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
         {/* Expandable Chat - Only show when not on home or settings page and sidebar is visible */}
         {activeTab !== "home" && activeTab !== "settings" && !hideSidebar && (
           <div ref={chatRef}> 
+          <div ref={chatRef}> 
           <ExpandableChat position="bottom-right" size="md">
            <ChatBot
               // New props for the home screen
@@ -607,7 +658,20 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
               botAvatarUrl="/chatbot/uniteccap_icon.webp"
               applicationUrl="https://www.unitedcapitalsource.com/small-business-loans/" // ... more customization options
               userMessageClassName={""} botMessageClassName={""} inputPlaceholder={""} sendButtonClassName={""}/> 
+           <ChatBot
+              // New props for the home screen
+              brandConfig={unitedCapitalSourceConfig}
+              welcomeMessage={ucsWelcomeMessage}
+              helpTopics={ucsHelpTopics}
+
+             model="llama3-70b-8192"
+              maxTokens={1024}
+              botName="United Capital Source Advisor"
+              botAvatarUrl="/chatbot/uniteccap_icon.webp"
+              applicationUrl="https://www.unitedcapitalsource.com/small-business-loans/" // ... more customization options
+              userMessageClassName={""} botMessageClassName={""} inputPlaceholder={""} sendButtonClassName={""}/> 
           </ExpandableChat>
+          </div>
           </div>
         )}
       </div>

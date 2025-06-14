@@ -185,6 +185,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
       revenueDiscussion: true, // Changed from weightLossGoals
     },
   
+  
 
     // Platform selection
     platforms: {

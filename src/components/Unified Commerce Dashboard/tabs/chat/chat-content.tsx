@@ -19,105 +19,77 @@ import SideArtifactPanel from "./components/side.panel";
 const EXAMPLE_QUERIES = [
   {
     name: "🚀 Customer Engagement & Retention",
-    name: "🚀 Customer Engagement & Retention",
     description:
-      "Keep your clients active, identify churn risks, and celebrate milestones.",
       "Keep your clients active, identify churn risks, and celebrate milestones.",
     queries: [
       {
         text: "Show me clients who haven't logged into their account in 30 days but still have an active loan or account.",
-        text: "Show me clients who haven't logged into their account in 30 days but still have an active loan or account.",
       },
       {
-        text: "Identify customers at high risk of closing their accounts based on recent activity.",
         text: "Identify customers at high risk of closing their accounts based on recent activity.",
       },
       {
         text: "List clients with upcoming birthdays this month for personalized offers.",
-        text: "List clients with upcoming birthdays this month for personalized offers.",
       },
       {
-        text: "Show me clients approaching a loan payoff milestone (e.g., 50%, 75% paid off).",
         text: "Show me clients approaching a loan payoff milestone (e.g., 50%, 75% paid off).",
       },
       {
         text: "Find customers whose engagement score has dropped significantly in the last month.",
-        text: "Find customers whose engagement score has dropped significantly in the last month.",
       },
       {
-        text: "List clients celebrating their account anniversary in the next 30 days.",
         text: "List clients celebrating their account anniversary in the next 30 days.",
       },
     ],
   },
   {
     name: "🎯 Lead Management & New Customer Onboarding",
-    name: "🎯 Lead Management & New Customer Onboarding",
     description:
-      "Convert prospects effectively and welcome new clients smoothly.",
       "Convert prospects effectively and welcome new clients smoothly.",
     queries: [
       {
         text: "Show me leads who started a loan application but haven't completed it.",
       },
+      { text: "List new leads from the 'Online Loan Inquiry Form' in the last 7 days." },
       {
-        text: "List new leads from the 'Online Loan Inquiry Form' in the last 7 days.",
-      },
-      {
-        text: "Identify prospects who requested a callback last week but haven't been contacted.",
         text: "Identify prospects who requested a callback last week but haven't been contacted.",
       },
       {
-        text: "Find leads interested in 'Home Loans' but haven't scheduled a consultation.",
         text: "Find leads interested in 'Home Loans' but haven't scheduled a consultation.",
       },
     ],
   },
   {
     name: "💳 Loan & Account Insights",
-    name: "💳 Loan & Account Insights",
     description:
-      "Manage loans, renewals, and identify cross-sell or upsell opportunities.",
       "Manage loans, renewals, and identify cross-sell or upsell opportunities.",
     queries: [
       {
         text: "Find clients whose loan is expiring or due for renewal in the next 14 days.",
-        text: "Find clients whose loan is expiring or due for renewal in the next 14 days.",
       },
       {
         text: "List clients with credit card balances above 80% of their limit.",
-        text: "List clients with credit card balances above 80% of their limit.",
       },
       { text: "Show customers whose auto-payment failed this month." },
-      { text: "Show customers whose auto-payment failed this month." },
       {
-        text: "Identify clients eligible for an upgrade to a premium account or loan product.",
         text: "Identify clients eligible for an upgrade to a premium account or loan product.",
       },
     ],
   },
   {
     name: "📊 Product & Advisor Performance",
-    name: "📊 Product & Advisor Performance",
     description:
       "Analyze product uptake, advisor effectiveness, and customer preferences.",
-      "Analyze product uptake, advisor effectiveness, and customer preferences.",
     queries: [
+      { text: "Which advisor has the highest loan origination rate this month?" },
       {
-        text: "Which advisor has the highest loan origination rate this month?",
-      },
-      {
-        text: "Find clients who opened an account with advisor Alex in the past month.",
         text: "Find clients who opened an account with advisor Alex in the past month.",
       },
       { text: "What were the most popular loan products last quarter?" },
-      { text: "What were the most popular loan products last quarter?" },
       {
-        text: "Show me products with consistently low uptake for potential review.",
         text: "Show me products with consistently low uptake for potential review.",
       },
       {
-        text: "Compare uptake for 'Personal Loans' vs 'Auto Loans' last month.",
         text: "Compare uptake for 'Personal Loans' vs 'Auto Loans' last month.",
       },
     ],
@@ -129,18 +101,14 @@ const EXAMPLE_QUERIES = [
     queries: [
       {
         text: "Show me clients who missed a payment in the last 30 days.",
-        text: "Show me clients who missed a payment in the last 30 days.",
       },
       {
-        text: "Generate a list of customers who haven't opened our last three email statements.",
         text: "Generate a list of customers who haven't opened our last three email statements.",
       },
       {
         text: "Find clients who live in the 'Downtown' area and have high credit scores.",
-        text: "Find clients who live in the 'Downtown' area and have high credit scores.",
       },
       {
-        text: "List all clients who have provided positive feedback via post-service surveys.",
         text: "List all clients who have provided positive feedback via post-service surveys.",
       },
     ],
