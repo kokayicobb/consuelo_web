@@ -379,7 +379,7 @@ export default function AutomationsPage() {
             <nav className="flex space-x-8">
               {[
                 { id: "overview", name: "Overview", icon: BarChart3 },
-                { id: "templates", name: "Templates", icon: Layout },
+                { id: "templates", name: "Discover", icon: Layout },
                 { id: "my-automations", name: "My Automations", icon: Workflow },
                 { id: "analytics", name: "Analytics", icon: TrendingUp },
               ].map((tab) => {
