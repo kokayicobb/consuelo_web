@@ -67,12 +67,14 @@ export default function AutomationsPage() {
       )
     : triggerTypes;
 
-  // Check for hash in URL on mount and when hash changes
+  // Check for view parameter in URL on mount and when URL changes
   useEffect(() => {
-    const handleHashChange = () => {
-      const hash = window.location.hash;
-      // Check if we have a subtab after the main #automations hash
-      if (hash.includes("#automations#create")) {
+    const checkUrlForView = () => {
+      // Get current URL
+      const url = new URL(window.location.href);
+      const viewParam = url.searchParams.get("view");
+      
+      if (viewParam === "create") {
         setCurrentView("create");
       } else {
         setCurrentView("list");
@@ -82,11 +84,11 @@ export default function AutomationsPage() {
     };
 
     // Initial check
-    handleHashChange();
+    checkUrlForView();
 
-    // Listen for hash changes
-    window.addEventListener("hashchange", handleHashChange);
-    return () => window.removeEventListener("hashchange", handleHashChange);
+    // Set up an event listener for popstate (browser back/forward buttons)
+    window.addEventListener("popstate", checkUrlForView);
+    return () => window.removeEventListener("popstate", checkUrlForView);
   }, []);
 
   // Reset form state
@@ -158,15 +160,26 @@ export default function AutomationsPage() {
 
   // Go to create view
   const handleCreateAutomation = () => {
-    // Update the URL hash to show the create view
-    window.location.hash = "#automations#create";
+    // Update the URL using history API instead of changing hash
+    const url = new URL(window.location.href);
+    url.searchParams.set("view", "create");
+    
+    // Use history.pushState to avoid page reload
+    window.history.pushState({}, "", url.toString());
+    
     setCurrentView("create");
     resetFormState();
   };
 
   // Go back to list view
   const handleBackToList = () => {
-    window.location.hash = "#automations";
+    // Update the URL using history API to remove the view parameter
+    const url = new URL(window.location.href);
+    url.searchParams.delete("view");
+    
+    // Use history.pushState to avoid page reload
+    window.history.pushState({}, "", url.toString());
+    
     setCurrentView("list");
     resetFormState();
   };

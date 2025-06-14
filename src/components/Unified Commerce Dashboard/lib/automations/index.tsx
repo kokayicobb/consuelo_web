@@ -91,6 +91,7 @@ async createFlow(data: CreateFlowData): Promise<ActivePiecesResponse<Flow>> {
     
     // Create a clean request object without 'active' or 'tags' properties
     const n8nWorkflow: Partial<N8nWorkflow> = {
+      
       name: data.displayName,
       nodes: [
         {
@@ -99,6 +100,7 @@ async createFlow(data: CreateFlowData): Promise<ActivePiecesResponse<Flow>> {
           typeVersion: 1,
           position: [250, 300],
           parameters: {}
+          
         }
       ],
       connections: {},
