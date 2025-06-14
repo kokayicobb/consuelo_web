@@ -9,7 +9,7 @@ import {
   generateChartConfig,
   explainQuery,
   generateActionSuggestions,
-} from "@/lib/actions";
+} from "@/components/Unified Commerce Dashboard/lib/actions/prompt_actions";
 
 import { ChatMessage, ChatMessageData } from "@/types/chats"; // Using your specified path
 import { SegmentationForm, ExampleQueries } from "../../segmentation"; // Using your specified path
