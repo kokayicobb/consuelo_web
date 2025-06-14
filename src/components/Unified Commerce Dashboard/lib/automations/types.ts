@@ -1,4 +1,4 @@
-// lib/activepieces/types.ts
+// lib/automations/types.ts - Updated version with trigger support
 
 /**
  * n8n API Type Definitions
@@ -42,12 +42,27 @@ export interface FlowTrigger {
   name: string;
   valid: boolean;
   displayName: string;
-  nextAction?: any;
+  nextAction?: FlowAction | null;
   type: 'PIECE_TRIGGER' | 'WEBHOOK' | 'SCHEDULE';
   settings: {
     pieceName?: string;
     pieceVersion?: string;
     triggerName?: string;
+    input?: Record<string, any>;
+    inputUiInfo?: Record<string, any>;
+  };
+}
+
+export interface FlowAction {
+  name: string;
+  valid: boolean;
+  displayName: string;
+  nextAction?: FlowAction | null;
+  type: 'PIECE_ACTION' | 'CODE' | 'BRANCH';
+  settings: {
+    pieceName?: string;
+    pieceVersion?: string;
+    actionName?: string;
     input?: Record<string, any>;
     inputUiInfo?: Record<string, any>;
   };
@@ -74,7 +89,7 @@ export interface N8nNode {
   typeVersion?: number;
   position: [number, number];
   parameters: Record<string, any>;
-  credentials?: Record<string, any>;
+  credentials?: Record<string, string>;
   disabled?: boolean;
 }
 
@@ -163,12 +178,13 @@ export interface N8nCredential {
   updatedAt: string;
 }
 
-// Request Types
+// Request Types - UPDATED WITH TRIGGER SUPPORT
 export interface CreateFlowData {
   displayName: string;
   projectId?: string;
   folderId?: string;
   metadata?: Record<string, any>;
+  trigger?: FlowTrigger; // Added trigger support
 }
 
 export interface UpdateFlowData {
@@ -177,6 +193,7 @@ export interface UpdateFlowData {
   nodes?: N8nNode[];
   connections?: N8nConnections;
   settings?: N8nWorkflowSettings;
+  trigger?: FlowTrigger; // Added trigger support
 }
 
 export interface CreateConnectionData {
@@ -253,7 +270,8 @@ export function n8nWorkflowToFlow(workflow: N8nWorkflow): Flow {
   const triggerNode = workflow.nodes.find(n => 
     n.type.includes('trigger') || 
     n.type === 'n8n-nodes-base.webhook' ||
-    n.type === 'n8n-nodes-base.scheduleTrigger'
+    n.type === 'n8n-nodes-base.scheduleTrigger' ||
+    n.type === 'n8n-nodes-base.start'
   );
 
   // Build a simple flow structure
@@ -297,7 +315,7 @@ export function n8nWorkflowToFlow(workflow: N8nWorkflow): Flow {
 }
 
 // Helper to build linked action structure
-function buildNextActions(workflow: N8nWorkflow, nodeName?: string): any {
+function buildNextActions(workflow: N8nWorkflow, nodeName?: string): FlowAction | null {
   if (!nodeName || !workflow.connections[nodeName]) return null;
   
   const connection = workflow.connections[nodeName];
@@ -350,7 +368,7 @@ export function flowToN8nWorkflow(flow: Flow): Partial<N8nWorkflow> {
   const connections: N8nConnections = {};
   
   // Convert trigger and actions to nodes
-  let currentStep = flow.version.trigger;
+  let currentStep: FlowTrigger | FlowAction | null = flow.version.trigger;
   let previousNodeName: string | null = null;
   let yPosition = 250;
   
@@ -374,7 +392,7 @@ export function flowToN8nWorkflow(flow: Flow): Partial<N8nWorkflow> {
     
     previousNodeName = node.name;
     yPosition += 150;
-    currentStep = currentStep.nextAction;
+    currentStep = currentStep.nextAction || null;
   }
   
   return {
@@ -396,6 +414,7 @@ function mapToN8nNodeType(pieceName: string): string {
     'twilio': 'n8n-nodes-base.twilio',
     'delay': 'n8n-nodes-base.wait',
     'branch': 'n8n-nodes-base.if',
+    'start': 'n8n-nodes-base.start',
   };
   return mapping[pieceName] || 'n8n-nodes-base.noOp';
 }

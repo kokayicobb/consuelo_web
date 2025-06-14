@@ -64,8 +64,8 @@ import MarketingContent from "../tabs/marketing-content"
 import SettingsContent from "../tabs/settings-content"
 import HomeContent from "../tabs/dashboard"
 import ActionSearchBar from "@/components/ui/action-search-bar";
-import AutomationBuilder from "../tabs/automations";
 import ChatBot from "../components/chatbot";
+import AutomationsPage from "../tabs/automations";
 
 
 // Chat Interface Component for use with ExpandableChat
@@ -203,7 +203,7 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
       case "settings":
         return <SettingsContent />
         case "automations":
-        return <AutomationBuilder />
+        return <AutomationsPage />
       default:
         return <HomeContent />
     }

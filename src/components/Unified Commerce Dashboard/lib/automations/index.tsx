@@ -1,4 +1,4 @@
-// lib/activepieces/index.ts
+// lib/automations/index.ts - Updated createFlow method
 
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import {
@@ -23,6 +23,10 @@ import {
   N8nPaginatedResponse,
   n8nWorkflowToFlow,
   flowToN8nWorkflow,
+  FlowTrigger,
+  FlowAction,
+  N8nNode,
+  N8nConnections,
 } from './types';
 
 /**
@@ -69,88 +73,226 @@ export class ActivePiecesService {
   }
 
   /**
-   * Get the Consuelo project ID (always returns the same)
+   * Convert our trigger/action structure to n8n nodes
    */
-  private async getConsueloProjectId(): Promise<string> {
-    return this.consueloProjectId;
-  }
+  private convertTriggerToNodes(trigger?: FlowTrigger): { nodes: N8nNode[], connections: N8nConnections } {
+    const nodes: N8nNode[] = [];
+    const connections: N8nConnections = {};
+    
+    if (!trigger) {
+      // Default start node
+      nodes.push({
+        name: 'Start',
+        type: 'n8n-nodes-base.start',
+        typeVersion: 1,
+        position: [250, 300],
+        parameters: {}
+      });
+      return { nodes, connections };
+    }
 
-  // ==================== FLOW METHODS (n8n Workflows) ====================
+    // Convert trigger to n8n node
+    const triggerNode: N8nNode = {
+      name: trigger.name || 'Trigger',
+      type: this.mapTriggerTypeToN8n(trigger),
+      typeVersion: 1,
+      position: [250, 300],
+      parameters: trigger.settings.input || {}
+    };
+    nodes.push(triggerNode);
+
+    // Convert actions to nodes
+    let currentAction = trigger.nextAction;
+    let previousNodeName = triggerNode.name;
+    let yPosition = 450;
+
+    while (currentAction) {
+      const actionNode: N8nNode = {
+        name: currentAction.name || `Action_${nodes.length}`,
+        type: this.mapActionTypeToN8n(currentAction),
+        typeVersion: 1,
+        position: [250, yPosition],
+        parameters: currentAction.settings.input || {}
+      };
+      nodes.push(actionNode);
+
+      // Create connection from previous node to this one
+      if (!connections[previousNodeName]) {
+        connections[previousNodeName] = { main: [] };
+      }
+      connections[previousNodeName].main.push([{
+        node: actionNode.name,
+        type: 'main',
+        index: 0
+      }]);
+
+      previousNodeName = actionNode.name;
+      yPosition += 150;
+      currentAction = currentAction.nextAction;
+    }
+
+    return { nodes, connections };
+  }
 
   /**
-// File: components/Unified Commerce Dashboard/lib/automations/index.ts
-// Updated createFlow method removing both 'active' and 'tags' properties
-
-/**
- * Create a new flow (workflow in n8n)
- * @param data Flow configuration
- */
-async createFlow(data: CreateFlowData): Promise<ActivePiecesResponse<Flow>> {
-  try {
-    console.log(`📋 Creating flow: ${JSON.stringify(data)}`);
-    
-    // Create a clean request object without 'active' or 'tags' properties
-    const n8nWorkflow: Partial<N8nWorkflow> = {
-      
-      name: data.displayName,
-      nodes: [
-        {
-          name: 'Start',
-          type: 'n8n-nodes-base.start',
-          typeVersion: 1,
-          position: [250, 300],
-          parameters: {}
-          
-        }
-      ],
-      connections: {},
-      settings: {
-        saveExecutionProgress: true,
-        saveManualExecutions: true,
-        saveDataErrorExecution: 'all',
-        saveDataSuccessExecution: 'all',
-      },
-      staticData: data.metadata
-      // Removed the 'tags' property that's also causing an error
-    };
-
-    console.log('🔄 Sending workflow creation request to n8n with:', JSON.stringify(n8nWorkflow, null, 2));
-    const response = await this.client.post<N8nWorkflow>('/workflows', n8nWorkflow);
-    console.log(`✅ n8n responded with status: ${response.status}`);
-    
-    // If we need to add tags/folder after creation, we can do that with a separate API call
-    if (data.folderId) {
-      try {
-        console.log(`🏷️ Adding workflow to folder: ${data.folderId}`);
-        // This would be a separate API call to add the workflow to a folder
-        // Implement according to n8n API requirements
-      } catch (folderError) {
-        console.warn('⚠️ Failed to add workflow to folder, but workflow was created:', folderError);
-      }
+   * Map our trigger types to n8n node types
+   */
+  private mapTriggerTypeToN8n(trigger: FlowTrigger): string {
+    if (trigger.type === 'WEBHOOK' || trigger.settings.triggerName === 'webhook') {
+      return 'n8n-nodes-base.webhook';
     }
-    
-    const flow = n8nWorkflowToFlow(response.data);
-    
-    return { success: true, data: flow };
-  } catch (error: any) {
-    console.error('❌ Error creating flow:', error);
-    
-    // Detailed error logging
-    if (error.response) {
-      console.error(`Response status: ${error.response.status}`);
-      console.error('Response data:', error.response.data);
+    if (trigger.type === 'SCHEDULE' || trigger.settings.triggerName === 'schedule') {
+      return 'n8n-nodes-base.scheduleTrigger';
     }
-    
-    return { 
-      success: false, 
-      error: { 
-        error: 'Failed to create flow', 
-        message: error.message || 'API error',
-        statusCode: error.response?.status || 500
-      } 
-    };
+    if (trigger.settings.triggerName === 'email') {
+      return 'n8n-nodes-base.emailTrigger';
+    }
+    if (trigger.settings.triggerName === 'form') {
+      return 'n8n-nodes-base.formTrigger';
+    }
+    // Default to webhook for unknown triggers
+    return 'n8n-nodes-base.webhook';
   }
-}
+
+  /**
+   * Map our action types to n8n node types
+   */
+  private mapActionTypeToN8n(action: FlowAction): string {
+    const actionName = action.settings.actionName || action.name;
+    
+    const mapping: Record<string, string> = {
+      'email': 'n8n-nodes-base.emailSend',
+      'sms': 'n8n-nodes-base.twilio',
+      'webhook': 'n8n-nodes-base.httpRequest',
+      'delay': 'n8n-nodes-base.wait',
+      'branch': 'n8n-nodes-base.if',
+      'code': 'n8n-nodes-base.code',
+    };
+    
+    return mapping[actionName] || 'n8n-nodes-base.httpRequest';
+  }
+
+  /**
+   * Create a new flow (workflow in n8n)
+   * @param data Flow configuration
+   */
+  async createFlow(data: CreateFlowData): Promise<ActivePiecesResponse<Flow>> {
+    try {
+      console.log(`📋 Creating flow with data:`, JSON.stringify(data, null, 2));
+      
+      // Convert trigger/actions to n8n nodes
+      const { nodes, connections } = this.convertTriggerToNodes(data.trigger);
+      
+      // Create n8n workflow structure
+      const n8nWorkflow: Partial<N8nWorkflow> = {
+        name: data.displayName,
+        nodes,
+        connections,
+        settings: {
+          saveExecutionProgress: true,
+          saveManualExecutions: true,
+          saveDataErrorExecution: 'all',
+          saveDataSuccessExecution: 'all',
+        },
+        staticData: {
+          ...data.metadata,
+          trigger: data.trigger, // Store original trigger structure in metadata
+        }
+      };
+
+      console.log('🔄 Sending workflow creation request to n8n with:', JSON.stringify(n8nWorkflow, null, 2));
+      const response = await this.client.post<N8nWorkflow>('/workflows', n8nWorkflow);
+      console.log(`✅ n8n responded with status: ${response.status}`);
+      
+      // If we need to add tags/folder after creation
+      if (data.folderId) {
+        try {
+          console.log(`🏷️ Adding workflow to folder: ${data.folderId}`);
+          // This would be a separate API call to add the workflow to a folder
+        } catch (folderError) {
+          console.warn('⚠️ Failed to add workflow to folder, but workflow was created:', folderError);
+        }
+      }
+      
+      // Convert back to our Flow format
+      const flow = n8nWorkflowToFlow(response.data);
+      
+      // If we stored the trigger in metadata, use that instead
+      if (response.data.staticData?.trigger) {
+        flow.version.trigger = response.data.staticData.trigger;
+      }
+      
+      return { success: true, data: flow };
+    } catch (error: any) {
+      console.error('❌ Error creating flow:', error);
+      
+      // Detailed error logging
+      if (error.response) {
+        console.error(`Response status: ${error.response.status}`);
+        console.error('Response data:', error.response.data);
+      }
+      
+      return { 
+        success: false, 
+        error: { 
+          error: 'Failed to create flow', 
+          message: error.message || 'API error',
+          statusCode: error.response?.status || 500
+        } 
+      };
+    }
+  }
+
+  /**
+   * Update a flow (workflow)
+   * @param id Flow ID
+   * @param data Update data
+   */
+  async updateFlow(id: string, data: UpdateFlowData): Promise<ActivePiecesResponse<Flow>> {
+    try {
+      // First get the existing workflow
+      const existingResponse = await this.client.get<N8nWorkflow>(`/workflows/${id}`);
+      const existingWorkflow = existingResponse.data;
+
+      let updatedNodes = existingWorkflow.nodes;
+      let updatedConnections = existingWorkflow.connections;
+
+      // If trigger is provided, convert to nodes
+      if (data.trigger) {
+        const converted = this.convertTriggerToNodes(data.trigger);
+        updatedNodes = converted.nodes;
+        updatedConnections = converted.connections;
+      }
+
+      // Merge updates
+      const updatedWorkflow: Partial<N8nWorkflow> = {
+        ...existingWorkflow,
+        name: data.displayName || existingWorkflow.name,
+        active: data.active !== undefined ? data.active : existingWorkflow.active,
+        nodes: data.nodes || updatedNodes,
+        connections: data.connections || updatedConnections,
+        settings: data.settings ? { ...existingWorkflow.settings, ...data.settings } : existingWorkflow.settings,
+        staticData: {
+          ...existingWorkflow.staticData,
+          trigger: data.trigger || existingWorkflow.staticData?.trigger,
+        }
+      };
+
+      const response = await this.client.put<N8nWorkflow>(`/workflows/${id}`, updatedWorkflow);
+      const flow = n8nWorkflowToFlow(response.data);
+      
+      // Use stored trigger if available
+      if (response.data.staticData?.trigger) {
+        flow.version.trigger = response.data.staticData.trigger;
+      }
+      
+      return { success: true, data: flow };
+    } catch (error) {
+      return { success: false, error: error as ApiError };
+    }
+  }
+
+  // ... rest of the methods remain the same as in your original file ...
 
   /**
    * List all flows (workflows) in the Consuelo project
@@ -179,7 +321,14 @@ async createFlow(data: CreateFlowData): Promise<ActivePiecesResponse<Flow>> {
         params: queryParams,
       });
 
-      const flows = response.data.data.map(n8nWorkflowToFlow);
+      const flows = response.data.data.map(workflow => {
+        const flow = n8nWorkflowToFlow(workflow);
+        // Use stored trigger if available
+        if (workflow.staticData?.trigger) {
+          flow.version.trigger = workflow.staticData.trigger;
+        }
+        return flow;
+      });
       
       return {
         success: true,
@@ -202,35 +351,10 @@ async createFlow(data: CreateFlowData): Promise<ActivePiecesResponse<Flow>> {
       const response = await this.client.get<N8nWorkflow>(`/workflows/${id}`);
       const flow = n8nWorkflowToFlow(response.data);
       
-      return { success: true, data: flow };
-    } catch (error) {
-      return { success: false, error: error as ApiError };
-    }
-  }
-
-  /**
-   * Update a flow (workflow)
-   * @param id Flow ID
-   * @param data Update data
-   */
-  async updateFlow(id: string, data: UpdateFlowData): Promise<ActivePiecesResponse<Flow>> {
-    try {
-      // First get the existing workflow
-      const existingResponse = await this.client.get<N8nWorkflow>(`/workflows/${id}`);
-      const existingWorkflow = existingResponse.data;
-
-      // Merge updates
-      const updatedWorkflow: Partial<N8nWorkflow> = {
-        ...existingWorkflow,
-        name: data.displayName || existingWorkflow.name,
-        active: data.active !== undefined ? data.active : existingWorkflow.active,
-        nodes: data.nodes || existingWorkflow.nodes,
-        connections: data.connections || existingWorkflow.connections,
-        settings: data.settings ? { ...existingWorkflow.settings, ...data.settings } : existingWorkflow.settings,
-      };
-
-      const response = await this.client.put<N8nWorkflow>(`/workflows/${id}`, updatedWorkflow);
-      const flow = n8nWorkflowToFlow(response.data);
+      // Use stored trigger if available
+      if (response.data.staticData?.trigger) {
+        flow.version.trigger = response.data.staticData.trigger;
+      }
       
       return { success: true, data: flow };
     } catch (error) {
@@ -252,40 +376,17 @@ async createFlow(data: CreateFlowData): Promise<ActivePiecesResponse<Flow>> {
   }
 
   /**
-   * Execute/trigger a flow manually
-   * @param id Flow ID
-   * @param payload Data to pass to the flow
-   */
-  async triggerFlow(id: string, payload: any): Promise<ActivePiecesResponse<any>> {
-    try {
-      // n8n doesn't have a direct trigger endpoint in the API
-      // You would typically use webhooks or the UI for this
-      // For now, we'll create an execution manually
-      const response = await this.client.post(`/workflows/${id}/execute`, {
-        data: payload
-      });
-      
-      return { success: true, data: response.data };
-    } catch (error) {
-      // If execute endpoint doesn't exist, return a placeholder
-      return { 
-        success: false, 
-        error: { 
-          error: 'Manual execution not available via API', 
-          message: 'Use webhook triggers or n8n UI to execute workflows',
-          statusCode: 501
-        }
-      };
-    }
-  }
-
-  /**
    * Activate a workflow
    */
   async activateFlow(id: string): Promise<ActivePiecesResponse<Flow>> {
     try {
       const response = await this.client.post<N8nWorkflow>(`/workflows/${id}/activate`);
       const flow = n8nWorkflowToFlow(response.data);
+      
+      if (response.data.staticData?.trigger) {
+        flow.version.trigger = response.data.staticData.trigger;
+      }
+      
       return { success: true, data: flow };
     } catch (error) {
       return { success: false, error: error as ApiError };
@@ -299,11 +400,18 @@ async createFlow(data: CreateFlowData): Promise<ActivePiecesResponse<Flow>> {
     try {
       const response = await this.client.post<N8nWorkflow>(`/workflows/${id}/deactivate`);
       const flow = n8nWorkflowToFlow(response.data);
+      
+      if (response.data.staticData?.trigger) {
+        flow.version.trigger = response.data.staticData.trigger;
+      }
+      
       return { success: true, data: flow };
     } catch (error) {
       return { success: false, error: error as ApiError };
     }
   }
+
+
 
   // ==================== CONNECTION METHODS (n8n Credentials) ====================
 
