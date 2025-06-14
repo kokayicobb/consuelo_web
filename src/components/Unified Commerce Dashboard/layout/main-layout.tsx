@@ -1,26 +1,24 @@
 "use client"
 
-import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
-
-import { useState, useEffect, useRef } from "react";
-
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
+import { useState, useEffect, useRef } from "react"
 import {
   Sidebar,
   SidebarBody,
   SidebarLink,
   SidebarCollapseButton,
-} from "@/components/ui/sidebar";
+} from "@/components/ui/sidebar"
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+} from "@/components/ui/collapsible"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu"
 import {
   LayoutDashboard,
   BarChart3,
@@ -41,13 +39,10 @@ import {
   Monitor,
   Check,
   Workflow,
-  Route
+  Route,
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-
-
-
 import {
   ExpandableChat,
   ExpandableChatHeader,
@@ -64,26 +59,22 @@ import InventoryContent from "../tabs/inventory-content"
 import MarketingContent from "../tabs/marketing-content"
 import SettingsContent from "../tabs/settings-content"
 import HomeContent from "../tabs/dashboard"
-import ActionSearchBar from "@/components/ui/action-search-bar";
-import ChatBot from "../components/chatbot";
-import AutomationsPage from "../tabs/automations";
-
+import ActionSearchBar from "@/components/ui/action-search-bar"
+import ChatBot from "../components/chatbot"
+import AutomationsPage from "../tabs/automations"
 
 // Chat Interface Component for use with ExpandableChat
+// NOTE: This component is currently not used in MainLayout but is kept for reference.
 const ChatInterface = () => {
   const [messages, setMessages] = useState([
     { text: "Hi there! How can I help you today?", sender: "bot" },
-  ]);
-  const [inputValue, setInputValue] = useState("");
+  ])
+  const [inputValue, setInputValue] = useState("")
 
   const handleSend = () => {
-    if (inputValue.trim() === "") return;
-
-    // Add user message
-    setMessages([...messages, { text: inputValue, sender: "user" }]);
-    setInputValue("");
-
-    // Simulate bot response (would be replaced with actual API call)
+    if (inputValue.trim() === "") return
+    setMessages([...messages, { text: inputValue, sender: "user" }])
+    setInputValue("")
     setTimeout(() => {
       setMessages((prev) => [
         ...prev,
@@ -91,9 +82,9 @@ const ChatInterface = () => {
           text: "Thanks for your message! I'll help you with that.",
           sender: "bot",
         },
-      ]);
-    }, 1000);
-  };
+      ])
+    }, 1000)
+  }
 
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
@@ -112,16 +103,17 @@ const ChatInterface = () => {
               className="h-6 w-6"
             />
           </div>
-          <span className="font-medium text-gray-900">Consuelo</span>
+          {/* FIX: Removed duplicated "Consuelo" span */}
           <span className="font-medium text-gray-900">Consuelo</span>
         </div>
       </ExpandableChatHeader>
-
       <ExpandableChatBody className="w-full space-y-4 bg-white p-4">
         {messages.map((message, index) => (
           <div
             key={index}
-            className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}
+            className={`flex ${
+              message.sender === "user" ? "justify-end" : "justify-start"
+            }`}
           >
             <div
               className={`max-w-[80%] rounded-lg px-4 py-2 ${
@@ -135,7 +127,6 @@ const ChatInterface = () => {
           </div>
         ))}
       </ExpandableChatBody>
-
       <ExpandableChatFooter className="border-t border-gray-200 bg-white">
         <div className="flex w-full items-center gap-2">
           <Input
@@ -144,7 +135,6 @@ const ChatInterface = () => {
             onKeyPress={handleKeyPress}
             placeholder="Type your message..."
             className="flex-1 border-gray-200 "
-          
           />
           <Button
             onClick={handleSend}
@@ -160,29 +150,19 @@ const ChatInterface = () => {
 }
 
 const MainLayout = ({ children, title, hideSidebar = false }) => {
-  // Create a state to track the active tab
   const [activeTab, setActiveTab] = useState("home")
   const [sidebarOpen, setSidebarOpen] = useState(!hideSidebar)
 
-  // Effect to sync URL hash with state
   useEffect(() => {
-    // Function to handle hash change
     const handleHashChange = () => {
       const hash = window.location.hash.replace("#", "") || "home"
       setActiveTab(hash)
     }
-
-    // Set initial state based on current hash
     handleHashChange()
-
-    // Listen for hash changes
     window.addEventListener("hashchange", handleHashChange)
-
-    // Clean up event listener
     return () => window.removeEventListener("hashchange", handleHashChange)
   }, [])
 
-  // Function to render the correct content based on activeTab
   const renderContent = () => {
     switch (activeTab) {
       case "home":
@@ -203,64 +183,32 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
         return <IntegrationsContent />
       case "settings":
         return <SettingsContent />
-        case "automations":
+      case "automations":
         return <AutomationsPage />
       default:
         return <HomeContent />
     }
-    
-    
   }
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  const chatRef = useRef(null);
-  // ADD THIS ENTIRE useEffect BLOCK:
+
+  // FIX: Removed duplicated state, ref, and useEffect hook. This is the correct, single version.
+  const [isChatOpen, setIsChatOpen] = useState(false)
+  const chatRef = useRef(null)
+
   useEffect(() => {
-    // Function to handle clicks outside the chat
     const handleClickOutside = (event) => {
-      // If the ref is attached and the click is outside the ref's element
       if (chatRef.current && !chatRef.current.contains(event.target)) {
-        setIsChatOpen(false); // Close the chat
+        setIsChatOpen(false)
       }
-    };
-
-    // Add the event listener only if the chat is open
-    if (isChatOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
     }
-
-    // Cleanup function to remove the listener when the component unmounts
-    // or when the chat is closed.
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isChatOpen]);
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  const chatRef = useRef(null);
-  // ADD THIS ENTIRE useEffect BLOCK:
-  useEffect(() => {
-    // Function to handle clicks outside the chat
-    const handleClickOutside = (event) => {
-      // If the ref is attached and the click is outside the ref's element
-      if (chatRef.current && !chatRef.current.contains(event.target)) {
-        setIsChatOpen(false); // Close the chat
-      }
-    };
-
-    // Add the event listener only if the chat is open
     if (isChatOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside)
     }
-
-    // Cleanup function to remove the listener when the component unmounts
-    // or when the chat is closed.
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isChatOpen]);
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [isChatOpen])
 
-  // Define the main navigation items (Home and Dashboard)
   const mainNavItems = [
- 
     {
       label: "Home",
       href: "#home",
@@ -276,14 +224,12 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
     {
       label: "Automations",
       href: "#automations",
-      href: "#automations",
       icon: <Workflow size={20} className="text-gray-600" />,
-      onClick: () => setActiveTab("automations"),
+      // FIX: Removed duplicated onClick property
       onClick: () => setActiveTab("automations"),
     },
-  ];
+  ]
 
-  // Define the retention section items
   const retentionItems = [
     {
       label: "Accounts",
@@ -299,14 +245,12 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
     },
     {
       label: "Product Insights",
-     
       href: "#inventory",
       icon: <Package size={20} className="text-gray-600" />,
       onClick: () => setActiveTab("inventory"),
     },
-  ];
+  ]
 
-  // Define the prospecting section items
   const prospectingItems = [
     {
       label: "Pipeline Builder",
@@ -314,24 +258,21 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
       icon: <BarChart3 size={20} className="text-gray-600" />,
       onClick: () => {}, // No functionality for now
     },
-   
-   
     {
       label: "Lead Cohorts",
       href: "#leads",
       icon: <Users size={20} className="text-gray-600" />,
-      onClick: () => setActiveTab("ai-insights"), // No functionality for now
-      onClick: () => setActiveTab("ai-insights"), // No functionality for now
-    
+      // FIX: Removed duplicated onClick property
+      onClick: () => setActiveTab("ai-insights"),
     },
     {
       label: "Channel Insights",
-     
       href: "#marketing",
       icon: <PieChart size={20} className="text-gray-600" />,
       onClick: () => setActiveTab("marketing"),
     },
-  ];
+  ]
+
   const dialerItems = [
     {
       label: "Create Scripts",
@@ -339,9 +280,8 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
       icon: <Plus size={20} className="text-gray-600" />,
       onClick: () => {}, // No functionality for now
     },
-  ];
+  ]
 
-  // Define the standalone items (AI Recommendations only now)
   const standaloneItems = [
     // {
     //   label: "AI Recommendations",
@@ -349,56 +289,45 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
     //   icon: <Lightbulb size={20} className="text-gray-600" />,
     //   onClick: () => setActiveTab("ai-insights"),
     // },
-  ];
-   const unitedCapitalSourceConfig = {
-        name: "United Capital Source",
-        logoUrl: "/chatbot/unitedcap.webp", // Replace with your actual logo path
-        agentAvatars: [
-            "/path/to/agent1.jpg", // Replace with actual avatar images
-            "/path/to/agent2.jpg",
-        ],
-    };
-    
-    const ucsWelcomeMessage = {
-        title: "Hi there",
-        subtitle: "How can we help your business grow?",
-    };
+  ]
 
-    const ucsHelpTopics = [
-        { title: "What types of loans do you offer?", question: "What types of business loans do you offer?" },
-        { title: "How long does the process take?", question: "How long does it take to get a loan?" },
-        { title: "What documents do I need to apply?", question: "What documents do I need to prepare for a loan application?" },
-        { title: "Am I eligible with my credit score?", question: "I'm worried about my credit score. Can I still get a loan?" },
-    ];
-  ];
-   const unitedCapitalSourceConfig = {
-        name: "United Capital Source",
-        logoUrl: "/chatbot/unitedcap.webp", // Replace with your actual logo path
-        agentAvatars: [
-            "/path/to/agent1.jpg", // Replace with actual avatar images
-            "/path/to/agent2.jpg",
-        ],
-    };
-    
-    const ucsWelcomeMessage = {
-        title: "Hi there",
-        subtitle: "How can we help your business grow?",
-    };
+  // FIX: Removed duplicated config objects and a stray closing bracket.
+  const unitedCapitalSourceConfig = {
+    name: "United Capital Source",
+    logoUrl: "/chatbot/unitedcap.webp",
+    agentAvatars: ["/path/to/agent1.jpg", "/path/to/agent2.jpg"],
+  }
 
-    const ucsHelpTopics = [
-        { title: "What types of loans do you offer?", question: "What types of business loans do you offer?" },
-        { title: "How long does the process take?", question: "How long does it take to get a loan?" },
-        { title: "What documents do I need to apply?", question: "What documents do I need to prepare for a loan application?" },
-        { title: "Am I eligible with my credit score?", question: "I'm worried about my credit score. Can I still get a loan?" },
-    ];
+  const ucsWelcomeMessage = {
+    title: "Hi there",
+    subtitle: "How can we help your business grow?",
+  }
+
+  const ucsHelpTopics = [
+    {
+      title: "What types of loans do you offer?",
+      question: "What types of business loans do you offer?",
+    },
+    {
+      title: "How long does the process take?",
+      question: "How long does it take to get a loan?",
+    },
+    {
+      title: "What documents do I need to apply?",
+      question:
+        "What documents do I need to prepare for a loan application?",
+    },
+    {
+      title: "Am I eligible with my credit score?",
+      question: "I'm worried about my credit score. Can I still get a loan?",
+    },
+  ]
 
   return (
-    
     <div className="flex h-screen flex-col overflow-hidden bg-white md:flex-row">
       {!hideSidebar && (
         <Sidebar open={sidebarOpen} setOpen={setSidebarOpen}>
           <SidebarBody className="bg-white">
-            {/* Consuelo Logo with Dropdown */}
             <div className="relative mb-4 flex items-center justify-center gap-2 px-3 pt-3">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -418,7 +347,6 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-80 p-0" align="start">
-                  {/* Header Section */}
                   <div className="border-b border-gray-100 p-4">
                     <div className="mb-4 flex items-center gap-3">
                       <div className="h-10 w-10 flex-shrink-0">
@@ -437,8 +365,6 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
                         </p>
                       </div>
                     </div>
-
-                    {/* Action Buttons */}
                     <div className="flex gap-2">
                       <Button
                         variant="outline"
@@ -459,13 +385,10 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
                       </Button>
                     </div>
                   </div>
-
-                  {/* User Account Section */}
                   <div className="p-2">
                     <div className="hover:none mb-1 px-2 py-1 text-xs  font-medium text-gray-500">
                       kokayi@consuelohq.com
                     </div>
-
                     <DropdownMenuItem className="flex items-center  justify-between rounded-lg p-3  hover:bg-gray-100">
                       <div className="flex items-center  gap-3">
                         <div className="h-6 w-6  flex-shrink-0">
@@ -479,16 +402,12 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
                       </div>
                       <Check className="h-4 w-4 text-green-600" />
                     </DropdownMenuItem>
-
                     <DropdownMenuItem className="flex items-center gap-3 rounded-lg p-3">
                       <Plus className="h-4 w-4 text-gray-500" />
                       <span>New Sales Team</span>
                     </DropdownMenuItem>
                   </div>
-
                   <DropdownMenuSeparator />
-
-                  {/* Navigation Items */}
                   <div className="p-2">
                     <DropdownMenuItem
                       className="flex items-center gap-3 rounded-lg p-3"
@@ -497,16 +416,13 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
                       <Route className="h-4 w-4 text-gray-500" />
                       <span>Integrations</span>
                     </DropdownMenuItem>
-
                     <DropdownMenuItem className="flex items-center gap-3 rounded-lg p-3">
                       <span>Add another account</span>
                     </DropdownMenuItem>
-
                     <DropdownMenuItem className="flex items-center gap-3 rounded-lg p-3">
                       <LogOut className="h-4 w-4 text-gray-500" />
                       <span>Log out</span>
                     </DropdownMenuItem>
-
                     <DropdownMenuItem className="flex items-center gap-3 rounded-lg p-3">
                       <Monitor className="h-4 w-4 text-gray-500" />
                       <span>Get Mac app</span>
@@ -514,25 +430,10 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
                   </div>
                 </DropdownMenuContent>
               </DropdownMenu>
-
-              {/* Collapse Arrow - Only visible on hover */}
               <SidebarCollapseButton className="absolute -right-2 top-1/2 -translate-y-1/2" />
             </div>
-<ActionSearchBar/>
-            {/* Search */}
-            {/* <div className="mb-4 px-3">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                <Input
-                  placeholder="Search..."
-                  className="h-8 border-0 bg-gray-50 pl-9 text-sm text-gray-700 placeholder-gray-500 focus-visible:ring-1 focus-visible:ring-gray-300"
-                />
-              </div>
-            </div> */}
-
-            
+            <ActionSearchBar />
             <nav className="flex-1 space-y-1 px-3">
-              {/* Main Navigation (Home & Dashboard) */}
               {mainNavItems.map((item) => (
                 <SidebarLink
                   key={item.href}
@@ -544,8 +445,6 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
                   } transition-colors duration-150`}
                 />
               ))}
-
-              {/* Retention Section */}
               <div className="pt-4">
                 <Collapsible defaultOpen className="group/collapsible">
                   <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm font-medium text-gray-600 transition-colors duration-150 hover:bg-gray-50 hover:text-gray-800">
@@ -567,8 +466,6 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
                   </CollapsibleContent>
                 </Collapsible>
               </div>
-
-              {/* Prospecting Section */}
               <div className="pt-4">
                 <Collapsible defaultOpen className="group/collapsible">
                   <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm font-medium text-gray-600 transition-colors duration-150 hover:bg-gray-50 hover:text-gray-800">
@@ -590,7 +487,6 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
                   </CollapsibleContent>
                 </Collapsible>
               </div>
-              {/* dialer Section */}
               <div className="pt-4">
                 <Collapsible defaultOpen className="group/collapsible">
                   <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm font-medium text-gray-600 transition-colors duration-150 hover:bg-gray-50 hover:text-gray-800">
@@ -612,8 +508,6 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
                   </CollapsibleContent>
                 </Collapsible>
               </div>
-
-              {/* Standalone Items */}
               {standaloneItems.map((item) => (
                 <SidebarLink
                   key={item.href}
@@ -631,47 +525,38 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
       )}
 
       <div
-        className={`flex flex-1 flex-col overflow-y-auto bg-gray-50 ${hideSidebar ? "w-full" : ""}`}
+        className={`flex flex-1 flex-col overflow-y-auto bg-gray-50 ${
+          hideSidebar ? "w-full" : ""
+        }`}
       >
-        {/* {activeTab !== "home" && !hideSidebar && (
-          <Header title={activeTab.charAt(0).toUpperCase() + activeTab.slice(1).replace("-", " ")} />
-        )} */}
-        <main className={`flex-1 ${activeTab === "home" && !hideSidebar ? "p-0" : "p-4 md:p-6"} bg-gray-50`}>
+        <main
+          className={`flex-1 ${
+            activeTab === "home" && !hideSidebar ? "p-0" : "p-4 md:p-6"
+          } bg-gray-50`}
+        >
           {hideSidebar ? children : renderContent()}
         </main>
 
-
-        {/* Expandable Chat - Only show when not on home or settings page and sidebar is visible */}
         {activeTab !== "home" && activeTab !== "settings" && !hideSidebar && (
-          <div ref={chatRef}> 
-          <div ref={chatRef}> 
-          <ExpandableChat position="bottom-right" size="md">
-           <ChatBot
-              // New props for the home screen
-              brandConfig={unitedCapitalSourceConfig}
-              welcomeMessage={ucsWelcomeMessage}
-              helpTopics={ucsHelpTopics}
-
-             model="llama3-70b-8192"
-              maxTokens={1024}
-              botName="United Capital Source Advisor"
-              botAvatarUrl="/chatbot/uniteccap_icon.webp"
-              applicationUrl="https://www.unitedcapitalsource.com/small-business-loans/" // ... more customization options
-              userMessageClassName={""} botMessageClassName={""} inputPlaceholder={""} sendButtonClassName={""}/> 
-           <ChatBot
-              // New props for the home screen
-              brandConfig={unitedCapitalSourceConfig}
-              welcomeMessage={ucsWelcomeMessage}
-              helpTopics={ucsHelpTopics}
-
-             model="llama3-70b-8192"
-              maxTokens={1024}
-              botName="United Capital Source Advisor"
-              botAvatarUrl="/chatbot/uniteccap_icon.webp"
-              applicationUrl="https://www.unitedcapitalsource.com/small-business-loans/" // ... more customization options
-              userMessageClassName={""} botMessageClassName={""} inputPlaceholder={""} sendButtonClassName={""}/> 
-          </ExpandableChat>
-          </div>
+          // FIX: Removed the extra nested div with the same ref
+          <div ref={chatRef}>
+            <ExpandableChat position="bottom-right" size="md">
+              {/* FIX: Removed the duplicated ChatBot component */}
+              <ChatBot
+                brandConfig={unitedCapitalSourceConfig}
+                welcomeMessage={ucsWelcomeMessage}
+                helpTopics={ucsHelpTopics}
+                model="llama3-70b-8192"
+                maxTokens={1024}
+                botName="United Capital Source Advisor"
+                botAvatarUrl="/chatbot/uniteccap_icon.webp"
+                applicationUrl="https://www.unitedcapitalsource.com/small-business-loans/"
+                userMessageClassName={""}
+                botMessageClassName={""}
+                inputPlaceholder={""}
+                sendButtonClassName={""}
+              />
+            </ExpandableChat>
           </div>
         )}
       </div>
