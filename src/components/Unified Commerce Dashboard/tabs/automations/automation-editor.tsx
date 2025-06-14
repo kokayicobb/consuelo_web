@@ -24,7 +24,11 @@ import {
   Copy,
   ExternalLink,
 } from "lucide-react";
-import { Flow, CreateFlowData, UpdateFlowData } from "../../lib/automations/types";
+import {
+  Flow,
+  CreateFlowData,
+  UpdateFlowData,
+} from "../../lib/activepieces/types";
 
 interface AutomationEditorProps {
   attemptId?: string | null;
@@ -125,17 +129,19 @@ export default function AutomationEditor({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [flow, setFlow] = useState<Flow | null>(null);
-  
+
   // Workflow state
   const [automationName, setAutomationName] = useState("Untitled Automation");
   const [description, setDescription] = useState("");
   const [steps, setSteps] = useState<WorkflowStep[]>([]);
   const [isDirty, setIsDirty] = useState(false);
-  
+
   // UI state
   const [showTriggerPicker, setShowTriggerPicker] = useState(false);
   const [showActionPicker, setShowActionPicker] = useState(false);
-  const [addActionAfterStepId, setAddActionAfterStepId] = useState<string | null>(null);
+  const [addActionAfterStepId, setAddActionAfterStepId] = useState<
+    string | null
+  >(null);
   const [triggerSearchTerm, setTriggerSearchTerm] = useState("");
   const [actionSearchTerm, setActionSearchTerm] = useState("");
   const [testResult, setTestResult] = useState<any>(null);
@@ -162,13 +168,13 @@ export default function AutomationEditor({
     try {
       const response = await fetch(`/api/automations/flows/${id}`);
       if (!response.ok) throw new Error("Failed to load flow");
-      
+
       const result = await response.json();
       if (result.success) {
         setFlow(result.data);
         setAutomationName(result.data.version.displayName);
         setDescription(result.data.metadata?.description || "");
-        
+
         // Convert flow structure to steps
         const loadedSteps = convertFlowToSteps(result.data);
         setSteps(loadedSteps);
@@ -184,11 +190,13 @@ export default function AutomationEditor({
   // Convert flow structure to editable steps
   const convertFlowToSteps = (flow: Flow): WorkflowStep[] => {
     const steps: WorkflowStep[] = [];
-    
+
     // Add trigger
     const trigger = flow.version.trigger;
-    const triggerType = TRIGGER_TYPES.find(t => t.id === trigger.settings.triggerName);
-    
+    const triggerType = TRIGGER_TYPES.find(
+      (t) => t.id === trigger.settings.triggerName,
+    );
+
     steps.push({
       id: generateStepId(),
       type: "trigger",
@@ -200,12 +208,14 @@ export default function AutomationEditor({
       isValid: trigger.valid,
       isExpanded: false,
     });
-    
+
     // Add actions
     let currentAction = trigger.nextAction;
     while (currentAction) {
-      const actionType = ACTION_TYPES.find(a => a.id === currentAction.settings.actionName);
-      
+      const actionType = ACTION_TYPES.find(
+        (a) => a.id === currentAction.settings.actionName,
+      );
+
       steps.push({
         id: generateStepId(),
         type: "action",
@@ -217,15 +227,15 @@ export default function AutomationEditor({
         isValid: currentAction.valid,
         isExpanded: false,
       });
-      
+
       currentAction = currentAction.nextAction;
     }
-    
+
     return steps;
   };
 
   // Add trigger
-  const handleAddTrigger = (triggerType: typeof TRIGGER_TYPES[0]) => {
+  const handleAddTrigger = (triggerType: (typeof TRIGGER_TYPES)[0]) => {
     const newStep: WorkflowStep = {
       id: generateStepId(),
       type: "trigger",
@@ -237,14 +247,14 @@ export default function AutomationEditor({
       isValid: false,
       isExpanded: true,
     };
-    
+
     setSteps([newStep]);
     setShowTriggerPicker(false);
     setTriggerSearchTerm("");
   };
 
   // Add action
-  const handleAddAction = (actionType: typeof ACTION_TYPES[0]) => {
+  const handleAddAction = (actionType: (typeof ACTION_TYPES)[0]) => {
     const newStep: WorkflowStep = {
       id: generateStepId(),
       type: "action",
@@ -256,16 +266,16 @@ export default function AutomationEditor({
       isValid: false,
       isExpanded: true,
     };
-    
+
     if (addActionAfterStepId) {
-      const index = steps.findIndex(s => s.id === addActionAfterStepId);
+      const index = steps.findIndex((s) => s.id === addActionAfterStepId);
       const newSteps = [...steps];
       newSteps.splice(index + 1, 0, newStep);
       setSteps(newSteps);
     } else {
       setSteps([...steps, newStep]);
     }
-    
+
     setShowActionPicker(false);
     setAddActionAfterStepId(null);
     setActionSearchTerm("");
@@ -273,24 +283,26 @@ export default function AutomationEditor({
 
   // Update step config
   const handleUpdateStep = (stepId: string, updates: Partial<WorkflowStep>) => {
-    setSteps(steps.map(step => 
-      step.id === stepId ? { ...step, ...updates } : step
-    ));
+    setSteps(
+      steps.map((step) =>
+        step.id === stepId ? { ...step, ...updates } : step,
+      ),
+    );
   };
 
   // Delete step
   const handleDeleteStep = (stepId: string) => {
-    setSteps(steps.filter(step => step.id !== stepId));
+    setSteps(steps.filter((step) => step.id !== stepId));
   };
 
   // Save as draft
   const handleSaveDraft = async () => {
     setIsSaving(true);
     setError(null);
-    
+
     try {
       const flowData = buildFlowData();
-      
+
       let savedFlow: Flow;
       if (flow) {
         // Update existing flow
@@ -299,7 +311,7 @@ export default function AutomationEditor({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(flowData),
         });
-        
+
         if (!response.ok) throw new Error("Failed to save draft");
         const result = await response.json();
         savedFlow = result.data;
@@ -310,12 +322,12 @@ export default function AutomationEditor({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(flowData),
         });
-        
+
         if (!response.ok) throw new Error("Failed to create draft");
         const result = await response.json();
         savedFlow = result.data;
       }
-      
+
       setFlow(savedFlow);
       setIsDirty(false);
       onSaveDraft(savedFlow);
@@ -330,21 +342,24 @@ export default function AutomationEditor({
   const handlePublish = async () => {
     setIsSaving(true);
     setError(null);
-    
+
     try {
       // First save the flow
       await handleSaveDraft();
-      
+
       if (!flow) throw new Error("Flow must be saved before publishing");
-      
+
       // Then activate it
-      const response = await fetch(`/api/automations/flows/${flow.id}/activate`, {
-        method: "POST",
-      });
-      
+      const response = await fetch(
+        `/api/automations/flows/${flow.id}/activate`,
+        {
+          method: "POST",
+        },
+      );
+
       if (!response.ok) throw new Error("Failed to publish flow");
       const result = await response.json();
-      
+
       setFlow(result.data);
       onPublish(result.data);
     } catch (err: any) {
@@ -361,7 +376,7 @@ export default function AutomationEditor({
       setTestResult({
         success: true,
         executionTime: 234,
-        steps: steps.map(step => ({
+        steps: steps.map((step) => ({
           name: step.displayName,
           status: "success",
           duration: Math.floor(Math.random() * 100),
@@ -375,9 +390,9 @@ export default function AutomationEditor({
 
   // Build flow data from steps
   const buildFlowData = (): CreateFlowData | UpdateFlowData => {
-    const trigger = steps.find(s => s.type === "trigger");
+    const trigger = steps.find((s) => s.type === "trigger");
     if (!trigger) throw new Error("Flow must have a trigger");
-    
+
     // Build linked action structure
     let currentAction = null;
     for (let i = steps.length - 1; i >= 0; i--) {
@@ -396,7 +411,7 @@ export default function AutomationEditor({
         };
       }
     }
-    
+
     return {
       displayName: automationName,
       metadata: { description },
@@ -420,14 +435,16 @@ export default function AutomationEditor({
   };
 
   // Filter triggers/actions
-  const filteredTriggers = TRIGGER_TYPES.filter(t =>
-    t.name.toLowerCase().includes(triggerSearchTerm.toLowerCase()) ||
-    t.description?.toLowerCase().includes(triggerSearchTerm.toLowerCase())
+  const filteredTriggers = TRIGGER_TYPES.filter(
+    (t) =>
+      t.name.toLowerCase().includes(triggerSearchTerm.toLowerCase()) ||
+      t.description?.toLowerCase().includes(triggerSearchTerm.toLowerCase()),
   );
-  
-  const filteredActions = ACTION_TYPES.filter(a =>
-    a.name.toLowerCase().includes(actionSearchTerm.toLowerCase()) ||
-    a.description?.toLowerCase().includes(actionSearchTerm.toLowerCase())
+
+  const filteredActions = ACTION_TYPES.filter(
+    (a) =>
+      a.name.toLowerCase().includes(actionSearchTerm.toLowerCase()) ||
+      a.description?.toLowerCase().includes(actionSearchTerm.toLowerCase()),
   );
 
   if (isLoading) {
@@ -450,22 +467,22 @@ export default function AutomationEditor({
             >
               <ArrowLeft size={20} />
             </button>
-            
+
             <div>
               <input
                 type="text"
                 value={automationName}
                 onChange={(e) => setAutomationName(e.target.value)}
-                className="text-lg font-semibold text-gray-900 bg-transparent border-none outline-none focus:ring-0"
+                className="border-none bg-transparent text-lg font-semibold text-gray-900 outline-none focus:ring-0"
                 placeholder="Automation name"
               />
               <p className="text-sm text-gray-500">
-                {flow?.status === "ENABLED" ? "Published" : "Draft"} • 
+                {flow?.status === "ENABLED" ? "Published" : "Draft"} •
                 {isDirty ? " Unsaved changes" : " All changes saved"}
               </p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <button
               onClick={handleTestFlow}
@@ -474,7 +491,7 @@ export default function AutomationEditor({
               <Play size={16} />
               Test
             </button>
-            
+
             <button
               onClick={handleSaveDraft}
               disabled={!isDirty || isSaving}
@@ -483,7 +500,7 @@ export default function AutomationEditor({
               <Save size={16} />
               Save
             </button>
-            
+
             <button
               onClick={handlePublish}
               disabled={isSaving || steps.length === 0}
@@ -540,9 +557,13 @@ export default function AutomationEditor({
                       step={step}
                       onUpdate={(updates) => handleUpdateStep(step.id, updates)}
                       onDelete={() => handleDeleteStep(step.id)}
-                      onExpand={() => handleUpdateStep(step.id, { isExpanded: !step.isExpanded })}
+                      onExpand={() =>
+                        handleUpdateStep(step.id, {
+                          isExpanded: !step.isExpanded,
+                        })
+                      }
                     />
-                    
+
                     {/* Add action button between steps */}
                     {index < steps.length - 1 && (
                       <div className="relative py-2">
@@ -551,12 +572,14 @@ export default function AutomationEditor({
                     )}
                   </div>
                 ))}
-                
+
                 {/* Add action button at the end */}
                 <div className="mt-3 flex justify-center">
                   <button
                     onClick={() => {
-                      setAddActionAfterStepId(steps[steps.length - 1]?.id || null);
+                      setAddActionAfterStepId(
+                        steps[steps.length - 1]?.id || null,
+                      );
                       setShowActionPicker(true);
                     }}
                     className="flex items-center gap-2 rounded-lg border-2 border-dashed border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 hover:border-gray-400 hover:text-gray-700"
@@ -592,8 +615,12 @@ export default function AutomationEditor({
               >
                 <div className="mt-0.5">{trigger.icon}</div>
                 <div>
-                  <div className="font-medium text-gray-900">{trigger.name}</div>
-                  <p className="mt-1 text-sm text-gray-500">{trigger.description}</p>
+                  <div className="font-medium text-gray-900">
+                    {trigger.name}
+                  </div>
+                  <p className="mt-1 text-sm text-gray-500">
+                    {trigger.description}
+                  </p>
                 </div>
               </button>
             ))}
@@ -624,7 +651,9 @@ export default function AutomationEditor({
                 <div className="mt-0.5">{action.icon}</div>
                 <div>
                   <div className="font-medium text-gray-900">{action.name}</div>
-                  <p className="mt-1 text-sm text-gray-500">{action.description}</p>
+                  <p className="mt-1 text-sm text-gray-500">
+                    {action.description}
+                  </p>
                 </div>
               </button>
             ))}
@@ -658,7 +687,7 @@ function StepCard({
   return (
     <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
       <div
-        className="flex items-center justify-between p-4 cursor-pointer"
+        className="flex cursor-pointer items-center justify-between p-4"
         onClick={onExpand}
       >
         <div className="flex items-center gap-3">
@@ -670,7 +699,7 @@ function StepCard({
             <p className="text-sm text-gray-500">{step.description}</p>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-2">
           {step.isValid && (
             <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-100">
@@ -684,7 +713,7 @@ function StepCard({
           />
         </div>
       </div>
-      
+
       {step.isExpanded && (
         <div className="border-t border-gray-200 p-4">
           {/* Step configuration UI would go here */}
@@ -695,24 +724,24 @@ function StepCard({
                 onChange={(config) => onUpdate({ config, isValid: true })}
               />
             )}
-            
+
             {step.type === "trigger" && step.name === "schedule" && (
               <ScheduleConfig
                 config={step.config}
                 onChange={(config) => onUpdate({ config, isValid: true })}
               />
             )}
-            
+
             {step.type === "action" && step.name === "email" && (
               <EmailConfig
                 config={step.config}
                 onChange={(config) => onUpdate({ config, isValid: true })}
               />
             )}
-            
+
             {/* Add more configuration components for other step types */}
           </div>
-          
+
           <div className="mt-4 flex justify-end">
             <button
               onClick={(e) => {
@@ -756,11 +785,11 @@ function PickerModal({
           >
             <X size={20} />
           </button>
-          
+
           <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
           <p className="mt-1 text-gray-600">{subtitle}</p>
-          
-          <div className="mt-4 relative">
+
+          <div className="relative mt-4">
             <Search
               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
               size={18}
@@ -770,13 +799,16 @@ function PickerModal({
               placeholder="Search..."
               value={searchTerm}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 pl-10 pr-4 py-2 focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
+              className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
               autoFocus
             />
           </div>
         </div>
-        
-        <div className="overflow-y-auto p-6" style={{ maxHeight: "calc(80vh - 180px)" }}>
+
+        <div
+          className="overflow-y-auto p-6"
+          style={{ maxHeight: "calc(80vh - 180px)" }}
+        >
           {children}
         </div>
       </div>
@@ -801,30 +833,35 @@ function TestResultModal({
         >
           <X size={20} />
         </button>
-        
+
         <h3 className="mb-4 text-lg font-semibold text-gray-900">
           Test Results
         </h3>
-        
+
         {result.success ? (
           <>
             <div className="mb-4 flex items-center gap-2 text-green-600">
               <Check className="h-5 w-5" />
               <span>Test completed successfully</span>
             </div>
-            
+
             <div className="space-y-2">
               {result.steps.map((step: any, index: number) => (
-                <div key={index} className="flex items-center justify-between rounded-lg bg-gray-50 p-3">
+                <div
+                  key={index}
+                  className="flex items-center justify-between rounded-lg bg-gray-50 p-3"
+                >
                   <div className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-green-500" />
                     <span className="text-sm font-medium">{step.name}</span>
                   </div>
-                  <span className="text-sm text-gray-500">{step.duration}ms</span>
+                  <span className="text-sm text-gray-500">
+                    {step.duration}ms
+                  </span>
                 </div>
               ))}
             </div>
-            
+
             <div className="mt-4 rounded-lg bg-blue-50 p-3">
               <p className="text-sm text-blue-800">
                 Total execution time: <strong>{result.executionTime}ms</strong>
@@ -834,7 +871,7 @@ function TestResultModal({
         ) : (
           <div className="text-red-600">Test failed</div>
         )}
-        
+
         <button
           onClick={onClose}
           className="mt-6 w-full rounded-lg bg-gray-800 py-2 text-white hover:bg-gray-700"
@@ -855,7 +892,7 @@ function WebhookConfig({
   onChange: (config: Record<string, any>) => void;
 }) {
   const webhookUrl = `${window.location.origin}/webhook/{{workflow_id}}`;
-  
+
   return (
     <div className="space-y-4">
       <div>
@@ -880,7 +917,7 @@ function WebhookConfig({
           Send POST requests to this URL to trigger the automation
         </p>
       </div>
-      
+
       <div>
         <label className="mb-1 block text-sm font-medium text-gray-700">
           Request Method
@@ -914,7 +951,9 @@ function ScheduleConfig({
         </label>
         <select
           value={config.scheduleType || "interval"}
-          onChange={(e) => onChange({ ...config, scheduleType: e.target.value })}
+          onChange={(e) =>
+            onChange({ ...config, scheduleType: e.target.value })
+          }
           className="w-full rounded-lg border border-gray-300 px-3 py-2"
         >
           <option value="interval">Interval</option>
@@ -923,18 +962,22 @@ function ScheduleConfig({
           <option value="cron">Custom (Cron)</option>
         </select>
       </div>
-      
+
       {config.scheduleType === "interval" && (
         <div className="flex gap-2">
           <input
             type="number"
             value={config.intervalValue || 1}
-            onChange={(e) => onChange({ ...config, intervalValue: e.target.value })}
+            onChange={(e) =>
+              onChange({ ...config, intervalValue: e.target.value })
+            }
             className="flex-1 rounded-lg border border-gray-300 px-3 py-2"
           />
           <select
             value={config.intervalUnit || "hours"}
-            onChange={(e) => onChange({ ...config, intervalUnit: e.target.value })}
+            onChange={(e) =>
+              onChange({ ...config, intervalUnit: e.target.value })
+            }
             className="rounded-lg border border-gray-300 px-3 py-2"
           >
             <option value="minutes">Minutes</option>
@@ -943,13 +986,15 @@ function ScheduleConfig({
           </select>
         </div>
       )}
-      
+
       {config.scheduleType === "cron" && (
         <div>
           <input
             type="text"
             value={config.cronExpression || "0 * * * *"}
-            onChange={(e) => onChange({ ...config, cronExpression: e.target.value })}
+            onChange={(e) =>
+              onChange({ ...config, cronExpression: e.target.value })
+            }
             placeholder="0 * * * *"
             className="w-full rounded-lg border border-gray-300 px-3 py-2"
           />
@@ -983,7 +1028,7 @@ function EmailConfig({
           className="w-full rounded-lg border border-gray-300 px-3 py-2"
         />
       </div>
-      
+
       <div>
         <label className="mb-1 block text-sm font-medium text-gray-700">
           Subject
@@ -996,7 +1041,7 @@ function EmailConfig({
           className="w-full rounded-lg border border-gray-300 px-3 py-2"
         />
       </div>
-      
+
       <div>
         <label className="mb-1 block text-sm font-medium text-gray-700">
           Body

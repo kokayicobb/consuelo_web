@@ -3,9 +3,20 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Plus, Search, Zap, Loader2, ChevronRight, Trash2, ArrowLeft, X, Check, ExternalLink } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Zap,
+  Loader2,
+  ChevronRight,
+  Trash2,
+  ArrowLeft,
+  X,
+  Check,
+  ExternalLink,
+} from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { Flow } from "../../lib/automations/types";
+import { Flow } from "../../lib/activepieces/types";
 import AutomationEditor from "./automation-editor"; // We'll create this component
 
 export default function AutomationsPage() {
@@ -15,13 +26,13 @@ export default function AutomationsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  
+
   // Parse URL params to determine current view
   const attemptId = searchParams.get("attempt_id");
   const flowId = searchParams.get("flow_id");
   const status = searchParams.get("status"); // 'draft' or 'published'
   const isEditing = Boolean(attemptId || flowId);
-  
+
   // State for publish success modal
   const [showPublishModal, setShowPublishModal] = useState(false);
   const [publishedFlow, setPublishedFlow] = useState<Flow | null>(null);
@@ -61,7 +72,7 @@ export default function AutomationsPage() {
   const handleCreateAutomation = () => {
     // Generate a temporary attempt ID for the new flow
     const newAttemptId = generateAttemptId();
-    
+
     // Update URL without navigation
     const url = new URL(window.location.href);
     url.searchParams.set("attempt_id", newAttemptId);
@@ -72,7 +83,10 @@ export default function AutomationsPage() {
   const handleEditAutomation = (flow: Flow) => {
     const url = new URL(window.location.href);
     url.searchParams.set("flow_id", flow.id);
-    url.searchParams.set("status", flow.status === "ENABLED" ? "published" : "draft");
+    url.searchParams.set(
+      "status",
+      flow.status === "ENABLED" ? "published" : "draft",
+    );
     window.history.pushState({}, "", url.toString());
   };
 
@@ -83,7 +97,7 @@ export default function AutomationsPage() {
     url.searchParams.delete("flow_id");
     url.searchParams.delete("status");
     window.history.pushState({}, "", url.toString());
-    
+
     // Refresh flows list
     fetchFlows();
   };
@@ -92,7 +106,7 @@ export default function AutomationsPage() {
   const handleFlowPublished = (flow: Flow) => {
     setPublishedFlow(flow);
     setShowPublishModal(true);
-    
+
     // Update URL to reflect published state
     const url = new URL(window.location.href);
     url.searchParams.set("flow_id", flow.id);
@@ -112,9 +126,12 @@ export default function AutomationsPage() {
   };
 
   // Delete an automation
-  const handleDeleteAutomation = async (flowId: string, e?: React.MouseEvent) => {
+  const handleDeleteAutomation = async (
+    flowId: string,
+    e?: React.MouseEvent,
+  ) => {
     e?.stopPropagation();
-    
+
     if (!confirm("Are you sure you want to delete this automation?")) return;
 
     try {
@@ -140,7 +157,7 @@ export default function AutomationsPage() {
   };
 
   const filteredFlows = flows.filter((flow) =>
-    flow.version.displayName.toLowerCase().includes(searchQuery.toLowerCase())
+    flow.version.displayName.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   // Render the editor view
@@ -154,7 +171,7 @@ export default function AutomationsPage() {
           onPublish={handleFlowPublished}
           onSaveDraft={handleFlowDraftSaved}
         />
-        
+
         {/* Publish Success Modal */}
         {showPublishModal && publishedFlow && (
           <PublishSuccessModal
@@ -241,7 +258,7 @@ export default function AutomationsPage() {
                 className="group flex items-center justify-between rounded-lg border border-gray-200 bg-white p-3 transition-colors hover:bg-gray-50"
               >
                 <div
-                  className="flex flex-grow items-center gap-4 cursor-pointer"
+                  className="flex flex-grow cursor-pointer items-center gap-4"
                   onClick={() => handleEditAutomation(flow)}
                 >
                   <div
@@ -315,9 +332,10 @@ function PublishSuccessModal({
         <h3 className="mb-2 text-lg font-semibold text-gray-900">
           Automation Published!
         </h3>
-        
+
         <p className="mb-6 text-gray-600">
-          Your automation "{flow.version.displayName}" is now live and ready to run.
+          Your automation "{flow.version.displayName}" is now live and ready to
+          run.
         </p>
 
         <div className="flex gap-3">
