@@ -10,7 +10,7 @@ import {
   generateChartConfig,
   explainQuery,
   generateActionSuggestions,
-} from "@/lib/actions";
+} from "@/components/Unified Commerce Dashboard/lib/activepieces/actions";
 import type { QueryExplanation, Config } from "@/types/otf";
 import {
   SegmentationForm,

@@ -12,7 +12,7 @@ import {
 import type { ChatMessageData } from "@/types/chats";
 
 import type { OtfContactLog } from "@/types/otf";
-import { generateSalesScript } from "@/lib/actions";
+import { generateSalesScript } from "@/components/Unified Commerce Dashboard/lib/actions/prompt_actions";
 import { SuggestedAction } from "../action-suggestions";
 import QueryResults from "../query-results";
 import ScriptModal from "../script-modal";
