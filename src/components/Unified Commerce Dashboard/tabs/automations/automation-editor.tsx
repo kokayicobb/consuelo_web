@@ -28,7 +28,7 @@ import {
   Flow,
   CreateFlowData,
   UpdateFlowData,
-} from "../../lib/activepieces/types";
+} from "../../lib/automations/types";
 
 interface AutomationEditorProps {
   attemptId?: string | null;
