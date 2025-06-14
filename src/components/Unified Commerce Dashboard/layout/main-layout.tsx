@@ -94,7 +94,7 @@ const ChatInterface = () => {
 
   return (
     <>
-      <ExpandableChatHeader className="border-b border-gray-200 bg-white">
+      <ExpandableChatHeader className="border-b border-gray-200 bg-neutral-50">
         <div className="flex items-center">
           <div className="mr-2 flex h-8 w-8 items-center justify-center rounded-full bg-gray-100">
             <img
@@ -324,16 +324,16 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
   ]
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-white md:flex-row">
+    <div className="flex h-screen flex-col overflow-hidden bg-neutral-50 md:flex-row">
       {!hideSidebar && (
         <Sidebar open={sidebarOpen} setOpen={setSidebarOpen}>
-          <SidebarBody className="bg-white">
+          <SidebarBody className="bg-neutral-50">
             <div className="relative mb-4 flex items-center justify-center gap-2 px-3 pt-3">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
-                    className="flex w-full items-center justify-start gap-2 rounded-md bg-white p-2 text-sm shadow-none hover:bg-gray-50"
+                    className="flex w-full items-center justify-start gap-2 rounded-md bg-neutral-50 p-2 text-sm shadow-none hover:bg-gray-50"
                   >
                     <div className="h-6 w-6 flex-shrink-0">
                       <img
@@ -346,7 +346,7 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
                     <ChevronDown className="ml-auto h-4 w-4 text-gray-500" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-80 p-0" align="start">
+                <DropdownMenuContent className="w-80 p-0 bg-neutral-50" align="start">
                   <div className="border-b border-gray-100 p-4">
                     <div className="mb-4 flex items-center gap-3">
                       <div className="h-10 w-10 flex-shrink-0">
@@ -525,14 +525,14 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
       )}
 
       <div
-        className={`flex flex-1 flex-col overflow-y-auto bg-gray-50 ${
+        className={`flex flex-1 flex-col overflow-y-auto bg-white ${
           hideSidebar ? "w-full" : ""
         }`}
       >
         <main
           className={`flex-1 ${
             activeTab === "home" && !hideSidebar ? "p-0" : "p-4 md:p-6"
-          } bg-gray-50`}
+          } bg-white`}
         >
           {hideSidebar ? children : renderContent()}
         </main>

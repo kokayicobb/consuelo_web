@@ -280,7 +280,7 @@ export default function NotionStyleCRMSearch() {
         <div className="relative flex flex-col items-center justify-start">
           <div className="sticky top-0 z-10 w-full max-w-sm bg-background pb-2 pt-2">
             <div
-              className="relative cursor-pointer rounded-lg border border-gray-200 bg-white transition-colors hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-gray-600"
+              className="relative cursor-pointer rounded-lg border border-none bg-neutral-50 transition-colors hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-gray-600"
               onClick={() => {
                 setIsModalOpen(true);
                 setQuery("");
@@ -320,7 +320,7 @@ export default function NotionStyleCRMSearch() {
             }}
           >
             <motion.div
-              className="relative max-h-[70vh] w-full max-w-2xl rounded-lg border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-800"
+              className="relative max-h-[70vh] w-full max-w-2xl rounded-lg border border-gray-200 bg-neutral-50 shadow-2xl dark:border-gray-700 dark:bg-gray-800"
               initial={{ y: -20, opacity: 0, scale: 0.95 }}
               animate={{ y: 0, opacity: 1, scale: 1 }}
               exit={{ y: -20, opacity: 0, scale: 0.95 }}
@@ -587,7 +587,7 @@ export default function NotionStyleCRMSearch() {
               </div>
 
               {/* Footer */}
-              <div className="rounded-b-lg bg-white px-4 py-3 dark:bg-gray-800">
+              <div className="rounded-b-lg bg-neutral-50 px-4 py-3 dark:bg-gray-800">
                 <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
                   <div className="flex items-center gap-4">
                     <span>↑↓ to navigate</span>
