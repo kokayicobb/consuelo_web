@@ -219,6 +219,7 @@ export default function ScriptModal({
     if (!scriptToAnalyze || scriptToAnalyze.trim().length < 20) {
       setTalkingPoints([]);
       setIsGeneratingPoints(true);
+     
       setPointsError(null);
       return;
     }
@@ -709,6 +710,7 @@ export default function ScriptModal({
                           </h4>
                           <ChevronRight
                             className={`h-4 w-4 text-gray-400 transition-transform group-hover:text-sky-600 ${
+                            className={`h-4 w-4 text-gray-400 transition-transform group-hover:text-sky-600 ${
                               expandedLogs ? "rotate-90" : ""
                             }`}
                           />
@@ -764,6 +766,7 @@ export default function ScriptModal({
                           )}
                         </h4>
                         <ChevronRight
+                          className={`h-4 w-4 text-gray-400 transition-transform group-hover:text-sky-600 ${
                           className={`h-4 w-4 text-gray-400 transition-transform group-hover:text-sky-600 ${
                             expandedSuggestions ? "rotate-90" : ""
                           }`}

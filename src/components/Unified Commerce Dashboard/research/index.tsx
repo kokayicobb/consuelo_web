@@ -113,11 +113,18 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
       { name: "Entrepreneur Support Group", selected: true },
       { name: "Local Business Funding", selected: false },
       { name: "Startup Funding Community", selected: true },
+      { name: "Small Business Owners Network", selected: true },
+      { name: "Entrepreneur Support Group", selected: true },
+      { name: "Local Business Funding", selected: false },
+      { name: "Startup Funding Community", selected: true },
     ],
     customFacebookGroup: "",
 
     // Instagram specific settings - UPDATE THESE TOO
     instagramTags: [
+      { name: "smallbusiness", selected: true },
+      { name: "entrepreneur", selected: true },
+      { name: "businessfunding", selected: false },
       { name: "smallbusiness", selected: true },
       { name: "entrepreneur", selected: true },
       { name: "businessfunding", selected: false },
@@ -164,6 +171,8 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
     customKeyword: "",
     scanFrequency: "daily",
     notificationType: "teams",
+    scanFrequency: "daily",
+    notificationType: "teams",
     emailAddress: "",
     teamsWebhook: "",
 
@@ -175,6 +184,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
       equipmentNeeds: true, // Changed from priceDiscussion
       revenueDiscussion: true, // Changed from weightLossGoals
     },
+  
 
     // Platform selection
     platforms: {
@@ -194,27 +204,40 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
       platform: "reddit",
       subreddit: "smallbusiness",
       username: "cafe_owner_22",
+      subreddit: "smallbusiness",
+      username: "cafe_owner_22",
       content:
+        "Been running my coffee shop for 3 years, revenue is steady at $45k/month. Looking to open a second location but need about $150k for equipment and buildout. Any advice on business loans?",
         "Been running my coffee shop for 3 years, revenue is steady at $45k/month. Looking to open a second location but need about $150k for equipment and buildout. Any advice on business loans?",
       date: "2025-05-10T14:22:00Z",
       sentiment: "seeking_funding",
+      sentiment: "seeking_funding",
       status: "new",
       score: 92,
+      url: "https://reddit.com/r/smallbusiness/comments/abc123",
       url: "https://reddit.com/r/smallbusiness/comments/abc123",
     },
     {
       id: 2,
       platform: "facebook",
       username: "maria.restaurant",
+      username: "maria.restaurant",
       content:
         "Restaurant has been profitable for 2 years, averaging $35k monthly revenue. Want to expand dining room and add catering kitchen. Need about $80k for renovation and equipment.",
+        "Restaurant has been profitable for 2 years, averaging $35k monthly revenue. Want to expand dining room and add catering kitchen. Need about $80k for renovation and equipment.",
       date: "2025-05-12T10:30:00Z",
+      sentiment: "expansion_plans",
       sentiment: "expansion_plans",
       status: "new",
       score: 95,
       url: "https://facebook.com/groups/smallbizowners/posts/123456",
+      url: "https://facebook.com/groups/smallbizowners/posts/123456",
     },
     {
+      id: 3,
+      platform: "reddit",
+      subreddit: "entrepreneur",
+      username: "construction_pro",
       id: 3,
       platform: "reddit",
       subreddit: "entrepreneur",
@@ -226,8 +249,29 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
       status: "contacted",
       score: 87,
       url: "https://reddit.com/r/entrepreneur/comments/def456",
+        "My construction company just landed a $500k contract but I need working capital to cover materials and payroll upfront. Client pays net-60. Cash flow is always tight in this industry.",
+      date: "2025-05-11T09:17:00Z",
+      sentiment: "cash_flow_issues",
+      status: "contacted",
+      score: 87,
+      url: "https://reddit.com/r/entrepreneur/comments/def456",
     },
+   
   ]);
+  const statusColors = {
+    new: "bg-blue-500",
+    contacted: "bg-yellow-500",
+    interested: "bg-teal-500",
+    converted: "bg-green-600",
+    not_interested: "bg-red-500",
+  };
+
+  // Color mapping for badge (can be moved outside)
+  const scoreBadgeColors = (score) => {
+    if (score >= 80) return "bg-green-500 hover:bg-green-600";
+    if (score >= 60) return "bg-yellow-500 text-black hover:bg-yellow-600";
+    return "bg-gray-500 hover:bg-gray-600";
+  };
   const statusColors = {
     new: "bg-blue-500",
     contacted: "bg-yellow-500",
@@ -254,6 +298,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
     string[]
   >([]);
   const [isGeneratingScript, setIsGeneratingScript] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   // Function to handle form submission (Start Monitoring)
   const handleSubmitConfiguration = async () => {
@@ -635,6 +680,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
             open={isRedditExpanded}
             onOpenChange={setIsRedditExpanded}
             className="rounded-lg  bg-white px-4 py-3"
+            className="rounded-lg  bg-white px-4 py-3"
           >
             <CollapsibleTrigger className="flex w-full items-center justify-between">
               <div className="flex items-center space-x-2">
@@ -734,6 +780,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
         {/* Facebook Configuration */}
         {formData.platforms.facebook && (
           <div className="space-y-4 rounded-lg bg-white px-4 py-3">
+          <div className="space-y-4 rounded-lg bg-white px-4 py-3">
             <div className="flex items-center space-x-2">
               <Facebook className="h-5 w-5 text-blue-600" />
               <span className="font-medium">Facebook Groups</span>
@@ -778,6 +825,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
                   onChange={handleChange}
                   placeholder="Enter Facebook group name"
                   className="flex-1 bg-white"
+                  className="flex-1 bg-white"
                 />
                 <Button
                   onClick={handleAddFacebookGroup}
@@ -794,6 +842,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
 
         {/* Instagram Configuration */}
         {formData.platforms.instagram && (
+          <div className="space-y-4 rounded-lg bg-white px-4 py-3">
           <div className="space-y-4 rounded-lg bg-white px-4 py-3">
             <div className="flex items-center space-x-2">
               <Instagram className="h-5 w-5 text-pink-600" />
@@ -838,6 +887,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
                   value={formData.customInstagramTag}
                   onChange={handleChange}
                   placeholder="Enter hashtag (without #)"
+                  className="flex-1 bg-white"
                   className="flex-1 bg-white"
                 />
                 <Button
@@ -958,6 +1008,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
               <div
                 key={filterKey}
                 className="flex items-center justify-between rounded-lg bg-white p-3"
+                className="flex items-center justify-between rounded-lg bg-white p-3"
               >
                 <Label
                   htmlFor={`filter-${filterKey}`}
@@ -1033,6 +1084,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
             Notification Preferences
           </Label>
           <div className="space-y-4">
+            <div className="flex items-center justify-between rounded-lg bg-white p-3">
             <div className="flex items-center justify-between rounded-lg bg-white p-3">
               <div className="flex items-center gap-2">
                 <MicrosoftTeamsSVG className="h-5 w-5" />
@@ -1949,13 +2001,17 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
   // Main app layout with iOS-inspired design
   return (
     <div className="min-h-screen bg-white p-4 font-sans">
+    <div className="min-h-screen bg-white p-4 font-sans">
       <div className="mx-auto mb-6 max-w-6xl">
         <div className="flex flex-col items-center justify-between gap-2 sm:flex-row">
           <div className="flex items-center">
             <div className="rounded-md bg-green-500 p-2 text-xl font-bold text-white">
               CFM
+            <div className="rounded-md bg-green-500 p-2 text-xl font-bold text-white">
+              CFM
             </div>
             <h1 className="ml-3 text-2xl font-bold text-gray-800">
+              Capital Fund Management
               Capital Fund Management
             </h1>
             <div className="ml-4 hidden text-gray-500 md:block">
