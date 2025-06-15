@@ -36,6 +36,7 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import type { Flow } from "../../lib/automations/types";
 import AutomationEditor from "./automation-editor";
+import InspirationSection from "./home-sections/inspiration-section";
 
 // Template interface for CRM-focused templates
 interface Template {
@@ -340,22 +341,28 @@ export default function AutomationsPage() {
         <div className="mb-8">
           <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Automations</h1>
-              <p className="mt-2 text-gray-600">
+              <h1 className="text-3xl font-bold text-neutral-900">
+                Automations
+              </h1>
+              <p className="mt-2 text-neutral-600">
                 Automate your CRM workflows to retain clients and generate leads
               </p>
             </div>
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setShowAIAssistant(true)}
-                className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 px-4 py-2 text-white transition-all hover:from-purple-700 hover:to-blue-700"
+                className="flex items-center gap-2 rounded-lg bg-transparent border-neutral-500 px-4 py-2 text-sm font-medium text-slate transition-all hover:slate-400"
               >
-                <Sparkles size={16} />
+                <img
+                        src="/apple-touch-icon.png"
+                        alt="Company Logo"
+                        className="h-5 w-5"
+                      />
                 AI Assistant
               </button>
               <button
                 onClick={handleCreateAutomation}
-                className="flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800"
+                className="flex items-center gap-2 rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-neutral-800"
               >
                 <Plus size={16} />
                 Create Automation
@@ -366,22 +373,22 @@ export default function AutomationsPage() {
           {/* AI Search Bar */}
           <div className="relative mb-6">
             <div className="relative">
-              <Sparkles
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-purple-500"
+              <Search
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
                 size={20}
               />
               <input
                 type="text"
-                placeholder="What would you like to automate? (e.g., 'Send welcome email to new leads')"
-                className="w-full rounded-xl border-2 border-gray-200 bg-white py-4 pl-12 pr-16 text-lg shadow-sm focus:border-purple-500 focus:outline-none"
+                placeholder="What would you like to automate? (example: 'Send welcome email to new leads')"
+                className="border-1 w-full rounded-xl border-neutral-500 bg-white py-4 pl-12 pr-16 text-lg shadow-2 focus:border-slate-500 focus:outline-none"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
               <div className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-2">
-                <span className="rounded-full bg-purple-100 px-2 py-1 text-xs font-medium text-purple-700">
+                <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">
                   AI beta
                 </span>
-                <button className="p-2 text-gray-400 hover:text-gray-600">
+                <button className="p-2 text-neutral-400 hover:text-neutral-600">
                   <Send size={18} />
                 </button>
               </div>
@@ -389,7 +396,7 @@ export default function AutomationsPage() {
           </div>
 
           {/* Navigation Tabs */}
-          <div className="border-b border-gray-200">
+          <div className="border-b border-neutral-200">
             <nav className="flex space-x-8">
               {[
                 { id: "overview", name: "Overview", icon: BarChart3 },
@@ -409,7 +416,7 @@ export default function AutomationsPage() {
                     className={`flex items-center gap-2 border-b-2 px-1 py-4 text-sm font-medium transition-colors ${
                       activeTab === tab.id
                         ? "border-blue-500 text-blue-600"
-                        : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                        : "border-transparent text-neutral-500 hover:border-neutral-300 hover:text-neutral-700"
                     }`}
                   >
                     <Icon size={16} />
@@ -426,11 +433,11 @@ export default function AutomationsPage() {
           <div className="space-y-8">
             {/* Quick Stats using your real data
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-neutral-200">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Active Automations</p>
-                    <p className="text-2xl font-bold text-gray-900">
+                    <p className="text-sm font-medium text-neutral-600">Active Automations</p>
+                    <p className="text-2xl font-bold text-neutral-900">
                       {flows.filter((f) => f.status === "ENABLED").length}
                     </p>
                   </div>
@@ -439,46 +446,46 @@ export default function AutomationsPage() {
                   </div>
                 </div>
               </div>
-              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-neutral-200">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Total Automations</p>
-                    <p className="text-2xl font-bold text-gray-900">{flows.length}</p>
+                    <p className="text-sm font-medium text-neutral-600">Total Automations</p>
+                    <p className="text-2xl font-bold text-neutral-900">{flows.length}</p>
                   </div>
                   <div className="p-3 bg-blue-100 rounded-lg">
                     <Zap className="h-6 w-6 text-blue-600" />
                   </div>
                 </div>
               </div>
-              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-neutral-200">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Draft Automations</p>
-                    <p className="text-2xl font-bold text-gray-900">
+                    <p className="text-sm font-medium text-neutral-600">Draft Automations</p>
+                    <p className="text-2xl font-bold text-neutral-900">
                       {flows.filter((f) => f.status === "DISABLED").length}
                     </p>
                   </div>
-                  <div className="p-3 bg-purple-100 rounded-lg">
-                    <Target className="h-6 w-6 text-purple-600" />
+                  <div className="p-3 bg-slate-100 rounded-lg">
+                    <Target className="h-6 w-6 text-slate-600" />
                   </div>
                 </div>
               </div>
-              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-neutral-200">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Templates Available</p>
-                    <p className="text-2xl font-bold text-gray-900">{templates.length}</p>
+                    <p className="text-sm font-medium text-neutral-600">Templates Available</p>
+                    <p className="text-2xl font-bold text-neutral-900">{templates.length}</p>
                   </div>
-                  <div className="p-3 bg-orange-100 rounded-lg">
-                    <Layout className="h-6 w-6 text-orange-600" />
+                  <div className="p-3 bg-slate-100 rounded-lg">
+                    <Layout className="h-6 w-6 text-slate-600" />
                   </div>
                 </div>
               </div>
             </div> */}
 
             {/* Start from Scratch */}
-            <div className="rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
-              <h2 className="mb-6 text-xl font-semibold text-gray-900">
+            <div className="rounded-xl border border-neutral-200 bg-white p-8 shadow-sm">
+              <h2 className="mb-6 text-xl font-semibold text-neutral-900">
                 Start from scratch
               </h2>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
@@ -487,7 +494,7 @@ export default function AutomationsPage() {
                     name: "Automation",
                     desc: "Automated workflows",
                     icon: Zap,
-                    color: "orange",
+                    color: "slate",
                   },
                   {
                     name: "Database",
@@ -499,19 +506,19 @@ export default function AutomationsPage() {
                     name: "Interface",
                     desc: "Apps, forms, and pages",
                     icon: Layout,
-                    color: "orange",
+                    color: "slate",
                   },
                   {
                     name: "Chatbot",
                     desc: "AI-powered chatbot",
                     icon: Bot,
-                    color: "orange",
+                    color: "slate",
                   },
                   {
                     name: "Canvas",
                     desc: "Process visualization",
                     icon: PenTool,
-                    color: "orange",
+                    color: "slate",
                   },
                 ].map((item) => {
                   const Icon = item.icon;
@@ -519,26 +526,31 @@ export default function AutomationsPage() {
                     <button
                       key={item.name}
                       onClick={handleCreateAutomation}
-                      className="group rounded-lg border-2 border-gray-200 p-6 text-left transition-colors hover:border-gray-300"
+                      className="group rounded-lg border-2 border-neutral-200 p-6 text-left transition-colors hover:border-neutral-300"
                     >
-                      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100 transition-colors group-hover:bg-orange-200">
-                        <Icon className="h-5 w-5 text-orange-600" />
+                      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 transition-colors group-hover:bg-slate-200">
+                        <Icon className="h-5 w-5 text-slate-600" />
                       </div>
-                      <h3 className="mb-1 font-medium text-gray-900">
+                      <h3 className="mb-1 font-medium text-neutral-900">
                         {item.name}
                       </h3>
-                      <p className="text-sm text-gray-600">{item.desc}</p>
+                      <p className="text-sm text-neutral-600">{item.desc}</p>
                     </button>
                   );
                 })}
               </div>
             </div>
+            <InspirationSection 
+  handleCreateAutomation={handleCreateAutomation}
+  handleUseTemplate={handleUseTemplate}
+  setActiveTab={setActiveTab}
+/>
 
             {/* Recent Activity using your real flows */}
             {flows.length > 0 && (
-              <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+              <div className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
                 <div className="mb-6 flex items-center justify-between">
-                  <h2 className="text-xl font-semibold text-gray-900">
+                  <h2 className="text-xl font-semibold text-neutral-900">
                     Recently updated
                   </h2>
                   <button
@@ -552,16 +564,16 @@ export default function AutomationsPage() {
                   {flows.slice(0, 3).map((flow) => (
                     <div
                       key={flow.id}
-                      className="flex cursor-pointer items-center justify-between rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50"
+                      className="flex cursor-pointer items-center justify-between rounded-lg border border-neutral-200 p-4 transition-colors hover:bg-neutral-50"
                       onClick={() => handleEditAutomation(flow)}
                     >
                       <div className="flex items-center gap-4">
-                        <Zap className="h-5 w-5 text-orange-500" />
+                        <Zap className="h-5 w-5 text-slate-500" />
                         <div>
-                          <h3 className="font-medium text-gray-900">
+                          <h3 className="font-medium text-neutral-900">
                             {flow.version.displayName}
                           </h3>
-                          <p className="text-sm text-gray-600">
+                          <p className="text-sm text-neutral-600">
                             Updated{" "}
                             {formatDistanceToNow(new Date(flow.updated), {
                               addSuffix: true,
@@ -574,7 +586,7 @@ export default function AutomationsPage() {
                           className={`rounded-full px-2 py-1 text-xs font-medium ${
                             flow.status === "ENABLED"
                               ? "bg-green-100 text-green-800"
-                              : "bg-gray-100 text-gray-800"
+                              : "bg-neutral-100 text-neutral-800"
                           }`}
                         >
                           {flow.status === "ENABLED" ? "On" : "Off"}
@@ -591,9 +603,9 @@ export default function AutomationsPage() {
         {/* Templates Tab */}
         {activeTab === "templates" && (
           <div className="space-y-6">
-            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+            <div className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900">
+                <h2 className="text-lg font-semibold text-neutral-900">
                   CRM Automation Templates
                 </h2>
                 <button className="text-sm font-medium text-blue-600 hover:text-blue-700">
@@ -622,7 +634,7 @@ export default function AutomationsPage() {
                       className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
                         selectedCategory === filter.id
                           ? "border border-blue-200 bg-blue-100 text-blue-700"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                          : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
                       }`}
                       onClick={() => setSelectedCategory(filter.id)}
                     >
@@ -639,7 +651,7 @@ export default function AutomationsPage() {
                   return (
                     <div
                       key={template.id}
-                      className="rounded-lg border border-gray-200 p-6 transition-shadow hover:shadow-md"
+                      className="rounded-lg border border-neutral-200 p-6 transition-shadow hover:shadow-md"
                     >
                       <div className="mb-4 flex items-start justify-between">
                         <div className="flex items-center gap-3">
@@ -648,16 +660,16 @@ export default function AutomationsPage() {
                           </div>
                         </div>
                         {template.popular && (
-                          <span className="rounded-full bg-purple-100 px-2 py-1 text-xs font-medium text-purple-700">
+                          <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">
                             Popular
                           </span>
                         )}
                       </div>
 
-                      <h3 className="mb-2 font-semibold text-gray-900">
+                      <h3 className="mb-2 font-semibold text-neutral-900">
                         {template.name}
                       </h3>
-                      <p className="mb-4 text-sm text-gray-600">
+                      <p className="mb-4 text-sm text-neutral-600">
                         {template.description}
                       </p>
 
@@ -665,13 +677,17 @@ export default function AutomationsPage() {
                         <div className="flex items-center gap-2">
                           {template.aiPowered && (
                             <div className="flex items-center gap-1">
-                              <Sparkles className="h-3 w-3 text-purple-500" />
-                              <span className="text-xs font-medium text-purple-600">
+                              <img
+                        src="/apple-touch-icon.png"
+                        alt="Company Logo"
+                        className="h-3 w-3"
+                      />
+                              <span className="text-xs font-medium text-slate-600">
                                 AI
                               </span>
                             </div>
                           )}
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-neutral-500">
                             {template.estimatedTime}
                           </span>
                         </div>
@@ -683,8 +699,8 @@ export default function AutomationsPage() {
                         </button>
                       </div>
 
-                      <div className="border-t border-gray-100 pt-3">
-                        <p className="text-xs text-gray-600">
+                      <div className="border-t border-neutral-100 pt-3">
+                        <p className="text-xs text-neutral-600">
                           {template.useCase}
                         </p>
                       </div>
@@ -699,16 +715,16 @@ export default function AutomationsPage() {
         {/* My Automations Tab - Your existing list with enhanced styling */}
         {activeTab === "my-automations" && (
           <div className="space-y-6">
-            <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
-              <div className="border-b border-gray-200 p-6">
+            <div className="rounded-xl border border-neutral-200 bg-white shadow-sm">
+              <div className="border-b border-neutral-200 p-6">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-gray-900">
+                  <h2 className="text-lg font-semibold text-neutral-900">
                     Your Automations
                   </h2>
                   <div className="flex items-center gap-3">
                     <div className="relative">
                       <Search
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400"
                         size={16}
                       />
                       <input
@@ -716,7 +732,7 @@ export default function AutomationsPage() {
                         placeholder="Search automations..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="rounded-lg border border-gray-300 py-2 pl-10 pr-4 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        className="rounded-lg border border-neutral-300 py-2 pl-10 pr-4 focus:outline-none focus:ring-1 focus:ring-blue-500"
                       />
                     </div>
                   </div>
@@ -725,7 +741,7 @@ export default function AutomationsPage() {
 
               {isLoading ? (
                 <div className="flex items-center justify-center py-20">
-                  <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                  <Loader2 className="h-8 w-8 animate-spin text-neutral-400" />
                 </div>
               ) : error ? (
                 <div className="py-20 text-center text-red-500">
@@ -733,27 +749,27 @@ export default function AutomationsPage() {
                 </div>
               ) : flows.length === 0 ? (
                 <div className="py-20 text-center">
-                  <Zap size={40} className="mx-auto mb-3 text-gray-300" />
-                  <h3 className="mb-1 font-semibold text-gray-700">
+                  <Zap size={40} className="mx-auto mb-3 text-neutral-300" />
+                  <h3 className="mb-1 font-semibold text-neutral-700">
                     No Automations Found
                   </h3>
-                  <p className="mb-4 text-sm text-gray-500">
+                  <p className="mb-4 text-sm text-neutral-500">
                     Get started by creating your first workflow.
                   </p>
                   <button
                     onClick={handleCreateAutomation}
-                    className="mx-auto flex items-center gap-2 rounded-md bg-gray-800 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700"
+                    className="mx-auto flex items-center gap-2 rounded-md bg-neutral-800 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700"
                   >
                     <Plus size={16} />
                     Create Automation
                   </button>
                 </div>
               ) : (
-                <div className="divide-y divide-gray-200">
+                <div className="divide-y divide-neutral-200">
                   {filteredFlows.map((flow) => (
                     <div
                       key={flow.id}
-                      className="p-6 transition-colors hover:bg-gray-50"
+                      className="p-6 transition-colors hover:bg-neutral-50"
                     >
                       <div className="flex items-center justify-between">
                         <div
@@ -764,14 +780,14 @@ export default function AutomationsPage() {
                             className={`h-3 w-3 rounded-full ${
                               flow.status === "ENABLED"
                                 ? "bg-green-500"
-                                : "bg-gray-400"
+                                : "bg-neutral-400"
                             }`}
                           />
                           <div>
-                            <h3 className="font-medium text-gray-900">
+                            <h3 className="font-medium text-neutral-900">
                               {flow.version.displayName}
                             </h3>
-                            <p className="mt-1 text-sm text-gray-600">
+                            <p className="mt-1 text-sm text-neutral-600">
                               Updated{" "}
                               {formatDistanceToNow(new Date(flow.updated), {
                                 addSuffix: true,
@@ -785,7 +801,7 @@ export default function AutomationsPage() {
                             className={`rounded-full px-3 py-1 text-xs font-medium ${
                               flow.status === "ENABLED"
                                 ? "bg-green-100 text-green-800"
-                                : "bg-gray-100 text-gray-800"
+                                : "bg-neutral-100 text-neutral-800"
                             }`}
                           >
                             {flow.status === "ENABLED" ? "Published" : "Draft"}
@@ -794,7 +810,7 @@ export default function AutomationsPage() {
                           <div className="flex items-center gap-1">
                             <button
                               onClick={() => handleEditAutomation(flow)}
-                              className="p-2 text-gray-400 hover:text-gray-600"
+                              className="p-2 text-neutral-400 hover:text-neutral-600"
                             >
                               <Settings size={16} />
                             </button>
@@ -802,13 +818,13 @@ export default function AutomationsPage() {
                               onClick={(e) =>
                                 handleDeleteAutomation(flow.id, e)
                               }
-                              className="p-2 text-gray-400 hover:text-red-500"
+                              className="p-2 text-neutral-400 hover:text-red-500"
                             >
                               <Trash2 size={16} />
                             </button>
                             <button
                               onClick={() => handleEditAutomation(flow)}
-                              className="p-2 text-gray-400 hover:text-gray-600"
+                              className="p-2 text-neutral-400 hover:text-neutral-600"
                             >
                               <ChevronRight size={16} />
                             </button>
@@ -827,29 +843,31 @@ export default function AutomationsPage() {
         {activeTab === "analytics" && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                <h3 className="mb-4 text-lg font-semibold text-gray-900">
+              <div className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
+                <h3 className="mb-4 text-lg font-semibold text-neutral-900">
                   Performance Overview
                 </h3>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Total Automations</span>
+                    <span className="text-neutral-600">Total Automations</span>
                     <span className="font-semibold">{flows.length}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Active Automations</span>
+                    <span className="text-neutral-600">Active Automations</span>
                     <span className="font-semibold text-green-600">
                       {flows.filter((f) => f.status === "ENABLED").length}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Draft Automations</span>
-                    <span className="font-semibold text-orange-600">
+                    <span className="text-neutral-600">Draft Automations</span>
+                    <span className="font-semibold text-slate-600">
                       {flows.filter((f) => f.status === "DISABLED").length}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Available Templates</span>
+                    <span className="text-neutral-600">
+                      Available Templates
+                    </span>
                     <span className="font-semibold text-blue-600">
                       {templates.length}
                     </span>
@@ -857,8 +875,8 @@ export default function AutomationsPage() {
                 </div>
               </div>
 
-              <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                <h3 className="mb-4 text-lg font-semibold text-gray-900">
+              <div className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
+                <h3 className="mb-4 text-lg font-semibold text-neutral-900">
                   Recent Automations
                 </h3>
                 <div className="space-y-3">
@@ -868,10 +886,10 @@ export default function AutomationsPage() {
                         {index + 1}
                       </div>
                       <div className="flex-1">
-                        <p className="font-medium text-gray-900">
+                        <p className="font-medium text-neutral-900">
                           {flow.version.displayName}
                         </p>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-neutral-600">
                           {formatDistanceToNow(new Date(flow.updated), {
                             addSuffix: true,
                           })}
@@ -882,7 +900,7 @@ export default function AutomationsPage() {
                           className={`text-sm font-medium ${
                             flow.status === "ENABLED"
                               ? "text-green-600"
-                              : "text-gray-600"
+                              : "text-neutral-600"
                           }`}
                         >
                           {flow.status === "ENABLED" ? "Active" : "Draft"}
@@ -900,24 +918,28 @@ export default function AutomationsPage() {
         {showAIAssistant && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="mx-4 max-h-[80vh] w-full max-w-2xl overflow-hidden rounded-xl bg-white shadow-xl">
-              <div className="border-b border-gray-200 p-6">
+              <div className="border-b border-neutral-200 p-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-r from-purple-500 to-blue-500">
-                      <Sparkles className="h-5 w-5 text-white" />
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white">
+                      <img
+                        src="/apple-touch-icon.png"
+                        alt="Company Logo"
+                        className="h-5 w-5"
+                      />
                     </div>
                     <div>
-                      <h2 className="text-xl font-semibold text-gray-900">
-                        AI Automation Assistant
+                      <h2 className="text-xl font-semibold text-neutral-900">
+                        Automation Assistant
                       </h2>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-neutral-600">
                         Describe what you want to automate
                       </p>
                     </div>
                   </div>
                   <button
                     onClick={() => setShowAIAssistant(false)}
-                    className="text-gray-400 hover:text-gray-600"
+                    className="text-neutral-400 hover:text-neutral-600"
                   >
                     <X size={20} />
                   </button>
@@ -926,21 +948,21 @@ export default function AutomationsPage() {
 
               <div className="p-6">
                 <div className="space-y-4">
-                  <div className="rounded-lg bg-gray-50 p-4">
-                    <p className="mb-2 text-sm text-gray-600">Try asking:</p>
+                  <div className="rounded-lg bg-whitep-4">
+                    <p className="mb-2 text-sm text-neutral-600">Try asking:</p>
                     <div className="space-y-2">
-                      <button className="block w-full rounded-lg bg-white p-3 text-left transition-colors hover:bg-gray-50">
+                      <button className="block w-full rounded-lg bg-white p-3 text-left transition-colors hover:bg-neutral-50">
                         <span className="text-sm">
                           "Send a welcome email when someone fills out my
                           contact form"
                         </span>
                       </button>
-                      <button className="block w-full rounded-lg bg-white p-3 text-left transition-colors hover:bg-gray-50">
+                      <button className="block w-full rounded-lg bg-white p-3 text-left transition-colors hover:bg-neutral-50">
                         <span className="text-sm">
                           "Remind me to follow up with clients after 30 days"
                         </span>
                       </button>
-                      <button className="block w-full rounded-lg bg-white p-3 text-left transition-colors hover:bg-gray-50">
+                      <button className="block w-full rounded-lg bg-white p-3 text-left transition-colors hover:bg-neutral-50">
                         <span className="text-sm">
                           "Create a task when a lead score reaches 80"
                         </span>
@@ -951,9 +973,9 @@ export default function AutomationsPage() {
                   <div className="relative">
                     <textarea
                       placeholder="Describe your automation idea in plain English..."
-                      className="h-32 w-full resize-none rounded-lg border border-gray-300 p-4 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="h-32 w-full resize-none rounded-lg border border-neutral-300 p-4 focus:outline-none focus:ring-2 focus:ring-slate-500"
                     />
-                    <button className="absolute bottom-3 right-3 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 p-2 text-white transition-all hover:from-purple-700 hover:to-blue-700">
+                    <button className="absolute bottom-3 right-3 rounded-lg bg-neutral-800 p-2 text-white transition-all hover:from-slate-700 hover:to-blue-700">
                       <Send size={16} />
                     </button>
                   </div>
@@ -982,7 +1004,7 @@ function PublishSuccessModal({
       <div className="relative mx-4 w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 text-gray-400 hover:text-gray-600"
+          className="absolute right-4 top-4 text-neutral-400 hover:text-neutral-600"
         >
           <X size={20} />
         </button>
@@ -991,11 +1013,11 @@ function PublishSuccessModal({
           <Check className="h-6 w-6 text-green-600" />
         </div>
 
-        <h3 className="mb-2 text-lg font-semibold text-gray-900">
+        <h3 className="mb-2 text-lg font-semibold text-neutral-900">
           Automation Published!
         </h3>
 
-        <p className="mb-6 text-gray-600">
+        <p className="mb-6 text-neutral-600">
           Your automation "{flow.version.displayName}" is now live and ready to
           run.
         </p>
@@ -1003,28 +1025,28 @@ function PublishSuccessModal({
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
+            className="flex-1 rounded-lg border border-neutral-300 px-4 py-2 text-neutral-700 hover:bg-neutral-50"
           >
             Back to Automations
           </button>
           <button
             onClick={onViewFlow}
-            className="flex-1 rounded-lg bg-gray-800 px-4 py-2 text-white hover:bg-gray-700"
+            className="flex-1 rounded-lg bg-neutral-800 px-4 py-2 text-white hover:bg-neutral-700"
           >
             Continue Editing
           </button>
         </div>
 
         {flow.version.trigger.type === "WEBHOOK" && (
-          <div className="mt-4 rounded-lg bg-gray-50 p-3">
-            <p className="mb-1 text-sm font-medium text-gray-700">
+          <div className="mt-4 rounded-lg bg-neutral-50 p-3">
+            <p className="mb-1 text-sm font-medium text-neutral-700">
               Webhook URL:
             </p>
             <div className="flex items-center gap-2">
-              <code className="flex-1 rounded bg-gray-200 px-2 py-1 text-xs text-gray-800">
+              <code className="flex-1 rounded bg-neutral-200 px-2 py-1 text-xs text-neutral-800">
                 {`${window.location.origin}/webhook/${flow.id}`}
               </code>
-              <button className="text-gray-600 hover:text-gray-800">
+              <button className="text-neutral-600 hover:text-neutral-800">
                 <ExternalLink size={16} />
               </button>
             </div>

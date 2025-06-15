@@ -432,8 +432,9 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
               </DropdownMenu>
               <SidebarCollapseButton className="absolute -right-2 top-1/2 -translate-y-1/2" />
             </div>
-            <ActionSearchBar />
+            
             <nav className="flex-1 space-y-1 px-3">
+              <ActionSearchBar />
               {mainNavItems.map((item) => (
                 <SidebarLink
                   key={item.href}

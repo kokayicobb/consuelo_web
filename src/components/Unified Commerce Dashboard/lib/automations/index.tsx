@@ -28,6 +28,14 @@ import {
   N8nNode,
   N8nConnections,
 } from './types';
+import {
+  TRIGGER_INTEGRATIONS,
+  ACTION_INTEGRATIONS,
+  INTEGRATION_TO_N8N_NODE_MAP,
+  IntegrationCategory,
+  TriggerType,
+  ActionType,
+} from './integrations';
 
 /**
  * ActivePieces Service Class (using n8n API under the hood)
@@ -138,35 +146,150 @@ export class ActivePiecesService {
    * Map our trigger types to n8n node types
    */
   private mapTriggerTypeToN8n(trigger: FlowTrigger): string {
+    // Check if we have a specific integration mapping
+    const integrationId = trigger.settings.pieceName || trigger.settings.triggerName;
+    if (integrationId && INTEGRATION_TO_N8N_NODE_MAP[`${integrationId}_trigger`]) {
+      return INTEGRATION_TO_N8N_NODE_MAP[`${integrationId}_trigger`];
+    }
+
+    // Handle generic trigger types
     if (trigger.type === 'WEBHOOK' || trigger.settings.triggerName === 'webhook') {
       return 'n8n-nodes-base.webhook';
     }
     if (trigger.type === 'SCHEDULE' || trigger.settings.triggerName === 'schedule') {
       return 'n8n-nodes-base.scheduleTrigger';
     }
-    if (trigger.settings.triggerName === 'email') {
-      return 'n8n-nodes-base.emailTrigger';
-    }
-    if (trigger.settings.triggerName === 'form') {
-      return 'n8n-nodes-base.formTrigger';
-    }
-    // Default to webhook for unknown triggers
-    return 'n8n-nodes-base.webhook';
+    
+    // Integration-specific mappings
+    const triggerMappings: Record<string, string> = {
+      // CRM
+      'salesforce': 'n8n-nodes-base.salesforceTrigger',
+      'hubspot': 'n8n-nodes-base.hubspotTrigger',
+      'pipedrive': 'n8n-nodes-base.pipedriveTrigger',
+      
+      // Communication
+      'slack': 'n8n-nodes-base.slackTrigger',
+      'teams': 'n8n-nodes-base.microsoftTeamsTrigger',
+      'twilio': 'n8n-nodes-base.twilioTrigger',
+      'email': 'n8n-nodes-base.emailTriggerImap',
+      
+      // Calendar
+      'google_calendar': 'n8n-nodes-base.googleCalendarTrigger',
+      'outlook_calendar': 'n8n-nodes-base.microsoftOutlookTrigger',
+      'calendly': 'n8n-nodes-base.calendlyTrigger',
+      
+      // E-commerce
+      'shopify': 'n8n-nodes-base.shopifyTrigger',
+      'woocommerce': 'n8n-nodes-base.wooCommerceTrigger',
+      
+      // Payments
+      'stripe': 'n8n-nodes-base.stripeTrigger',
+      'paypal': 'n8n-nodes-base.payPalTrigger',
+      'square': 'n8n-nodes-base.squareTrigger',
+      
+      // Productivity
+      'airtable': 'n8n-nodes-base.airtableTrigger',
+      'google_sheets': 'n8n-nodes-base.googleSheetsTrigger',
+      'notion': 'n8n-nodes-base.notionTrigger',
+      
+      // Forms
+      'typeform': 'n8n-nodes-base.typeformTrigger',
+      'google_forms': 'n8n-nodes-base.googleFormsTrigger',
+      'jotform': 'n8n-nodes-base.jotformTrigger',
+      'form': 'n8n-nodes-base.formTrigger',
+      
+      // Marketing
+      'mailchimp': 'n8n-nodes-base.mailchimpTrigger',
+      'sendgrid': 'n8n-nodes-base.sendGridTrigger',
+      'activecampaign': 'n8n-nodes-base.activeCampaignTrigger',
+      
+      // Social Media
+      'facebook': 'n8n-nodes-base.facebookTrigger',
+      'instagram': 'n8n-nodes-base.instagramTrigger',
+      'linkedin': 'n8n-nodes-base.linkedInTrigger',
+      'twitter': 'n8n-nodes-base.twitterTrigger',
+      
+      // Support
+      'zendesk': 'n8n-nodes-base.zendeskTrigger',
+      'intercom': 'n8n-nodes-base.intercomTrigger',
+      'freshdesk': 'n8n-nodes-base.freshdeskTrigger',
+      
+      // Analytics
+      'google_analytics': 'n8n-nodes-base.googleAnalyticsTrigger',
+      'mixpanel': 'n8n-nodes-base.mixpanelTrigger',
+    };
+    
+    const triggerName = trigger.settings.triggerName || trigger.name;
+    return triggerMappings[triggerName] || 'n8n-nodes-base.webhook';
   }
 
   /**
    * Map our action types to n8n node types
    */
   private mapActionTypeToN8n(action: FlowAction): string {
+    // Check if we have a specific integration mapping
+    const integrationId = action.settings.pieceName || action.settings.actionName;
+    if (integrationId && INTEGRATION_TO_N8N_NODE_MAP[`${integrationId}_action`]) {
+      return INTEGRATION_TO_N8N_NODE_MAP[`${integrationId}_action`];
+    }
+
     const actionName = action.settings.actionName || action.name;
     
     const mapping: Record<string, string> = {
+      // CRM
+      'salesforce': 'n8n-nodes-base.salesforce',
+      'hubspot': 'n8n-nodes-base.hubspot',
+      'pipedrive': 'n8n-nodes-base.pipedrive',
+      
+      // Communication
+      'slack': 'n8n-nodes-base.slack',
+      'teams': 'n8n-nodes-base.microsoftTeams',
+      'twilio': 'n8n-nodes-base.twilio',
       'email': 'n8n-nodes-base.emailSend',
       'sms': 'n8n-nodes-base.twilio',
-      'webhook': 'n8n-nodes-base.httpRequest',
-      'delay': 'n8n-nodes-base.wait',
-      'branch': 'n8n-nodes-base.if',
-      'code': 'n8n-nodes-base.code',
+      'zoom': 'n8n-nodes-base.zoom',
+      
+      // Calendar
+      'google_calendar': 'n8n-nodes-base.googleCalendar',
+      'outlook_calendar': 'n8n-nodes-base.microsoftOutlook',
+      'calendly': 'n8n-nodes-base.calendly',
+      
+      // E-commerce
+      'shopify': 'n8n-nodes-base.shopify',
+      'woocommerce': 'n8n-nodes-base.wooCommerce',
+      
+      // Payments
+      'stripe': 'n8n-nodes-base.stripe',
+      'paypal': 'n8n-nodes-base.payPal',
+      'square': 'n8n-nodes-base.square',
+      
+      // Productivity
+      'airtable': 'n8n-nodes-base.airtable',
+      'google_sheets': 'n8n-nodes-base.googleSheets',
+      'notion': 'n8n-nodes-base.notion',
+      'google_drive': 'n8n-nodes-base.googleDrive',
+      'dropbox': 'n8n-nodes-base.dropbox',
+      
+      // Marketing
+      'mailchimp': 'n8n-nodes-base.mailchimp',
+      'sendgrid': 'n8n-nodes-base.sendGrid',
+      'activecampaign': 'n8n-nodes-base.activeCampaign',
+      
+      // Social Media
+      'facebook': 'n8n-nodes-base.facebook',
+      'instagram': 'n8n-nodes-base.instagram',
+      'linkedin': 'n8n-nodes-base.linkedIn',
+      'twitter': 'n8n-nodes-base.twitter',
+      
+      // Support
+      'zendesk': 'n8n-nodes-base.zendesk',
+      'intercom': 'n8n-nodes-base.intercom',
+      'freshdesk': 'n8n-nodes-base.freshdesk',
+      
+      // Analytics
+      'google_analytics': 'n8n-nodes-base.googleAnalytics',
+      'mixpanel': 'n8n-nodes-base.mixpanel',
+    
     };
     
     return mapping[actionName] || 'n8n-nodes-base.httpRequest';

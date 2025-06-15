@@ -50,6 +50,7 @@ export interface FlowTrigger {
     triggerName?: string;
     input?: Record<string, any>;
     inputUiInfo?: Record<string, any>;
+    credentialId?: string; // ADD THIS LINE
   };
 }
 
@@ -65,6 +66,7 @@ export interface FlowAction {
     actionName?: string;
     input?: Record<string, any>;
     inputUiInfo?: Record<string, any>;
+    credentialId?: string; // ADD THIS LINE
   };
 }
 
