@@ -18,15 +18,10 @@ import {
   UserPlus,
   ArrowUpRight,
   Mail,
-  Save,
-  ChevronUp,
+  Save
 } from "lucide-react";
 import MicrosoftTeamsSVG from "@/components/ui/Logos/microsoft-teams";
-import {
-  processRedditDataForLeads,
-  generateSalesScript,
-  generateKeyTalkingPoints,
-} from "@/components/Unified Commerce Dashboard/lib/actions/prompt_actions";
+
 import {
   Card,
   CardContent,
@@ -59,6 +54,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { processRedditDataForLeads, generateSalesScript, generateKeyTalkingPoints } from "../lib/actions/prompt_actions";
 
 // Define Lead type matching UI and PotentialLead from actions
 interface Lead {
@@ -89,103 +85,62 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
   const [formData, setFormData] = useState({
     // Reddit specific settings
     subreddits: [
-      { name: "borrow", category: "lending", selected: true },
-      { name: "SimpleLoans", category: "lending", selected: true },
-      { name: "donationrequest", category: "lending", selected: true },
-      { name: "smallbusiness", category: "business", selected: true },
-      { name: "entrepreneur", category: "business", selected: true },
-      { name: "startups", category: "business", selected: true },
-      { name: "business", category: "business", selected: true },
-      { name: "Entrepreneur", category: "business", selected: false },
-      { name: "EntrepreneurRideAlong", category: "business", selected: false },
-      { name: "sweatystartup", category: "business", selected: false },
-      { name: "restaurateur", category: "industry", selected: false },
-      { name: "retail", category: "industry", selected: false },
-      { name: "construction", category: "industry", selected: false },
-      { name: "freelance", category: "business", selected: false },
-      { name: "consulting", category: "business", selected: false },
+      { name: "charlottenc", category: "location", selected: true },
+      { name: "Charlotte", category: "location", selected: true },
+      { name: "NorthCarolina", category: "location", selected: true },
+      { name: "orangetheory", category: "fitness", selected: false },
+      { name: "fitness", category: "fitness", selected: false },
+      { name: "workout", category: "fitness", selected: false },
+      { name: "yoga", category: "fitness", selected: false },
+      { name: "weightloss", category: "fitness", selected: false },
+      { name: "running", category: "fitness", selected: false },
+      { name: "crossfit", category: "fitness", selected: false },
+      { name: "gym", category: "fitness", selected: false },
     ],
     customSubreddit: "",
 
-    // Facebook specific settings - UPDATE THESE TOO
+    // Facebook specific settings
     facebookGroups: [
-      { name: "Small Business Owners Network", selected: true },
-      { name: "Entrepreneur Support Group", selected: true },
-      { name: "Local Business Funding", selected: false },
-      { name: "Startup Funding Community", selected: true },
-      { name: "Small Business Owners Network", selected: true },
-      { name: "Entrepreneur Support Group", selected: true },
-      { name: "Local Business Funding", selected: false },
-      { name: "Startup Funding Community", selected: true },
+      { name: "Charlotte Fitness Community", selected: true },
+      { name: "Charlotte Newcomers", selected: true },
+      { name: "North Carolina Fitness Enthusiasts", selected: false },
+      { name: "Orangetheory Memes", selected: true },
     ],
     customFacebookGroup: "",
 
-    // Instagram specific settings - UPDATE THESE TOO
+    // Instagram specific settings
     instagramTags: [
-      { name: "smallbusiness", selected: true },
-      { name: "entrepreneur", selected: true },
-      { name: "businessfunding", selected: false },
-      { name: "smallbusiness", selected: true },
-      { name: "entrepreneur", selected: true },
-      { name: "businessfunding", selected: false },
+      { name: "charlottefitness", selected: true },
+      { name: "cltfitness", selected: true },
+      { name: "ncfitness", selected: false },
     ],
     customInstagramTag: "",
 
-    // UPDATED KEYWORDS FOR BUSINESS FUNDING
+    // Common settings
     keywords: [
-      "funding",
-      "loan",
-      "capital",
-      "cash flow",
-      "business loan",
-      "working capital",
-      "equipment financing",
-      "need money",
-      "financial help",
-      "expand",
-      "growth",
-      "investment",
-      "revenue",
-      "startup costs",
-      "line of credit",
-      "sba loan",
-      "business advice",
-      "need help",
-      "struggling",
-
-      "need loan",
-      "borrow money",
-      "emergency loan",
-      "quick loan",
-      "personal loan",
-      "cash advance",
-      "financial help",
-      "need money",
-      "loan request",
-      "urgent",
-      "business loan",
-      "expansion",
-      "inventory",
-      "payroll",
+      "orange theory",
+      "fitness",
+      "workout",
+      "HIIT",
+      "gym",
+      "weight loss",
+      "Charlotte",
+      "recommendation",
+      "new to area",
+      "classes",
     ],
     customKeyword: "",
-    scanFrequency: "daily",
-    notificationType: "teams",
-    scanFrequency: "daily",
-    notificationType: "teams",
+    scanFrequency: "daily", // hourly, daily, weekly
+    notificationType: "teams", // email, teams, none
     emailAddress: "",
     teamsWebhook: "",
-
-    // UPDATED CONTENT FILTERS FOR BUSINESS CONTEXT
     contentFilter: {
-      seekingFunding: true, // Changed from seekingRecommendations
-      expansionPlans: true, // Changed from newToArea
-      cashFlowIssues: true, // Changed from complaining
-      equipmentNeeds: true, // Changed from priceDiscussion
-      revenueDiscussion: true, // Changed from weightLossGoals
+      seekingRecommendations: true,
+      newToArea: true,
+      complaining: true,
+      priceDiscussion: true,
+      weightLossGoals: true,
     },
-  
-  
 
     // Platform selection
     platforms: {
@@ -203,90 +158,55 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
     {
       id: 1,
       platform: "reddit",
-      subreddit: "smallbusiness",
-      username: "cafe_owner_22",
-      subreddit: "smallbusiness",
-      username: "cafe_owner_22",
+      subreddit: "charlottenc",
+      username: "user123",
       content:
-        "Been running my coffee shop for 3 years, revenue is steady at $45k/month. Looking to open a second location but need about $150k for equipment and buildout. Any advice on business loans?",
-        "Been running my coffee shop for 3 years, revenue is steady at $45k/month. Looking to open a second location but need about $150k for equipment and buildout. Any advice on business loans?",
+        "Just moved to Charlotte and looking for a good gym in the South End area. Preferably something with classes as I'm not good at motivating myself.",
       date: "2025-05-10T14:22:00Z",
-      sentiment: "seeking_funding",
-      sentiment: "seeking_funding",
+      sentiment: "seeking_recommendation",
       status: "new",
       score: 92,
-      url: "https://reddit.com/r/smallbusiness/comments/abc123",
-      url: "https://reddit.com/r/smallbusiness/comments/abc123",
+      url: "https://reddit.com/r/charlottenc/comments/abc123",
     },
     {
       id: 2,
-      platform: "facebook",
-      username: "maria.restaurant",
-      username: "maria.restaurant",
+      platform: "reddit",
+      subreddit: "fitness",
+      username: "fit_for_life",
       content:
-        "Restaurant has been profitable for 2 years, averaging $35k monthly revenue. Want to expand dining room and add catering kitchen. Need about $80k for renovation and equipment.",
-        "Restaurant has been profitable for 2 years, averaging $35k monthly revenue. Want to expand dining room and add catering kitchen. Need about $80k for renovation and equipment.",
-      date: "2025-05-12T10:30:00Z",
-      sentiment: "expansion_plans",
-      sentiment: "expansion_plans",
-      status: "new",
-      score: 95,
-      url: "https://facebook.com/groups/smallbizowners/posts/123456",
-      url: "https://facebook.com/groups/smallbizowners/posts/123456",
+        "I've tried several HIIT workouts but can't find one that works with my schedule in Charlotte. Ideally looking for something near Uptown with early morning and late evening classes.",
+      date: "2025-05-11T09:17:00Z",
+      sentiment: "pain_point",
+      status: "contacted",
+      score: 87,
+      url: "https://reddit.com/r/fitness/comments/def456",
     },
     {
       id: 3,
-      platform: "reddit",
-      subreddit: "entrepreneur",
-      username: "construction_pro",
-      id: 3,
-      platform: "reddit",
-      subreddit: "entrepreneur",
-      username: "construction_pro",
+      platform: "facebook",
+      username: "jane.smith",
       content:
-        "My construction company just landed a $500k contract but I need working capital to cover materials and payroll upfront. Client pays net-60. Cash flow is always tight in this industry.",
-      date: "2025-05-11T09:17:00Z",
-      sentiment: "cash_flow_issues",
-      status: "contacted",
-      score: 87,
-      url: "https://reddit.com/r/entrepreneur/comments/def456",
-        "My construction company just landed a $500k contract but I need working capital to cover materials and payroll upfront. Client pays net-60. Cash flow is always tight in this industry.",
-      date: "2025-05-11T09:17:00Z",
-      sentiment: "cash_flow_issues",
-      status: "contacted",
-      score: 87,
-      url: "https://reddit.com/r/entrepreneur/comments/def456",
+        "Hey Charlotte Fitness Community! I'm looking for workout classes that are high intensity but also fun. Any recommendations in the NoDa area?",
+      date: "2025-05-12T10:30:00Z",
+      sentiment: "seeking_recommendation",
+      status: "new",
+      score: 95,
+      url: "https://facebook.com/groups/charlottefitness/posts/123456",
     },
-   
+    {
+      id: 4,
+      platform: "instagram",
+      username: "fitness_enthusiast",
+      content:
+        "Trying to find a new workout routine in #charlottefitness that will help me lose these last 10 pounds. Any suggestions?",
+      date: "2025-05-13T15:45:00Z",
+      sentiment: "seeking_recommendation",
+      status: "new",
+      score: 89,
+      url: "https://instagram.com/p/abc123",
+    },
   ]);
-  const statusColors = {
-    new: "bg-blue-500",
-    contacted: "bg-yellow-500",
-    interested: "bg-teal-500",
-    converted: "bg-green-600",
-    not_interested: "bg-red-500",
-  };
 
-  // Color mapping for badge (can be moved outside)
-  const scoreBadgeColors = (score) => {
-    if (score >= 80) return "bg-green-500 hover:bg-green-600";
-    if (score >= 60) return "bg-yellow-500 text-black hover:bg-yellow-600";
-    return "bg-gray-500 hover:bg-gray-600";
-  };
-  const statusColors = {
-    new: "bg-blue-500",
-    contacted: "bg-yellow-500",
-    interested: "bg-teal-500",
-    converted: "bg-green-600",
-    not_interested: "bg-red-500",
-  };
-
-  // Color mapping for badge (can be moved outside)
-  const scoreBadgeColors = (score) => {
-    if (score >= 80) return "bg-green-500 hover:bg-green-600";
-    if (score >= 60) return "bg-yellow-500 text-black hover:bg-yellow-600";
-    return "bg-gray-500 hover:bg-gray-600";
-  };
   const [filterStatus, setFilterStatus] = useState("all");
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -299,8 +219,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
     string[]
   >([]);
   const [isGeneratingScript, setIsGeneratingScript] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
+
   // Function to handle form submission (Start Monitoring)
   const handleSubmitConfiguration = async () => {
     console.log("Form submitted for monitoring:", formData);
@@ -680,8 +599,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
           <Collapsible
             open={isRedditExpanded}
             onOpenChange={setIsRedditExpanded}
-            className="rounded-lg  bg-white px-4 py-3"
-            className="rounded-lg  bg-white px-4 py-3"
+            className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3"
           >
             <CollapsibleTrigger className="flex w-full items-center justify-between">
               <div className="flex items-center space-x-2">
@@ -752,9 +670,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
                 >
                   Add Custom Subreddit
                 </Label>
-                <div className="flex w-full items-center gap-2">
-                  {" "}
-                  {/* Changed to 'gap-2' for spacing */}
+                <div className="flex space-x-2">
                   <Input
                     id="custom-subreddit"
                     type="text"
@@ -762,13 +678,13 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
                     value={formData.customSubreddit}
                     onChange={handleChange}
                     placeholder="Enter subreddit name"
-                    className="flex-1" // This makes the input grow to fill available space
+                    className="flex-1"
                   />
                   <Button
                     onClick={handleAddSubreddit}
                     variant="default"
                     size="default"
-                    className="text-black-800 whitespace-nowrap bg-transparent shadow-none hover:bg-gray-100" // Ensures button text doesn't wrap
+                    className="whitespace-nowrap"
                   >
                     Add
                   </Button>
@@ -780,8 +696,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
 
         {/* Facebook Configuration */}
         {formData.platforms.facebook && (
-          <div className="space-y-4 rounded-lg bg-white px-4 py-3">
-          <div className="space-y-4 rounded-lg bg-white px-4 py-3">
+          <div className="space-y-4 rounded-lg border border-gray-100 bg-gray-50 px-4 py-3">
             <div className="flex items-center space-x-2">
               <Facebook className="h-5 w-5 text-blue-600" />
               <span className="font-medium">Facebook Groups</span>
@@ -801,7 +716,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
                     />
                     <Label
                       htmlFor={`facebook-group-${index}`}
-                      className="bg-white text-sm"
+                      className="text-sm"
                     >
                       {group.name}
                     </Label>
@@ -825,14 +740,13 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
                   value={formData.customFacebookGroup}
                   onChange={handleChange}
                   placeholder="Enter Facebook group name"
-                  className="flex-1 bg-white"
-                  className="flex-1 bg-white"
+                  className="flex-1"
                 />
                 <Button
                   onClick={handleAddFacebookGroup}
                   variant="default"
                   size="default"
-                  className="text-black-800 whitespace-nowrap bg-transparent shadow-none hover:bg-gray-100"
+                  className="whitespace-nowrap"
                 >
                   Add
                 </Button>
@@ -843,8 +757,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
 
         {/* Instagram Configuration */}
         {formData.platforms.instagram && (
-          <div className="space-y-4 rounded-lg bg-white px-4 py-3">
-          <div className="space-y-4 rounded-lg bg-white px-4 py-3">
+          <div className="space-y-4 rounded-lg border border-gray-100 bg-gray-50 px-4 py-3">
             <div className="flex items-center space-x-2">
               <Instagram className="h-5 w-5 text-pink-600" />
               <span className="font-medium">Instagram Hashtags</span>
@@ -888,14 +801,13 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
                   value={formData.customInstagramTag}
                   onChange={handleChange}
                   placeholder="Enter hashtag (without #)"
-                  className="flex-1 bg-white"
-                  className="flex-1 bg-white"
+                  className="flex-1"
                 />
                 <Button
                   onClick={handleAddInstagramTag}
                   variant="default"
                   size="default"
-                  className="text-black-800 whitespace-nowrap bg-transparent shadow-none hover:bg-gray-100"
+                  className="whitespace-nowrap"
                 >
                   Add
                 </Button>
@@ -907,7 +819,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
       <CardFooter className="flex justify-end pt-2">
         <Button
           onClick={() => setCurrentStep(2)}
-          className="text-black-800 bg-transparent shadow-none hover:bg-gray-100"
+          className="bg-blue-500 hover:bg-blue-600"
         >
           Next <ChevronRight className="ml-2 h-4 w-4" />
         </Button>
@@ -923,70 +835,39 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-3">
-          <Collapsible
-            open={isOpen}
-            onOpenChange={setIsOpen}
-            className="w-full space-y-2"
-          >
-            <div className="flex items-center justify-between space-x-4">
-              <Label className="text-sm font-medium">
-                Keywords to Track ({formData.keywords.length})
-              </Label>
-              <CollapsibleTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-black-800 w-9 bg-transparent p-0 shadow-none hover:bg-gray-100"
+          <Label className="text-sm font-medium">Keywords to Track</Label>
+          <div className="mb-3 flex flex-wrap gap-2">
+            {formData.keywords.map((keyword) => (
+              <Badge
+                key={keyword}
+                variant="secondary"
+                className="flex items-center gap-1 px-3 py-1.5"
+              >
+                {keyword}
+                <button
+                  onClick={() => handleRemoveKeyword(keyword)}
+                  className="ml-1 text-gray-500 hover:text-gray-700"
+                  aria-label={`Remove ${keyword}`}
                 >
-                  <ChevronDown className="h-4 w-4" />
-                  <span className="sr-only">Toggle</span>
-                </Button>
-              </CollapsibleTrigger>
-            </div>
-
-            <CollapsibleContent>
-              {/* You can add some padding/border to the content area if desired */}
-              <div className="mb-3 flex flex-wrap gap-2 rounded-md p-3">
-                {formData.keywords.length > 0 ? (
-                  formData.keywords.map((keyword) => (
-                    <Badge
-                      key={keyword}
-                      variant="secondary"
-                      className="flex items-center gap-1 px-3 py-1.5"
-                    >
-                      {keyword}
-                      <button
-                        onClick={() => handleRemoveKeyword(keyword)}
-                        className="ml-1 text-gray-500 hover:text-gray-700"
-                        aria-label={`Remove ${keyword}`}
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))
-                ) : (
-                  <p className="text-sm text-gray-500">
-                    No keywords to display.
-                  </p>
-                )}
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            ))}
+          </div>
           <div className="flex space-x-2">
             <Input
               type="text"
               name="customKeyword"
               value={formData.customKeyword}
               onChange={handleChange}
-              placeholder="Add keyword (e.g., loan help)"
-              className="flex-1 border border-gray-400 bg-white"
+              placeholder="Add keyword (e.g., gym motivation)"
+              className="flex-1"
             />
             <Button
               onClick={handleAddKeyword}
               variant="default"
               size="default"
-              className="text-black-800 whitespace-nowrap bg-transparent shadow-none hover:bg-gray-100"
+              className="whitespace-nowrap"
             >
               Add
             </Button>
@@ -1008,8 +889,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
             ).map((filterKey) => (
               <div
                 key={filterKey}
-                className="flex items-center justify-between rounded-lg bg-white p-3"
-                className="flex items-center justify-between rounded-lg bg-white p-3"
+                className="flex items-center justify-between rounded-lg bg-gray-50 p-3"
               >
                 <Label
                   htmlFor={`filter-${filterKey}`}
@@ -1028,16 +908,12 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
         </div>
       </CardContent>
       <CardFooter className="flex justify-between pt-2">
-        <Button
-          onClick={() => setCurrentStep(1)}
-          variant="outline"
-          className="text-black-800 bg-transparent shadow-none hover:bg-gray-100"
-        >
+        <Button onClick={() => setCurrentStep(1)} variant="outline">
           Back
         </Button>
         <Button
           onClick={() => setCurrentStep(3)}
-          className="text-black-800 bg-transparent shadow-none hover:bg-gray-100"
+          className="bg-blue-500 hover:bg-blue-600"
         >
           Next <ChevronRight className="ml-2 h-4 w-4" />
         </Button>
@@ -1077,18 +953,17 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
             </SelectContent>
           </Select>
         </div>
-
+  
         <Separator />
-
+  
         <div className="space-y-3">
-          <Label className="bg-white text-sm font-medium">
+          <Label className="text-sm font-medium">
             Notification Preferences
           </Label>
           <div className="space-y-4">
-            <div className="flex items-center justify-between rounded-lg bg-white p-3">
-            <div className="flex items-center justify-between rounded-lg bg-white p-3">
+            <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3">
               <div className="flex items-center gap-2">
-                <MicrosoftTeamsSVG className="h-5 w-5" />
+              <MicrosoftTeamsSVG className="h-5 w-5" />
                 <Label htmlFor="teams-notification" className="text-sm">
                   Teams Notifications
                 </Label>
@@ -1104,7 +979,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
                 }
               />
             </div>
-
+  
             {formData.notificationType === "teams" && (
               <div className="space-y-2 pl-4">
                 <button
@@ -1119,8 +994,8 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
                 </button>
               </div>
             )}
-
-            <div className="flex items-center justify-between rounded-lg bg-white p-3">
+  
+            <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3">
               <div className="flex items-center gap-2">
                 <Mail className="h-5 w-5" />
                 <Label htmlFor="email-notification" className="text-sm">
@@ -1138,7 +1013,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
                 }
               />
             </div>
-
+  
             {formData.notificationType === "email" && (
               <div className="space-y-2 pl-4">
                 <Label htmlFor="email-address" className="text-sm">
@@ -1154,9 +1029,9 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
                 />
               </div>
             )}
-
-            <div className="flex items-center justify-between rounded-lg bg-white p-3">
-              <Label htmlFor="no-notification" className="text-sm ">
+  
+            <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3">
+              <Label htmlFor="no-notification" className="text-sm">
                 No Notifications
               </Label>
               <Switch
@@ -1169,100 +1044,69 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
             </div>
           </div>
         </div>
-        <Collapsible
-          open={isOpen}
-          onOpenChange={setIsOpen}
-          className="w-full space-y-2" // Adjust width as needed
-        >
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-sky-600">
-              Configuration Summary
-            </h3>
-            <CollapsibleTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-9 bg-transparent p-0 text-sky-600 shadow-none hover:bg-gray-100"
-              >
-                {/* You can use ChevronsUpDown or conditionally render ChevronUp/ChevronDown */}
-                {isOpen ? (
-                  <ChevronUp className="h-4 w-4" />
-                ) : (
-                  <ChevronDown className="h-4 w-4" />
-                )}
-                <span className="sr-only">Toggle summary</span>
-              </Button>
-            </CollapsibleTrigger>
+  
+        <div className="rounded-lg border border-blue-100 bg-blue-50 p-4">
+          <h3 className="mb-2 font-medium text-blue-800">
+            Configuration Summary
+          </h3>
+          <div className="space-y-1 text-sm text-blue-700">
+            <p>
+              <span className="font-medium">Platforms:</span>{" "}
+              {Object.entries(formData.platforms)
+                .filter(([_, enabled]) => enabled)
+                .map(
+                  ([platform]) =>
+                    platform.charAt(0).toUpperCase() + platform.slice(1),
+                )
+                .join(", ")}
+            </p>
+            {formData.platforms.reddit && (
+              <p>
+                <span className="font-medium">Reddit:</span>{" "}
+                {formData.subreddits.filter((sr) => sr.selected).length}{" "}
+                subreddits selected
+              </p>
+            )}
+            {formData.platforms.facebook && (
+              <p>
+                <span className="font-medium">Facebook:</span>{" "}
+                {formData.facebookGroups.filter((g) => g.selected).length}{" "}
+                groups selected
+              </p>
+            )}
+            {formData.platforms.instagram && (
+              <p>
+                <span className="font-medium">Instagram:</span>{" "}
+                {formData.instagramTags.filter((t) => t.selected).length}{" "}
+                hashtags selected
+              </p>
+            )}
+            <p>
+              <span className="font-medium">Keywords:</span>{" "}
+              {formData.keywords.length} keywords defined
+            </p>
+            <p>
+              <span className="font-medium">Scan Frequency:</span>{" "}
+              {formData.scanFrequency.charAt(0).toUpperCase() +
+                formData.scanFrequency.slice(1)}
+            </p>
+            <p>
+              <span className="font-medium">Notifications:</span>{" "}
+              {formData.notificationType === "none"
+                ? "Manual dashboard check"
+                : `${formData.notificationType.charAt(0).toUpperCase() + formData.notificationType.slice(1)}`}
+            </p>
           </div>
-
-          <CollapsibleContent>
-            {/* Your original Configuration Summary content goes here */}
-            <div className="rounded-lg border border-blue-100 bg-blue-50 p-4">
-              {/* Moved the H3 to the trigger section for better visibility when closed */}
-              <div className="space-y-1 text-sm text-blue-700">
-                <p>
-                  <span className="font-medium">Platforms:</span>{" "}
-                  {Object.entries(formData.platforms)
-                    .filter(([_, enabled]) => enabled)
-                    .map(
-                      ([platform]) =>
-                        platform.charAt(0).toUpperCase() + platform.slice(1),
-                    )
-                    .join(", ")}
-                </p>
-                {formData.platforms.reddit && (
-                  <p>
-                    <span className="font-medium">Reddit:</span>{" "}
-                    {formData.subreddits.filter((sr) => sr.selected).length}{" "}
-                    subreddits selected
-                  </p>
-                )}
-                {formData.platforms.facebook && (
-                  <p>
-                    <span className="font-medium">Facebook:</span>{" "}
-                    {formData.facebookGroups.filter((g) => g.selected).length}{" "}
-                    groups selected
-                  </p>
-                )}
-                {formData.platforms.instagram && (
-                  <p>
-                    <span className="font-medium">Instagram:</span>{" "}
-                    {formData.instagramTags.filter((t) => t.selected).length}{" "}
-                    hashtags selected
-                  </p>
-                )}
-                <p>
-                  <span className="font-medium">Keywords:</span>{" "}
-                  {formData.keywords.length} keywords defined
-                </p>
-                <p>
-                  <span className="font-medium">Scan Frequency:</span>{" "}
-                  {formData.scanFrequency.charAt(0).toUpperCase() +
-                    formData.scanFrequency.slice(1)}
-                </p>
-                <p>
-                  <span className="font-medium">Notifications:</span>{" "}
-                  {formData.notificationType === "none"
-                    ? "Manual dashboard check"
-                    : `${formData.notificationType.charAt(0).toUpperCase() + formData.notificationType.slice(1)}`}
-                </p>
-              </div>
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
+        </div>
       </CardContent>
       <CardFooter className="flex justify-between pt-2">
-        <Button
-          onClick={() => setCurrentStep(2)}
-          variant="outline"
-          className="text-black-800 bg-white shadow-none hover:bg-gray-100"
-        >
+        <Button onClick={() => setCurrentStep(2)} variant="outline">
           Back
         </Button>
         <Button
           onClick={handleSubmitConfiguration}
           disabled={isProcessing}
-          className="shawdow-none bg-white text-black hover:bg-gray-100 disabled:bg-gray-300 disabled:text-gray-500"
+          className="bg-green-500 hover:bg-green-600 disabled:bg-gray-300 disabled:text-gray-500"
         >
           {isProcessing ? (
             <>
@@ -1271,8 +1115,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
             </>
           ) : (
             <>
-              Start Monitoring{" "}
-              <ArrowRightCircle className="text-black-800 border: ml-2 h-4 w-4 border-none bg-white shadow-none hover:bg-gray-100" />
+              Start Monitoring <ArrowRightCircle className="ml-2 h-4 w-4" />
             </>
           )}
         </Button>
@@ -1294,7 +1137,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
               onClick={() => setCurrentStep(1)}
               variant="outline"
               size="sm"
-              className="text-black-800 flex items-center bg-transparent shadow-none hover:bg-gray-100"
+              className="flex items-center"
             >
               <Settings className="mr-2 h-4 w-4" />
               Configure
@@ -1324,9 +1167,9 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
                 className="pl-9"
               />
             </div>
-            <div className="shawdow-none flex gap-2">
+            <div className="flex gap-2">
               <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger className="shawdow-none w-[140px]">
+                <SelectTrigger className="w-[140px]">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -1340,9 +1183,9 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
               </Select>
               <Badge
                 variant="outline"
-                className="shawdow-none flex h-10 items-center gap-1 px-3"
+                className="flex h-10 items-center gap-1 px-3"
               >
-                <Filter className="shawdow-none h-3.5 w-3.5" />
+                <Filter className="h-3.5 w-3.5" />
                 {filteredLeads.length} leads
               </Badge>
             </div>
@@ -1377,20 +1220,12 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="all" className="mt-2">
-          <ScrollArea className="h-[calc(100vh-280px)] w-full">
-            <div className="flex flex-col space-y-4 p-4">
+        <TabsContent value="all" className="mt-0">
+          <ScrollArea className="h-[calc(100vh-280px)]">
+            <div className="space-y-3">
               {filteredLeads.length > 0 ? (
                 filteredLeads.map((lead) => (
-                  <Card
-                    key={lead.id}
-                    // 4. Changed `w-80 md:w-96` to `w-full` so each card takes the full width
-                    //    of the container. You can adjust this if you want a max-width or
-                    //    specific width (e.g., `w-full max-w-md mx-auto` for a centered card with max width).
-                    // 5. `flex-shrink-0` is usually for horizontal flex layouts to prevent shrinking.
-                    //    It's less critical here but doesn't harm. Can be removed if not needed.
-                    className="mx-auto w-full max-w-md shadow-none"
-                  >
+                  <Card key={lead.id} className="overflow-hidden">
                     <CardHeader className="flex flex-row items-start justify-between p-3 pb-0">
                       <div className="flex items-center gap-2">
                         <PlatformIcon platform={lead.platform} />
@@ -1521,7 +1356,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
             <div className="space-y-3">
               {filteredLeads.length > 0 ? (
                 filteredLeads.map((lead) => (
-                  <Card key={lead.id} className="w-full overflow-hidden">
+                  <Card key={lead.id} className="overflow-hidden">
                     <CardHeader className="flex flex-row items-start justify-between p-3 pb-0">
                       <div className="flex items-center gap-2">
                         <PlatformIcon platform={lead.platform} />
@@ -1884,6 +1719,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
           <DialogHeader>
             <DialogTitle className="flex items-start justify-between">
               <span>Outreach Script for {selectedLeadForScript?.username}</span>
+             
             </DialogTitle>
           </DialogHeader>
 
@@ -2001,19 +1837,15 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
 
   // Main app layout with iOS-inspired design
   return (
-    <div className="min-h-screen bg-white p-4 font-sans">
-    <div className="min-h-screen bg-white p-4 font-sans">
+    <div className="min-h-screen bg-gray-50 p-4 font-sans">
       <div className="mx-auto mb-6 max-w-6xl">
         <div className="flex flex-col items-center justify-between gap-2 sm:flex-row">
           <div className="flex items-center">
-            <div className="rounded-md bg-green-500 p-2 text-xl font-bold text-white">
-              CFM
-            <div className="rounded-md bg-green-500 p-2 text-xl font-bold text-white">
-              CFM
+            <div className="rounded-md bg-orange-500 p-2 text-xl font-bold text-white">
+              OTF
             </div>
             <h1 className="ml-3 text-2xl font-bold text-gray-800">
-              Capital Fund Management
-              Capital Fund Management
+              Orange Theory Charlotte
             </h1>
             <div className="ml-4 hidden text-gray-500 md:block">
               Social Search

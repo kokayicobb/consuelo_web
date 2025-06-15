@@ -242,7 +242,7 @@ const HomeContent: React.FC = () => {
   const [timeRange, setTimeRange] = useState("month");
 
   return (
-    <div className="space-y-6 bg-gray-50">
+    <div className="space-y-6 bg-white">
       {/* Page header with date selector */}
       <div className="flex items-center justify-between">
         <div>

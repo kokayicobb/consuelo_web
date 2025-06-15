@@ -2,7 +2,7 @@
 // Fixed version that properly passes trigger data to the service layer
 
 import { NextRequest, NextResponse } from "next/server";
-import { activePieces } from "@/components/Unified Commerce Dashboard/lib/activepieces";
+import { activePieces } from "@/components/Unified Commerce Dashboard/lib/automations";
 
 interface RouteParams {
   params: {
