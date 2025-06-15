@@ -4,13 +4,7 @@ import type React from "react";
 
 import { useState } from "react";
 
-import {
-  generateQuery,
-  runGeneratedSQLQuery,
-  generateChartConfig,
-  explainQuery,
-  generateActionSuggestions,
-} from "@/components/Unified Commerce Dashboard/lib/activepieces/actions";
+
 import type { QueryExplanation, Config } from "@/types/otf";
 import {
   SegmentationForm,
@@ -19,6 +13,7 @@ import {
   QueryResults,
 } from "../segmentation";
 import SqlDisplay from "../segmentation/sql-display";
+import { generateQuery, runGeneratedSQLQuery, generateChartConfig, generateActionSuggestions, explainQuery } from "../lib/actions/prompt_actions";
 
 // Example segmentation queries to get users started
 const EXAMPLE_QUERIES = [
