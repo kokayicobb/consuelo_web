@@ -126,27 +126,31 @@ const ExpandableChatToggle: React.FC<ExpandableChatToggleProps> = ({
   toggleChat,
   ...props
 }) => (
-  <Button
-    variant="default"
-    onClick={toggleChat}
-    className={cn(
-      "w-16 h-16 rounded-full shadow-md flex items-center justify-center hover:shadow-lg hover:shadow-black/30 transition-all duration-300",
-      className,
-    )}
-    {...props}
-  >
-    {isOpen ? (
-      <X className="h-8 w-8" />
-    ) : (
-      icon ||  <img
-      src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/apple-touch-icon-OnEhJzRCthwLXcIuoeeWSqvvYynB9c.png"
-      alt="Consuelo Logo"
-      className="h-8 w-8"
-     
-     />
-    )}
-
-  </Button>
+<Button
+  variant="default"
+  onClick={toggleChat}
+  className={cn(
+    "h-12 px-4 rounded-full shadow-md flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 border border-gray-200 hover:shadow-lg hover:shadow-gray-300/50 transition-all duration-300 text-gray-700 hover:text-gray-800",
+    className,
+  )}
+  {...props}
+>
+  {isOpen ? (
+    <>
+      <X className="h-5 w-5" />
+      <span className="text-sm font-medium">Close</span>
+    </>
+  ) : (
+    <>
+      <img
+        src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/apple-touch-icon-OnEhJzRCthwLXcIuoeeWSqvvYynB9c.png"
+        alt="Consuelo Logo"
+        className="h-5 w-5"
+      />
+      <span className="text-sm font-medium">Ask</span>
+    </>
+  )}
+</Button>
 );
 
 ExpandableChatToggle.displayName = "ExpandableChatToggle";

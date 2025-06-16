@@ -246,10 +246,12 @@ const HomeContent: React.FC = () => {
       {/* Page header with date selector */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-800">
+          <h1 className="text-2xl font-bold tracking-tight text-slate
+          -800">
             Dashboard
           </h1>
-          <p className="text-gray-600">
+          <p className="text-slate
+          -600">
             Welcome back. Here's an overview of your store's performance.
           </p>
         </div>
@@ -271,18 +273,21 @@ const HomeContent: React.FC = () => {
           <Button
             variant="outline"
             size="icon"
-            className="bg-transparent shadow-none hover:bg-gray-100"
+            className="bg-transparent shadow-none hover:bg-slate
+            -100"
           >
             <RefreshCw className="h-4 w-4 text-black" />
           </Button>
           <Button
             variant="outline"
             size="icon"
-            className="bg-transparent shadow-none hover:bg-gray-100"
+            className="bg-transparent shadow-none hover:bg-slate
+            -100"
           >
             <Download className="h-4 w-4 text-black" />
           </Button>
-          <Button className="bg-transparent text-black shadow-none hover:bg-gray-100">
+          <Button className="bg-transparent text-black shadow-none hover:bg-slate
+          -100">
             Generate Report
           </Button>
         </div>
@@ -291,7 +296,8 @@ const HomeContent: React.FC = () => {
       {/* Overview Stats */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {overviewStats.map((stat, index) => (
-          <Card className="border-gray-200 bg-white shadow-none" key={index}>
+          <Card className="border-slate
+          -200 bg-white shadow-none" key={index}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
                 {stat.title}
