@@ -1446,13 +1446,7 @@ export default function DetailedSidePanel({
           }`}
         >
           {/* Show skeleton only when data is loading, otherwise show the appropriate view */}
-          {isDataLoading && !aiInsights.length && !activities.length && !deals.length && !tickets.length && !files.length ? (
-            <SkeletonCompactView />
-          ) : isFullScreen ? (
-            renderFullScreenView()
-          ) : (
-            renderCompactView()
-          )}
+          {isDataLoading ? <SkeletonCompactView /> : isFullScreen ? renderFullScreenView() : renderCompactView()}
         </Drawer.Content>
       </Drawer.Portal>
 
