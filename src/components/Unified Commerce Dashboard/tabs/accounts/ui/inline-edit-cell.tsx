@@ -28,9 +28,15 @@ export default function InlineEditCell({
   options = [],
 }: InlineEditCellProps) {
   const [isEditing, setIsEditing] = useState(false)
-  const [editValue, setEditValue] = useState(value || "")
+  const [editValue, setEditValue] = useState(value ?? "")
   const [isSaving, setIsSaving] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    // When value prop changes from the outside (e.g., data refresh), update the cell
+    setEditValue(value ?? "");
+  }, [value]);
+
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
@@ -52,14 +58,14 @@ export default function InlineEditCell({
     } catch (error) {
       console.error("Failed to save:", error)
       // Reset to original value on error
-      setEditValue(value || "")
+      setEditValue(value ?? "")
     } finally {
       setIsSaving(false)
     }
   }
 
   const handleCancel = () => {
-    setEditValue(value || "")
+    setEditValue(value ?? "")
     setIsEditing(false)
   }
 
@@ -145,7 +151,6 @@ export default function InlineEditCell({
         <div className="flex gap-1">
           <Button
             size="sm"
-            
             onClick={handleSave}
             disabled={isSaving}
             className="h-6 w-6 p-0 bg-transparent text-green-600 hover:text-green-700 hover:bg-green-50 shadow-none"
@@ -168,11 +173,18 @@ export default function InlineEditCell({
 
   return (
     <div
-      className="group flex items-center gap-2 cursor-pointer hover:bg-gray-50 rounded px-2 py-1 -mx-2 -my-1"
-      onClick={() => setIsEditing(true)}
+      className="group flex items-center gap-2"
+      // REMOVED the onClick from this parent div.
+      // Now, clicks on this area will correctly bubble up to the TableRow.
     >
       <div className="flex-1">{renderDisplayValue()}</div>
-      <Edit2 className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+      <Edit2
+        className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+        onClick={(e) => {
+          e.stopPropagation(); // This is VITAL. It prevents the row's onClick from firing.
+          setIsEditing(true);   // This now triggers the edit mode as intended.
+        }}
+      />
     </div>
   )
 }
