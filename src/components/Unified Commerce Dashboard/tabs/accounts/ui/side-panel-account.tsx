@@ -454,7 +454,7 @@ useEffect(() => {
 					<Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 p-0">
 						<X className="h-4 w-4" />
 					</Button>
-					<h2 className="text-lg font-semibold">Customer Details</h2>
+					<h2 className="text-lg font-semibold">Account Details</h2>
 				</div>
 				<Button variant="ghost" size="sm" onClick={onToggleFullScreen} className="h-8 w-8 p-0">
 					<Maximize className="h-4 w-4" />
