@@ -438,46 +438,46 @@ const CustomersContent: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Page header with action buttons */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Accounts</h1>
-          <p className="text-muted-foreground">
-            Understand your clients and build stronger relationships
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center rounded-md border px-3 py-2">
-            <Calendar className="mr-2 h-4 w-4 opacity-50" />
-            <Select defaultValue={timeRange} onValueChange={setTimeRange}>
-              <SelectTrigger className="h-auto w-[120px] border-0 p-0 shadow-none focus:ring-0">
-                <SelectValue placeholder="Select Range" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="week">This Week</SelectItem>
-                <SelectItem value="month">This Month</SelectItem>
-                <SelectItem value="quarter">This Quarter</SelectItem>
-                <SelectItem value="year">This Year</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <Button variant="outline" size="icon">
-            <Filter className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="icon">
-            <RefreshCw className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="icon">
-            <Download className="h-4 w-4" />
-          </Button>
-          {activeTab === "all-customers" && (
-            <Button>
-              <Plus className="mr-1 h-4 w-4" />
-              Add Accounts
-            </Button>
-          )}
-        </div>
+    {/* Page header with action buttons */}
+    <div className="flex items-center justify-between">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Accounts</h1>
+        <p className="text-muted-foreground">
+          Understand your clients and build stronger relationships
+        </p>
       </div>
+      <div className="flex items-center gap-2">
+        <div className="flex items-center rounded-md border px-3 py-2">
+          <Calendar className="mr-2 h-4 w-4 opacity-50" />
+          <Select defaultValue={timeRange} onValueChange={setTimeRange}>
+            <SelectTrigger className="h-auto w-[120px] border-0 p-0 shadow-none focus:ring-0">
+              <SelectValue placeholder="Select Range" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="week">This Week</SelectItem>
+              <SelectItem value="month">This Month</SelectItem>
+              <SelectItem value="quarter">This Quarter</SelectItem>
+              <SelectItem value="year">This Year</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <Button variant="outline" size="icon">
+          <Filter className="h-4 w-4" />
+        </Button>
+        <Button variant="outline" size="icon">
+          <RefreshCw className="h-4 w-4" />
+        </Button>
+        <Button variant="outline" size="icon">
+          <Download className="h-4 w-4" />
+        </Button>
+        {activeTab === "all-customers" && (
+          <Button>
+            <Plus className="mr-1 h-4 w-4" />
+            Add Accounts
+          </Button>
+        )}
+      </div>
+    </div>
 
       {/* Customer Metrics */}
       {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
