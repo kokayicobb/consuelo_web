@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import {
   Maximize,
   Minimize,
@@ -37,6 +37,7 @@ import type { Customer } from "@/lib/supabase/customer"
 import { supabase } from "@/lib/supabase/client"
 import { toast } from "sonner"
 import { Drawer } from "vaul"
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface DetailedSidePanelProps {
   isOpen: boolean
@@ -153,33 +154,7 @@ export default function DetailedSidePanel({
   const [showNewTicket, setShowNewTicket] = useState(false)
   const [showNewInsight, setShowNewInsight] = useState(false)
 
-  useEffect(() => {
-    if (customer && isOpen) {
-      fetchAllData()
-      setEditedCustomer(customer)
-    }
-  }, [customer, isOpen])
-
-  const fetchAllData = async () => {
-    if (!customer) return
-
-    setLoading(true)
-    try {
-      await Promise.all([
-        fetchAIInsights(),
-        fetchActivities(),
-        fetchDeals(),
-        fetchTickets(),
-        fetchFiles(),
-      ])
-    } catch (error) {
-      console.error("Error fetching data:", error)
-      toast.error("Failed to load customer data")
-    } finally {
-      setLoading(false)
-    }
-  }
-
+ 
   const fetchAIInsights = async () => {
     if (!customer) return
     const { data, error } = await supabase
@@ -241,7 +216,42 @@ export default function DetailedSidePanel({
     if (error) console.error("Error fetching files:", error)
     else setFiles(data || [])
   }
+	
+ const fetchAllData = useCallback(async () => {
+    if (!customer) return
 
+    setLoading(true)
+    try {
+      await Promise.all([
+        fetchAIInsights(),
+        fetchActivities(),
+        fetchDeals(),
+        fetchTickets(),
+        fetchFiles(),
+      ])
+    } catch (error) {
+      console.error("Error fetching data:", error)
+      toast.error("Failed to load customer data")
+    } finally {
+      setLoading(false)
+    }
+  }, [customer, fetchAIInsights, fetchActivities, fetchDeals, fetchTickets, fetchFiles])
+
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+
+// Modify your useEffect
+useEffect(() => {
+  if (customer && isOpen) {
+    // Show skeleton immediately
+    setIsInitialLoad(true);
+    setEditedCustomer(customer);
+    
+    // Fetch data in background
+    fetchAllData().finally(() => {
+      setIsInitialLoad(false);
+    });
+  }
+}, [customer, isOpen, fetchAllData]);
   // Fixed updateCustomer function with correct column names based on your schema
   const updateCustomer = async () => {
     if (!editedCustomer || !customer) return
@@ -435,6 +445,70 @@ export default function DetailedSidePanel({
   }
 
   if (!customer) return null
+
+	const SkeletonCompactView = () => (
+		<div className="h-full flex flex-col">
+			{/* Header - keep this real for immediate feedback */}
+			<div className="flex items-center justify-between p-4 border-b border-slate-200 bg-white flex-shrink-0">
+				<div className="flex items-center gap-2">
+					<Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 p-0">
+						<X className="h-4 w-4" />
+					</Button>
+					<h2 className="text-lg font-semibold">Customer Details</h2>
+				</div>
+				<Button variant="ghost" size="sm" onClick={onToggleFullScreen} className="h-8 w-8 p-0">
+					<Maximize className="h-4 w-4" />
+				</Button>
+			</div>
+	
+			{/* Scrollable skeleton content */}
+			<div className="flex-1 overflow-y-auto">
+				<div className="space-y-6 p-6">
+					{/* Customer Header Skeleton */}
+					<div className="flex items-center space-x-4 pb-4 border-b border-slate-200">
+						<Skeleton className="h-16 w-16 rounded-full" />
+						<div className="space-y-2">
+							<Skeleton className="h-8 w-48" />
+							<Skeleton className="h-4 w-32" />
+							<Skeleton className="h-5 w-20" />
+						</div>
+					</div>
+	
+					{/* AI Talking Points Skeleton */}
+					<div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
+						<Skeleton className="h-6 w-32 mb-3" />
+						<div className="space-y-2">
+							<Skeleton className="h-4 w-full" />
+							<Skeleton className="h-4 w-3/4" />
+						</div>
+					</div>
+	
+					{/* Financial Overview Skeleton */}
+					<div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+						<Skeleton className="h-6 w-40 mb-3" />
+						<div className="space-y-2">
+							{[1, 2, 3, 4].map((i) => (
+								<Skeleton key={i} className="h-4 w-48" />
+							))}
+						</div>
+					</div>
+	
+					{/* Recent Activity Skeleton */}
+					<div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+						<Skeleton className="h-6 w-36 mb-3" />
+						<div className="space-y-3">
+							{[1, 2, 3].map((i) => (
+								<div key={i} className="space-y-1">
+									<Skeleton className="h-3 w-32" />
+									<Skeleton className="h-4 w-full" />
+								</div>
+							))}
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	);
 
   const renderCompactView = () => (
     <div className="h-full flex flex-col">
