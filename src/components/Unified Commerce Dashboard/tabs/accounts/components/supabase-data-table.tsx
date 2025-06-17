@@ -199,11 +199,13 @@ export default function SupabaseCustomerTable({
     value: any,
   ) => {
     try {
-      // Map the field to database column name
       const fieldMapping: Record<string, string> = {
+        // Basic client information
         name: "Client",
         email: "email",
         phone: "phone",
+        
+        // Financial service fields
         pricingOption: "Pricing Option",
         visits: "# Visits",
         lastVisit: "Last Visit",
@@ -213,6 +215,24 @@ export default function SupabaseCustomerTable({
         visitType: "Visit Type",
         bookingMethod: "Booking Method",
         referralType: "Referral Type",
+        
+        // Additional CRM/Banking fields
+        title: "title",
+        company: "company",
+        address: "address",
+        linkedin: "linkedin",
+        priority: "priority",
+        status: "status",
+        segment: "segment",
+        relationshipManager: "relationship_manager",
+        notes: "notes",
+        totalAssetsUnderManagement: "total_assets_under_management",
+        recentDealValue: "recent_deal_value",
+        productInterests: "product_interests",
+        lastReviewDate: "last_review_date",
+        createdAt: "created_at",
+        updatedAt: "updated_at",
+        clientId: "Client ID"
       };
 
       const dbField = fieldMapping[field] || field;
@@ -322,16 +342,42 @@ export default function SupabaseCustomerTable({
       visits: "number",
       lastVisit: "date",
       expirationDate: "date",
+      lastReviewDate: "date",
+      totalAssetsUnderManagement: "number",
+      recentDealValue: "number",
+      priority: "select",
+      status: "select",
+      segment: "select",
+      pricingOption: "select",
+      crossRegionalVisit: "select",
+      visitType: "select",
+      bookingMethod: "select",
+      referralType: "select",
     };
     return typeMap[field] || "text";
   };
 
   const getFieldOptions = (field: string) => {
-    if (field === "pricingOption") return pricingOptions;
-    if (field === "status") return ["active", "inactive"];
-    return [];
+    const optionsMap: Record<string, string[]> = {
+      pricingOption: ["Premium Banking", "Standard Banking", "Basic Banking", "Enterprise", "VIP", "Corporate"],
+      status: ["active", "inactive", "pending", "suspended"],
+      priority: ["Critical", "High", "Medium", "Low", "Normal"],
+      segment: ["Enterprise", "SMB", "Startup", "Non-Profit", "Government", "Healthcare", "Education", "Retail", "Manufacturing", "Technology"],
+      crossRegionalVisit: ["Yes", "No"],
+      visitType: ["Portfolio Review", "Investment Consultation", "Account Opening", "Financial Planning", "Risk Assessment", "Follow-up Meeting", "Quarterly Review"],
+      bookingMethod: ["Phone", "Email", "Online Portal", "Mobile App", "In-Person", "Video Call"],
+      referralType: ["Professional Referral", "Existing Client", "Marketing Campaign", "Website", "Social Media", "Partnership", "Cold Outreach"],
+    };
+    
+    if (field === "relationshipManager") {
+      // You can populate this with actual staff members from your database
+      return ["Alice Cooper", "Bob Martinez", "Carol Johnson", "Dan Williams", "Eva Rodriguez", "Frank Chen"];
+    }
+    
+    return optionsMap[field] || [];
   };
 
+ 
   if (error) {
     return (
       <Card className="w-full">
@@ -623,7 +669,7 @@ export default function SupabaseCustomerTable({
                         />
                       </TableCell>
                       {visibleColumns.map((column) => (
-                       <TableCell key={column.id} className={column.key === "visits" ? "text-right" : ""}>
+                       <TableCell key={column.id} className={`${column.key === "visits" ? "text-right" : ""} ${column.key === "phone" ? "whitespace-nowrap" : ""}`}>
                           {column.key === "name" ? (
                             <div className="flex items-center gap-3">
                               <Avatar className="h-10 w-10">
@@ -655,13 +701,17 @@ export default function SupabaseCustomerTable({
                                   </div>
                                 )}
                                 {customer.phone && (
+
+                                   
                                   <div className="flex items-center gap-1 text-xs text-gray-400">
                                     <Phone className="h-3 w-3" />
-                                    {customer.phone}
+                                    {customer.phone }
                                   </div>
                                 )}
                               </div>
                             </div>
+
+                            
                           ) : (
                             <InlineEditCell
                               customer={customer}
