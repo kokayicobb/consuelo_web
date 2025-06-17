@@ -68,7 +68,6 @@ import { createClient } from "@/lib/supabase/clients";
 import DraggableTableHeader from "../ui/draggable-table-header";
 import InlineEditCell from "../ui/inline-edit-cell";
 import DetailedSidePanel from "../ui/side-panel-account";
-import { Skeleton } from "@/components/ui/skeleton";
 interface ProductionCustomerTableProps {
   onViewProfile?: (customerId: string) => void;
   onSendEmail?: (customerId: string) => void;
@@ -635,188 +634,151 @@ export default function SupabaseCustomerTable({
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
-              
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={visibleColumns.length + 2}
+                      className="py-12 text-center"
+                    >
+                      <div className="flex items-center justify-center">
+                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                        Loading accounts...
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  paginatedCustomers.map((customer) => (
+                    <TableRow
+                      key={customer.id}
+                      className={`${selectedCustomers.includes(customer.id) ? "bg-blue-50" : ""} cursor-pointer hover:bg-gray-50`}
+                      onClick={() => {
+                        setSelectedCustomerForDetails(customer);
+                        setIsSidePanelOpen(true);
+                      }}
+                    >
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <Checkbox
+                          checked={selectedCustomers.includes(customer.id)}
+                          onCheckedChange={(checked) =>
+                            handleSelectCustomer(
+                              customer.id,
+                              checked as boolean,
+                            )
+                          }
+                          aria-label={`Select ${customer.name}`}
+                        />
+                      </TableCell>
+                      {visibleColumns.map((column) => (
+                       <TableCell key={column.id} className={`${column.key === "visits" ? "text-right" : ""} ${column.key === "phone" ? "whitespace-nowrap" : ""}`}>
+                          {column.key === "name" ? (
+                            <div className="flex items-center gap-3">
+                              <Avatar className="h-10 w-10">
+                                <AvatarImage
+                                  src="/placeholder.svg"
+                                  alt={customer.name}
+                                />
+                                <AvatarFallback className="bg-gray-100 text-gray-600">
+                                  {customer.name
+                                    .split(" ")
+                                    .map((n) => n[0])
+                                    .join("")
+                                    .toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <InlineEditCell
+                                  customer={customer}
+        field={column.key}
+        value={customer[column.key as keyof Customer]}
+        onSave={handleInlineEdit}
+        type={getFieldType(column.key) as any}
+        options={getFieldOptions(column.key)}
+                                />
+                                {customer.email && (
+                                  <div className="flex items-center gap-1 text-sm text-gray-500">
+                                    <Mail className="h-3 w-3" />
+                                    {customer.email}
+                                  </div>
+                                )}
+                                {customer.phone && (
 
-<TableBody>
-  {loading ? (
-    // Skeleton rows - show multiple skeleton rows that match your table structure
-    Array.from({ length: pageSize }, (_, index) => (
-      <TableRow key={`skeleton-${index}`}>
-        {/* Checkbox column skeleton */}
-        <TableCell>
-          <Skeleton className="h-4 w-4" />
-        </TableCell>
-        
-        {/* Dynamic columns based on visible columns */}
-        {visibleColumns.map((column) => (
-          <TableCell key={column.id} className={`${column.key === "visits" ? "text-right" : ""} ${column.key === "phone" ? "whitespace-nowrap" : ""}`}>
-            {column.key === "name" ? (
-              // Special skeleton for name column with avatar
-              <div className="flex items-center gap-3">
-                <Skeleton className="h-10 w-10 rounded-full" />
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-32" />
-                  <div className="flex items-center gap-1">
-                    <Skeleton className="h-3 w-3" />
-                    <Skeleton className="h-3 w-24" />
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Skeleton className="h-3 w-3" />
-                    <Skeleton className="h-3 w-20" />
-                  </div>
-                </div>
-              </div>
-            ) : (
-              // Regular skeleton for other columns
-              <Skeleton className={`h-4 ${
-                column.key === "email" ? "w-32" :
-                column.key === "phone" ? "w-24" :
-                column.key === "visits" ? "w-8" :
-                column.key === "lastVisit" ? "w-20" :
-                column.key === "pricingOption" ? "w-28" :
-                column.key === "staff" ? "w-24" :
-                "w-20"
-              }`} />
-            )}
-          </TableCell>
-        ))}
-        
-        {/* Actions column skeleton */}
-        <TableCell className="text-right">
-          <Skeleton className="h-8 w-8 ml-auto" />
-        </TableCell>
-      </TableRow>
-    ))
-  ) : (
-    // Your existing non-loading table rows
-    paginatedCustomers.map((customer) => (
-      <TableRow
-        key={customer.id}
-        className={`${selectedCustomers.includes(customer.id) ? "bg-blue-50" : ""} cursor-pointer hover:bg-gray-50`}
-        onClick={() => {
-          setSelectedCustomerForDetails(customer);
-          setIsSidePanelOpen(true);
-        }}
-      >
-        {/* Your existing table row content */}
-        <TableCell onClick={(e) => e.stopPropagation()}>
-          <Checkbox
-            checked={selectedCustomers.includes(customer.id)}
-            onCheckedChange={(checked) =>
-              handleSelectCustomer(
-                customer.id,
-                checked as boolean,
-              )
-            }
-            aria-label={`Select ${customer.name}`}
-          />
-        </TableCell>
-        {visibleColumns.map((column) => (
-          <TableCell key={column.id} className={`${column.key === "visits" ? "text-right" : ""} ${column.key === "phone" ? "whitespace-nowrap" : ""}`}>
-            {column.key === "name" ? (
-              <div className="flex items-center gap-3">
-                <Avatar className="h-10 w-10">
-                  <AvatarImage
-                    src="/placeholder.svg"
-                    alt={customer.name}
-                  />
-                  <AvatarFallback className="bg-gray-100 text-gray-600">
-                    {customer.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")
-                      .toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <InlineEditCell
-                    customer={customer}
-                    field={column.key}
-                    value={customer[column.key as keyof Customer]}
-                    onSave={handleInlineEdit}
-                    type={getFieldType(column.key) as any}
-                    options={getFieldOptions(column.key)}
-                  />
-                  {customer.email && (
-                    <div className="flex items-center gap-1 text-sm text-gray-500">
-                      <Mail className="h-3 w-3" />
-                      {customer.email}
-                    </div>
-                  )}
-                  {customer.phone && (
-                    <div className="flex items-center gap-1 text-xs text-gray-400">
-                      <Phone className="h-3 w-3" />
-                      {customer.phone}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <InlineEditCell
-                customer={customer}
-                field={column.key}
-                value={customer[column.key as keyof Customer]}
-                onSave={handleInlineEdit}
-                type={getFieldType(column.key) as any}
-                options={getFieldOptions(column.key)}
-              />
-            )}
-          </TableCell>
-        ))}
-        <TableCell
-          className="text-right"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                size="icon"
-                className="h-8 w-8 bg-transparent text-black shadow-none hover:bg-slate-100"
-              >
-                <MoreHorizontal className="h-4 w-4" />
-                <span className="sr-only">Open menu</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="w-48 bg-slate-200"
-            >
-              <DropdownMenuItem
-                onClick={() => onViewProfile?.(customer.id)}
-                className="cursor-pointer hover:bg-slate-300"
-              >
-                <User className="mr-2 h-4 w-4" />
-                View Profile
-              </DropdownMenuItem>
-              {customer.email && (
-                <DropdownMenuItem
-                  onClick={() => onSendEmail?.(customer.id)}
-                  className="cursor-pointer"
-                >
-                  <Mail className="mr-2 h-4 w-4" />
-                  Send Email
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuItem
-                onClick={() => onViewDetails?.(customer.id)}
-                className="cursor-pointer"
-              >
-                View Details
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => handleEditCustomer(customer.id)}
-                className="cursor-pointer"
-              >
-                Edit Customer
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </TableCell>
-      </TableRow>
-    ))
-  )}
-</TableBody>
+                                   
+                                  <div className="flex items-center gap-1 text-xs text-gray-400">
+                                    <Phone className="h-3 w-3" />
+                                    {customer.phone }
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            
+                          ) : (
+                            <InlineEditCell
+                              customer={customer}
+                              field={column.key}
+                              value={customer[column.key as keyof Customer]}
+                              onSave={handleInlineEdit}
+                              type={getFieldType(column.key) as any}
+                              options={getFieldOptions(column.key)}
+                            />
+                          )}
+                        </TableCell>
+                      ))}
+                      <TableCell
+                        className="text-right"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              size="icon"
+                              className="h-8 w-8 bg-transparent text-black shadow-none hover:bg-slate-100"
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">Open menu</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent
+                            align="end"
+                            className="w-48 bg-slate-200"
+                          >
+                            <DropdownMenuItem
+                              onClick={() => onViewProfile?.(customer.id)}
+                              className="cursor-pointer hover:bg-slate-300  "
+                            >
+                              <User className="mr-2 h-4 w-4" />
+                              View Profile
+                            </DropdownMenuItem>
+                            {customer.email && (
+                              <DropdownMenuItem
+                                onClick={() => onSendEmail?.(customer.id)}
+                                className="cursor-pointer"
+                              >
+                                <Mail className="mr-2 h-4 w-4" />
+                                Send Email
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem
+                              onClick={() => onViewDetails?.(customer.id)}
+                              className="cursor-pointer"
+                            >
+                              View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => handleEditCustomer(customer.id)}
+                              className="cursor-pointer"
+                            >
+                              Edit Customer
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
             </Table>
 
             {!loading && paginatedCustomers.length === 0 && (
