@@ -16,7 +16,24 @@ export interface DatabaseClient {
   "Visit Type": string | null
   "Booking Method": string | null
   "Referral Type": string | null
+  created_at?: string | null
+  updated_at?: string | null
+  // Make these optional with ?
+  title?: string | null
+  company?: string | null
+  address?: string | null
+  linkedin?: string | null
+  priority?: string | null
+  status?: string | null
+  segment?: string | null
+  relationship_manager?: string | null
+  notes?: string | null
+  total_assets_under_management?: number | null
+  recent_deal_value?: number | null
+  product_interests?: string[] | null
+  last_review_date?: string | null
 }
+
 
 // Transform database row to our Customer interface
 export function transformDatabaseClient(dbClient: DatabaseClient): Customer {
@@ -40,6 +57,18 @@ export function transformDatabaseClient(dbClient: DatabaseClient): Customer {
     referralType: dbClient["Referral Type"],
     status: isActive ? "active" : "inactive",
     avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(dbClient["Client"] || "Unknown")}&background=random`, // Generate avatar from name
+    title: dbClient.title,
+    company: dbClient.company,
+    address: dbClient.address,
+    linkedin: dbClient.linkedin,
+    priority: dbClient.priority,
+    segment: dbClient.segment,
+    relationship_manager: dbClient.relationship_manager,
+    notes: dbClient.notes,
+    total_assets_under_management: dbClient.total_assets_under_management,
+    recent_deal_value: dbClient.recent_deal_value,
+    product_interests: dbClient.product_interests,
+    last_review_date: dbClient.last_review_date,
   }
 }
 
