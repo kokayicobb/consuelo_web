@@ -68,7 +68,31 @@ import { createClient } from "@/lib/supabase/clients";
 import DraggableTableHeader from "../ui/draggable-table-header";
 import InlineEditCell from "../ui/inline-edit-cell";
 import DetailedSidePanel from "../ui/side-panel-account";
-import { Skeleton } from "@/components/ui/skeleton";
+import DataHeader from "../ui/table-header";
+
+interface SortRule {
+  id: string
+  field: string
+  direction: "asc" | "desc"
+  label: string
+}
+
+interface FilterRule {
+  id: string
+  field: string
+  operator: string
+  value: string | number | Date | string[]
+  label: string
+}
+
+interface PermanentRule {
+  id: string
+  field: string
+  operator: string
+  value: string | number | Date
+  label: string
+  type: "filter" | "sort"
+}
 interface ProductionCustomerTableProps {
   onViewProfile?: (customerId: string) => void;
   onSendEmail?: (customerId: string) => void;
@@ -83,12 +107,13 @@ export default function SupabaseCustomerTable({
   const { clients, loading, error, refreshClients } = useClients();
   const {
     visibleColumns,
-    hasUnsavedChanges,
+   
     reorderColumns,
     toggleColumnVisibility,
     saveConfiguration,
     resetConfiguration,
     columns,
+    updateColumns,
   } = useColumnConfig();
 
   const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
@@ -111,7 +136,15 @@ export default function SupabaseCustomerTable({
     );
     return Array.from(options).sort();
   }, [clients]);
-
+  const [activeFilters, setActiveFilters] = useState<FilterRule[]>([])
+  const availableStaff = ["John Doe", "Jane Smith", "Mike Johnson", "Sarah Wilson", "Me"]
+  const availablePricingOptions = ["Premium", "Standard", "Basic", "Enterprise"]
+  const availableSegments = ["High Net Worth", "Corporate", "Retail", "Institutional"]
+  const availableVisitTypes = ["In-Person", "Virtual", "Phone", "Email"]
+  const availableBookingMethods = ["Online", "Phone", "Walk-in", "Referral"]
+  const availableReferralTypes = ["Client Referral", "Partner", "Marketing", "Cold Outreach"]
+  const [activeSorts, setActiveSorts] = useState<SortRule[]>([])
+  const [permanentRules, setPermanentRules] = useState<PermanentRule[]>([])
   // Filter and sort customers
   const filteredAndSortedCustomers = useMemo(() => {
     const filtered = clients.filter((customer) => {
@@ -250,7 +283,19 @@ export default function SupabaseCustomerTable({
   const handleDragStart = (index: number) => {
     setDraggedIndex(index);
   };
-
+  const handleResize = (index: number, width: number) => {
+    const updatedColumns = visibleColumns.map((col, i) => 
+      i === index ? { ...col, width } : col
+    );
+    
+    // Update the full columns array with new widths
+    const newColumns = columns.map(col => {
+      const updated = updatedColumns.find(c => c.id === col.id);
+      return updated ? { ...col, width: updated.width } : col;
+    });
+    
+    updateColumns(newColumns);
+  };
   const handleDragOver = (e: React.DragEvent, index: number) => {
     e.preventDefault();
   };
@@ -270,8 +315,7 @@ export default function SupabaseCustomerTable({
     setCurrentPage(1);
   };
 
-  const hasActiveFilters =
-    searchTerm || pricingFilter !== "all" || statusFilter !== "all";
+  const hasActiveFilters = searchTerm || pricingFilter !== "all" || statusFilter !== "all"
 
   const handleExportData = () => {
     exportClientsToCSV(filteredAndSortedCustomers);
@@ -335,11 +379,13 @@ export default function SupabaseCustomerTable({
       throw error;
     }
   };
+  
 
   const getFieldType = (field: string) => {
     const typeMap: Record<string, string> = {
       email: "email",
       phone: "phone",
+      title: "title",
       visits: "number",
       lastVisit: "date",
       expirationDate: "date",
@@ -357,17 +403,41 @@ export default function SupabaseCustomerTable({
     };
     return typeMap[field] || "text";
   };
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+
+
+
+  const handleToggleColumnVisibility = (id: string) => {
+    // Your column visibility logic here
+    setHasUnsavedChanges(true)
+  }
+
+  const handleSaveConfiguration = () => {
+    // Your save logic here
+    setHasUnsavedChanges(false)
+  }
+
+  const handleResetConfiguration = () => {
+    // Your reset logic here
+    setHasUnsavedChanges(false)
+  }
+
+  
+
+
+  const handleShowActiveOnly = () => {
+    setStatusFilter("active")
+  }
+
+  const handleAddAccount = () => {
+    // Your add account logic here
+    console.log("Add account clicked")
+  }
+
 
   const getFieldOptions = (field: string) => {
     const optionsMap: Record<string, string[]> = {
-      pricingOption: ["Premium Banking", "Standard Banking", "Basic Banking", "Enterprise", "VIP", "Corporate"],
-      status: ["active", "inactive", "pending", "suspended"],
-      priority: ["Critical", "High", "Medium", "Low", "Normal"],
-      segment: ["Enterprise", "SMB", "Startup", "Non-Profit", "Government", "Healthcare", "Education", "Retail", "Manufacturing", "Technology"],
-      crossRegionalVisit: ["Yes", "No"],
-      visitType: ["Portfolio Review", "Investment Consultation", "Account Opening", "Financial Planning", "Risk Assessment", "Follow-up Meeting", "Quarterly Review"],
-      bookingMethod: ["Phone", "Email", "Online Portal", "Mobile App", "In-Person", "Video Call"],
-      referralType: ["Professional Referral", "Existing Client", "Marketing Campaign", "Website", "Social Media", "Partnership", "Cold Outreach"],
+      
     };
     
     if (field === "relationshipManager") {
@@ -400,210 +470,43 @@ export default function SupabaseCustomerTable({
       </Card>
     );
   }
-
+  
   return (
     <div className="w-full space-y-4">
       <Card className="w-full">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-2xl font-bold">
-                Account Directory
-              </CardTitle>
-              <CardDescription>
-                Manage your account database with drag-and-drop columns and
-                inline editing
-              </CardDescription>
-            </div>
-            <div className="flex items-center gap-2">
-              {hasUnsavedChanges && (
-                <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-                  <span className="text-sm font-medium text-slate-700">
-                    Unsaved column changes
-                  </span>
-                  <Button
-                    size="sm"
-                    onClick={saveConfiguration}
-                    className="h-7 bg-slate-600 text-white hover:bg-slate-700"
-                  >
-                    <Save className="mr-1 h-3 w-3" />
-                    Save
-                  </Button>
-                </div>
-              )}
-              {selectedCustomers.length > 0 && (
-                <div className="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2">
-                  <span className="text-sm font-medium text-blue-700">
-                    {selectedCustomers.length} selected
-                  </span>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-7 border-blue-200 text-blue-700 hover:bg-blue-100"
-                    onClick={() => setSelectedCustomers([])}
-                  >
-                    Clear
-                  </Button>
-                </div>
-              )}
-              <Button
-                size="sm"
-                onClick={() => setShowColumnSettings(!showColumnSettings)}
-                className="h-9"
-              >
-                <Settings className="mr-2 h-4 w-4" />
-                Columns
-              </Button>
-              {/* <Button  size="sm" onClick={refreshClients} disabled={loading} className="h-9 bg-transparent text-black shadow-none hover:bg-slate-100">
-                <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-                Refresh
-              </Button> */}
-              <Button
-              size="sm"
-                onClick={handleAddCustomer}
-                className="h-9"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Add Account
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
+        
+      <DataHeader
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        activeFilters={activeFilters}
+        onFiltersChange={setActiveFilters}
+        activeSorts={activeSorts}
+        onSortsChange={setActiveSorts}
+        permanentRules={permanentRules}
+        onPermanentRulesChange={setPermanentRules}
+        columns={columns}
+        onToggleColumnVisibility={handleToggleColumnVisibility}
+        hasUnsavedChanges={hasUnsavedChanges}
+        onSaveConfiguration={handleSaveConfiguration}
+        onResetConfiguration={handleResetConfiguration}
+        selectedCount={selectedCustomers.length}
+        onClearSelection={() => setSelectedCustomers([])}
+        onAddAccount={handleAddAccount}
+        onShowActiveOnly={handleShowActiveOnly}
+        availableStaff={availableStaff}
+        availablePricingOptions={availablePricingOptions}
+        availableSegments={availableSegments}
+        availableVisitTypes={availableVisitTypes}
+        availableBookingMethods={availableBookingMethods}
+        availableReferralTypes={availableReferralTypes}
+      />
 
         <CardContent>
-          {/* Column Settings */}
-          {showColumnSettings && (
-            <div className="mb-6 rounded-lg border bg-gray-50 p-4">
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="font-medium">Column Visibility</h3>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    className="bg-transparent text-black shadow-none hover:bg-slate-100"
-                    onClick={resetConfiguration}
-                  >
-                    Reset
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="bg-transparent text-black shadow-none hover:bg-slate-100"
-                    onClick={saveConfiguration}
-                  >
-                    Save Changes
-                  </Button>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4">
-                {columns.map((column) => (
-                  <div key={column.id} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={column.id}
-                      checked={column.visible}
-                      onCheckedChange={() => toggleColumnVisibility(column.id)}
-                    />
-                    <label
-                      htmlFor={column.id}
-                      className="cursor-pointer text-sm font-medium"
-                    >
-                      {column.label}
-                    </label>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+         
 
-          {/* Filters and Search */}
-          <div className="mb-6 flex flex-col gap-4">
-            <div className="flex flex-col gap-4 sm:flex-row">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
-                <Input
-                  placeholder="Search accounts by name, email, phone, or staff..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <Select value={pricingFilter} onValueChange={setPricingFilter}>
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <SelectValue placeholder="All Pricing" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Pricing</SelectItem>
-                  {pricingOptions.map((option) => (
-                    <SelectItem key={option} value={option}>
-                      {option}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <SelectValue placeholder="All Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {hasActiveFilters && (
-              <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-gray-500" />
-                <span className="text-sm text-gray-600">Active filters:</span>
-                {searchTerm && (
-                  <Badge
-                    variant="outline"
-                    className="border-blue-200 bg-blue-50 text-blue-700"
-                  >
-                    Search: {searchTerm}
-                    <X
-                      className="ml-1 h-3 w-3 cursor-pointer"
-                      onClick={() => setSearchTerm("")}
-                    />
-                  </Badge>
-                )}
-                {pricingFilter !== "all" && (
-                  <Badge
-                    variant="outline"
-                    className="border-blue-200 bg-blue-50 text-blue-700"
-                  >
-                    Pricing: {pricingFilter}
-                    <X
-                      className="ml-1 h-3 w-3 cursor-pointer"
-                      onClick={() => setPricingFilter("all")}
-                    />
-                  </Badge>
-                )}
-                {statusFilter !== "all" && (
-                  <Badge
-                    variant="outline"
-                    className="border-blue-200 bg-blue-50 text-blue-700"
-                  >
-                    Status: {statusFilter}
-                    <X
-                      className="ml-1 h-3 w-3 cursor-pointer"
-                      onClick={() => setStatusFilter("all")}
-                    />
-                  </Badge>
-                )}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={clearFilters}
-                  className="h-6 bg-transparent px-2 text-xs text-black shadow-none hover:bg-slate-100"
-                >
-                  Clear all
-                </Button>
-              </div>
-            )}
-          </div>
-
+         
           {/* Table */}
-          <div className="overflow-hidden rounded-lg border">
+          <div className="w-full overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow className="bg-gray-50">
@@ -624,6 +527,7 @@ export default function SupabaseCustomerTable({
                       column={column}
                       index={index}
                       onSort={handleSort}
+                      onResize={handleResize}
                       onDragStart={handleDragStart}
                       onDragOver={handleDragOver}
                       onDrop={handleDrop}
@@ -635,188 +539,155 @@ export default function SupabaseCustomerTable({
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
-              
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={visibleColumns.length + 2}
+                      className="py-12 text-center"
+                    >
+                      <div className="flex items-center justify-center">
+                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                        Loading accounts...
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  paginatedCustomers.map((customer) => (
+                    <TableRow
+                      key={customer.id}
+                      className={`${selectedCustomers.includes(customer.id) ? "bg-blue-50" : ""} cursor-pointer hover:bg-gray-50`}
+                      onClick={() => {
+                        setSelectedCustomerForDetails(customer);
+                        setIsSidePanelOpen(true);
+                      }}
+                    >
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <Checkbox
+                          checked={selectedCustomers.includes(customer.id)}
+                          onCheckedChange={(checked) =>
+                            handleSelectCustomer(
+                              customer.id,
+                              checked as boolean,
+                            )
+                          }
+                          aria-label={`Select ${customer.name}`}
+                        />
+                      </TableCell>
+                      {visibleColumns.map((column) => (
+  <TableCell 
+    key={column.id} 
+    className={`${column.key === "visits" ? "text-right" : ""} ${column.key === "phone" ? "whitespace-nowrap" : ""}`}
+    style={{ width: column.width || 'auto', minWidth: column.width || 'auto' }}
+  >
+                          {column.key === "name" ? (
+                            <div className="flex items-center gap-3">
+                              <Avatar className="h-10 w-10">
+                                <AvatarImage
+                                  src="/placeholder.svg"
+                                  alt={customer.name}
+                                />
+                                <AvatarFallback className="bg-gray-100 text-gray-600">
+                                  {customer.name
+                                    .split(" ")
+                                    .map((n) => n[0])
+                                    .join("")
+                                    .toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <InlineEditCell
+                                  customer={customer}
+        field={column.key}
+        value={customer[column.key as keyof Customer]}
+        onSave={handleInlineEdit}
+        type={getFieldType(column.key) as any}
+        options={getFieldOptions(column.key)}
+                                />
+                                {customer.email && (
+                                  <div className="flex items-center gap-1 text-sm text-gray-500">
+                                    <Mail className="h-3 w-3" />
+                                    {customer.email}
+                                  </div>
+                                )}
+                                {customer.phone && (
 
-<TableBody>
-  {loading ? (
-    // Skeleton rows - show multiple skeleton rows that match your table structure
-    Array.from({ length: pageSize }, (_, index) => (
-      <TableRow key={`skeleton-${index}`}>
-        {/* Checkbox column skeleton */}
-        <TableCell>
-          <Skeleton className="h-4 w-4" />
-        </TableCell>
-        
-        {/* Dynamic columns based on visible columns */}
-        {visibleColumns.map((column) => (
-          <TableCell key={column.id} className={`${column.key === "visits" ? "text-right" : ""} ${column.key === "phone" ? "whitespace-nowrap" : ""}`}>
-            {column.key === "name" ? (
-              // Special skeleton for name column with avatar
-              <div className="flex items-center gap-3">
-                <Skeleton className="h-10 w-10 rounded-full" />
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-32" />
-                  <div className="flex items-center gap-1">
-                    <Skeleton className="h-3 w-3" />
-                    <Skeleton className="h-3 w-24" />
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Skeleton className="h-3 w-3" />
-                    <Skeleton className="h-3 w-20" />
-                  </div>
-                </div>
-              </div>
-            ) : (
-              // Regular skeleton for other columns
-              <Skeleton className={`h-4 ${
-                column.key === "email" ? "w-32" :
-                column.key === "phone" ? "w-24" :
-                column.key === "visits" ? "w-8" :
-                column.key === "lastVisit" ? "w-20" :
-                column.key === "pricingOption" ? "w-28" :
-                column.key === "staff" ? "w-24" :
-                "w-20"
-              }`} />
-            )}
-          </TableCell>
-        ))}
-        
-        {/* Actions column skeleton */}
-        <TableCell className="text-right">
-          <Skeleton className="h-8 w-8 ml-auto" />
-        </TableCell>
-      </TableRow>
-    ))
-  ) : (
-    // Your existing non-loading table rows
-    paginatedCustomers.map((customer) => (
-      <TableRow
-        key={customer.id}
-        className={`${selectedCustomers.includes(customer.id) ? "bg-blue-50" : ""} cursor-pointer hover:bg-gray-50`}
-        onClick={() => {
-          setSelectedCustomerForDetails(customer);
-          setIsSidePanelOpen(true);
-        }}
-      >
-        {/* Your existing table row content */}
-        <TableCell onClick={(e) => e.stopPropagation()}>
-          <Checkbox
-            checked={selectedCustomers.includes(customer.id)}
-            onCheckedChange={(checked) =>
-              handleSelectCustomer(
-                customer.id,
-                checked as boolean,
-              )
-            }
-            aria-label={`Select ${customer.name}`}
-          />
-        </TableCell>
-        {visibleColumns.map((column) => (
-          <TableCell key={column.id} className={`${column.key === "visits" ? "text-right" : ""} ${column.key === "phone" ? "whitespace-nowrap" : ""}`}>
-            {column.key === "name" ? (
-              <div className="flex items-center gap-3">
-                <Avatar className="h-10 w-10">
-                  <AvatarImage
-                    src="/placeholder.svg"
-                    alt={customer.name}
-                  />
-                  <AvatarFallback className="bg-gray-100 text-gray-600">
-                    {customer.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")
-                      .toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <InlineEditCell
-                    customer={customer}
-                    field={column.key}
-                    value={customer[column.key as keyof Customer]}
-                    onSave={handleInlineEdit}
-                    type={getFieldType(column.key) as any}
-                    options={getFieldOptions(column.key)}
-                  />
-                  {customer.email && (
-                    <div className="flex items-center gap-1 text-sm text-gray-500">
-                      <Mail className="h-3 w-3" />
-                      {customer.email}
-                    </div>
-                  )}
-                  {customer.phone && (
-                    <div className="flex items-center gap-1 text-xs text-gray-400">
-                      <Phone className="h-3 w-3" />
-                      {customer.phone}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <InlineEditCell
-                customer={customer}
-                field={column.key}
-                value={customer[column.key as keyof Customer]}
-                onSave={handleInlineEdit}
-                type={getFieldType(column.key) as any}
-                options={getFieldOptions(column.key)}
-              />
-            )}
-          </TableCell>
-        ))}
-        <TableCell
-          className="text-right"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                size="icon"
-                className="h-8 w-8 bg-transparent text-black shadow-none hover:bg-slate-100"
-              >
-                <MoreHorizontal className="h-4 w-4" />
-                <span className="sr-only">Open menu</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="w-48 bg-slate-200"
-            >
-              <DropdownMenuItem
-                onClick={() => onViewProfile?.(customer.id)}
-                className="cursor-pointer hover:bg-slate-300"
-              >
-                <User className="mr-2 h-4 w-4" />
-                View Profile
-              </DropdownMenuItem>
-              {customer.email && (
-                <DropdownMenuItem
-                  onClick={() => onSendEmail?.(customer.id)}
-                  className="cursor-pointer"
-                >
-                  <Mail className="mr-2 h-4 w-4" />
-                  Send Email
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuItem
-                onClick={() => onViewDetails?.(customer.id)}
-                className="cursor-pointer"
-              >
-                View Details
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => handleEditCustomer(customer.id)}
-                className="cursor-pointer"
-              >
-                Edit Customer
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </TableCell>
-      </TableRow>
-    ))
-  )}
-</TableBody>
+                                   
+                                  <div className="flex items-center gap-1 text-xs text-gray-400">
+                                    <Phone className="h-3 w-3" />
+                                    {customer.phone }
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            
+                          ) : (
+                            <InlineEditCell
+                              customer={customer}
+                              field={column.key}
+                              value={customer[column.key as keyof Customer]}
+                              onSave={handleInlineEdit}
+                              type={getFieldType(column.key) as any}
+                              options={getFieldOptions(column.key)}
+                            />
+                          )}
+                        </TableCell>
+                      ))}
+                      <TableCell
+                        className="text-right"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              size="icon"
+                              className="h-8 w-8 bg-transparent text-black shadow-none hover:bg-slate-100"
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">Open menu</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent
+                            align="end"
+                            className="w-48 bg-slate-200"
+                          >
+                            <DropdownMenuItem
+                              onClick={() => onViewProfile?.(customer.id)}
+                              className="cursor-pointer hover:bg-slate-300  "
+                            >
+                              <User className="mr-2 h-4 w-4" />
+                              View Profile
+                            </DropdownMenuItem>
+                            {customer.email && (
+                              <DropdownMenuItem
+                                onClick={() => onSendEmail?.(customer.id)}
+                                className="cursor-pointer"
+                              >
+                                <Mail className="mr-2 h-4 w-4" />
+                                Send Email
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem
+                              onClick={() => onViewDetails?.(customer.id)}
+                              className="cursor-pointer"
+                            >
+                              View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => handleEditCustomer(customer.id)}
+                              className="cursor-pointer"
+                            >
+                              Edit Customer
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
             </Table>
 
             {!loading && paginatedCustomers.length === 0 && (
