@@ -100,10 +100,10 @@ const config: Config = {
   },
   
   plugins: [
-    require("tailgrids/plugin"),
-    require("tailwindcss-animate"),
-    addVariablesForColors
-  ],
+		require("tailgrids/plugin"),
+		require("tailwindcss-animate"),
+		require("tailwind-scrollbar-hide"),
+	],
 };
 
 function addVariablesForColors({ addBase, theme }: any) {
