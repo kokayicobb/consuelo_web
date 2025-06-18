@@ -41,6 +41,32 @@ import {
   Workflow,
   Route,
 } from "lucide-react"
+import {
+  ArrowsPointingOutIcon,
+  ArrowsPointingInIcon,
+  EnvelopeIcon,
+  PhoneIcon,
+  MapPinIcon,
+  CurrencyDollarIcon,
+  UserIcon,
+  SignalIcon,
+  BriefcaseIcon,
+  DocumentTextIcon,
+  TagIcon,
+  PaperClipIcon,
+  InformationCircleIcon,
+  LightBulbIcon,
+  PlusIcon,
+  PencilIcon,
+  XMarkIcon,
+  TrashIcon,
+  ChatBubbleLeftIcon,
+  EllipsisHorizontalIcon,
+  StarIcon,
+  ChartBarIcon,
+  CalendarIcon,
+  ChevronDoubleRightIcon,
+} from '@heroicons/react/24/solid'
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import {
@@ -207,7 +233,9 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
       document.removeEventListener("mousedown", handleClickOutside)
     }
   }, [isChatOpen])
+ 
 
+  
   const mainNavItems = [
     {
       label: "Home",

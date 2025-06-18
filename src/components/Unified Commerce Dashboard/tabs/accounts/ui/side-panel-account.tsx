@@ -3,27 +3,53 @@
 import { useState, useEffect, useCallback } from "react"
 import {
   Maximize,
-  Minimize,
+  
   Mail,
   Phone,
-  MapPin,
+ 
   Linkedin,
-  Calendar,
-  DollarSign,
-  User,
-  Activity,
-  Briefcase,
-  FileText,
-  Tag,
-  Paperclip,
+ 
+ 
+  
+  
   TrendingUp,
   Info,
-  Lightbulb,
-  Plus,
-  Edit2,
+  
+  
+ 
   X,
   Trash2,
+  MessageCircle,
+  MoreHorizontal,
+  Star,
 } from "lucide-react"
+import {
+  ArrowsPointingOutIcon,
+  ArrowsPointingInIcon,
+  EnvelopeIcon,
+  PhoneIcon,
+  MapPinIcon,
+  CurrencyDollarIcon,
+  UserIcon,
+  SignalIcon,
+  BriefcaseIcon,
+  DocumentTextIcon,
+  TagIcon,
+  PaperClipIcon,
+  InformationCircleIcon,
+  LightBulbIcon,
+  PlusIcon,
+  PencilIcon,
+  XMarkIcon,
+  TrashIcon,
+  ChatBubbleLeftIcon,
+  EllipsisHorizontalIcon,
+  StarIcon,
+  ChartBarIcon,
+  CalendarIcon,
+  ChevronDoubleRightIcon,
+} from '@heroicons/react/24/solid'
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -112,15 +138,15 @@ interface ClientFile {
 }
 
 const TABS = [
-  { id: "overview", label: "Overview", icon: User },
-  { id: "activity", label: "Activity", icon: Activity },
-  { id: "emails", label: "Emails", icon: Mail },
-  { id: "calls", label: "Calls", icon: Phone },
-  { id: "tasks", label: "Tasks", icon: Briefcase },
-  { id: "notes", label: "Notes", icon: FileText },
-  { id: "files", label: "Files", icon: Paperclip },
-  { id: "deals", label: "Deals", icon: DollarSign },
-  { id: "tickets", label: "Tickets", icon: Tag },
+  { id: "overview", label: "Overview", icon: UserIcon },
+  { id: "activity", label: "Activity", icon: ChartBarIcon },
+  { id: "emails", label: "Emails", icon: EnvelopeIcon },
+  { id: "calls", label: "Calls", icon: PhoneIcon },
+  { id: "tasks", label: "Tasks", icon: BriefcaseIcon },
+  { id: "notes", label: "Notes", icon: DocumentTextIcon },
+  { id: "files", label: "Files", icon: PaperClipIcon },
+  { id: "deals", label: "Deals", icon: CurrencyDollarIcon },
+  { id: "tickets", label: "Tickets", icon: TagIcon },
 ]
 
 const ACTIVITY_TYPES = ["Email", "Call", "Meeting", "Task", "Note"]
@@ -448,17 +474,32 @@ export default function DetailedSidePanel({
   const SkeletonCompactView = () => (
     <div className="h-full flex flex-col">
       {/* Header - keep this real for immediate feedback */}
-      <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-white flex-shrink-0">
+      <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-neutral-50 flex-shrink-0">
         <div className="flex items-center gap-2">
-          <Button variant="default" size="sm" onClick={onClose} className="h-8 w-8 p-0">
-            <X className="h-4 w-4" />
-          </Button>
-          <h2 className="text-lg font-semibold">Customer Details</h2>
-        </div>
-        <Button variant="default" size="sm" onClick={onToggleFullScreen} className="h-8 w-8 p-0">
-          <Maximize className="h-4 w-4" />
-        </Button>
-      </div>
+        <Button variant="default" size="sm" onClick={onClose} className="h-8 w-8 p-0">
+      <ChevronDoubleRightIcon className="h-5 w-5" />
+    </Button>
+    <Button variant="default" size="sm" onClick={onToggleFullScreen} className="h-8 w-8 p-0">
+      <ArrowsPointingOutIcon className="h-5 w-5" />
+    </Button>
+    <h2 className="text-lg font-semibold">Client Details</h2>
+  </div>
+  
+  <div className="flex items-center gap-1">
+    <Button variant="default" size="sm" className="h-8 px-3 text-slate-600 hover:text-slate-900">
+      Share
+    </Button>
+    <Button variant="default" size="sm" className="h-8 w-8 p-0 text-slate-600 hover:text-slate-900">
+      <ChatBubbleLeftIcon className="h-5 w-5" />
+    </Button>
+    <Button variant="default" size="sm" className="h-8 w-8 p-0 text-slate-600 hover:text-slate-900">
+      <StarIcon className="h-5 w-5" />
+    </Button>
+    <Button variant="default" size="sm" className="h-8 w-8 p-0 text-slate-600 hover:text-slate-900">
+      <EllipsisHorizontalIcon className="h-6 w-6" />
+    </Button>
+  </div>
+</div>
 
       {/* Scrollable skeleton content */}
       <div className="flex-1 overflow-y-auto">
@@ -512,18 +553,32 @@ export default function DetailedSidePanel({
   const renderCompactView = () => (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-white flex-shrink-0">
+      <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-neutral-50 flex-shrink-0">
         <div className="flex items-center gap-2">
-          <Button variant="default" size="sm" onClick={onClose} className="h-8 w-8 p-0">
-            <X className="h-4 w-4" />
-          </Button>
-          <h2 className="text-lg font-semibold">Customer Details</h2>
-        </div>
-        <Button variant="default" size="sm" onClick={onToggleFullScreen} className="h-8 w-8 p-0">
-          <Maximize className="h-4 w-4" />
-        </Button>
-      </div>
-
+        <Button variant="default" size="sm" onClick={onClose} className="h-8 w-8 p-0">
+      <ChevronDoubleRightIcon className="h-5 w-5" />
+    </Button>
+    <Button variant="default" size="sm" onClick={onToggleFullScreen} className="h-8 w-8 p-0">
+      <ArrowsPointingOutIcon className="h-5 w-5" />
+    </Button>
+    <h2 className="text-lg font-semibold">Client Details</h2>
+  </div>
+  
+  <div className="flex items-center gap-1">
+    <Button variant="ghost" size="sm" className="h-8 px-3 text-slate-600 hover:text-slate-900">
+      Share
+    </Button>
+    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-600 hover:text-slate-900">
+      <ChatBubbleLeftIcon className="h-5 w-5" />
+    </Button>
+    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-600 hover:text-slate-900">
+      <StarIcon className="h-5 w-5" />
+    </Button>
+    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-600 hover:text-slate-900">
+      <EllipsisHorizontalIcon className="h-6 w-6" />
+    </Button>
+  </div>
+</div>
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto">
         <div className="space-y-6 p-6">
@@ -549,7 +604,7 @@ export default function DetailedSidePanel({
                     onClick={() => setIsEditingCustomer(true)}
                     className="h-6 w-6 p-0"
                   >
-                    <Edit2 className="h-3 w-3" />
+                    <PencilIcon className="h-3 w-3" />
                   </Button>
                 </div>
                 <p className="text-md text-slate-600">
@@ -580,13 +635,13 @@ export default function DetailedSidePanel({
                   className="flex items-center group hover:text-blue-600"
                   title={customer.email}
                 >
-                  <Mail className="h-3.5 w-3.5 mr-2 text-slate-400 group-hover:text-blue-500 flex-shrink-0" />
+                  <EnvelopeIcon className="h-3.5 w-3.5 mr-2 text-slate-400 group-hover:text-blue-500 flex-shrink-0" />
                   <span className="truncate">{customer.email}</span>
                 </a>
               )}
               {customer.phone && (
                 <a href={`tel:${customer.phone}`} className="flex items-center group hover:text-blue-600">
-                  <Phone className="h-3.5 w-3.5 mr-2 text-slate-400 group-hover:text-blue-500 flex-shrink-0" />
+                  <PhoneIcon className="h-3.5 w-3.5 mr-2 text-slate-400 group-hover:text-blue-500 flex-shrink-0" />
                   <span>{customer.phone}</span>
                 </a>
               )}
@@ -603,7 +658,7 @@ export default function DetailedSidePanel({
               )}
               {customer.address && (
                 <div className="flex items-start group">
-                  <MapPin className="h-3.5 w-3.5 mr-2 text-slate-400 flex-shrink-0 mt-0.5" />
+                  <MapPinIcon className="h-3.5 w-3.5 mr-2 text-slate-400 flex-shrink-0 mt-0.5" />
                   <span className="truncate" title={customer.address}>
                     {customer.address}
                   </span>
@@ -616,11 +671,11 @@ export default function DetailedSidePanel({
           <div className="bg-neutral-50 p-4 rounded-lg border border-neutral-200">
             <div className="flex items-center justify-between mb-3">
               <h4 className="font-semibold text-lg text-gray-800 flex items-center">
-                <Lightbulb className="h-5 w-5 mr-2 text-neutral-500" />
+                <LightBulbIcon className="h-5 w-5 mr-2 text-neutral-500" />
                 Talking Tips
               </h4>
               <Button size="sm" variant="default" onClick={() => setShowNewInsight(true)} className="h-7 text-xs">
-                <Plus className="h-3 w-3 mr-1" /> Add
+                <PlusIcon className="h-3 w-3 mr-1" /> Add
               </Button>
             </div>
             {isDataLoading ? (
@@ -645,7 +700,7 @@ export default function DetailedSidePanel({
                           onClick={() => deleteItem("client_ai_insights", insight.id, fetchAIInsights)}
                           className="opacity-0 group-hover:opacity-100 h-5 w-5 p-0 ml-2"
                         >
-                          <X className="h-3 w-3" />
+                          <XMarkIcon className="h-3 w-3" />
                         </Button>
                       </li>
                     ))}
@@ -663,37 +718,37 @@ export default function DetailedSidePanel({
             <ul className="space-y-2 text-sm text-slate-700">
               {customer.staff && (
                 <li className="flex items-center">
-                  <User className="h-4 w-4 mr-3 text-slate-500 flex-shrink-0" />
+                  <UserIcon className="h-5 w-5 mr-3 text-slate-500 flex-shrink-0" />
                   Relationship Mgr: <span className="font-medium ml-1">{customer.staff}</span>
                 </li>
               )}
               {customer.status && (
                 <li className="flex items-center">
-                  <Info className="h-4 w-4 mr-3 text-slate-500 flex-shrink-0" />
+                  <InformationCircleIcon className="h-5 w-5 mr-3 text-slate-500 flex-shrink-0" />
                   Status: <span className="font-medium ml-1">{customer.status}</span>
                 </li>
               )}
               {customer.segment && (
                 <li className="flex items-center">
-                  <TrendingUp className="h-4 w-4 mr-3 text-slate-500 flex-shrink-0" />
+                  <TrendingUp className="h-5 w-5 mr-3 text-slate-500 flex-shrink-0" />
                   Segment: <span className="font-medium ml-1">{customer.segment}</span>
                 </li>
               )}
               {customer.total_assets_under_management && (
                 <li className="flex items-center">
-                  <DollarSign className="h-4 w-4 mr-3 text-slate-500 flex-shrink-0" />
+                  <CurrencyDollarIcon className="h-5 w-5 mr-3 text-slate-500 flex-shrink-0" />
                   AUM: <span className="font-medium ml-1">{formatCurrency(customer.total_assets_under_management)}</span>
                 </li>
               )}
               {customer.product_interests && customer.product_interests.length > 0 && (
                 <li className="flex items-start">
-                  <Paperclip className="h-4 w-4 mr-3 text-slate-500 flex-shrink-0 mt-0.5" />
+                  <PaperClipIcon className="h-5 w-5 mr-3 text-slate-500 flex-shrink-0 mt-0.5" />
                   Product Interests: <span className="ml-1">{customer.product_interests.join(", ")}</span>
                 </li>
               )}
               {customer.lastVisit && (
                 <li className="flex items-center">
-                  <Calendar className="h-4 w-4 mr-3 text-slate-500 flex-shrink-0" />
+                  <CalendarIcon className="h-5 w-5 mr-3 text-slate-500 flex-shrink-0" />
                   Last Visit: <span className="font-medium ml-1">{formatDate(customer.lastVisit)}</span>
                 </li>
               )}
@@ -705,7 +760,7 @@ export default function DetailedSidePanel({
             <div className="flex items-center justify-between mb-3">
               <h4 className="font-semibold text-lg text-slate-800">Recent Activity</h4>
               <Button size="sm" variant="default" onClick={() => setShowNewActivity(true)} className="h-7 text-xs">
-                <Plus className="h-3 w-3 mr-1" /> Add
+                <PlusIcon className="h-3 w-3 mr-1" /> Add
               </Button>
             </div>
             {isDataLoading ? (
@@ -766,7 +821,7 @@ export default function DetailedSidePanel({
       <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-white flex-shrink-0">
         <div className="flex items-center gap-4">
           <Button variant="default" size="sm" onClick={onClose} className="h-8 w-8 p-0">
-            <X className="h-4 w-4" />
+            <ChevronDoubleRightIcon className="h-5 w-5" />
           </Button>
           <div className="flex items-center space-x-3">
             <Avatar className="h-10 w-10">
@@ -786,7 +841,7 @@ export default function DetailedSidePanel({
           </div>
         </div>
         <Button variant="default" size="sm" onClick={onToggleFullScreen} className="h-8 w-8 p-0">
-          <Minimize className="h-4 w-4" />
+          <ArrowsPointingInIcon className="h-5 w-5" />
         </Button>
       </div>
 
@@ -814,7 +869,7 @@ export default function DetailedSidePanel({
                     <CardTitle className="flex items-center justify-between">
                       Customer Information
                       <Button size="sm" variant="default" onClick={() => setIsEditingCustomer(true)}>
-                        <Edit2 className="h-3 w-3 mr-1" />
+                        <PencilIcon className="h-3 w-3 mr-1" />
                         Edit
                       </Button>
                     </CardTitle>
@@ -852,11 +907,11 @@ export default function DetailedSidePanel({
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between">
                       <div className="flex items-center">
-                        <Lightbulb className="h-4 w-4 mr-2 text-neutral-500" />
+                        <LightBulbIcon className="h-5 w-5 mr-2 text-neutral-500" />
                         AI Insights
                       </div>
                       <Button size="sm" variant="default" onClick={() => setShowNewInsight(true)}>
-                        <Plus className="h-3 w-3 mr-1" />
+                        <PlusIcon className="h-3 w-3 mr-1" />
                         Add
                       </Button>
                     </CardTitle>
@@ -880,7 +935,7 @@ export default function DetailedSidePanel({
                               onClick={() => deleteItem("client_ai_insights", insight.id, fetchAIInsights)}
                               className="opacity-0 group-hover:opacity-100 h-5 w-5 p-0 ml-2"
                             >
-                              <X className="h-3 w-3" />
+                              <XMarkIcon className="h-3 w-3" />
                             </Button>
                           </li>
                         ))}
@@ -991,7 +1046,7 @@ export default function DetailedSidePanel({
                   <CardTitle className="flex items-center justify-between">
                     All Activities
                     <Button onClick={() => setShowNewActivity(true)}>
-                      <Plus className="h-4 w-4 mr-2" />
+                      <PlusIcon className="h-5 w-5 mr-2" />
                       Add Activity
                     </Button>
                   </CardTitle>
@@ -1037,7 +1092,7 @@ export default function DetailedSidePanel({
                                 variant="default"
                                 onClick={() => deleteItem("client_activities", activity.id, fetchActivities)}
                               >
-                                <Trash2 className="h-3 w-3" />
+                                <TrashIcon className="h-3 w-3" />
                               </Button>
                             </div>
                           </div>
@@ -1230,7 +1285,7 @@ export default function DetailedSidePanel({
                   <CardTitle className="flex items-center justify-between">
                     Files & Documents
                     <Button>
-                      <Plus className="h-4 w-4 mr-2" />
+                      <PlusIcon className="h-5 w-5 mr-2" />
                       Upload File
                     </Button>
                   </CardTitle>
@@ -1251,7 +1306,7 @@ export default function DetailedSidePanel({
                         <div key={file.id} className="border border-slate-200 rounded-lg p-4">
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
-                              <Paperclip className="h-4 w-4 text-slate-400" />
+                              <PaperClipIcon className="h-5 w-5 text-slate-400" />
                               <h4 className="font-medium">{file.file_name}</h4>
                               <Badge variant="outline">{file.file_type}</Badge>
                             </div>
@@ -1262,7 +1317,7 @@ export default function DetailedSidePanel({
                                 variant="default"
                                 onClick={() => deleteItem("client_files", file.id, fetchFiles)}
                               >
-                                <Trash2 className="h-3 w-3" />
+                                <TrashIcon className="h-3 w-3" />
                               </Button>
                             </div>
                           </div>
@@ -1287,7 +1342,7 @@ export default function DetailedSidePanel({
                   <CardTitle className="flex items-center justify-between">
                     Deals & Opportunities
                     <Button onClick={() => setShowNewDeal(true)}>
-                      <Plus className="h-4 w-4 mr-2" />
+                      <PlusIcon className="h-5 w-5 mr-2" />
                       Add Deal
                     </Button>
                   </CardTitle>
@@ -1360,7 +1415,7 @@ export default function DetailedSidePanel({
                   <CardTitle className="flex items-center justify-between">
                     Support Tickets
                     <Button onClick={() => setShowNewTicket(true)}>
-                      <Plus className="h-4 w-4 mr-2" />
+                      <PlusIcon className="h-5 w-5 mr-2" />
                       Create Ticket
                     </Button>
                   </CardTitle>
@@ -1437,11 +1492,16 @@ export default function DetailedSidePanel({
   )
 
   return (
-    <Drawer.Root open={isOpen} onOpenChange={onClose} direction="right">
+    <Drawer.Root 
+    open={isOpen} 
+    onOpenChange={onClose} 
+    direction="right"
+    modal={false}  // This allows interaction with background elements
+  >
       <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40" />
+       
         <Drawer.Content
-          className={`bg-white h-full fixed top-0 right-0 z-50 outline-none overflow-hidden ${
+          className={`bg-neutral-50 h-full fixed top-0 right-0 z-50 outline-none overflow-hidden ${
             isFullScreen ? "w-full" : "w-full max-w-2xl"
           }`}
         >
