@@ -70,7 +70,7 @@ import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 
 import SupabaseCustomerTable from "./components/supabase-data-table";
-import { ConversationalEditor } from "./ui/plate/conversational-editor";
+import { ConversationalEditor } from "./ui/chat/conversational-editor";
 
 // Mock data for customer metrics
 const customerMetrics = [
@@ -508,9 +508,8 @@ const CustomersContent: React.FC = () => {
       >
         <TabsList>
           <TabsTrigger value="all-customers">All Accounts</TabsTrigger>
-          <TabsTrigger value="segments">Leads</TabsTrigger>
-          <TabsTrigger value="acquisition">Clients</TabsTrigger>
-          <TabsTrigger value="feedback">Insights</TabsTrigger>
+          <TabsTrigger value="segments">Insights</TabsTrigger>
+          <TabsTrigger value="feedback">Automations</TabsTrigger>
           {selectedCustomerId && (
             <TabsTrigger value="customer-profile">Customer Profile</TabsTrigger>
           )}

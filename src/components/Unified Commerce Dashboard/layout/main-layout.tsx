@@ -79,7 +79,7 @@ import {
 import AIInsightsContent from "../tabs/ai-insights"
 import ChannelsContent from "../tabs/channels-content"
 import ChatContent from "../tabs/chat"
-import CustomersContent from "../tabs/accounts/customer-content"
+import CustomersContent from "../tabs/accounts"
 import IntegrationsContent from "../tabs/integration-content"
 import InventoryContent from "../tabs/inventory-content"
 import MarketingContent from "../tabs/marketing-content"
