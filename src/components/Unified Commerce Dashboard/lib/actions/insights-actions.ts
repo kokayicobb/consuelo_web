@@ -1,5 +1,4 @@
-// src/lib/actions/insights-actions.ts
-"use client";
+"use client"
 
 // Define the type for a single chat message
 interface ChatMessage {
@@ -13,6 +12,18 @@ interface ChatMessage {
       arguments: string
     }
   }>
+}
+
+// Define reasoning part type
+interface ReasoningPart {
+  type: "reasoning"
+  details: Array<{ type: "text"; text: string } | { type: "redacted" }>
+}
+
+// Define text part type
+interface TextPart {
+  type: "text"
+  text: string
 }
 
 const systemPrompt = `You are 'United Capital Source Advisor', a master AI sales consultant for United Capital Source. Your persona is that of a deeply empathetic, highly competent, and patient expert. Your primary specialty is helping business owners with credit challenges, but you are an expert in ALL financing products offered.
@@ -254,33 +265,33 @@ You have access to tools for scheduling consultations when users agree to meet w
 1. Every response should be visually engaging, well-structured, and easy to scan
 2. When asked about KPIs or charts, ALWAYS use the artifact format shown above
 3. The artifact JSON must be valid JSON format
-4. Always wrap your main response in <response> tags when using artifacts`;
+4. Always wrap your main response in <response> tags when using artifacts`
 
 // Helper function to parse AI response with artifacts
 function parseAIResponse(fullResponse: string): { content: string; artifacts: any[] } {
   try {
     // Check if response contains artifacts
-    const responseMatch = fullResponse.match(/<response>([\s\S]*?)<\/response>/);
-    const artifactsMatch = fullResponse.match(/<artifacts>([\s\S]*?)<\/artifacts>/);
-    
+    const responseMatch = fullResponse.match(/<response>([\s\S]*?)<\/response>/)
+    const artifactsMatch = fullResponse.match(/<artifacts>([\s\S]*?)<\/artifacts>/)
+
     if (responseMatch && artifactsMatch) {
-      const content = responseMatch[1].trim();
-      const artifactsJson = artifactsMatch[1].trim();
-      
+      const content = responseMatch[1].trim()
+      const artifactsJson = artifactsMatch[1].trim()
+
       try {
-        const artifacts = JSON.parse(artifactsJson);
-        return { content, artifacts: Array.isArray(artifacts) ? artifacts : [] };
+        const artifacts = JSON.parse(artifactsJson)
+        return { content, artifacts: Array.isArray(artifacts) ? artifacts : [] }
       } catch (e) {
-        console.warn('Failed to parse artifacts JSON:', e);
-        return { content, artifacts: [] };
+        console.warn("Failed to parse artifacts JSON:", e)
+        return { content, artifacts: [] }
       }
     }
-    
+
     // If no artifacts structure found, return full response as content
-    return { content: fullResponse, artifacts: [] };
+    return { content: fullResponse, artifacts: [] }
   } catch (e) {
-    console.warn('Failed to parse AI response:', e);
-    return { content: fullResponse, artifacts: [] };
+    console.warn("Failed to parse AI response:", e)
+    return { content: fullResponse, artifacts: [] }
   }
 }
 
@@ -289,8 +300,9 @@ export async function sendChatMessageInsights(
   model = "deepseek-r1-distill-llama-70b",
   maxTokens = 2048,
   onStream?: (chunk: string) => void,
+  onReasoningStream?: (reasoning: string) => void,
   onToolCall?: (toolCall: any) => void,
-): Promise<{ content: string; artifacts: any[] }> {
+): Promise<{ content: string; artifacts: any[]; reasoning?: string }> {
   try {
     const response = await fetch("/api/chat", {
       method: "POST",
@@ -336,6 +348,7 @@ export async function sendChatMessageInsights(
       const reader = response.body.getReader()
       const decoder = new TextDecoder()
       let fullText = ""
+      let fullReasoning = ""
       let buffer = ""
 
       while (true) {
@@ -355,11 +368,25 @@ export async function sendChatMessageInsights(
           try {
             // Handle different streaming formats
             if (line.startsWith("0:")) {
-              // Format: 0:"content"
+              // Format: 0:"content" - regular text content
               const content = JSON.parse(line.substring(2))
               if (typeof content === "string") {
                 fullText += content
                 if (onStream) onStream(content)
+              }
+            } else if (line.startsWith("3:")) {
+              // Format: 3:[reasoning_data] - reasoning tokens
+              try {
+                const reasoningData = JSON.parse(line.substring(2))
+                if (reasoningData && reasoningData.details) {
+                  const reasoningText = reasoningData.details
+                    .map((detail: any) => (detail.type === "text" ? detail.text : "<redacted>"))
+                    .join("")
+                  fullReasoning += reasoningText
+                  if (onReasoningStream) onReasoningStream(reasoningText)
+                }
+              } catch (e) {
+                console.warn("Skipping invalid reasoning JSON:", line, e)
               }
             } else if (line.startsWith("2:")) {
               // Handle tool calls
@@ -385,7 +412,12 @@ export async function sendChatMessageInsights(
                 }
               } catch (e) {
                 // If it's not JSON, treat as plain text
-                if (line.length > 0 && !line.includes("finishReason") && !line.includes("usage") && !line.includes("messageId")) {
+                if (
+                  line.length > 0 &&
+                  !line.includes("finishReason") &&
+                  !line.includes("usage") &&
+                  !line.includes("messageId")
+                ) {
                   fullText += line
                   if (onStream) onStream(line)
                 }
@@ -397,17 +429,19 @@ export async function sendChatMessageInsights(
           }
         }
       }
-      
+
       // Parse the full response for artifacts
-      return parseAIResponse(fullText || "I received your message but couldn't generate a proper response.")
+      const parsed = parseAIResponse(fullText || "I received your message but couldn't generate a proper response.")
+      return {
+        ...parsed,
+        reasoning: fullReasoning || undefined,
+      }
     } else {
       // Handle non-streaming response
       try {
         const data = await response.json()
-        const fullResponse = data?.choices?.[0]?.message?.content || 
-                           data?.content || 
-                           data?.message || 
-                           "No response received"
+        const fullResponse =
+          data?.choices?.[0]?.message?.content || data?.content || data?.message || "No response received"
         return parseAIResponse(fullResponse)
       } catch (e) {
         console.error("Failed to parse non-streaming response:", e)
