@@ -21,6 +21,7 @@ import {
   AlertCircle,
   Loader2,
   Brain,
+  PaperclipIcon,
 } from "lucide-react"
 import { sendChatMessageInsights } from "@/components/Unified Commerce Dashboard/lib/actions/insights-actions"
 import {
@@ -38,6 +39,8 @@ import {
 } from "recharts"
 import { ChatMessageArea } from "@/components/ui/chat-message-area"
 import { MarkdownContent } from "@/components/ui/markdown-content"
+import { motion, AnimatePresence } from "framer-motion"
+import { cn } from "@/lib/utils"
 
 interface Message {
   id: string
@@ -54,7 +57,7 @@ interface ConversationalInterfaceProps {
   onBackToDashboard: () => void
 }
 
-// Simple chart component that fetches KPI data
+// Simple chart component that fetches KPI data (keeping as-is)
 function SimpleKPIChart({ artifact }: { artifact: any }) {
   const [data, setData] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -284,7 +287,7 @@ function SimpleKPIChart({ artifact }: { artifact: any }) {
   )
 }
 
-// Updated AI Response Panel
+// Updated AI Response Panel (keeping as-is)
 function AIResponsePanel({ message }: { message: Message }) {
   return (
     <ScrollArea className="h-full">
@@ -353,35 +356,53 @@ function AIResponsePanel({ message }: { message: Message }) {
 }
 
 export function ConversationalInterface({ onBackToDashboard }: ConversationalInterfaceProps) {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "welcome",
-      role: "assistant",
-      content:
-        "Welcome to United Capital Source! We're experts in finding the right financing for all types of businesses, especially those that have faced challenges with traditional banks. To get started, could you tell me a little about what you're hoping to accomplish with funding?",
-      timestamp: new Date(),
-    },
-  ])
-  const lastMessageRef = useRef<HTMLDivElement>(null)
-
-  // Only scroll to the start of new messages, not the bottom
-  useEffect(() => {
-    if (lastMessageRef.current) {
-      lastMessageRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "start", // This ensures you see the TOP of the message
-      })
-    }
-  }, [messages])
-
+  const [messages, setMessages] = useState<Message[]>([])
+  const [hasStarted, setHasStarted] = useState(false)
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null)
   const [showPanel, setShowPanel] = useState(false)
-  // Add this state for tracking scroll position
   const [isAtBottom, setIsAtBottom] = useState(true)
+  const [isFocused, setIsFocused] = useState(false)
+  const lastMessageRef = useRef<HTMLDivElement>(null)
 
-  // Add this function to be passed to a modified ChatMessageArea
+  // Placeholder animation states
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [animationState, setAnimationState] = useState<"idle" | "animating">("idle")
+
+  const placeholders = [
+    "Help me find the right business loan options...",
+    "What funding programs am I eligible for?...",
+    "Create a loan application checklist for me...",
+    "Analyze my business financials for loan readiness...",
+    "Compare different financing options for my industry...",
+  ]
+
+  // Placeholder animation effect
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (animationState === "idle" && !input && !hasStarted) {
+        setAnimationState("animating")
+        setTimeout(() => {
+          setCurrentIndex((prev) => (prev + 1) % placeholders.length)
+          setAnimationState("idle")
+        }, 1000)
+      }
+    }, 3000)
+
+    return () => clearInterval(interval)
+  }, [animationState, placeholders.length, input, hasStarted])
+
+  // Scroll to top of new messages
+  useEffect(() => {
+    if (lastMessageRef.current && hasStarted) {
+      lastMessageRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      })
+    }
+  }, [messages, hasStarted])
+
   const handleScrollChange = useCallback((atBottom: boolean) => {
     setIsAtBottom(atBottom)
   }, [])
@@ -398,6 +419,11 @@ export function ConversationalInterface({ onBackToDashboard }: ConversationalInt
   const handleSendMessage = useCallback(async () => {
     if (!input.trim() || isLoading) return
 
+    // Start the chat if this is the first message
+    if (!hasStarted) {
+      setHasStarted(true)
+    }
+
     const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
@@ -405,7 +431,20 @@ export function ConversationalInterface({ onBackToDashboard }: ConversationalInt
       timestamp: new Date(),
     }
 
-    setMessages((prev) => [...prev, userMessage])
+    // If this is the first message, add the welcome message too
+    if (messages.length === 0) {
+      const welcomeMessage: Message = {
+        id: "welcome",
+        role: "assistant",
+        content:
+          "Welcome to United Capital Source! We're experts in finding the right financing for all types of businesses, especially those that have faced challenges with traditional banks. I see you're interested in exploring funding options. Let me help you with that.",
+        timestamp: new Date(),
+      }
+      setMessages([welcomeMessage, userMessage])
+    } else {
+      setMessages((prev) => [...prev, userMessage])
+    }
+
     const currentInput = input.trim()
     setInput("")
     setIsLoading(true)
@@ -424,8 +463,8 @@ export function ConversationalInterface({ onBackToDashboard }: ConversationalInt
     setMessages((prev) => [...prev, tempAssistantMessage])
 
     try {
-      // Prepare conversation history for AI
-      const conversationHistory = [...messages, userMessage].map((msg) => ({
+      // Prepare conversation history for AI - include all messages except the temp one
+      const conversationHistory = messages.filter(msg => msg.id !== tempAssistantId).concat(userMessage).map((msg) => ({
         role: msg.role,
         content: msg.content,
       }))
@@ -457,8 +496,8 @@ export function ConversationalInterface({ onBackToDashboard }: ConversationalInt
         role: "assistant",
         content: content,
         timestamp: new Date(),
-        hasArtifacts: artifacts.length > 0,
-        artifacts: artifacts,
+        hasArtifacts: artifacts && artifacts.length > 0,
+        artifacts: artifacts || [],
         reasoning: reasoning,
         isStreamingReasoning: false,
       }
@@ -466,7 +505,7 @@ export function ConversationalInterface({ onBackToDashboard }: ConversationalInt
       setMessages((prev) => prev.map((msg) => (msg.id === tempAssistantId ? finalAssistantMessage : msg)))
 
       // Auto-open panel if there are artifacts
-      if (artifacts.length > 0) {
+      if (artifacts && artifacts.length > 0) {
         setSelectedMessage(finalAssistantMessage)
         setShowPanel(true)
       }
@@ -483,7 +522,7 @@ export function ConversationalInterface({ onBackToDashboard }: ConversationalInt
     } finally {
       setIsLoading(false)
     }
-  }, [input, messages, isLoading])
+  }, [input, messages, isLoading, hasStarted])
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -502,122 +541,324 @@ export function ConversationalInterface({ onBackToDashboard }: ConversationalInt
     setSelectedMessage(null)
   }
 
+  const quickActionButtons = [
+    "Loan Options",
+    "Eligibility Check",
+    "Document Checklist",
+    "Industry Financing",
+    "Application Help",
+  ]
+
+  const handleQuickAction = (action: string) => {
+    const actionPrompts: Record<string, string> = {
+      "Loan Options": "What loan options are available for my business?",
+      "Eligibility Check": "Can you help me check what financing I'm eligible for?",
+      "Document Checklist": "What documents do I need for a business loan application?",
+      "Industry Financing": "What are the best financing options for my industry?",
+      "Application Help": "Can you help me prepare my loan application?",
+    }
+    setInput(actionPrompts[action] || "")
+  }
+
   return (
     <div className="flex h-screen">
       {/* Chat Interface */}
       <div className={`flex flex-col transition-all duration-300 ${showPanel ? "w-1/2" : "w-full"}`}>
-        {/* Header */}
+        {/* Header - Always visible */}
         <div className="flex items-center justify-between border-b bg-background/95 p-4 backdrop-blur">
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" onClick={onBackToDashboard}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <h2 className="flex items-center gap-2 text-xl font-semibold">
-              <Sparkles className="h-5 w-5 text-blue-500" />
-              AI Business Assistant
+            <img
+              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/apple-touch-icon-OnEhJzRCthwLXcIuoeeWSqvvYynB9c.png"
+              alt="Consuelo Logo"
+              className="h-6 w-6"
+            />
+              Business Assistant
             </h2>
           </div>
         </div>
 
-        {/* Messages */}
-        <ChatMessageArea onScrollChange={handleScrollChange} className="space-y-4 px-4 py-8">
-          <div className="space-y-4">
-            {messages.map((message, index) => (
-              <div
-                key={message.id}
-                ref={index === messages.length - 1 ? lastMessageRef : null} // Ref on last message
-                className={`flex gap-3 ${message.role === "user" ? "justify-end" : "justify-start"}`}
+        {/* Main Content Area */}
+        <div className="relative flex-1 overflow-hidden">
+          <AnimatePresence mode="wait">
+            {!hasStarted ? (
+              // Initial centered state
+              <motion.div
+                key="initial"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.5 }}
+                className="flex h-full w-full items-center justify-center"
               >
-                {message.role === "assistant" && (
-                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-blue-100">
-                    <Bot className="h-4 w-4 text-blue-600" />
-                  </div>
-                )}
+                <div className="w-full max-w-3xl px-4">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="mb-8 text-center"
+                  >
+                    <h1 className="text-4xl font-medium text-foreground">Let's Chat About Your Business</h1>
+                  </motion.div>
 
-                <div className={`max-w-[80%] space-y-2 ${message.role === "user" ? "order-first" : ""}`}>
-                  {/* Reasoning/Thinking Display */}
-                  {message.role === "assistant" && message.reasoning && (
-                    <Card className="bg-gray-50 border-gray-200">
-                      <CardContent className="p-3">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Brain className="h-3 w-3 text-gray-500" />
-                          <span className="text-xs text-gray-500 font-medium">
-                            {message.isStreamingReasoning ? "Thinking..." : "Reasoning"}
-                          </span>
-                        </div>
-                        <div className="text-xs text-gray-600 whitespace-pre-wrap font-mono leading-relaxed">
-                          {message.reasoning}
-                          {message.isStreamingReasoning && (
-                            <span className="inline-block w-2 h-3 bg-gray-400 animate-pulse ml-1" />
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.1 }}
+                    className="w-full"
+                  >
+                    <div className="relative w-full">
+                      <div
+                        className={cn(
+                          "relative rounded-3xl border border-border bg-transparent transition-all duration-300",
+                          "shadow-[0_0_15px_rgba(0,0,0,0.05)]",
+                          isFocused
+                            ? "shadow-[0_0_0_1px_rgba(0,0,0,0.08),0_4px_20px_rgba(0,0,0,0.08)] ring-1 ring-black/5"
+                            : "hover:shadow-[0_0_0_1px_rgba(0,0,0,0.05),0_2px_8px_rgba(0,0,0,0.05)]",
+                        )}
+                      >
+                        <div className="relative min-h-[120px] w-full">
+                          <textarea
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            onFocus={() => setIsFocused(true)}
+                            onBlur={() => setIsFocused(false)}
+                            onKeyPress={handleKeyPress}
+                            className="min-h-[120px] w-full resize-none rounded-3xl bg-transparent px-4 py-5 text-foreground outline-none"
+                            placeholder=""
+                            disabled={isLoading}
+                          />
+
+                          {!input && (
+                            <div className="pointer-events-none absolute inset-0 overflow-hidden px-4 py-5 text-muted-foreground">
+                              <div className="relative h-full">
+                                <motion.div
+                                  key={`current-${currentIndex}`}
+                                  initial={{ y: 0, opacity: 1 }}
+                                  animate={{
+                                    y: animationState === "animating" ? -20 : 0,
+                                    opacity: animationState === "animating" ? 0 : 1,
+                                  }}
+                                  transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                                  className="absolute inset-0"
+                                >
+                                  {placeholders[currentIndex]}
+                                </motion.div>
+
+                                <motion.div
+                                  key={`next-${currentIndex}`}
+                                  initial={{ y: 20, opacity: 0 }}
+                                  animate={{
+                                    y: animationState === "animating" ? 0 : 20,
+                                    opacity: animationState === "animating" ? 1 : 0,
+                                  }}
+                                  transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                                  className="absolute inset-0"
+                                >
+                                  {placeholders[(currentIndex + 1) % placeholders.length]}
+                                </motion.div>
+                              </div>
+                            </div>
                           )}
                         </div>
-                      </CardContent>
-                    </Card>
-                  )}
 
-                  {/* Main Response */}
-                  <Card className={`${message.role === "user" ? "bg-blue-500 text-white" : "bg-muted"}`}>
-                    <CardContent className="p-3">
-                      {message.role === "assistant" ? (
-                        <MarkdownContent id={`message-${message.id}`} content={message.content} />
-                      ) : (
-                        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                      )}
-                      {message.hasArtifacts && (
-                        <div className="mt-2 border-t border-border/50 pt-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleViewArtifacts(message)}
-                            className="text-xs"
+                        <div className="absolute bottom-4 right-4 flex items-center gap-2">
+                          <button className="rounded-full p-1.5 transition-colors hover:bg-muted/20">
+                            <PaperclipIcon size={18} className="text-muted-foreground" />
+                          </button>
+                          <button
+                            onClick={handleSendMessage}
+                            disabled={isLoading || !input.trim()}
+                            className="rounded-full bg-emerald-600 p-1.5 text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
                           >
-                            View Interactive Response ({message.artifacts?.length} item
-                            {message.artifacts?.length !== 1 ? "s" : ""})
-                          </Button>
+                            <svg
+                              width="18"
+                              height="18"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                d="M12 4V20M12 4L6 10M12 4L18 10"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                transform="rotate(180 12 12)"
+                              />
+                            </svg>
+                          </button>
                         </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                  <p className="mt-1 px-1 text-xs text-muted-foreground">{message.timestamp.toLocaleTimeString()}</p>
+                      </div>
+                    </div>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.2 }}
+                    className="mt-6 flex flex-wrap items-center justify-center gap-2"
+                  >
+                    {quickActionButtons.map((action) => (
+                      <button
+                        key={action}
+                        onClick={() => handleQuickAction(action)}
+                        className="rounded-full border border-border bg-transparent px-4 py-2 text-sm text-foreground transition-colors hover:bg-card/10"
+                      >
+                        {action}
+                      </button>
+                    ))}
+                  </motion.div>
                 </div>
+              </motion.div>
+            ) : (
+              // Chat started state
+              <motion.div
+                key="chat"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
+                className="flex h-full flex-col"
+              >
+                {/* Messages */}
+                <ChatMessageArea onScrollChange={handleScrollChange} className="space-y-4 px-4 py-8">
+                  <div className="space-y-4">
+                    {messages.map((message, index) => (
+                      <div
+                        key={message.id}
+                        ref={index === messages.length - 1 ? lastMessageRef : null}
+                        className={`flex gap-3 ${message.role === "user" ? "justify-end" : "justify-start"}`}
+                      >
+                        {message.role === "assistant" && (
+                          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-blue-100">
+                            <Bot className="h-4 w-4 text-blue-600" />
+                          </div>
+                        )}
 
-                {message.role === "user" && (
-                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gray-100">
-                    <User className="h-4 w-4 text-gray-600" />
+                        <div className={`max-w-[80%] space-y-2 ${message.role === "user" ? "order-first" : ""}`}>
+                          {/* Reasoning/Thinking Display */}
+                          {message.role === "assistant" && message.reasoning && (
+                            <Card className="bg-gray-50 border-gray-200">
+                              <CardContent className="p-3">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <Brain className="h-3 w-3 text-gray-500" />
+                                  <span className="text-xs text-gray-500 font-medium">
+                                    {message.isStreamingReasoning ? "Thinking..." : "Reasoning"}
+                                  </span>
+                                </div>
+                                <div className="text-xs text-gray-600 whitespace-pre-wrap font-mono leading-relaxed">
+                                  {message.reasoning}
+                                  {message.isStreamingReasoning && (
+                                    <span className="inline-block w-2 h-3 bg-gray-400 animate-pulse ml-1" />
+                                  )}
+                                </div>
+                              </CardContent>
+                            </Card>
+                          )}
+
+                          {/* Main Response */}
+                          <Card className={`${message.role === "user" ? "bg-blue-500 text-white" : "bg-muted"}`}>
+                            <CardContent className="p-3">
+                              {message.role === "assistant" ? (
+                                <MarkdownContent id={`message-${message.id}`} content={message.content} />
+                              ) : (
+                                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                              )}
+                              {message.hasArtifacts && (
+                                <div className="mt-2 border-t border-border/50 pt-2">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleViewArtifacts(message)}
+                                    className="text-xs"
+                                  >
+                                    View Interactive Response ({message.artifacts?.length} item
+                                    {message.artifacts?.length !== 1 ? "s" : ""})
+                                  </Button>
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                          <p className="mt-1 px-1 text-xs text-muted-foreground">{message.timestamp.toLocaleTimeString()}</p>
+                        </div>
+
+                        {message.role === "user" && (
+                          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gray-100">
+                            <User className="h-4 w-4 text-gray-600" />
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </ChatMessageArea>
+                </ChatMessageArea>
 
-        {/* Input */}
-        <div className="border-t bg-background/95 p-4 backdrop-blur">
-          <div className="flex gap-2">
-            <Input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Ask about loan options, create email templates, analyze business data..."
-              className="flex-1"
-              disabled={isLoading}
-            />
-            <Button onClick={handleSendMessage} disabled={isLoading || !input.trim()}>
-              <Send className="h-4 w-4" />
-            </Button>
-          </div>
+                {/* Scroll to Top Button */}
+                {isAtBottom && messages[messages.length - 1]?.role === "assistant" && (
+                  <Button
+                    onClick={scrollToTopOfLastMessage}
+                    className="fixed bottom-40 right-10 z-50 h-9 w-9 rounded-full shadow-lg"
+                    size="icon"
+                    variant="secondary"
+                  >
+                    <ChevronUp className="h-5 w-5" />
+                  </Button>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-        {/* Scroll to Top Button */}
-        {isAtBottom && messages[messages.length - 1]?.role === "assistant" && (
-          <Button
-            onClick={scrollToTopOfLastMessage}
-            className="fixed bottom-40 right-10 z-50 h-9 w-9 rounded-full shadow-lg"
-            size="icon"
-            variant="secondary"
-          >
-            <ChevronUp className="h-5 w-5" />
-          </Button>
-        )}
+
+        {/* Input Area - Animated based on hasStarted */}
+        <AnimatePresence>
+          {hasStarted && (
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="border-t bg-background/95 p-4 backdrop-blur"
+            >
+              <div className="mx-auto w-full max-w-4xl">
+                <div
+                  className={cn(
+                    "relative rounded-3xl border border-border bg-transparent transition-all duration-300",
+                    "shadow-[0_0_15px_rgba(0,0,0,0.05)]",
+                    isFocused
+                      ? "shadow-[0_0_0_1px_rgba(0,0,0,0.08),0_4px_20px_rgba(0,0,0,0.08)] ring-1 ring-black/5"
+                      : "hover:shadow-[0_0_0_1px_rgba(0,0,0,0.05),0_2px_8px_rgba(0,0,0,0.05)]",
+                  )}
+                >
+                  <div className="flex items-center">
+                    <input
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      onFocus={() => setIsFocused(true)}
+                      onBlur={() => setIsFocused(false)}
+                      placeholder="Ask about loan options, create email templates, analyze business data..."
+                      className="flex-1 rounded-3xl bg-transparent px-4 py-3 text-foreground outline-none"
+                      disabled={isLoading}
+                    />
+                    <div className="flex items-center gap-2 pr-3">
+                      <button className="rounded-full p-1.5 transition-colors hover:bg-muted/20">
+                        <PaperclipIcon size={18} className="text-muted-foreground" />
+                      </button>
+                      <button
+                        onClick={handleSendMessage}
+                        disabled={isLoading || !input.trim()}
+                        className="rounded-full bg-emerald-600 p-1.5 text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
+                      >
+                        <Send className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* AI Response Panel */}
