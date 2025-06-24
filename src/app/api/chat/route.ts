@@ -13,7 +13,7 @@ export async function POST(req: Request) {
     }
 
     const result = streamText({
-      model: groq("llama3-70b-8192"), // Correct model format
+      model: groq("deepseek-r1-distill-llama-70b"), // Correct model format
       messages,
       maxTokens: 1024,
       temperature: 0.7,

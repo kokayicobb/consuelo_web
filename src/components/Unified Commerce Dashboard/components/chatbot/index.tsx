@@ -4,7 +4,7 @@ import type React from "react";
 import { useState, useEffect, useRef } from "react";
 import TypingIndicator from "./typing-indicator";
 import SchedulingButtons from "./cal-com/scheduling-buttons";
-import { sendChatMessage } from "@/lib/actions-chatbot";
+import { sendChatMessage } from "@/components/Unified Commerce Dashboard/lib/actions/chatbot-actions";
 
 // --- Interfaces for a structured component ---
 interface HelpTopic {
