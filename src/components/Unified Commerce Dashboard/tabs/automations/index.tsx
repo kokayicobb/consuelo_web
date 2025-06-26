@@ -492,9 +492,9 @@ export default function AutomationsPage() {
                     onClick: handleCreateAutomation,
                   },
                   {
-                    name: "Database",
-                    desc: "Automated data",
-                    icon: Database,
+                    name: "Search",
+                    desc: "Search for Leads",
+                    icon: Search,
                     color: "red",
                     onClick: handleDatabaseClick, // Updated to use the new handler
                   },
