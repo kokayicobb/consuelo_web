@@ -76,18 +76,18 @@ import {
   ExpandableChatFooter,
 } from "@/components/ui/expandable-chat";
 
-import AIInsightsContent from "../tabs/ai-insights";
-import ChannelsContent from "../tabs/channels-content";
-import ChatContent from "../tabs/chat";
-import CustomersContent from "../tabs/accounts/customer-content";
-import IntegrationsContent from "../tabs/integration-content";
-import InventoryContent from "../tabs/inventory-content";
-import MarketingContent from "../tabs/marketing-content";
-import SettingsContent from "../tabs/settings-content";
-import HomeContent from "../tabs/dashboard";
-import ActionSearchBar from "@/components/ui/action-search-bar";
-import ChatBot from "../components/chatbot";
-import AutomationsPage from "../tabs/automations";
+import AIInsightsContent from "../tabs/ai-insights"
+import ChannelsContent from "../tabs/channels-content"
+import ChatContent from "../tabs/chat"
+import CustomersContent from "../tabs/accounts"
+import IntegrationsContent from "../tabs/integration-content"
+import InventoryContent from "../tabs/inventory-content"
+import MarketingContent from "../tabs/marketing-content"
+import SettingsContent from "../tabs/settings-content"
+import HomeContent from "../tabs/dashboard"
+import ActionSearchBar from "@/components/ui/action-search-bar"
+import ChatBot from "../components/chatbot"
+import AutomationsPage from "../tabs/automations"
 
 // Chat Interface Component for use with ExpandableChat
 // NOTE: This component is currently not used in MainLayout but is kept for reference.
@@ -210,7 +210,9 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
       case "settings":
         return <SettingsContent />;
       case "automations":
-        return <AutomationsPage />;
+        return <AutomationsPage />
+      case "blank":
+        return <div className="w-full h-full bg-white"></div>
       default:
         return <HomeContent />;
     }
@@ -464,16 +466,28 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
             <nav className="flex-1 space-y-1 px-3">
               <ActionSearchBar />
               {mainNavItems.map((item) => (
-                <SidebarLink
-                  key={item.href}
-                  link={item}
-                  className={`${
-                    activeTab === item.href.replace("#", "")
-                      ? "bg-gray-100 font-medium text-gray-900"
-                      : "text-gray-700 hover:bg-gray-50"
-                  } transition-colors duration-150`}
-                />
-              ))}
+  <SidebarLink
+    key={item.href}
+    link={item}
+    isActive={activeTab === item.href.replace("#", "")}
+    onTabReset={() => {
+      // Force a complete refresh of the tab state
+      const currentTab = item.href.replace("#", "")
+      
+      // Temporarily set to a different tab, then back to trigger a full re-render
+      setActiveTab("blank")
+      setTimeout(() => {
+        setActiveTab(currentTab)
+        window.scrollTo(0, 0)
+      }, 0)
+    }}
+    className={`${
+      activeTab === item.href.replace("#", "")
+        ? "bg-gray-100 font-medium text-gray-900"
+        : "text-gray-700 hover:bg-gray-50"
+    } transition-colors duration-150`}
+  />
+))}
               <div className="pt-4">
                 <Collapsible defaultOpen className="group/collapsible">
                   <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm font-medium text-gray-600 transition-colors duration-150 hover:bg-gray-50 hover:text-gray-800">
@@ -481,17 +495,26 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
                     <ChevronRight className="h-3 w-3 transition-transform group-data-[state=open]/collapsible:rotate-90" />
                   </CollapsibleTrigger>
                   <CollapsibleContent className="mt-1 space-y-1 pl-4">
-                    {retentionItems.map((item) => (
-                      <SidebarLink
-                        key={item.href}
-                        link={item}
-                        className={`${
-                          activeTab === item.href.replace("#", "")
-                            ? "bg-gray-100 font-medium text-gray-900"
-                            : "text-gray-700 hover:bg-gray-50"
-                        } transition-colors duration-150`}
-                      />
-                    ))}
+                  {retentionItems.map((item) => (
+  <SidebarLink
+    key={item.href}
+    link={item}
+    isActive={activeTab === item.href.replace("#", "")}
+    onTabReset={() => {
+      const currentTab = item.href.replace("#", "")
+      setActiveTab("blank")
+      setTimeout(() => {
+        setActiveTab(currentTab)
+        window.scrollTo(0, 0)
+      }, 0)
+    }}
+    className={`${
+      activeTab === item.href.replace("#", "")
+        ? "bg-gray-100 font-medium text-gray-900"
+        : "text-gray-700 hover:bg-gray-50"
+    } transition-colors duration-150`}
+  />
+))}
                   </CollapsibleContent>
                 </Collapsible>
               </div>
@@ -502,17 +525,26 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
                     <ChevronRight className="h-3 w-3 transition-transform group-data-[state=open]/collapsible:rotate-90" />
                   </CollapsibleTrigger>
                   <CollapsibleContent className="mt-1 space-y-1 pl-4">
-                    {prospectingItems.map((item) => (
-                      <SidebarLink
-                        key={item.href}
-                        link={item}
-                        className={`${
-                          activeTab === item.href.replace("#", "")
-                            ? "bg-gray-100 font-medium text-gray-900"
-                            : "text-gray-700 hover:bg-gray-50"
-                        } transition-colors duration-150`}
-                      />
-                    ))}
+                  {prospectingItems.map((item) => (
+  <SidebarLink
+    key={item.href}
+    link={item}
+    isActive={activeTab === item.href.replace("#", "")}
+    onTabReset={() => {
+      const currentTab = item.href.replace("#", "")
+      setActiveTab("blank")
+      setTimeout(() => {
+        setActiveTab(currentTab)
+        window.scrollTo(0, 0)
+      }, 0)
+    }}
+    className={`${
+      activeTab === item.href.replace("#", "")
+        ? "bg-gray-100 font-medium text-gray-900"
+        : "text-gray-700 hover:bg-gray-50"
+    } transition-colors duration-150`}
+  />
+))}
                   </CollapsibleContent>
                 </Collapsible>
               </div>
@@ -523,31 +555,49 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
                     <ChevronRight className="h-3 w-3 transition-transform group-data-[state=open]/collapsible:rotate-90" />
                   </CollapsibleTrigger>
                   <CollapsibleContent className="mt-1 space-y-1 pl-4">
-                    {dialerItems.map((item) => (
-                      <SidebarLink
-                        key={item.href}
-                        link={item}
-                        className={`${
-                          activeTab === item.href.replace("#", "")
-                            ? "bg-gray-100 font-medium text-gray-900"
-                            : "text-gray-700 hover:bg-gray-50"
-                        } transition-colors duration-150`}
-                      />
-                    ))}
+                  {dialerItems.map((item) => (
+  <SidebarLink
+    key={item.href}
+    link={item}
+    isActive={activeTab === item.href.replace("#", "")}
+    onTabReset={() => {
+      const currentTab = item.href.replace("#", "")
+      setActiveTab("blank")
+      setTimeout(() => {
+        setActiveTab(currentTab)
+        window.scrollTo(0, 0)
+      }, 0)
+    }}
+    className={`${
+      activeTab === item.href.replace("#", "")
+        ? "bg-gray-100 font-medium text-gray-900"
+        : "text-gray-700 hover:bg-gray-50"
+    } transition-colors duration-150`}
+  />
+))}
                   </CollapsibleContent>
                 </Collapsible>
               </div>
               {standaloneItems.map((item) => (
-                <SidebarLink
-                  key={item.href}
-                  link={item}
-                  className={`${
-                    activeTab === item.href.replace("#", "")
-                      ? "bg-gray-100 font-medium text-gray-900"
-                      : "text-gray-700 hover:bg-gray-50"
-                  } transition-colors duration-150`}
-                />
-              ))}
+  <SidebarLink
+    key={item.href}
+    link={item}
+    isActive={activeTab === item.href.replace("#", "")}
+    onTabReset={() => {
+      const currentTab = item.href.replace("#", "")
+      setActiveTab("blank")
+      setTimeout(() => {
+        setActiveTab(currentTab)
+        window.scrollTo(0, 0)
+      }, 0)
+    }}
+    className={`${
+      activeTab === item.href.replace("#", "")
+        ? "bg-gray-100 font-medium text-gray-900"
+        : "text-gray-700 hover:bg-gray-50"
+    } transition-colors duration-150`}
+  />
+))}
             </nav>
           </SidebarBody>
         </Sidebar>

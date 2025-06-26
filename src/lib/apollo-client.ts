@@ -1,6 +1,5 @@
 import { ApolloSearchParams, ApolloSearchResponse, ApolloContact } from '../../types/apollo';
 // lib/apollo-client.ts
-
 export class ApolloClient {
   private baseUrl: string;
 

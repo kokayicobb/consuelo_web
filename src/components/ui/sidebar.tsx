@@ -41,20 +41,26 @@ export const SidebarProvider = ({
   setOpen?: React.Dispatch<React.SetStateAction<boolean>>
   animate?: boolean
 }) => {
-  const [openState, setOpenState] = useState(true) // Default to open
+  const [openState, setOpenState] = useState(false) // Changed to false by default
   const [isMobile, setIsMobile] = useState(false)
 
   React.useEffect(() => {
     // Check if we're on mobile
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768)
+      const mobile = window.innerWidth < 768
+      setIsMobile(mobile)
+      
+      // Set default open state based on screen size
+      if (openProp === undefined && setOpenProp === undefined) {
+        setOpenState(!mobile) // Open on desktop, closed on mobile
+      }
     }
 
     checkMobile()
     window.addEventListener("resize", checkMobile)
 
     return () => window.removeEventListener("resize", checkMobile)
-  }, [])
+  }, [openProp, setOpenProp])
 
   const open = openProp !== undefined ? openProp : openState
   const setOpen = setOpenProp !== undefined ? setOpenProp : setOpenState
@@ -165,7 +171,8 @@ export const MobileSidebar = ({
   return (
     <>
       <div className={cn("h-10 px-4 py-4 flex flex-row md:hidden items-center justify-between bg-neutral-50 w-full")}>
-        <div className="flex justify-end z-20 w-full">
+        {/* Moved menu icon to the left */}
+        <div className="flex justify-start z-20">
           <Menu className="text-gray-700 opacity-50 cursor-pointer" onClick={() => setOpen(!open)} />
         </div>
         <AnimatePresence>
@@ -201,19 +208,29 @@ export const SidebarLink = ({
   link,
   className,
   onClick,
-  isActive, // ADD THIS PROP
+  isActive,
+  onTabReset, // New prop for handling tab reset
   ...props
 }: {
   link: Links
   className?: string
   onClick?: () => void
-  isActive?: boolean // ADD THIS PROP
+  isActive?: boolean
+  onTabReset?: () => void // Function to call when resetting current tab
   props?: LinkProps
 }) => {
   const { isMobile, setOpen } = useSidebar()
 
   const handleClick = (e: React.MouseEvent) => {
-    // ... (your existing click handler logic)
+    // If clicking on the currently active tab, reset it instead
+    if (isActive && onTabReset) {
+      e.preventDefault() // Prevent navigation
+      onTabReset()
+      if (isMobile) setOpen(false)
+      return
+    }
+
+    // Normal click behavior
     if (onClick) onClick();
     if (link?.onClick) link.onClick();
     if (isMobile) setOpen(false);
