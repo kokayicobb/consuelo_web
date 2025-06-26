@@ -1,8 +1,7 @@
 "use client";
 
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Sidebar,
   SidebarBody,
@@ -41,32 +40,57 @@ import {
   Check,
   Workflow,
   Route,
-  Building,
 } from "lucide-react";
+import {
+  ArrowsPointingOutIcon,
+  ArrowsPointingInIcon,
+  EnvelopeIcon,
+  PhoneIcon,
+  MapPinIcon,
+  CurrencyDollarIcon,
+  UserIcon,
+  SignalIcon,
+  BriefcaseIcon,
+  DocumentTextIcon,
+  TagIcon,
+  PaperClipIcon,
+  InformationCircleIcon,
+  LightBulbIcon,
+  PlusIcon,
+  PencilIcon,
+  XMarkIcon,
+  TrashIcon,
+  ChatBubbleLeftIcon,
+  EllipsisHorizontalIcon,
+  StarIcon,
+  ChartBarIcon,
+  CalendarIcon,
+  ChevronDoubleRightIcon,
+} from "@heroicons/react/24/solid";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import Header from "./header";
-import ChannelsContent from "../tabs/channels-content";
-import HomeContent from "../tabs/dashboard/home-content";
-import InventoryContent from "../tabs/inventory-content";
-import CustomersContent from "../tabs/customer-content";
-import MarketingContent from "../tabs/marketing-content";
-import AIInsightsContent from "../tabs/ai-insights";
-import IntegrationsContent from "../tabs/integration-content";
-import SettingsContent from "../tabs/settings-content";
-
 import {
   ExpandableChat,
   ExpandableChatHeader,
   ExpandableChatBody,
   ExpandableChatFooter,
 } from "@/components/ui/expandable-chat";
-import ChatContent from "../tabs/chat";
 
-// Import the Apollo Search Component
-import ApolloSearchComponent from "../components/apollo-search-component";
+import AIInsightsContent from "../tabs/ai-insights";
+import ChannelsContent from "../tabs/channels-content";
+import ChatContent from "../tabs/chat";
+import CustomersContent from "../tabs/accounts/customer-content";
+import IntegrationsContent from "../tabs/integration-content";
+import InventoryContent from "../tabs/inventory-content";
+import MarketingContent from "../tabs/marketing-content";
+import SettingsContent from "../tabs/settings-content";
+import HomeContent from "../tabs/dashboard";
+import ActionSearchBar from "@/components/ui/action-search-bar";
+import ChatBot from "../components/chatbot";
+import AutomationsPage from "../tabs/automations";
 
 // Chat Interface Component for use with ExpandableChat
+// NOTE: This component is currently not used in MainLayout but is kept for reference.
 const ChatInterface = () => {
   const [messages, setMessages] = useState([
     { text: "Hi there! How can I help you today?", sender: "bot" },
@@ -75,12 +99,8 @@ const ChatInterface = () => {
 
   const handleSend = () => {
     if (inputValue.trim() === "") return;
-
-    // Add user message
     setMessages([...messages, { text: inputValue, sender: "user" }]);
     setInputValue("");
-
-    // Simulate bot response (would be replaced with actual API call)
     setTimeout(() => {
       setMessages((prev) => [
         ...prev,
@@ -92,7 +112,7 @@ const ChatInterface = () => {
     }, 1000);
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyPress = (e) => {
     if (e.key === "Enter") {
       handleSend();
     }
@@ -100,7 +120,7 @@ const ChatInterface = () => {
 
   return (
     <>
-      <ExpandableChatHeader className="border-b border-gray-200 bg-white">
+      <ExpandableChatHeader className="border-b border-gray-200 bg-neutral-50">
         <div className="flex items-center">
           <div className="mr-2 flex h-8 w-8 items-center justify-center rounded-full bg-gray-100">
             <img
@@ -109,15 +129,17 @@ const ChatInterface = () => {
               className="h-6 w-6"
             />
           </div>
+          {/* FIX: Removed duplicated "Consuelo" span */}
           <span className="font-medium text-gray-900">Consuelo</span>
         </div>
       </ExpandableChatHeader>
-
       <ExpandableChatBody className="w-full space-y-4 bg-white p-4">
         {messages.map((message, index) => (
           <div
             key={index}
-            className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}
+            className={`flex ${
+              message.sender === "user" ? "justify-end" : "justify-start"
+            }`}
           >
             <div
               className={`max-w-[80%] rounded-lg px-4 py-2 ${
@@ -131,7 +153,6 @@ const ChatInterface = () => {
           </div>
         ))}
       </ExpandableChatBody>
-
       <ExpandableChatFooter className="border-t border-gray-200 bg-white">
         <div className="flex w-full items-center gap-2">
           <Input
@@ -139,7 +160,7 @@ const ChatInterface = () => {
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Type your message..."
-            className="flex-1 border-gray-200"
+            className="flex-1 border-gray-200 "
           />
           <Button
             onClick={handleSend}
@@ -154,48 +175,26 @@ const ChatInterface = () => {
   );
 };
 
-interface MainLayoutProps {
-  children?: React.ReactNode;
-  title?: string;
-  hideSidebar?: boolean;
-}
-
-const MainLayout = ({
-  children,
-  title,
-  hideSidebar = false,
-}: MainLayoutProps) => {
-  // Create a state to track the active tab
+const MainLayout = ({ children, title, hideSidebar = false }) => {
   const [activeTab, setActiveTab] = useState("home");
   const [sidebarOpen, setSidebarOpen] = useState(!hideSidebar);
 
-  // Effect to sync URL hash with state
   useEffect(() => {
-    // Function to handle hash change
     const handleHashChange = () => {
       const hash = window.location.hash.replace("#", "") || "home";
       setActiveTab(hash);
     };
-
-    // Set initial state based on current hash
     handleHashChange();
-
-    // Listen for hash changes
     window.addEventListener("hashchange", handleHashChange);
-
-    // Clean up event listener
     return () => window.removeEventListener("hashchange", handleHashChange);
   }, []);
 
-  // Function to render the correct content based on activeTab
   const renderContent = () => {
     switch (activeTab) {
       case "home":
         return <ChatContent />;
       case "dashboard":
         return <HomeContent />;
-      case "apollo-search":
-        return <ApolloSearchComponent />;
       case "channels":
         return <ChannelsContent />;
       case "inventory":
@@ -210,12 +209,31 @@ const MainLayout = ({
         return <IntegrationsContent />;
       case "settings":
         return <SettingsContent />;
+      case "automations":
+        return <AutomationsPage />;
       default:
         return <HomeContent />;
     }
   };
 
-  // Define the main navigation items (Home, Dashboard, Apollo Search, and Automations)
+  // FIX: Removed duplicated state, ref, and useEffect hook. This is the correct, single version.
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const chatRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (chatRef.current && !chatRef.current.contains(event.target)) {
+        setIsChatOpen(false);
+      }
+    };
+    if (isChatOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isChatOpen]);
+
   const mainNavItems = [
     {
       label: "Home",
@@ -230,20 +248,14 @@ const MainLayout = ({
       onClick: () => setActiveTab("dashboard"),
     },
     {
-      label: "Apollo Search",
-      href: "#apollo-search",
-      icon: <Building size={20} className="text-gray-600" />,
-      onClick: () => setActiveTab("apollo-search"),
-    },
-    {
       label: "Automations",
-      href: "#ai-insights",
+      href: "#automations",
       icon: <Workflow size={20} className="text-gray-600" />,
-      onClick: () => setActiveTab("ai-insights"),
+      // FIX: Removed duplicated onClick property
+      onClick: () => setActiveTab("automations"),
     },
   ];
 
-  // Define the retention section items
   const retentionItems = [
     {
       label: "Accounts",
@@ -265,7 +277,6 @@ const MainLayout = ({
     },
   ];
 
-  // Define the prospecting section items
   const prospectingItems = [
     {
       label: "Pipeline Builder",
@@ -277,7 +288,8 @@ const MainLayout = ({
       label: "Lead Cohorts",
       href: "#leads",
       icon: <Users size={20} className="text-gray-600" />,
-      onClick: () => {}, // No functionality for now
+      // FIX: Removed duplicated onClick property
+      onClick: () => setActiveTab("ai-insights"),
     },
     {
       label: "Channel Insights",
@@ -296,7 +308,6 @@ const MainLayout = ({
     },
   ];
 
-  // Define the standalone items (AI Recommendations only now)
   const standaloneItems = [
     // {
     //   label: "AI Recommendations",
@@ -306,18 +317,48 @@ const MainLayout = ({
     // },
   ];
 
+  // FIX: Removed duplicated config objects and a stray closing bracket.
+  const unitedCapitalSourceConfig = {
+    name: "United Capital Source",
+    logoUrl: "/chatbot/unitedcap.webp",
+    agentAvatars: ["/path/to/agent1.jpg", "/path/to/agent2.jpg"],
+  };
+
+  const ucsWelcomeMessage = {
+    title: "Hi there",
+    subtitle: "How can we help your business grow?",
+  };
+
+  const ucsHelpTopics = [
+    {
+      title: "What types of loans do you offer?",
+      question: "What types of business loans do you offer?",
+    },
+    {
+      title: "How long does the process take?",
+      question: "How long does it take to get a loan?",
+    },
+    {
+      title: "What documents do I need to apply?",
+      question: "What documents do I need to prepare for a loan application?",
+    },
+    {
+      title: "Am I eligible with my credit score?",
+      question: "I'm worried about my credit score. Can I still get a loan?",
+    },
+  ];
+
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-white md:flex-row">
+    <div className="flex h-screen flex-col overflow-hidden bg-neutral-50 md:flex-row">
       {!hideSidebar && (
         <Sidebar open={sidebarOpen} setOpen={setSidebarOpen}>
-          <SidebarBody className="bg-white">
-            {/* Consuelo Logo with Dropdown */}
+          <SidebarBody className="bg-neutral-50">
             <div className="relative mb-4 flex items-center justify-center gap-2 px-3 pt-3">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
-                    className="flex w-full items-center justify-start gap-2 rounded-md bg-white p-2 text-sm shadow-none hover:bg-gray-50"
+                    className="flex w-full items-center justify-start gap-2 rounded-md bg-neutral-50 p-2 text-sm shadow-none hover:bg-gray-50"
                   >
                     <div className="h-6 w-6 flex-shrink-0">
                       <img
@@ -330,8 +371,10 @@ const MainLayout = ({
                     <ChevronDown className="ml-auto h-4 w-4 text-gray-500" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-80 p-0" align="start">
-                  {/* Header Section */}
+                <DropdownMenuContent
+                  className="w-80 bg-neutral-50 p-0"
+                  align="start"
+                >
                   <div className="border-b border-gray-100 p-4">
                     <div className="mb-4 flex items-center gap-3">
                       <div className="h-10 w-10 flex-shrink-0">
@@ -350,8 +393,6 @@ const MainLayout = ({
                         </p>
                       </div>
                     </div>
-
-                    {/* Action Buttons */}
                     <div className="flex gap-2">
                       <Button
                         variant="outline"
@@ -372,13 +413,10 @@ const MainLayout = ({
                       </Button>
                     </div>
                   </div>
-
-                  {/* User Account Section */}
                   <div className="p-2">
                     <div className="hover:none mb-1 px-2 py-1 text-xs  font-medium text-gray-500">
                       kokayi@consuelohq.com
                     </div>
-
                     <DropdownMenuItem className="flex items-center  justify-between rounded-lg p-3  hover:bg-gray-100">
                       <div className="flex items-center  gap-3">
                         <div className="h-6 w-6  flex-shrink-0">
@@ -392,16 +430,12 @@ const MainLayout = ({
                       </div>
                       <Check className="h-4 w-4 text-green-600" />
                     </DropdownMenuItem>
-
                     <DropdownMenuItem className="flex items-center gap-3 rounded-lg p-3">
                       <Plus className="h-4 w-4 text-gray-500" />
                       <span>New Sales Team</span>
                     </DropdownMenuItem>
                   </div>
-
                   <DropdownMenuSeparator />
-
-                  {/* Navigation Items */}
                   <div className="p-2">
                     <DropdownMenuItem
                       className="flex items-center gap-3 rounded-lg p-3"
@@ -410,16 +444,13 @@ const MainLayout = ({
                       <Route className="h-4 w-4 text-gray-500" />
                       <span>Integrations</span>
                     </DropdownMenuItem>
-
                     <DropdownMenuItem className="flex items-center gap-3 rounded-lg p-3">
                       <span>Add another account</span>
                     </DropdownMenuItem>
-
                     <DropdownMenuItem className="flex items-center gap-3 rounded-lg p-3">
                       <LogOut className="h-4 w-4 text-gray-500" />
                       <span>Log out</span>
                     </DropdownMenuItem>
-
                     <DropdownMenuItem className="flex items-center gap-3 rounded-lg p-3">
                       <Monitor className="h-4 w-4 text-gray-500" />
                       <span>Get Mac app</span>
@@ -427,24 +458,11 @@ const MainLayout = ({
                   </div>
                 </DropdownMenuContent>
               </DropdownMenu>
-
-              {/* Collapse Arrow - Only visible on hover */}
               <SidebarCollapseButton className="absolute -right-2 top-1/2 -translate-y-1/2" />
             </div>
 
-            {/* Search */}
-            <div className="mb-4 px-3">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                <Input
-                  placeholder="Search..."
-                  className="h-8 border-0 bg-gray-50 pl-9 text-sm text-gray-700 placeholder-gray-500 focus-visible:ring-1 focus-visible:ring-gray-300"
-                />
-              </div>
-            </div>
-
             <nav className="flex-1 space-y-1 px-3">
-              {/* Main Navigation (Home, Dashboard, Apollo Search, & Automations) */}
+              <ActionSearchBar />
               {mainNavItems.map((item) => (
                 <SidebarLink
                   key={item.href}
@@ -456,8 +474,6 @@ const MainLayout = ({
                   } transition-colors duration-150`}
                 />
               ))}
-
-              {/* Retention Section */}
               <div className="pt-4">
                 <Collapsible defaultOpen className="group/collapsible">
                   <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm font-medium text-gray-600 transition-colors duration-150 hover:bg-gray-50 hover:text-gray-800">
@@ -479,8 +495,6 @@ const MainLayout = ({
                   </CollapsibleContent>
                 </Collapsible>
               </div>
-
-              {/* Prospecting Section */}
               <div className="pt-4">
                 <Collapsible defaultOpen className="group/collapsible">
                   <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm font-medium text-gray-600 transition-colors duration-150 hover:bg-gray-50 hover:text-gray-800">
@@ -502,8 +516,6 @@ const MainLayout = ({
                   </CollapsibleContent>
                 </Collapsible>
               </div>
-
-              {/* Dialer Section */}
               <div className="pt-4">
                 <Collapsible defaultOpen className="group/collapsible">
                   <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm font-medium text-gray-600 transition-colors duration-150 hover:bg-gray-50 hover:text-gray-800">
@@ -525,8 +537,6 @@ const MainLayout = ({
                   </CollapsibleContent>
                 </Collapsible>
               </div>
-
-              {/* Standalone Items */}
               {standaloneItems.map((item) => (
                 <SidebarLink
                   key={item.href}
@@ -544,29 +554,39 @@ const MainLayout = ({
       )}
 
       <div
-        className={`flex flex-1 flex-col overflow-y-auto bg-gray-50 ${hideSidebar ? "w-full" : ""}`}
+        className={`flex flex-1 flex-col overflow-y-auto bg-white ${
+          hideSidebar ? "w-full" : ""
+        }`}
       >
-        {activeTab !== "home" && !hideSidebar && (
-          <Header
-            title={
-              activeTab === "apollo-search"
-                ? "Apollo Search"
-                : activeTab.charAt(0).toUpperCase() +
-                  activeTab.slice(1).replace("-", " ")
-            }
-          />
-        )}
         <main
-          className={`flex-1 ${activeTab === "home" && !hideSidebar ? "p-0" : "p-4 md:p-6"} bg-gray-50`}
+          className={`flex-1 ${
+            activeTab === "home" && !hideSidebar ? "p-0" : "p-4 md:p-6"
+          } bg-white`}
         >
           {hideSidebar ? children : renderContent()}
         </main>
 
-        {/* Expandable Chat - Only show when not on home or settings page and sidebar is visible */}
         {activeTab !== "home" && activeTab !== "settings" && !hideSidebar && (
-          <ExpandableChat position="bottom-right" size="md">
-            <ChatInterface />
-          </ExpandableChat>
+          // FIX: Removed the extra nested div with the same ref
+          <div ref={chatRef}>
+            <ExpandableChat position="bottom-right" size="md">
+              {/* FIX: Removed the duplicated ChatBot component */}
+              <ChatBot
+                brandConfig={unitedCapitalSourceConfig}
+                welcomeMessage={ucsWelcomeMessage}
+                helpTopics={ucsHelpTopics}
+                model="llama3-70b-8192"
+                maxTokens={1024}
+                botName="United Capital Source Advisor"
+                botAvatarUrl="/chatbot/uniteccap_icon.webp"
+                applicationUrl="https://www.unitedcapitalsource.com/small-business-loans/"
+                userMessageClassName={""}
+                botMessageClassName={""}
+                inputPlaceholder={""}
+                sendButtonClassName={""}
+              />
+            </ExpandableChat>
+          </div>
         )}
       </div>
     </div>

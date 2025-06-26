@@ -23,7 +23,8 @@ import {
   Edit,
 } from "lucide-react";
 import type { OtfContactLog, OtfClient } from "@/types/otf";
-import { generateSalesScript, generateKeyTalkingPoints, generateScriptEdits } from "@/lib/actions";
+import { generateKeyTalkingPoints, generateScriptEdits, generateSalesScript } from "../../lib/actions/prompt_actions";
+
 
 // Define suggestion type
 interface ScriptSuggestion {
@@ -199,7 +200,7 @@ export default function ScriptModal({
   const fetchTalkingPoints = useCallback(async (scriptToAnalyze: string) => {
     if (!scriptToAnalyze || scriptToAnalyze.trim().length < 20) {
       setTalkingPoints([]);
-      setIsGeneratingPoints(true);
+      setIsGeneratingPoints(false);
       setPointsError(null);
       return;
     }
@@ -475,13 +476,13 @@ export default function ScriptModal({
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
         <Dialog.Panel className="bg-white rounded-lg shadow-xl w-full max-w-4xl p-0 relative max-h-[90vh] overflow-hidden flex flex-col">
           {/* Header */}
-          <div className="p-4 bg-sky-50 border-b border-sky-100 flex justify-between items-center sticky top-0 z-10">
+          <div className="p-4 bg-orange-50 border-b border-orange-100 flex justify-between items-center sticky top-0 z-10">
             <Dialog.Title className="text-xl font-semibold text-gray-900">
               Client Communication Script
             </Dialog.Title>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-sky-500 rounded"
+              className="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500 rounded"
             >
               <X size={24} />
             </button>
@@ -493,9 +494,9 @@ export default function ScriptModal({
               {/* Client Information Panel */}
               <div className="lg:col-span-1">
                 <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden h-full flex flex-col">
-                  <div className="bg-gradient-to-r from-sky-50 to-sky-100 p-4 border-b border-gray-200">
+                  <div className="bg-gradient-to-r from-orange-50 to-orange-100 p-4 border-b border-gray-200">
                     <h3 className="flex items-center text-lg font-semibold text-gray-800">
-                      <User className="h-5 w-5 mr-2 text-sky-600" />
+                      <User className="h-5 w-5 mr-2 text-orange-600" />
                       <span>{firstName} {lastName}</span>
                     </h3>
                     <p className="text-sm text-gray-600">
@@ -512,16 +513,16 @@ export default function ScriptModal({
                       <div className="grid grid-cols-1 gap-2">
                         {client.phone && (
                           <div className="flex items-center group">
-                            <Phone className="h-4 w-4 mr-2 text-gray-400 group-hover:text-sky-600 transition-colors" />
-                            <a href={`tel:${client.phone}`} className="text-sm text-gray-700 hover:text-sky-600 hover:underline">
+                            <Phone className="h-4 w-4 mr-2 text-gray-400 group-hover:text-orange-600 transition-colors" />
+                            <a href={`tel:${client.phone}`} className="text-sm text-gray-700 hover:text-orange-600 hover:underline">
                               {client.phone}
                             </a>
                           </div>
                         )}
                         {client.email && (
                           <div className="flex items-center group">
-                            <Mail className="h-4 w-4 mr-2 text-gray-400 group-hover:text-sky-600 transition-colors" />
-                             <a href={`mailto:${client.email}`} className="text-sm text-gray-700 hover:text-sky-600 hover:underline truncate" title={client.email}>
+                            <Mail className="h-4 w-4 mr-2 text-gray-400 group-hover:text-orange-600 transition-colors" />
+                             <a href={`mailto:${client.email}`} className="text-sm text-gray-700 hover:text-orange-600 hover:underline truncate" title={client.email}>
                               {client.email}
                             </a>
                           </div>
@@ -598,12 +599,12 @@ export default function ScriptModal({
                           className="flex items-center justify-between cursor-pointer group"
                           onClick={() => setExpandedLogs(!expandedLogs)}
                         >
-                          <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1 group-hover:text-sky-600 transition-colors">
+                          <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1 group-hover:text-orange-600 transition-colors">
                             <MessageSquare className="h-4 w-4" />
                             Contact History ({contactLogs.length})
                           </h4>
                           <ChevronRight
-                            className={`h-4 w-4 text-gray-400 transition-transform group-hover:text-sky-600 ${
+                            className={`h-4 w-4 text-gray-400 transition-transform group-hover:text-orange-600 ${
                               expandedLogs ? "rotate-90" : ""
                             }`}
                           />
@@ -645,31 +646,31 @@ export default function ScriptModal({
                         className="flex items-center justify-between cursor-pointer group"
                         onClick={() => setExpandedSuggestions(!expandedSuggestions)}
                       >
-                        <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1 group-hover:text-sky-600 transition-colors">
-                          <Sparkles className="h-4 w-4 text-sky-500" />
+                        <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1 group-hover:text-orange-600 transition-colors">
+                          <Sparkles className="h-4 w-4 text-orange-500" />
                           AI Script Suggestions
-                          {isGeneratingSuggestions && <Loader2 className="h-3 w-3 ml-1 animate-spin text-sky-500" />}
+                          {isGeneratingSuggestions && <Loader2 className="h-3 w-3 ml-1 animate-spin text-orange-500" />}
                         </h4>
                         <ChevronRight
-                          className={`h-4 w-4 text-gray-400 transition-transform group-hover:text-sky-600 ${
+                          className={`h-4 w-4 text-gray-400 transition-transform group-hover:text-orange-600 ${
                             expandedSuggestions ? "rotate-90" : ""
                           }`}
                         />
                       </div>
 
                       {expandedSuggestions && (
-                        <div className="flex-grow overflow-y-auto pr-2 mt-2 border-l-2 border-sky-100 pl-3 space-y-3" style={{ minHeight: '200px' }}>
+                        <div className="flex-grow overflow-y-auto pr-2 mt-2 border-l-2 border-orange-100 pl-3 space-y-3" style={{ minHeight: '200px' }}>
                           {isGeneratingSuggestions ? (
                             <div className="space-y-2 py-2">
-                              <div className="h-3 bg-sky-50 rounded w-3/4 animate-pulse"></div>
-                              <div className="h-3 bg-sky-50 rounded w-5/6 animate-pulse"></div>
-                              <div className="h-3 bg-sky-50 rounded w-1/2 animate-pulse"></div>
+                              <div className="h-3 bg-orange-50 rounded w-3/4 animate-pulse"></div>
+                              <div className="h-3 bg-orange-50 rounded w-5/6 animate-pulse"></div>
+                              <div className="h-3 bg-orange-50 rounded w-1/2 animate-pulse"></div>
                             </div>
                           ) : scriptSuggestions.length > 0 ? (
                             scriptSuggestions.map((suggestion, index) => (
                               <div 
                                 key={index} 
-                                className="py-2 relative group cursor-pointer hover:bg-sky-50 rounded px-2 transition-colors"
+                                className="py-2 relative group cursor-pointer hover:bg-orange-50 rounded px-2 transition-colors"
                                 onClick={() => applySuggestion(suggestion)}
                                 onMouseEnter={() => {
                                   // Capture current textarea dimensions before switching views
@@ -687,7 +688,7 @@ export default function ScriptModal({
                               >
                                 <div className="flex items-start mb-0.5 justify-between">
                                   <div className="flex items-center">
-                                    <Edit className="h-3.5 w-3.5 mr-1.5 text-sky-600 flex-shrink-0" />
+                                    <Edit className="h-3.5 w-3.5 mr-1.5 text-orange-600 flex-shrink-0" />
                                     <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${
                                       suggestion.type === 'tone' ? 'bg-blue-50 text-blue-700' :
                                       suggestion.type === 'clarity' ? 'bg-green-50 text-green-700' :
@@ -697,11 +698,11 @@ export default function ScriptModal({
                                       {suggestion.type.charAt(0).toUpperCase() + suggestion.type.slice(1)}
                                     </span>
                                   </div>
-                                  <span className="opacity-0 group-hover:opacity-100 text-xs text-sky-600 bg-sky-50 px-1.5 py-0.5 rounded transition-opacity">
+                                  <span className="opacity-0 group-hover:opacity-100 text-xs text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded transition-opacity">
                                     Apply
                                   </span>
                                 </div>
-                                <p className="text-xs text-gray-700 leading-relaxed border-l-2 border-sky-200 pl-2 ml-1 mt-1.5">
+                                <p className="text-xs text-gray-700 leading-relaxed border-l-2 border-orange-200 pl-2 ml-1 mt-1.5">
                                   "{suggestion.suggested}"
                                 </p>
                                 {suggestion.reason && (
@@ -709,7 +710,7 @@ export default function ScriptModal({
                                     {suggestion.reason}
                                   </p>
                                 )}
-                                {index < scriptSuggestions.length - 1 && <hr className="mt-2 border-sky-100" />}
+                                {index < scriptSuggestions.length - 1 && <hr className="mt-2 border-orange-100" />}
                               </div>
                             ))
                           ) : (
@@ -742,7 +743,7 @@ export default function ScriptModal({
                       <span className={`px-2.5 py-1 text-xs font-medium rounded border ${
                         client.membershipType === 'Prospect'
                           ? 'bg-blue-50 text-blue-700 border-blue-200'
-                          : 'bg-sky-50 text-sky-700 border-sky-200'
+                          : 'bg-orange-50 text-orange-700 border-orange-200'
                       }`}>
                         {client.membershipType}
                       </span>
@@ -757,7 +758,7 @@ export default function ScriptModal({
                           onClick={() => handleTabChange("call")}
                           className={`whitespace-nowrap pb-3 px-1 border-b-2 flex items-center text-sm font-medium transition-colors duration-150 ease-in-out ${
                             activeTab === "call"
-                              ? "border-sky-500 text-sky-600"
+                              ? "border-orange-500 text-orange-600"
                               : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                           }`}
                           aria-current={activeTab === "call" ? "page" : undefined}
@@ -769,7 +770,7 @@ export default function ScriptModal({
                           onClick={() => handleTabChange("email")}
                            className={`whitespace-nowrap pb-3 px-1 border-b-2 flex items-center text-sm font-medium transition-colors duration-150 ease-in-out ${
                             activeTab === "email"
-                              ? "border-sky-500 text-sky-600"
+                              ? "border-orange-500 text-orange-600"
                               : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                           }`}
                           aria-current={activeTab === "email" ? "page" : undefined}
@@ -781,19 +782,19 @@ export default function ScriptModal({
                     </div>
 
                     {/* Key Talking Points Section */}
-                    <div className="bg-gradient-to-r from-sky-50 to-sky-100 p-4 rounded-lg border border-sky-100 mb-5 shadow-sm">
-                       <h4 className="text-sm font-semibold text-sky-800 mb-3 flex items-center">
-                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-sky-600" viewBox="0 0 20 20" fill="currentColor">
+                    <div className="bg-gradient-to-r from-orange-50 to-amber-50 p-4 rounded-lg border border-orange-100 mb-5 shadow-sm">
+                       <h4 className="text-sm font-semibold text-orange-800 mb-3 flex items-center">
+                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-orange-600" viewBox="0 0 20 20" fill="currentColor">
                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                          </svg>
                          Key Talking Points
-                         {isGeneratingPoints && <Loader2 className="h-4 w-4 ml-2 animate-spin text-sky-500" />}
+                         {isGeneratingPoints && <Loader2 className="h-4 w-4 ml-2 animate-spin text-orange-500" />}
                       </h4>
                       {isGeneratingPoints ? (
                         <div className="space-y-2">
-                          <div className="h-3 bg-sky-100 rounded w-3/4 animate-pulse"></div>
-                          <div className="h-3 bg-sky-100 rounded w-5/6 animate-pulse"></div>
-                          <div className="h-3 bg-sky-100 rounded w-1/2 animate-pulse"></div>
+                          <div className="h-3 bg-orange-100 rounded w-3/4 animate-pulse"></div>
+                          <div className="h-3 bg-orange-100 rounded w-5/6 animate-pulse"></div>
+                          <div className="h-3 bg-orange-100 rounded w-1/2 animate-pulse"></div>
                         </div>
                       ) : pointsError ? (
                          <div className="flex items-center text-sm text-red-700 bg-red-100 p-3 rounded border border-red-200">
@@ -804,7 +805,7 @@ export default function ScriptModal({
                         <ul className="space-y-2">
                           {talkingPoints.map((point, pointIdx) => (
                             <li key={pointIdx} className="flex items-start">
-                              <Check className="h-4 w-4 mr-2 mt-0.5 text-sky-500 flex-shrink-0" />
+                              <Check className="h-4 w-4 mr-2 mt-0.5 text-orange-500 flex-shrink-0" />
                               <span className="text-sm text-gray-700">{point}</span>
                             </li>
                           ))}
@@ -845,7 +846,7 @@ export default function ScriptModal({
                           <div className="relative min-h-[200px]">
                             <button
                               onClick={handleCopyToClipboard}
-                              className="absolute top-0 right-0 mt-1 mr-1 p-1.5 text-gray-400 hover:text-sky-600 hover:bg-sky-100 rounded-full transition-colors duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-sky-300 z-10"
+                              className="absolute top-0 right-0 mt-1 mr-1 p-1.5 text-gray-400 hover:text-orange-600 hover:bg-orange-100 rounded-full transition-colors duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-orange-300 z-10"
                               title="Copy script"
                             >
                               {isCopied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
@@ -881,7 +882,7 @@ export default function ScriptModal({
                                     return (
                                       <>
                                         <span className="whitespace-pre-wrap">{beforeText}</span>
-                                        <span className="whitespace-pre-wrap bg-sky-100 border-b-2 border-sky-400">{highlightedText}</span>
+                                        <span className="whitespace-pre-wrap bg-orange-100 border-b-2 border-orange-400">{highlightedText}</span>
                                         <span className="whitespace-pre-wrap">{afterText}</span>
                                       </>
                                     );
@@ -901,7 +902,7 @@ export default function ScriptModal({
                       <div className="mt-3 flex justify-end">
                         <button
                           onClick={handleSaveScript}
-                          className="px-3 py-1.5 bg-sky-100 text-sky-700 hover:bg-sky-200 rounded-md text-sm font-medium transition-colors duration-150 flex items-center"
+                          className="px-3 py-1.5 bg-orange-100 text-orange-700 hover:bg-orange-200 rounded-md text-sm font-medium transition-colors duration-150 flex items-center"
                         >
                           {isSaved ? (
                             <>

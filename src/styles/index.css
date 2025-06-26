@@ -27,6 +27,10 @@ html {
     font-family: "Söhne", "Helvetica Neue", Helvetica, Arial, sans-serif;
     @apply w-full bg-transparent;
   }
+  .dot-pattern {
+    background-image: radial-gradient(circle, rgba(0,0,0,0.03) 0.5px, transparent 0.5px);
+    background-size: 12px 12px;
+}
 
 @layer base {
   :root {
@@ -115,7 +119,17 @@ html {
   .animate-fade-in {
     animation: fade-in 0.8s ease-out;
   }
-  
+  @keyframes subtle-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
   /* Subtle glow animation with muted colors */
   @keyframes glow {
     0% {

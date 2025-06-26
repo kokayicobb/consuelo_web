@@ -7,6 +7,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import Analytics from '@/components/Analytics'
 import { Providers } from '@/components/providers';
 import { AuthProvider } from '@/lib/auth/auth-provider';
+import { Toaster } from '@/components/ui/sonner';
 
 export default function RootLayout({
   children,
@@ -21,8 +22,10 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
       </head>
       <body> 
+        
       <AuthProvider>
         <Providers>
+        <Toaster /> 
           <ClientLayout>{children}</ClientLayout>
           <Analytics />
           <SpeedInsights />

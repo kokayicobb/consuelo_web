@@ -121,7 +121,7 @@ export const DesktopSidebar = ({
             exit={{ width: 0, opacity: 0 }}
             transition={{ duration: 0.2, ease: "easeInOut" }}
             className={cn(
-              "h-full hidden md:flex md:flex-col bg-white border-r border-gray-200 flex-shrink-0 relative group overflow-hidden",
+              "h-full hidden md:flex md:flex-col bg-neutral-50 border-r border-gray-200 flex-shrink-0 relative group overflow-hidden",
               className,
             )}
             {...props}
@@ -143,7 +143,7 @@ export const DesktopSidebar = ({
           >
             <button
               onClick={() => setOpen(true)}
-              className="h-8 w-6 bg-white border border-gray-200 shadow-sm hover:bg-gray-50 rounded-r-md rounded-l-none flex items-center justify-center transition-colors duration-150"
+              className="h-8 w-6 bg-neutral-50 border border-gray-200 shadow-sm hover:bg-gray-50 rounded-r-md rounded-l-none flex items-center justify-center transition-colors duration-150"
             >
               <ChevronRight size={16} className="text-gray-600" />
             </button>
@@ -164,7 +164,7 @@ export const MobileSidebar = ({
   const { open, setOpen } = useSidebar()
   return (
     <>
-      <div className={cn("h-10 px-4 py-4 flex flex-row md:hidden items-center justify-between bg-gray-50 w-full")}>
+      <div className={cn("h-10 px-4 py-4 flex flex-row md:hidden items-center justify-between bg-neutral-50 w-full")}>
         <div className="flex justify-end z-20 w-full">
           <Menu className="text-gray-700 opacity-50 cursor-pointer" onClick={() => setOpen(!open)} />
         </div>
@@ -179,7 +179,7 @@ export const MobileSidebar = ({
                 ease: "easeInOut",
               }}
               className={cn(
-                "fixed h-screen w-full inset-0 bg-white p-4 z-[100] flex flex-col justify-between",
+                "fixed h-screen w-full inset-0 bg-neutral-50 p-4 z-[100] flex flex-col justify-between",
                 className,
               )}
             >
@@ -195,36 +195,30 @@ export const MobileSidebar = ({
   )
 }
 
+// src/components/ui/sidebar.tsx
+
 export const SidebarLink = ({
   link,
   className,
   onClick,
+  isActive, // ADD THIS PROP
   ...props
 }: {
   link: Links
   className?: string
   onClick?: () => void
+  isActive?: boolean // ADD THIS PROP
   props?: LinkProps
 }) => {
-  const { open, setOpen, animate, isMobile } = useSidebar()
+  const { isMobile, setOpen } = useSidebar()
 
   const handleClick = (e: React.MouseEvent) => {
-    // Handle custom click events
-    if (onClick) {
-      onClick()
-    }
-
-    if (link?.onClick) {
-      link.onClick()
-    }
-
-    // Close mobile sidebar after clicking a link
-    if (isMobile) {
-      setOpen(false)
-    }
+    // ... (your existing click handler logic)
+    if (onClick) onClick();
+    if (link?.onClick) link.onClick();
+    if (isMobile) setOpen(false);
   }
 
-  // Add a safety check to ensure link exists
   if (!link) {
     console.error("SidebarLink: link prop is undefined")
     return null
@@ -234,8 +228,13 @@ export const SidebarLink = ({
     <Link
       href={link.href || ""}
       className={cn(
-        "flex items-center rounded-md px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150",
-        "justify-start",
+        "flex items-center rounded-md px-2 py-1.5 text-sm justify-start",
+        "transition-all duration-300 ease-out", 
+        // THIS IS THE CORE LOGIC CHANGE:
+        {
+          "bg-neutral-200 text-neutral-900 font-medium": isActive, // Active state
+          "text-neutral-700 hover:bg-neutral-200 hover:text-neutral-900 hover:font-medium": !isActive, // Default and Hover state
+        },
         className,
       )}
       onClick={handleClick}
