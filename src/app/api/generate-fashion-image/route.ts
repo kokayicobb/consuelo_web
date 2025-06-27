@@ -1,81 +1,189 @@
 // app/api/generate-fashion-image/route.js
 
-
 import { NextResponse } from 'next/server';
 export const runtime = 'edge';
 
-// Helper function to build enhanced fashion prompt
-function buildFashionPrompt(options) {
-  const { modelOptions, clothingOptions, backgroundOptions, customPrompt, brandGuidelines } = options;
+// Helper function to build marketing-optimized prompt
+function buildMarketingPrompt(options) {
+  const { 
+    modelOptions, 
+    clothingOptions, 
+    backgroundOptions, 
+    customPrompt, 
+    brandGuidelines,
+    marketingOptions,
+    selectedPlatforms,
+    campaignType,
+    marketingStyle 
+  } = options;
   
-  // Base photography settings
-  let prompt = "Professional fashion photography, high-end magazine quality, ";
+  // Base prompt for social media marketing
+  let prompt = "High-quality social media marketing photography, viral content style, ";
   
-  // Add model specifications
-  if (modelOptions) {
-    if (modelOptions.gender) {
-      prompt += `${modelOptions.gender} model, `;
+  // Add platform-specific optimization
+  if (selectedPlatforms && selectedPlatforms.length > 0) {
+    if (selectedPlatforms.includes('instagram') || selectedPlatforms.includes('instagram-story')) {
+      prompt += "Instagram-worthy aesthetic, highly engaging visual, ";
     }
-    if (modelOptions.ethnicity && modelOptions.ethnicity !== "") {
-      prompt += `${modelOptions.ethnicity} ethnicity, `;
+    if (selectedPlatforms.includes('linkedin')) {
+      prompt += "professional business context, corporate polish, ";
     }
-    if (modelOptions.pose) {
-      prompt += `in ${modelOptions.pose} pose, `;
+    if (selectedPlatforms.includes('tiktok')) {
+      prompt += "Gen-Z appeal, trending style, dynamic energy, ";
     }
   }
   
-  // Add clothing specifications
-  if (clothingOptions) {
+  // Marketing style application
+  if (marketingStyle) {
+    switch(marketingStyle) {
+      case 'authentic':
+        prompt += "authentic and relatable vibe, real people energy, genuine emotion, ";
+        break;
+      case 'aspirational':
+        prompt += "aspirational lifestyle, premium quality, luxury feel, ";
+        break;
+      case 'minimalist':
+        prompt += "clean minimalist aesthetic, negative space, sophisticated simplicity, ";
+        break;
+      case 'bold':
+        prompt += "bold eye-catching composition, vibrant colors, high impact visual, ";
+        break;
+      case 'storytelling':
+        prompt += "narrative-driven scene, emotional connection, story elements, ";
+        break;
+      case 'ugc':
+        prompt += "user-generated content style, authentic casual feel, smartphone aesthetic, ";
+        break;
+    }
+  }
+  
+  // Model specifications for marketing
+  if (modelOptions) {
+    prompt += `${modelOptions.gender} model`;
+    
+    if (modelOptions.age) {
+      prompt += ` age ${modelOptions.age}`;
+    }
+    
+    if (modelOptions.ethnicity && modelOptions.ethnicity !== "diverse") {
+      prompt += `, ${modelOptions.ethnicity} ethnicity`;
+    } else {
+      prompt += ", diverse representation";
+    }
+    
+    if (modelOptions.expression) {
+      prompt += `, ${modelOptions.expression}`;
+    }
+    
+    if (modelOptions.pose) {
+      prompt += `, ${modelOptions.pose} pose`;
+    }
+    
+    prompt += ", ";
+  }
+  
+  // Clothing with marketing focus
+  if (clothingOptions && clothingOptions.type) {
     prompt += "wearing ";
     
-    if (clothingOptions.color && clothingOptions.color !== "") {
+    if (clothingOptions.brand) {
+      prompt += `${clothingOptions.brand} branded `;
+    }
+    
+    if (clothingOptions.season) {
+      prompt += `${clothingOptions.season} `;
+    }
+    
+    if (clothingOptions.color) {
       prompt += `${clothingOptions.color} `;
     }
     
-    if (clothingOptions.material && clothingOptions.material !== "") {
-      prompt += `${clothingOptions.material} `;
+    prompt += `${clothingOptions.type}`;
+    
+    if (clothingOptions.style) {
+      prompt += ` in ${clothingOptions.style} style`;
     }
     
-    if (clothingOptions.type && clothingOptions.type !== "") {
-      prompt += `${clothingOptions.type} `;
-    } else {
-      prompt += "clothing ";
+    prompt += ", product clearly visible and appealing, ";
+  }
+  
+  // Background and environment for marketing
+  if (backgroundOptions) {
+    if (backgroundOptions.setting) {
+      prompt += `${backgroundOptions.setting}, `;
     }
     
-    if (clothingOptions.style && clothingOptions.style !== "") {
-      prompt += `in ${clothingOptions.style} style, `;
+    if (backgroundOptions.mood) {
+      prompt += `${backgroundOptions.mood} lighting and atmosphere, `;
     }
   }
   
-  // Add background specification
-  if (backgroundOptions && backgroundOptions.setting) {
-    prompt += `${backgroundOptions.setting}, `;
+  // Campaign-specific elements
+  if (campaignType) {
+    switch(campaignType) {
+      case 'product-launch':
+        prompt += "new product reveal excitement, fresh and innovative feel, ";
+        break;
+      case 'seasonal':
+        prompt += "seasonal campaign mood, timely and relevant, ";
+        break;
+      case 'brand-awareness':
+        prompt += "strong brand presence, memorable visual impact, ";
+        break;
+      case 'user-generated':
+        prompt += "authentic user-generated style, relatable and real, ";
+        break;
+      case 'influencer':
+        prompt += "influencer marketing aesthetic, aspirational yet approachable, ";
+        break;
+      case 'sale-promotion':
+        prompt += "promotional energy, urgency and excitement, ";
+        break;
+    }
   }
   
-  // Add lighting and photography style
-  prompt += "professional studio lighting, soft shadows, detailed fabric texture, ";
+  // Marketing-specific requirements
+  prompt += "scroll-stopping visual impact, thumb-stopping content, ";
+  prompt += "optimized for social media engagement, shareable and memorable, ";
+  prompt += "current trends and viral aesthetics, ";
   
-  // Add brand guidelines if provided
+  // Target audience optimization
+  if (marketingOptions?.targetAudience) {
+    prompt += `appealing to ${marketingOptions.targetAudience}, `;
+  }
+  
+  // Brand tone
+  if (marketingOptions?.brandTone) {
+    prompt += `${marketingOptions.brandTone} brand personality, `;
+  }
+  
+  // Brand guidelines
   if (brandGuidelines && brandGuidelines.trim() !== "") {
     prompt += `${brandGuidelines}, `;
   }
   
-  // Add custom prompt if provided
+  // Custom prompt additions
   if (customPrompt && customPrompt.trim() !== "") {
     prompt += `${customPrompt}, `;
   }
   
-  // Add final quality parameters
-  prompt += "8k ultra detailed, professional color grading, sharp focus, fashion magazine quality";
+  // Technical quality for marketing
+  prompt += "professional photography, perfect lighting, sharp focus, ";
+  prompt += "high resolution for all screen sizes, mobile-optimized composition, ";
+  prompt += "commercially viable, brand-safe content, inclusive representation";
   
   return prompt;
 }
 
-// Build negative prompt to avoid common fashion AI generation issues
-function buildNegativePrompt() {
-  return "distorted clothing, deformed body, unrealistic proportions, extra limbs, " +
-    "missing limbs, floating limbs, disconnected limbs, malformed hands, extra fingers, " +
-    "missing fingers, poorly drawn face, blurry, low quality, disfigured, duplicate clothing";
+// Build negative prompt for marketing content
+function buildMarketingNegativePrompt() {
+  return "low quality, amateur photography, poor lighting, blurry, pixelated, " +
+    "unprofessional appearance, messy background, distracting elements, " +
+    "outdated style, unflattering angles, poor composition, " +
+    "inappropriate content, offensive imagery, brand-unsafe elements, " +
+    "distorted proportions, unrealistic body standards, " +
+    "low engagement potential, dated aesthetics, poor color grading, " +
+    "stock photo feel, generic composition, forgettable imagery";
 }
 
 export async function POST(request) {
@@ -91,34 +199,59 @@ export async function POST(request) {
 
     // Parse request data
     const requestData = await request.json();
-    console.log("Received request data:", requestData);
+    console.log("Received marketing request data:", requestData);
     
-    // Build enhanced fashion prompt
-    const enhancedPrompt = buildFashionPrompt({
+    // Build marketing-optimized prompt
+    const marketingPrompt = buildMarketingPrompt({
       modelOptions: requestData.modelOptions,
       clothingOptions: requestData.clothingOptions,
       backgroundOptions: requestData.backgroundOptions,
       customPrompt: requestData.customPrompt,
-      brandGuidelines: requestData.brandGuidelines
+      brandGuidelines: requestData.brandGuidelines,
+      marketingOptions: requestData.marketingOptions,
+      selectedPlatforms: requestData.selectedPlatforms,
+      campaignType: requestData.campaignType,
+      marketingStyle: requestData.marketingStyle
     });
     
-    const negativePrompt = buildNegativePrompt();
-    console.log("Generated fashion prompt:", enhancedPrompt);
+    const negativePrompt = buildMarketingNegativePrompt();
+    console.log("Generated marketing prompt:", marketingPrompt);
+    
+    // Determine aspect ratio based on primary platform
+    let aspectRatio = '1:1'; // Default for Instagram
+    if (requestData.selectedPlatforms && requestData.selectedPlatforms.length > 0) {
+      const primaryPlatform = requestData.selectedPlatforms[0];
+      switch(primaryPlatform) {
+        case 'instagram-story':
+        case 'tiktok':
+          aspectRatio = '9:16';
+          break;
+        case 'facebook':
+        case 'linkedin':
+          aspectRatio = '16:9';
+          break;
+        case 'twitter':
+          aspectRatio = '16:9';
+          break;
+        default:
+          aspectRatio = '1:1';
+      }
+    }
     
     // Create form data for the Stability API request
     const formData = new FormData();
-    formData.append('prompt', enhancedPrompt);
+    formData.append('prompt', marketingPrompt);
     formData.append('negative_prompt', negativePrompt);
-    formData.append('aspect_ratio', '2:3'); // Better for fashion/model photos
+    formData.append('aspect_ratio', aspectRatio);
     formData.append('output_format', 'webp');
     formData.append('style_preset', 'photographic');
     
-    // Make sure there's a file entry (some implementations require this)
+    // Add empty blob (required by some implementations)
     const emptyBlob = new Blob([''], { type: 'text/plain' });
     formData.append('none', emptyBlob);
     
     // Generate the initial image
-    console.log("Calling Stability API for initial image generation...");
+    console.log("Calling Stability API for marketing content generation...");
     
     const generationResponse = await fetch('https://api.stability.ai/v2beta/stable-image/generate/ultra', {
       method: 'POST',
@@ -163,28 +296,34 @@ export async function POST(request) {
       );
     }
     
-    // Return the model data along with the image for the background removal step
+    // Return the model data along with the image
     const modelData = {
       modelOptions: requestData.modelOptions,
       clothingOptions: requestData.clothingOptions,
       backgroundOptions: requestData.backgroundOptions,
       customPrompt: requestData.customPrompt,
       brandGuidelines: requestData.brandGuidelines,
-      prompt: enhancedPrompt
+      marketingOptions: requestData.marketingOptions,
+      selectedPlatforms: requestData.selectedPlatforms,
+      campaignType: requestData.campaignType,
+      marketingStyle: requestData.marketingStyle,
+      prompt: marketingPrompt,
+      aspectRatio: aspectRatio
     };
     
     // Return the image data to the client
     return NextResponse.json({
       imageUrl: `data:image/webp;base64,${imageBase64}`,
       requiresBackgroundRemoval: requestData.backgroundOptions?.remove === true,
-      modelData: modelData
+      modelData: modelData,
+      prompt: marketingPrompt
     });
     
   } catch (error) {
-    console.error('General error in image generation endpoint:', error);
+    console.error('General error in marketing image generation endpoint:', error);
     
     return NextResponse.json(
-      { error: 'Failed to generate image: ' + error.message },
+      { error: 'Failed to generate marketing content: ' + error.message },
       { status: 500 }
     );
   }
