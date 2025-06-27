@@ -37,7 +37,9 @@ import { formatDistanceToNow } from "date-fns";
 import type { Flow } from "../../../lib/automations/types";
 import AutomationEditor from "./automation-editor";
 import InspirationSection from "./home-sections/inspiration-section";
+
 import ApolloSearchComponent from "../app-views/apollo-search-component";
+
 
 
 // Template interface for CRM-focused templates
