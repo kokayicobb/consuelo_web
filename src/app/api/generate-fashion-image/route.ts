@@ -320,7 +320,7 @@ export async function POST(request) {
     });
     
   } catch (error) {
-    console.error('General error in marketing image generation endpoint:', error);
+    console.error('General error in marketing image generation  endpoint:', error);
     
     return NextResponse.json(
       { error: 'Failed to generate marketing content: ' + error.message },
