@@ -70,6 +70,7 @@ import {
 } from '@heroicons/react/24/solid'
 import ApolloSearchComponent from "./app-views/apollo-search-component"
 import dynamic from "next/dynamic"
+import ModelGenerationContent from "@/components/Dashboard/model-generation-content"
 
 // Dynamically import to avoid SSR issues with Google Maps
 const LeadGenerationSearch = dynamic(
@@ -344,7 +345,13 @@ const renderDrawerContent = () => {
     // import LeadGenerationSearch from "./app-views/LeadGenerationSearch"
     return <LeadGenerationSearch />
   }
-
+   // Add handling for Google Maps Scraper
+   if (selectedApp.id === "content-creator") {
+    // Import at the top of the file:
+    // import LeadGenerationSearch from "./app-views/LeadGenerationSearch"
+    return <ModelGenerationContent />
+  }
+//
   // Default content for other apps
   return (
     <div className="space-y-4">
