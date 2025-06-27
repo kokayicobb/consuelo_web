@@ -1,24 +1,24 @@
-"use client"
+"use client";
 
-import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
-import { useState, useEffect, useRef } from "react"
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { useState, useEffect, useRef } from "react";
 import {
   Sidebar,
   SidebarBody,
   SidebarLink,
   SidebarCollapseButton,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible"
+} from "@/components/ui/collapsible";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import {
   LayoutDashboard,
   BarChart3,
@@ -40,7 +40,7 @@ import {
   Check,
   Workflow,
   Route,
-} from "lucide-react"
+} from "lucide-react";
 import {
   ArrowsPointingOutIcon,
   ArrowsPointingInIcon,
@@ -66,41 +66,42 @@ import {
   ChartBarIcon,
   CalendarIcon,
   ChevronDoubleRightIcon,
-} from '@heroicons/react/24/solid'
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+} from "@heroicons/react/24/solid";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   ExpandableChat,
   ExpandableChatHeader,
   ExpandableChatBody,
   ExpandableChatFooter,
-} from "@/components/ui/expandable-chat"
+} from "@/components/ui/expandable-chat";
 
-import AIInsightsContent from "../tabs/ai-insights"
-import ChannelsContent from "../tabs/channels-content"
-import ChatContent from "../tabs/chat"
-import CustomersContent from "../tabs/accounts"
-import IntegrationsContent from "../tabs/integration-content"
-import InventoryContent from "../tabs/inventory-content"
-import MarketingContent from "../tabs/marketing-content"
-import SettingsContent from "../tabs/settings-content"
-import HomeContent from "../tabs/dashboard"
-import ActionSearchBar from "@/components/ui/action-search-bar"
-import ChatBot from "../components/chatbot"
-import AutomationsPage from "../tabs/automations"
+import AIInsightsContent from "../tabs/ai-insights";
+import ChannelsContent from "../tabs/channels-content";
+import ChatContent from "../tabs/chat";
+import CustomersContent from "../tabs/accounts";
+import IntegrationsContent from "../tabs/integration-content";
+import InventoryContent from "../tabs/inventory-content";
+import MarketingContent from "../tabs/marketing-content";
+import SettingsContent from "../tabs/settings-content";
+import HomeContent from "../tabs/dashboard";
+import ActionSearchBar from "@/components/ui/action-search-bar";
+import ChatBot from "../components/chatbot";
+import AutomationsPage from "../tabs/apps/automations";
+import AppsPage from "../tabs/apps";
 
 // Chat Interface Component for use with ExpandableChat
 // NOTE: This component is currently not used in MainLayout but is kept for reference.
 const ChatInterface = () => {
   const [messages, setMessages] = useState([
     { text: "Hi there! How can I help you today?", sender: "bot" },
-  ])
-  const [inputValue, setInputValue] = useState("")
+  ]);
+  const [inputValue, setInputValue] = useState("");
 
   const handleSend = () => {
-    if (inputValue.trim() === "") return
-    setMessages([...messages, { text: inputValue, sender: "user" }])
-    setInputValue("")
+    if (inputValue.trim() === "") return;
+    setMessages([...messages, { text: inputValue, sender: "user" }]);
+    setInputValue("");
     setTimeout(() => {
       setMessages((prev) => [
         ...prev,
@@ -108,15 +109,15 @@ const ChatInterface = () => {
           text: "Thanks for your message! I'll help you with that.",
           sender: "bot",
         },
-      ])
-    }, 1000)
-  }
+      ]);
+    }, 1000);
+  };
 
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
-      handleSend()
+      handleSend();
     }
-  }
+  };
 
   return (
     <>
@@ -172,72 +173,70 @@ const ChatInterface = () => {
         </div>
       </ExpandableChatFooter>
     </>
-  )
-}
+  );
+};
 
 const MainLayout = ({ children, title, hideSidebar = false }) => {
-  const [activeTab, setActiveTab] = useState("home")
-  const [sidebarOpen, setSidebarOpen] = useState(!hideSidebar)
+  const [activeTab, setActiveTab] = useState("home");
+  const [sidebarOpen, setSidebarOpen] = useState(!hideSidebar);
 
   useEffect(() => {
     const handleHashChange = () => {
-      const hash = window.location.hash.replace("#", "") || "home"
-      setActiveTab(hash)
-    }
-    handleHashChange()
-    window.addEventListener("hashchange", handleHashChange)
-    return () => window.removeEventListener("hashchange", handleHashChange)
-  }, [])
+      const hash = window.location.hash.replace("#", "") || "home";
+      setActiveTab(hash);
+    };
+    handleHashChange();
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, []);
 
   const renderContent = () => {
     switch (activeTab) {
       case "home":
-        return <ChatContent />
+        return <ChatContent />;
       case "dashboard":
-        return <HomeContent />
+        return <HomeContent />;
       case "channels":
-        return <ChannelsContent />
+        return <ChannelsContent />;
       case "inventory":
-        return <InventoryContent />
+        return <InventoryContent />;
       case "accounts":
-        return <CustomersContent />
+        return <CustomersContent />;
       case "marketing":
-        return <MarketingContent />
+        return <MarketingContent />;
       case "ai-insights":
-        return <AIInsightsContent />
+        return <AIInsightsContent />;
       case "integrations":
-        return <IntegrationsContent />
+        return <IntegrationsContent />;
       case "settings":
-        return <SettingsContent />
+        return <SettingsContent />;
       case "automations":
-        return <AutomationsPage />
+        return <AppsPage />;
       case "blank":
-        return <div className="w-full h-full bg-white"></div>
+        return <div className="h-full w-full bg-white"></div>;
       default:
-        return <HomeContent />
+        return <HomeContent />;
     }
-  }
+  };
 
   // FIX: Removed duplicated state, ref, and useEffect hook. This is the correct, single version.
-  const [isChatOpen, setIsChatOpen] = useState(false)
-  const chatRef = useRef(null)
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const chatRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (chatRef.current && !chatRef.current.contains(event.target)) {
-        setIsChatOpen(false)
+        setIsChatOpen(false);
       }
-    }
+    };
     if (isChatOpen) {
-      document.addEventListener("mousedown", handleClickOutside)
+      document.addEventListener("mousedown", handleClickOutside);
     }
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-    }
-  }, [isChatOpen])
- 
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isChatOpen]);
 
-  
   const mainNavItems = [
     {
       label: "Home",
@@ -258,7 +257,7 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
       // FIX: Removed duplicated onClick property
       onClick: () => setActiveTab("automations"),
     },
-  ]
+  ];
 
   const retentionItems = [
     {
@@ -279,7 +278,7 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
       icon: <Package size={20} className="text-gray-600" />,
       onClick: () => setActiveTab("inventory"),
     },
-  ]
+  ];
 
   const prospectingItems = [
     {
@@ -301,7 +300,7 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
       icon: <PieChart size={20} className="text-gray-600" />,
       onClick: () => setActiveTab("marketing"),
     },
-  ]
+  ];
 
   const dialerItems = [
     {
@@ -310,7 +309,7 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
       icon: <Plus size={20} className="text-gray-600" />,
       onClick: () => {}, // No functionality for now
     },
-  ]
+  ];
 
   const standaloneItems = [
     // {
@@ -319,19 +318,19 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
     //   icon: <Lightbulb size={20} className="text-gray-600" />,
     //   onClick: () => setActiveTab("ai-insights"),
     // },
-  ]
+  ];
 
   // FIX: Removed duplicated config objects and a stray closing bracket.
   const unitedCapitalSourceConfig = {
     name: "United Capital Source",
     logoUrl: "/chatbot/unitedcap.webp",
     agentAvatars: ["/path/to/agent1.jpg", "/path/to/agent2.jpg"],
-  }
+  };
 
   const ucsWelcomeMessage = {
     title: "Hi there",
     subtitle: "How can we help your business grow?",
-  }
+  };
 
   const ucsHelpTopics = [
     {
@@ -344,14 +343,13 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
     },
     {
       title: "What documents do I need to apply?",
-      question:
-        "What documents do I need to prepare for a loan application?",
+      question: "What documents do I need to prepare for a loan application?",
     },
     {
       title: "Am I eligible with my credit score?",
       question: "I'm worried about my credit score. Can I still get a loan?",
     },
-  ]
+  ];
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-neutral-50 md:flex-row">
@@ -376,7 +374,10 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
                     <ChevronDown className="ml-auto h-4 w-4 text-gray-500" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-80 p-0 bg-neutral-50" align="start">
+                <DropdownMenuContent
+                  className="w-80 bg-neutral-50 p-0"
+                  align="start"
+                >
                   <div className="border-b border-gray-100 p-4">
                     <div className="mb-4 flex items-center gap-3">
                       <div className="h-10 w-10 flex-shrink-0">
@@ -462,32 +463,32 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
               </DropdownMenu>
               <SidebarCollapseButton className="absolute -right-2 top-1/2 -translate-y-1/2" />
             </div>
-            
+
             <nav className="flex-1 space-y-1 px-3">
               <ActionSearchBar />
               {mainNavItems.map((item) => (
-  <SidebarLink
-    key={item.href}
-    link={item}
-    isActive={activeTab === item.href.replace("#", "")}
-    onTabReset={() => {
-      // Force a complete refresh of the tab state
-      const currentTab = item.href.replace("#", "")
-      
-      // Temporarily set to a different tab, then back to trigger a full re-render
-      setActiveTab("blank")
-      setTimeout(() => {
-        setActiveTab(currentTab)
-        window.scrollTo(0, 0)
-      }, 0)
-    }}
-    className={`${
-      activeTab === item.href.replace("#", "")
-        ? "bg-gray-100 font-medium text-gray-900"
-        : "text-gray-700 hover:bg-gray-50"
-    } transition-colors duration-150`}
-  />
-))}
+                <SidebarLink
+                  key={item.href}
+                  link={item}
+                  isActive={activeTab === item.href.replace("#", "")}
+                  onTabReset={() => {
+                    // Force a complete refresh of the tab state
+                    const currentTab = item.href.replace("#", "");
+
+                    // Temporarily set to a different tab, then back to trigger a full re-render
+                    setActiveTab("blank");
+                    setTimeout(() => {
+                      setActiveTab(currentTab);
+                      window.scrollTo(0, 0);
+                    }, 0);
+                  }}
+                  className={`${
+                    activeTab === item.href.replace("#", "")
+                      ? "bg-gray-100 font-medium text-gray-900"
+                      : "text-gray-700 hover:bg-gray-50"
+                  } transition-colors duration-150`}
+                />
+              ))}
               <div className="pt-4">
                 <Collapsible defaultOpen className="group/collapsible">
                   <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm font-medium text-gray-600 transition-colors duration-150 hover:bg-gray-50 hover:text-gray-800">
@@ -495,26 +496,26 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
                     <ChevronRight className="h-3 w-3 transition-transform group-data-[state=open]/collapsible:rotate-90" />
                   </CollapsibleTrigger>
                   <CollapsibleContent className="mt-1 space-y-1 pl-4">
-                  {retentionItems.map((item) => (
-  <SidebarLink
-    key={item.href}
-    link={item}
-    isActive={activeTab === item.href.replace("#", "")}
-    onTabReset={() => {
-      const currentTab = item.href.replace("#", "")
-      setActiveTab("blank")
-      setTimeout(() => {
-        setActiveTab(currentTab)
-        window.scrollTo(0, 0)
-      }, 0)
-    }}
-    className={`${
-      activeTab === item.href.replace("#", "")
-        ? "bg-gray-100 font-medium text-gray-900"
-        : "text-gray-700 hover:bg-gray-50"
-    } transition-colors duration-150`}
-  />
-))}
+                    {retentionItems.map((item) => (
+                      <SidebarLink
+                        key={item.href}
+                        link={item}
+                        isActive={activeTab === item.href.replace("#", "")}
+                        onTabReset={() => {
+                          const currentTab = item.href.replace("#", "");
+                          setActiveTab("blank");
+                          setTimeout(() => {
+                            setActiveTab(currentTab);
+                            window.scrollTo(0, 0);
+                          }, 0);
+                        }}
+                        className={`${
+                          activeTab === item.href.replace("#", "")
+                            ? "bg-gray-100 font-medium text-gray-900"
+                            : "text-gray-700 hover:bg-gray-50"
+                        } transition-colors duration-150`}
+                      />
+                    ))}
                   </CollapsibleContent>
                 </Collapsible>
               </div>
@@ -525,26 +526,26 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
                     <ChevronRight className="h-3 w-3 transition-transform group-data-[state=open]/collapsible:rotate-90" />
                   </CollapsibleTrigger>
                   <CollapsibleContent className="mt-1 space-y-1 pl-4">
-                  {prospectingItems.map((item) => (
-  <SidebarLink
-    key={item.href}
-    link={item}
-    isActive={activeTab === item.href.replace("#", "")}
-    onTabReset={() => {
-      const currentTab = item.href.replace("#", "")
-      setActiveTab("blank")
-      setTimeout(() => {
-        setActiveTab(currentTab)
-        window.scrollTo(0, 0)
-      }, 0)
-    }}
-    className={`${
-      activeTab === item.href.replace("#", "")
-        ? "bg-gray-100 font-medium text-gray-900"
-        : "text-gray-700 hover:bg-gray-50"
-    } transition-colors duration-150`}
-  />
-))}
+                    {prospectingItems.map((item) => (
+                      <SidebarLink
+                        key={item.href}
+                        link={item}
+                        isActive={activeTab === item.href.replace("#", "")}
+                        onTabReset={() => {
+                          const currentTab = item.href.replace("#", "");
+                          setActiveTab("blank");
+                          setTimeout(() => {
+                            setActiveTab(currentTab);
+                            window.scrollTo(0, 0);
+                          }, 0);
+                        }}
+                        className={`${
+                          activeTab === item.href.replace("#", "")
+                            ? "bg-gray-100 font-medium text-gray-900"
+                            : "text-gray-700 hover:bg-gray-50"
+                        } transition-colors duration-150`}
+                      />
+                    ))}
                   </CollapsibleContent>
                 </Collapsible>
               </div>
@@ -555,49 +556,49 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
                     <ChevronRight className="h-3 w-3 transition-transform group-data-[state=open]/collapsible:rotate-90" />
                   </CollapsibleTrigger>
                   <CollapsibleContent className="mt-1 space-y-1 pl-4">
-                  {dialerItems.map((item) => (
-  <SidebarLink
-    key={item.href}
-    link={item}
-    isActive={activeTab === item.href.replace("#", "")}
-    onTabReset={() => {
-      const currentTab = item.href.replace("#", "")
-      setActiveTab("blank")
-      setTimeout(() => {
-        setActiveTab(currentTab)
-        window.scrollTo(0, 0)
-      }, 0)
-    }}
-    className={`${
-      activeTab === item.href.replace("#", "")
-        ? "bg-gray-100 font-medium text-gray-900"
-        : "text-gray-700 hover:bg-gray-50"
-    } transition-colors duration-150`}
-  />
-))}
+                    {dialerItems.map((item) => (
+                      <SidebarLink
+                        key={item.href}
+                        link={item}
+                        isActive={activeTab === item.href.replace("#", "")}
+                        onTabReset={() => {
+                          const currentTab = item.href.replace("#", "");
+                          setActiveTab("blank");
+                          setTimeout(() => {
+                            setActiveTab(currentTab);
+                            window.scrollTo(0, 0);
+                          }, 0);
+                        }}
+                        className={`${
+                          activeTab === item.href.replace("#", "")
+                            ? "bg-gray-100 font-medium text-gray-900"
+                            : "text-gray-700 hover:bg-gray-50"
+                        } transition-colors duration-150`}
+                      />
+                    ))}
                   </CollapsibleContent>
                 </Collapsible>
               </div>
               {standaloneItems.map((item) => (
-  <SidebarLink
-    key={item.href}
-    link={item}
-    isActive={activeTab === item.href.replace("#", "")}
-    onTabReset={() => {
-      const currentTab = item.href.replace("#", "")
-      setActiveTab("blank")
-      setTimeout(() => {
-        setActiveTab(currentTab)
-        window.scrollTo(0, 0)
-      }, 0)
-    }}
-    className={`${
-      activeTab === item.href.replace("#", "")
-        ? "bg-gray-100 font-medium text-gray-900"
-        : "text-gray-700 hover:bg-gray-50"
-    } transition-colors duration-150`}
-  />
-))}
+                <SidebarLink
+                  key={item.href}
+                  link={item}
+                  isActive={activeTab === item.href.replace("#", "")}
+                  onTabReset={() => {
+                    const currentTab = item.href.replace("#", "");
+                    setActiveTab("blank");
+                    setTimeout(() => {
+                      setActiveTab(currentTab);
+                      window.scrollTo(0, 0);
+                    }, 0);
+                  }}
+                  className={`${
+                    activeTab === item.href.replace("#", "")
+                      ? "bg-gray-100 font-medium text-gray-900"
+                      : "text-gray-700 hover:bg-gray-50"
+                  } transition-colors duration-150`}
+                />
+              ))}
             </nav>
           </SidebarBody>
         </Sidebar>
@@ -620,7 +621,6 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
           // FIX: Removed the extra nested div with the same ref
           <div ref={chatRef}>
             <ExpandableChat position="bottom-right" size="md">
-              
               {/* FIX: Removed the duplicated ChatBot component */}
               <ChatBot
                 brandConfig={unitedCapitalSourceConfig}
@@ -641,7 +641,7 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default MainLayout
+export default MainLayout;

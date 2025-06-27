@@ -34,7 +34,7 @@ import {
   PenTool,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import type { Flow } from "../../lib/automations/types";
+import type { Flow } from "../../../lib/automations/types";
 import AutomationEditor from "./automation-editor";
 import InspirationSection from "./home-sections/inspiration-section";
 
@@ -351,13 +351,13 @@ export default function AutomationsPage() {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setShowAIAssistant(true)}
-                className="flex items-center gap-2 rounded-lg bg-transparent border-neutral-500 px-4 py-2 text-sm font-medium text-slate transition-all hover:slate-400"
+                className="text-slate hover:slate-400 flex items-center gap-2 rounded-lg border-neutral-500 bg-transparent px-4 py-2 text-sm font-medium transition-all"
               >
                 <img
-                        src="/apple-touch-icon.png"
-                        alt="Company Logo"
-                        className="h-5 w-5"
-                      />
+                  src="/apple-touch-icon.png"
+                  alt="Company Logo"
+                  className="h-5 w-5"
+                />
                 AI Assistant
               </button>
               <button
@@ -540,11 +540,11 @@ export default function AutomationsPage() {
                 })}
               </div>
             </div>
-            <InspirationSection 
-  handleCreateAutomation={handleCreateAutomation}
-  handleUseTemplate={handleUseTemplate}
-  setActiveTab={setActiveTab}
-/>
+            <InspirationSection
+              handleCreateAutomation={handleCreateAutomation}
+              handleUseTemplate={handleUseTemplate}
+              setActiveTab={setActiveTab}
+            />
 
             {/* Recent Activity using your real flows */}
             {flows.length > 0 && (
@@ -678,10 +678,10 @@ export default function AutomationsPage() {
                           {template.aiPowered && (
                             <div className="flex items-center gap-1">
                               <img
-                        src="/apple-touch-icon.png"
-                        alt="Company Logo"
-                        className="h-3 w-3"
-                      />
+                                src="/apple-touch-icon.png"
+                                alt="Company Logo"
+                                className="h-3 w-3"
+                              />
                               <span className="text-xs font-medium text-slate-600">
                                 AI
                               </span>
@@ -948,7 +948,7 @@ export default function AutomationsPage() {
 
               <div className="p-6">
                 <div className="space-y-4">
-                  <div className="rounded-lg bg-whitep-4">
+                  <div className="bg-whitep-4 rounded-lg">
                     <p className="mb-2 text-sm text-neutral-600">Try asking:</p>
                     <div className="space-y-2">
                       <button className="block w-full rounded-lg bg-white p-3 text-left transition-colors hover:bg-neutral-50">
