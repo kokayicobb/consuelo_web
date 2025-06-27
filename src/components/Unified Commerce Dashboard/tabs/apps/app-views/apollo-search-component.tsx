@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import Image from "next/image";
 import {
   Search,
   Building,
@@ -612,7 +613,7 @@ const ApolloSearchComponent = () => {
                       {/* Using original detailed card layout */}
                       <div className="flex items-start gap-3">
                         {contact.photo_url ? (
-                          <img
+                          <Image
                             src={contact.photo_url}
                             alt={contact.name}
                             className="h-12 w-12 rounded-full object-cover"

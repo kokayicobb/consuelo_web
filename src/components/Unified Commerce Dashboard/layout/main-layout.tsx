@@ -26,12 +26,14 @@ import {
   Users,
   PieChart,
   Lightbulb,
+  FilePenLine,
   Settings,
   Globe,
   MessageCircle,
   Send,
   Search,
   ChevronRight,
+  Mic,
   ChevronDown,
   UserPlus,
   Plus,
@@ -250,13 +252,7 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
       icon: <LayoutDashboard size={20} className="text-gray-600" />,
       onClick: () => setActiveTab("dashboard"),
     },
-    {
-      label: "Automations",
-      href: "#automations",
-      icon: <Workflow size={20} className="text-gray-600" />,
-      // FIX: Removed duplicated onClick property
-      onClick: () => setActiveTab("automations"),
-    },
+   
   ];
 
   const retentionItems = [
@@ -272,39 +268,61 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
       icon: <BarChart3 size={20} className="text-gray-600" />,
       onClick: () => setActiveTab("channels"),
     },
-    {
-      label: "Product Insights",
-      href: "#inventory",
-      icon: <Package size={20} className="text-gray-600" />,
-      onClick: () => setActiveTab("inventory"),
-    },
+    // {
+    //   label: "Product Insights",
+    //   href: "#inventory",
+    //   icon: <Package size={20} className="text-gray-600" />,
+    //   onClick: () => setActiveTab("inventory"),
+    // },
   ];
 
   const prospectingItems = [
     {
-      label: "Pipeline Builder",
-      href: "#pipeline-builder",
-      icon: <BarChart3 size={20} className="text-gray-600" />,
-      onClick: () => {}, // No functionality for now
-    },
-    {
-      label: "Lead Cohorts",
-      href: "#leads",
-      icon: <Users size={20} className="text-gray-600" />,
+      label: "All Apps",
+      href: "#automations",
+      icon: <Workflow size={20} className="text-gray-600" />,
       // FIX: Removed duplicated onClick property
-      onClick: () => setActiveTab("ai-insights"),
+      onClick: () => setActiveTab("automations"),
+      
     },
-    {
-      label: "Channel Insights",
-      href: "#marketing",
-      icon: <PieChart size={20} className="text-gray-600" />,
-      onClick: () => setActiveTab("marketing"),
-    },
+  
+
+
+    // {
+    //   label: "Pipeline Builder",
+    //   href: "#pipeline-builder",
+    //   icon: <BarChart3 size={20} className="text-gray-600" />,
+    //   onClick: () => {}, // No functionality for now
+    // },
+    // {
+    //   label: "Lead Cohorts",
+    //   href: "#leads",
+    //   icon: <Users size={20} className="text-gray-600" />,
+    //   // FIX: Removed duplicated onClick property
+    //   onClick: () => setActiveTab("ai-insights"),
+    // },
+    // {
+    //   label: "Channel Insights",
+    //   href: "#marketing",
+    //   icon: <PieChart size={20} className="text-gray-600" />,
+    //   onClick: () => setActiveTab("marketing"),
+    // },
   ];
 
   const dialerItems = [
     {
-      label: "Create Scripts",
+      label: "On-Call Coaching",
+      href: "#pipeline-builder",
+      icon: <Mic size={20} className="text-gray-600" />,
+      onClick: () => {}, // No functionality for now
+    },
+    {
+      label: "Draft Emails",
+      href: "#pipeline-builder",
+      icon: <FilePenLine size={20} className="text-gray-600" />,
+      onClick: () => {}, // No functionality for now
+    },  {
+      label: "Create Script",
       href: "#pipeline-builder",
       icon: <Plus size={20} className="text-gray-600" />,
       onClick: () => {}, // No functionality for now
@@ -489,6 +507,36 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
                   } transition-colors duration-150`}
                 />
               ))}
+                <div className="pt-4">
+                <Collapsible defaultOpen className="group/collapsible">
+                  <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm font-medium text-gray-600 transition-colors duration-150 hover:bg-gray-50 hover:text-gray-800">
+                    Apps
+                    <ChevronRight className="h-3 w-3 transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="mt-1 space-y-1 pl-4">
+                    {prospectingItems.map((item) => (
+                      <SidebarLink
+                        key={item.href}
+                        link={item}
+                        isActive={activeTab === item.href.replace("#", "")}
+                        onTabReset={() => {
+                          const currentTab = item.href.replace("#", "");
+                          setActiveTab("blank");
+                          setTimeout(() => {
+                            setActiveTab(currentTab);
+                            window.scrollTo(0, 0);
+                          }, 0);
+                        }}
+                        className={`${
+                          activeTab === item.href.replace("#", "")
+                            ? "bg-gray-100 font-medium text-gray-900"
+                            : "text-gray-700 hover:bg-gray-50"
+                        } transition-colors duration-150`}
+                      />
+                    ))}
+                  </CollapsibleContent>
+                </Collapsible>
+              </div>
               <div className="pt-4">
                 <Collapsible defaultOpen className="group/collapsible">
                   <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm font-medium text-gray-600 transition-colors duration-150 hover:bg-gray-50 hover:text-gray-800">
@@ -519,40 +567,11 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
                   </CollapsibleContent>
                 </Collapsible>
               </div>
+            
               <div className="pt-4">
                 <Collapsible defaultOpen className="group/collapsible">
                   <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm font-medium text-gray-600 transition-colors duration-150 hover:bg-gray-50 hover:text-gray-800">
-                    Prospecting
-                    <ChevronRight className="h-3 w-3 transition-transform group-data-[state=open]/collapsible:rotate-90" />
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="mt-1 space-y-1 pl-4">
-                    {prospectingItems.map((item) => (
-                      <SidebarLink
-                        key={item.href}
-                        link={item}
-                        isActive={activeTab === item.href.replace("#", "")}
-                        onTabReset={() => {
-                          const currentTab = item.href.replace("#", "");
-                          setActiveTab("blank");
-                          setTimeout(() => {
-                            setActiveTab(currentTab);
-                            window.scrollTo(0, 0);
-                          }, 0);
-                        }}
-                        className={`${
-                          activeTab === item.href.replace("#", "")
-                            ? "bg-gray-100 font-medium text-gray-900"
-                            : "text-gray-700 hover:bg-gray-50"
-                        } transition-colors duration-150`}
-                      />
-                    ))}
-                  </CollapsibleContent>
-                </Collapsible>
-              </div>
-              <div className="pt-4">
-                <Collapsible defaultOpen className="group/collapsible">
-                  <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm font-medium text-gray-600 transition-colors duration-150 hover:bg-gray-50 hover:text-gray-800">
-                    Dialer
+                    Contacting
                     <ChevronRight className="h-3 w-3 transition-transform group-data-[state=open]/collapsible:rotate-90" />
                   </CollapsibleTrigger>
                   <CollapsibleContent className="mt-1 space-y-1 pl-4">

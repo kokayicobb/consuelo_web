@@ -69,7 +69,23 @@ import {
   ChevronDoubleRightIcon,
 } from '@heroicons/react/24/solid'
 import ApolloSearchComponent from "./app-views/apollo-search-component"
+import dynamic from "next/dynamic"
 
+// Dynamically import to avoid SSR issues with Google Maps
+const LeadGenerationSearch = dynamic(
+  () => import("./app-views/google-maps"),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading Lead Generation...</p>
+        </div>
+      </div>
+    )
+  }
+)
 // Temporary component definitions for demo
 const Button = ({ children, variant = "default", size = "md", className = "", ...props }) => (
   <button 
@@ -312,29 +328,38 @@ export default function AppsPage() {
     setIsDrawerOpen(true)
   }
 
-  const renderDrawerContent = () => {
-    if (!selectedApp) return null
+ // In your apps.tsx file, update the renderDrawerContent function:
 
-    // Special handling for Apollo/ZoomInfo Scraper
-    if (selectedApp.id === "apollo-scraper") {
-      return <ApolloSearchComponent  />
-    }
+const renderDrawerContent = () => {
+  if (!selectedApp) return null
 
-    // Default content for other apps
-    return (
-      <div className="space-y-4">
-        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-          <p className="text-sm text-gray-600">
-            This is the {selectedApp.name} interface. The functionality is coming soon.
-          </p>
-        </div>
-        <div className="space-y-2">
-          <h4 className="font-medium text-sm">Description</h4>
-          <p className="text-sm text-gray-600">{selectedApp.description}</p>
-        </div>
-      </div>
-    )
+  // Special handling for Apollo/ZoomInfo Scraper
+  if (selectedApp.id === "apollo-scraper") {
+    return <ApolloSearchComponent />
   }
+
+  // Add handling for Google Maps Scraper
+  if (selectedApp.id === "maps-scraper") {
+    // Import at the top of the file:
+    // import LeadGenerationSearch from "./app-views/LeadGenerationSearch"
+    return <LeadGenerationSearch />
+  }
+
+  // Default content for other apps
+  return (
+    <div className="space-y-4">
+      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+        <p className="text-sm text-gray-600">
+          This is the {selectedApp.name} interface. The functionality is coming soon.
+        </p>
+      </div>
+      <div className="space-y-2">
+        <h4 className="font-medium text-sm">Description</h4>
+        <p className="text-sm text-gray-600">{selectedApp.description}</p>
+      </div>
+    </div>
+  )
+}
 
   return (
     <div className="space-y-6 bg-white min-h-screen p-8">
