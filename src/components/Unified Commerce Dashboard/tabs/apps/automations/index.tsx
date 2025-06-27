@@ -34,7 +34,7 @@ import {
   PenTool,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import type { Flow } from "../../lib/automations/types";
+import type { Flow } from "../../../lib/automations/types";
 import AutomationEditor from "./automation-editor";
 import InspirationSection from "./home-sections/inspiration-section";
 import ApolloSearchComponent from "../../components/apollo-search-component";

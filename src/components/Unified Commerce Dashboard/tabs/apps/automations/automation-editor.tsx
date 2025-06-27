@@ -9,7 +9,7 @@ import {
   TriggerType,
   ActionType,
   Integration,
-} from "../../lib/automations/integrations";
+} from "../../../lib/automations/integrations";
 
 import {
   ArrowLeft,
@@ -38,8 +38,12 @@ import {
   Flow,
   CreateFlowData,
   UpdateFlowData,
-} from "../../lib/automations/types";
-import { INTEGRATION_CONFIG_COMPONENTS, GenericTriggerConfig, GenericActionConfig } from "./components/Integrations-config";
+} from "../../../lib/automations/types";
+import {
+  INTEGRATION_CONFIG_COMPONENTS,
+  GenericTriggerConfig,
+  GenericActionConfig,
+} from "./components/Integrations-config";
 
 interface AutomationEditorProps {
   attemptId?: string | null;
@@ -68,21 +72,20 @@ interface WorkflowStep {
 // Group integrations by category for better UX
 const groupIntegrationsByCategory = (integrations: Integration[]) => {
   const grouped: Record<string, Integration[]> = {};
-  
-  integrations.forEach(integration => {
+
+  integrations.forEach((integration) => {
     if (!grouped[integration.category]) {
       grouped[integration.category] = [];
     }
     grouped[integration.category].push(integration);
   });
-  
+
   return grouped;
 };
 
 // Use the real integrations from our integrations file
 const GROUPED_TRIGGERS = groupIntegrationsByCategory(TRIGGER_INTEGRATIONS);
 const GROUPED_ACTIONS = groupIntegrationsByCategory(ACTION_INTEGRATIONS);
-
 
 export default function AutomationEditor({
   attemptId,
@@ -122,20 +125,22 @@ export default function AutomationEditor({
   useEffect(() => {
     setIsDirty(true);
   }, [automationName, description, steps]);
-const convertFlowToSteps = (flow: Flow): WorkflowStep[] => {
+  const convertFlowToSteps = (flow: Flow): WorkflowStep[] => {
     const steps: WorkflowStep[] = [];
-  
+
     // Add trigger
     const trigger = flow.version.trigger;
     const triggerIntegration = TRIGGER_INTEGRATIONS.find(
-      t => t.id === trigger.settings.triggerName || 
-          t.id === trigger.settings.pieceName + '_trigger'
+      (t) =>
+        t.id === trigger.settings.triggerName ||
+        t.id === trigger.settings.pieceName + "_trigger",
     );
-  
+
     steps.push({
       id: generateStepId(),
       type: "trigger",
-      integrationId: triggerIntegration?.id || trigger.settings.triggerName || 'webhook',
+      integrationId:
+        triggerIntegration?.id || trigger.settings.triggerName || "webhook",
       name: trigger.settings.triggerName || "webhook",
       displayName: trigger.displayName,
       description: triggerIntegration?.description,
@@ -147,19 +152,23 @@ const convertFlowToSteps = (flow: Flow): WorkflowStep[] => {
       authType: triggerIntegration?.authType,
       credentialId: trigger.settings.credentialId,
     });
-  
+
     // Add actions
     let currentAction = trigger.nextAction;
     while (currentAction) {
       const actionIntegration = ACTION_INTEGRATIONS.find(
-        a => a.id === currentAction.settings.actionName || 
-            a.id === currentAction.settings.pieceName + '_action'
+        (a) =>
+          a.id === currentAction.settings.actionName ||
+          a.id === currentAction.settings.pieceName + "_action",
       );
-  
+
       steps.push({
         id: generateStepId(),
         type: "action",
-        integrationId: actionIntegration?.id || currentAction.settings.actionName || 'webhook',
+        integrationId:
+          actionIntegration?.id ||
+          currentAction.settings.actionName ||
+          "webhook",
         name: currentAction.settings.actionName || "action",
         displayName: currentAction.displayName,
         description: actionIntegration?.description,
@@ -171,10 +180,10 @@ const convertFlowToSteps = (flow: Flow): WorkflowStep[] => {
         authType: actionIntegration?.authType,
         credentialId: currentAction.settings.credentialId,
       });
-  
+
       currentAction = currentAction.nextAction;
     }
-  
+
     return steps;
   };
   // Load existing flow
@@ -183,13 +192,13 @@ const convertFlowToSteps = (flow: Flow): WorkflowStep[] => {
     try {
       const response = await fetch(`/api/automations/flows/${id}`);
       if (!response.ok) throw new Error("Failed to load flow");
-  
+
       const result = await response.json();
       if (result.success) {
         setFlow(result.data);
         setAutomationName(result.data.version.displayName);
         setDescription(result.data.metadata?.description || "");
-  
+
         // Convert flow structure to steps
         const loadedSteps = convertFlowToSteps(result.data);
         setSteps(loadedSteps);
@@ -201,8 +210,8 @@ const convertFlowToSteps = (flow: Flow): WorkflowStep[] => {
       setIsLoading(false);
     }
   }, []); // Empty dependency array since it doesn't depend on any props or state
-  
-useEffect(() => {
+
+  useEffect(() => {
     if (flowId) {
       loadFlow(flowId);
     } else if (attemptId) {
@@ -211,21 +220,23 @@ useEffect(() => {
     }
   }, [flowId, attemptId, loadFlow]);
   // // Convert flow structure to editable steps
-  
+
   // 6. Add helper function to get integration credentials:
-const getIntegrationCredentials = async (integrationId: string) => {
-  try {
-    // TODO: Implement actual credential fetching
-    // This would call your API to get available credentials for the integration
-    const response = await fetch(`/api/automations/credentials?integration=${integrationId}`);
-    const result = await response.json();
-    return result.data || [];
-  } catch (error) {
-    console.error('Failed to fetch credentials:', error);
-    return [];
-  }
-};
-  
+  const getIntegrationCredentials = async (integrationId: string) => {
+    try {
+      // TODO: Implement actual credential fetching
+      // This would call your API to get available credentials for the integration
+      const response = await fetch(
+        `/api/automations/credentials?integration=${integrationId}`,
+      );
+      const result = await response.json();
+      return result.data || [];
+    } catch (error) {
+      console.error("Failed to fetch credentials:", error);
+      return [];
+    }
+  };
+
   // Add trigger
   const handleAddTrigger = (trigger: TriggerType) => {
     const newStep: WorkflowStep = {
@@ -242,7 +253,7 @@ const getIntegrationCredentials = async (integrationId: string) => {
       requiresAuth: trigger.requiresAuth,
       authType: trigger.authType,
     };
-  
+
     setSteps([newStep]);
     setShowTriggerPicker(false);
     setTriggerSearchTerm("");
@@ -264,7 +275,7 @@ const getIntegrationCredentials = async (integrationId: string) => {
       requiresAuth: action.requiresAuth,
       authType: action.authType,
     };
-  
+
     if (addActionAfterStepId) {
       const index = steps.findIndex((s) => s.id === addActionAfterStepId);
       const newSteps = [...steps];
@@ -273,7 +284,7 @@ const getIntegrationCredentials = async (integrationId: string) => {
     } else {
       setSteps([...steps, newStep]);
     }
-  
+
     setShowActionPicker(false);
     setAddActionAfterStepId(null);
     setActionSearchTerm("");
@@ -390,7 +401,7 @@ const getIntegrationCredentials = async (integrationId: string) => {
   const buildFlowData = (): CreateFlowData | UpdateFlowData => {
     const trigger = steps.find((s) => s.type === "trigger");
     if (!trigger) throw new Error("Flow must have a trigger");
-  
+
     // Build linked action structure
     let currentAction = null;
     for (let i = steps.length - 1; i >= 0; i--) {
@@ -402,7 +413,7 @@ const getIntegrationCredentials = async (integrationId: string) => {
           valid: step.isValid,
           type: "PIECE_ACTION" as const,
           settings: {
-            pieceName: step.integrationId.replace('_action', ''),
+            pieceName: step.integrationId.replace("_action", ""),
             actionName: step.integrationId,
             input: step.config,
             credentialId: step.credentialId,
@@ -411,7 +422,7 @@ const getIntegrationCredentials = async (integrationId: string) => {
         };
       }
     }
-  
+
     return {
       displayName: automationName,
       metadata: { description },
@@ -421,7 +432,7 @@ const getIntegrationCredentials = async (integrationId: string) => {
         valid: trigger.isValid,
         type: "PIECE_TRIGGER" as const,
         settings: {
-          pieceName: trigger.integrationId.replace('_trigger', ''),
+          pieceName: trigger.integrationId.replace("_trigger", ""),
           triggerName: trigger.integrationId,
           input: trigger.config,
           credentialId: trigger.credentialId,
@@ -431,30 +442,28 @@ const getIntegrationCredentials = async (integrationId: string) => {
     };
   };
 
-  
-
   const filterIntegrationsBySearch = (
     grouped: Record<string, Integration[]>,
-    searchTerm: string
+    searchTerm: string,
   ): Record<string, Integration[]> => {
     if (!searchTerm) return grouped;
-    
+
     const filtered: Record<string, Integration[]> = {};
     const lowercaseSearch = searchTerm.toLowerCase();
-    
+
     Object.entries(grouped).forEach(([category, integrations]) => {
       const matchingIntegrations = integrations.filter(
         (integration) =>
           integration.name.toLowerCase().includes(lowercaseSearch) ||
           integration.description?.toLowerCase().includes(lowercaseSearch) ||
-          category.toLowerCase().includes(lowercaseSearch)
+          category.toLowerCase().includes(lowercaseSearch),
       );
-      
+
       if (matchingIntegrations.length > 0) {
         filtered[category] = matchingIntegrations;
       }
     });
-    
+
     return filtered;
   };
 
@@ -480,16 +489,16 @@ const getIntegrationCredentials = async (integrationId: string) => {
             </button>
 
             <div>
-            <input
-  type="text"
-  value={automationName}
-  onChange={(e) => setAutomationName(e.target.value)}
-  className="w-full rounded-md border-none bg-transparent px-2 py-1 text-lg font-semibold text-slate-900 placeholder-slate-400 
-             hover:bg-slate-100
-             focus:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-200
-             transition-all duration-200 ease-in-out"
-  placeholder="Untitled Automation"
-/>
+              <input
+                type="text"
+                value={automationName}
+                onChange={(e) => setAutomationName(e.target.value)}
+                className="w-full rounded-md border-none bg-transparent px-2 py-1 text-lg font-semibold text-slate-900 placeholder-slate-400 
+             transition-all
+             duration-200 ease-in-out hover:bg-slate-100 focus:bg-slate-100
+             focus:outline-none focus:ring-2 focus:ring-slate-200"
+                placeholder="Untitled Automation"
+              />
               <p className="text-sm text-slate-500">
                 {flow?.status === "ENABLED" ? "Published" : "Draft"} •
                 {isDirty ? " Unsaved changes" : " All changes saved"}
@@ -610,29 +619,29 @@ const getIntegrationCredentials = async (integrationId: string) => {
 
       {/* Trigger Picker Modal */}
       {showTriggerPicker && (
-  <IntegrationPicker
-    type="trigger"
-    onSelect={(integration) => handleAddTrigger(integration as TriggerType)}
-    onClose={() => {
-      setShowTriggerPicker(false);
-      setTriggerSearchTerm("");
-    }}
-  />
-)}
+        <IntegrationPicker
+          type="trigger"
+          onSelect={(integration) =>
+            handleAddTrigger(integration as TriggerType)
+          }
+          onClose={() => {
+            setShowTriggerPicker(false);
+            setTriggerSearchTerm("");
+          }}
+        />
+      )}
 
-{showActionPicker && (
-  <IntegrationPicker
-    type="action"
-    onSelect={(integration) => handleAddAction(integration as ActionType)}
-    onClose={() => {
-      setShowActionPicker(false);
-      setAddActionAfterStepId(null);
-      setActionSearchTerm("");
-    }}
-  />
-)}
-
-
+      {showActionPicker && (
+        <IntegrationPicker
+          type="action"
+          onSelect={(integration) => handleAddAction(integration as ActionType)}
+          onClose={() => {
+            setShowActionPicker(false);
+            setAddActionAfterStepId(null);
+            setActionSearchTerm("");
+          }}
+        />
+      )}
 
       {/* Test Results Modal */}
       {showTestResult && testResult && (
@@ -661,13 +670,13 @@ function StepCard({
   const getConfigComponent = () => {
     const configKey = step.integrationId;
     const ConfigComponent = INTEGRATION_CONFIG_COMPONENTS[configKey];
-    
+
     if (ConfigComponent) {
       return ConfigComponent;
     }
-    
+
     // Fallback to generic config
-    return step.type === 'trigger' ? GenericTriggerConfig : GenericActionConfig;
+    return step.type === "trigger" ? GenericTriggerConfig : GenericActionConfig;
   };
 
   const ConfigComponent = getConfigComponent();
@@ -713,17 +722,23 @@ function StepCard({
           {step.requiresAuth && !step.credentialId && (
             <div className="mb-4 rounded-lg bg-slate-50 p-4">
               <div className="flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-slate-600 mt-0.5" />
+                <AlertCircle className="mt-0.5 h-5 w-5 text-slate-600" />
                 <div className="flex-1">
-                  <h4 className="font-medium text-slate-900">Authentication Required</h4>
+                  <h4 className="font-medium text-slate-900">
+                    Authentication Required
+                  </h4>
                   <p className="mt-1 text-sm text-slate-700">
-                    Connect your {step.displayName} account to use this integration.
+                    Connect your {step.displayName} account to use this
+                    integration.
                   </p>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       // TODO: Implement credential connection
-                      console.log('Connect credentials for:', step.integrationId);
+                      console.log(
+                        "Connect credentials for:",
+                        step.integrationId,
+                      );
                     }}
                     className="mt-3 rounded-lg bg-slate-600 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
                   >
@@ -738,9 +753,9 @@ function StepCard({
           <ConfigComponent
             config={step.config}
             onChange={(newConfig) => {
-              onUpdate({ 
-                config: newConfig, 
-                isValid: validateStepConfig(step, newConfig) 
+              onUpdate({
+                config: newConfig,
+                isValid: validateStepConfig(step, newConfig),
               });
             }}
           />
@@ -761,104 +776,123 @@ function StepCard({
     </div>
   );
 }
-function validateStepConfig(step: WorkflowStep, config: Record<string, any>): boolean {
+function validateStepConfig(
+  step: WorkflowStep,
+  config: Record<string, any>,
+): boolean {
   // Basic validation - you can expand this based on integration requirements
   switch (step.integrationId) {
-    case 'salesforce_trigger':
-    case 'salesforce_action':
-      return !!config.object && (step.type === 'action' || !!config.event);
-    
-    case 'slack_trigger':
-    case 'slack_action':
-      if (step.type === 'trigger') return !!config.event;
+    case "salesforce_trigger":
+    case "salesforce_action":
+      return !!config.object && (step.type === "action" || !!config.event);
+
+    case "slack_trigger":
+    case "slack_action":
+      if (step.type === "trigger") return !!config.event;
       return !!config.action && (!!config.channel || !!config.userId);
-    
-    case 'google_calendar_trigger':
-    case 'google_calendar_action':
-      if (step.type === 'trigger') return (config.events?.length || 0) > 0;
-      return !!config.action && !!config.title && !!config.startTime && !!config.endTime;
-    
-    case 'stripe_trigger':
+
+    case "google_calendar_trigger":
+    case "google_calendar_action":
+      if (step.type === "trigger") return (config.events?.length || 0) > 0;
+      return (
+        !!config.action &&
+        !!config.title &&
+        !!config.startTime &&
+        !!config.endTime
+      );
+
+    case "stripe_trigger":
       return (config.events?.length || 0) > 0;
-    
-    case 'stripe_action':
+
+    case "stripe_action":
       return !!config.resource && !!config.action;
-    
-    case 'shopify_trigger':
+
+    case "shopify_trigger":
       return !!config.event;
-    
-    case 'shopify_action':
+
+    case "shopify_action":
       return !!config.resource && !!config.action;
-    
-    case 'airtable_trigger':
-    case 'airtable_action':
+
+    case "airtable_trigger":
+    case "airtable_action":
       return !!config.baseId && !!config.tableId;
-    
-    case 'hubspot_trigger':
-    case 'hubspot_action':
-      if (step.type === 'trigger') return !!config.object && !!config.event;
+
+    case "hubspot_trigger":
+    case "hubspot_action":
+      if (step.type === "trigger") return !!config.object && !!config.event;
       return !!config.resource && !!config.action;
-    
-    case 'mailchimp_trigger':
-    case 'mailchimp_action':
+
+    case "mailchimp_trigger":
+    case "mailchimp_action":
       return !!config.listId;
-    
+
     // Basic triggers
-    case 'webhook':
+    case "webhook":
       return true; // Webhook URL is generated automatically
-    
-    case 'schedule':
+
+    case "schedule":
       return !!config.scheduleType;
-    
-    case 'email':
+
+    case "email":
       return !!config.to && !!config.subject && !!config.body;
-    
-    case 'sms':
+
+    case "sms":
       return !!config.to && !!config.message;
-    
+
     default:
       // For other integrations, just check if there's some config
       return Object.keys(config).length > 0;
   }
 }
-const IntegrationPicker = ({ 
-  type, 
-  onSelect, 
-  onClose 
-}: { 
-  type: 'trigger' | 'action',
-  onSelect: (integration: TriggerType | ActionType) => void,
-  onClose: () => void 
+const IntegrationPicker = ({
+  type,
+  onSelect,
+  onClose,
+}: {
+  type: "trigger" | "action";
+  onSelect: (integration: TriggerType | ActionType) => void;
+  onClose: () => void;
 }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<IntegrationCategory | 'all'>('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<
+    IntegrationCategory | "all"
+  >("all");
 
-  const integrations = type === 'trigger' ? TRIGGER_INTEGRATIONS : ACTION_INTEGRATIONS;
-  
+  const integrations =
+    type === "trigger" ? TRIGGER_INTEGRATIONS : ACTION_INTEGRATIONS;
+
   // Group by category
-  const groupedIntegrations = integrations.reduce((acc, integration) => {
-    if (!acc[integration.category]) {
-      acc[integration.category] = [];
-    }
-    acc[integration.category].push(integration);
-    return acc;
-  }, {} as Record<IntegrationCategory, (TriggerType | ActionType)[]>);
+  const groupedIntegrations = integrations.reduce(
+    (acc, integration) => {
+      if (!acc[integration.category]) {
+        acc[integration.category] = [];
+      }
+      acc[integration.category].push(integration);
+      return acc;
+    },
+    {} as Record<IntegrationCategory, (TriggerType | ActionType)[]>,
+  );
 
   // Filter integrations
-  const filteredGroups = Object.entries(groupedIntegrations).reduce((acc, [category, items]) => {
-    if (selectedCategory !== 'all' && category !== selectedCategory) return acc;
-    
-    const filtered = items.filter(item =>
-      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    
-    if (filtered.length > 0) {
-      acc[category as IntegrationCategory] = filtered;
-    }
-    
-    return acc;
-  }, {} as Record<IntegrationCategory, (TriggerType | ActionType)[]>);
+  const filteredGroups = Object.entries(groupedIntegrations).reduce(
+    (acc, [category, items]) => {
+      if (selectedCategory !== "all" && category !== selectedCategory)
+        return acc;
+
+      const filtered = items.filter(
+        (item) =>
+          item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          item.description.toLowerCase().includes(searchTerm.toLowerCase()),
+      );
+
+      if (filtered.length > 0) {
+        acc[category as IntegrationCategory] = filtered;
+      }
+
+      return acc;
+    },
+    {} as Record<IntegrationCategory, (TriggerType | ActionType)[]>,
+  );
 
   const categories = Object.values(IntegrationCategory);
 
@@ -874,12 +908,12 @@ const IntegrationPicker = ({
           </button>
 
           <h2 className="text-xl font-semibold text-slate-900">
-            Choose {type === 'trigger' ? 'a Trigger' : 'an Action'}
+            Choose {type === "trigger" ? "a Trigger" : "an Action"}
           </h2>
           <p className="mt-1 text-slate-600">
-            {type === 'trigger' 
-              ? 'Select what will start your automation'
-              : 'Select what this step should do'}
+            {type === "trigger"
+              ? "Select what will start your automation"
+              : "Select what this step should do"}
           </p>
 
           <div className="mt-4 flex gap-4">
@@ -900,27 +934,38 @@ const IntegrationPicker = ({
 
             <select
               value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value as IntegrationCategory | 'all')}
+              onChange={(e) =>
+                setSelectedCategory(
+                  e.target.value as IntegrationCategory | "all",
+                )
+              }
               className="rounded-lg border border-slate-300 px-4 py-2"
             >
               <option value="all">All Categories</option>
-              {categories.map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
+              {categories.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
               ))}
             </select>
           </div>
         </div>
 
-        <div className="overflow-y-auto p-6" style={{ maxHeight: 'calc(90vh - 200px)' }}>
+        <div
+          className="overflow-y-auto p-6"
+          style={{ maxHeight: "calc(90vh - 200px)" }}
+        >
           {Object.entries(filteredGroups).length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-slate-500">No integrations found matching "{searchTerm}"</p>
+            <div className="py-12 text-center">
+              <p className="text-slate-500">
+                No integrations found matching "{searchTerm}"
+              </p>
             </div>
           ) : (
             <div className="space-y-8">
               {Object.entries(filteredGroups).map(([category, items]) => (
                 <div key={category}>
-                  <h3 className="mb-4 text-sm font-semibold text-slate-600 uppercase tracking-wide">
+                  <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-600">
                     {category}
                   </h3>
                   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -930,22 +975,22 @@ const IntegrationPicker = ({
                         onClick={() => onSelect(integration)}
                         className="group flex items-start gap-3 rounded-lg border border-slate-200 p-4 text-left transition-all hover:border-slate-400 hover:bg-slate-50 hover:shadow-sm"
                       >
-                        <div 
+                        <div
                           className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-lg group-hover:bg-white"
-                          style={{ backgroundColor: integration.color + '20' }}
+                          style={{ backgroundColor: integration.color + "20" }}
                         >
                           {integration.icon}
                         </div>
-                        <div className="flex-1 min-w-0">
+                        <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
-                            <span className="font-medium text-slate-900 truncate">
+                            <span className="truncate font-medium text-slate-900">
                               {integration.name}
                             </span>
                             {integration.requiresAuth && (
                               <Shield className="h-3 w-3 text-slate-400" />
                             )}
                           </div>
-                          <p className="mt-1 text-sm text-slate-500 line-clamp-2">
+                          <p className="mt-1 line-clamp-2 text-sm text-slate-500">
                             {integration.description}
                           </p>
                         </div>
