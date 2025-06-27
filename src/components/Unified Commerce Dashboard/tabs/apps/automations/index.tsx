@@ -37,6 +37,7 @@ import { formatDistanceToNow } from "date-fns";
 import type { Flow } from "../../../lib/automations/types";
 import AutomationEditor from "./automation-editor";
 import InspirationSection from "./home-sections/inspiration-section";
+import ApolloSearchComponent from "../../components/apollo-search-component";
 
 // Template interface for CRM-focused templates
 interface Template {
@@ -55,6 +56,8 @@ interface Template {
 }
 
 export default function AutomationsPage() {
+  const [showApolloSearch, setShowApolloSearch] = useState(false);
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const [flows, setFlows] = useState<Flow[]>([]);
@@ -278,6 +281,16 @@ export default function AutomationsPage() {
     window.history.pushState({}, "", url.toString());
   };
 
+  // Handle database card click - show Apollo search
+  const handleDatabaseClick = () => {
+    setShowApolloSearch(true);
+  };
+
+  // Handle closing Apollo search
+  const handleCloseApolloSearch = () => {
+    setShowApolloSearch(false);
+  };
+
   const filteredFlows = flows.filter((flow) =>
     flow.version.displayName.toLowerCase().includes(searchQuery.toLowerCase()),
   );
@@ -330,6 +343,39 @@ export default function AutomationsPage() {
           />
         )}
       </>
+    );
+  }
+
+  // Show Apollo Search if triggered
+  if (showApolloSearch) {
+    return (
+      <div className="min-h-screen bg-white">
+        <div className="mx-auto max-w-7xl p-4 sm:p-6 lg:p-8">
+          {/* Header with back button */}
+          <div className="mb-8">
+            <div className="mb-6 flex items-center gap-4">
+              <button
+                onClick={handleCloseApolloSearch}
+                className="flex items-center gap-2 text-neutral-600 hover:text-neutral-800"
+              >
+                <ChevronRight className="rotate-180" size={20} />
+                Back to Automations
+              </button>
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-neutral-900">
+                Database Search
+              </h1>
+              <p className="mt-2 text-neutral-600">
+                Search and manage your database connections
+              </p>
+            </div>
+          </div>
+
+          {/* Apollo Search Component */}
+          <ApolloSearchComponent />
+        </div>
+      </div>
     );
   }
 
@@ -431,58 +477,6 @@ export default function AutomationsPage() {
         {/* Tab Content */}
         {activeTab === "overview" && (
           <div className="space-y-8">
-            {/* Quick Stats using your real data
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <div className="bg-white p-6 rounded-xl shadow-sm border border-neutral-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-neutral-600">Active Automations</p>
-                    <p className="text-2xl font-bold text-neutral-900">
-                      {flows.filter((f) => f.status === "ENABLED").length}
-                    </p>
-                  </div>
-                  <div className="p-3 bg-green-100 rounded-lg">
-                    <Play className="h-6 w-6 text-green-600" />
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white p-6 rounded-xl shadow-sm border border-neutral-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-neutral-600">Total Automations</p>
-                    <p className="text-2xl font-bold text-neutral-900">{flows.length}</p>
-                  </div>
-                  <div className="p-3 bg-blue-100 rounded-lg">
-                    <Zap className="h-6 w-6 text-blue-600" />
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white p-6 rounded-xl shadow-sm border border-neutral-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-neutral-600">Draft Automations</p>
-                    <p className="text-2xl font-bold text-neutral-900">
-                      {flows.filter((f) => f.status === "DISABLED").length}
-                    </p>
-                  </div>
-                  <div className="p-3 bg-slate-100 rounded-lg">
-                    <Target className="h-6 w-6 text-slate-600" />
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white p-6 rounded-xl shadow-sm border border-neutral-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-neutral-600">Templates Available</p>
-                    <p className="text-2xl font-bold text-neutral-900">{templates.length}</p>
-                  </div>
-                  <div className="p-3 bg-slate-100 rounded-lg">
-                    <Layout className="h-6 w-6 text-slate-600" />
-                  </div>
-                </div>
-              </div>
-            </div> */}
-
             {/* Start from Scratch */}
             <div className="rounded-xl border border-neutral-200 bg-white p-8 shadow-sm">
               <h2 className="mb-6 text-xl font-semibold text-neutral-900">
@@ -495,37 +489,42 @@ export default function AutomationsPage() {
                     desc: "Automated workflows",
                     icon: Zap,
                     color: "slate",
+                    onClick: handleCreateAutomation,
                   },
                   {
-                    name: "Database",
-                    desc: "Automated data",
-                    icon: Database,
+                    name: "Search",
+                    desc: "Search for Leads",
+                    icon: Search,
                     color: "red",
+                    onClick: handleDatabaseClick, // Updated to use the new handler
                   },
                   {
                     name: "Interface",
                     desc: "Apps, forms, and pages",
                     icon: Layout,
                     color: "slate",
+                    onClick: handleCreateAutomation,
                   },
                   {
                     name: "Chatbot",
                     desc: "AI-powered chatbot",
                     icon: Bot,
                     color: "slate",
+                    onClick: handleCreateAutomation,
                   },
                   {
                     name: "Canvas",
                     desc: "Process visualization",
                     icon: PenTool,
                     color: "slate",
+                    onClick: handleCreateAutomation,
                   },
                 ].map((item) => {
                   const Icon = item.icon;
                   return (
                     <button
                       key={item.name}
-                      onClick={handleCreateAutomation}
+                      onClick={item.onClick}
                       className="group rounded-lg border-2 border-neutral-200 p-6 text-left transition-colors hover:border-neutral-300"
                     >
                       <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 transition-colors group-hover:bg-slate-200">
