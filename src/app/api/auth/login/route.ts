@@ -7,16 +7,18 @@ export const runtime = 'nodejs';
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const redirectUri = searchParams.get('redirect_uri') || process.env.NEXT_PUBLIC_WORKOS_REDIRECT_URI;
     const state = searchParams.get('state') || '/dashboard';
     const screenHint = searchParams.get('screen_hint'); // 'sign-up' for signup flow
-
-    if (!redirectUri) {
-      return NextResponse.json(
-        { error: 'Missing redirect_uri parameter' },
-        { status: 400 }
-      );
-    }
+    
+    // Construct the redirect URI based on the current request
+    // This ensures it matches the actual domain being used
+    const origin = request.nextUrl.origin;
+    const redirectUri = searchParams.get('redirect_uri') || 
+                       process.env.NEXT_PUBLIC_WORKOS_REDIRECT_URI ||
+                       `${origin}/api/auth/callback`;
+    
+    console.log('Login route - Origin:', origin);
+    console.log('Login route - Redirect URI:', redirectUri);
 
     try {
       // Dynamic import to avoid build-time module resolution
@@ -28,6 +30,8 @@ export async function GET(request: NextRequest) {
         redirectUri,
         ...(screenHint && { screenHint: screenHint as 'sign-up' | 'sign-in' }),
       });
+
+      console.log('AuthKit generated URL:', authUrl);
 
       // Redirect the user to the AuthKit hosted login page
       return NextResponse.redirect(authUrl);
@@ -45,6 +49,10 @@ export async function GET(request: NextRequest) {
         );
       }
       
+      // Log the redirect URI being used
+      console.log('Fallback - Using redirect URI:', redirectUri);
+      console.log('Fallback - Client ID:', clientId);
+      
       const params = new URLSearchParams({
         client_id: clientId,
         redirect_uri: redirectUri,
@@ -54,6 +62,7 @@ export async function GET(request: NextRequest) {
       });
       
       const authUrl = `https://api.workos.com/user_management/authorize?${params.toString()}`;
+      console.log('Fallback - Full auth URL:', authUrl);
       
       return NextResponse.redirect(authUrl);
     }
