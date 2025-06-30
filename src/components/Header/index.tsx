@@ -35,6 +35,17 @@ export function Header() {
     typeof document !== "undefined" &&
     document.body.getAttribute("data-hide-sidebar") === "true";
 
+  // Direct login function - same as in your login component
+  const handleDirectLogin = () => {
+    try {
+      const redirect = '/dashboard'; // Default redirect after login
+      const authUrl = `/api/auth/login?redirect_uri=${encodeURIComponent(window.location.origin + '/callback')}&state=${encodeURIComponent(redirect)}`;
+      window.location.href = authUrl;
+    } catch (error) {
+      console.error("Login error:", error);
+    }
+  };
+
   // If we're on an app route or header should be hidden, don't render anything
   if (isAppRoute || shouldHideHeader) {
     return null;
@@ -108,12 +119,13 @@ export function Header() {
                       </Link>
                     ))}
                     <div className="mt-6 border-t pt-6">
-                      <Link
-                        href="/login"
-                        className="block py-3 text-sm transition-colors hover:text-primary"
+                      <Button
+                        onClick={handleDirectLogin}
+                        variant="ghost"
+                        className="w-full justify-start px-0 py-3 text-sm transition-colors hover:text-primary"
                       >
                         Log in
-                      </Link>
+                      </Button>
                       <Button
                         variant="outline"
                         size="sm"
@@ -139,14 +151,13 @@ export function Header() {
               <Search className="h-5 w-5" />
               <span className="sr-only">Search</span>
             </Button>
-            <Link href="/login">
-              <Button
-                variant="ghost"
-                className="rounded-full bg-secondary/50 px-4 py-2 text-foreground hover:bg-secondary/80"
-              >
-                Log in
-              </Button>
-            </Link>
+            <Button
+              onClick={handleDirectLogin}
+              variant="ghost"
+              className="rounded-full bg-secondary/50 px-4 py-2 text-foreground hover:bg-secondary/80"
+            >
+              Log in
+            </Button>
           </div>
         </div>
       </header>
