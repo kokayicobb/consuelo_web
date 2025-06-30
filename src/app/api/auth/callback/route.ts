@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     
     return handler(request);
   } catch (error) {
-    console.error('Failed to load auth handler:', error);
+    console.error('Failed to load auth handler :', error);
     
     // Fallback to manual implementation if dynamic import fails
     return handleAuthFallback(request);
