@@ -4,56 +4,45 @@
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '@/lib/auth/auth-context';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2 } from 'lucide-react';
-import { supabaseClient } from '@/lib/supabase/client';
 
 export default function LoginForm() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
-  const { signIn } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect') || '/dashboard';
   
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSignIn = async () => {
     setIsLoading(true);
-    setError('');
+    setError(null);
     
     try {
-      console.log("Starting sign in process...");
-      await signIn(email, password);
-      console.log("Sign in successful");
-      
-      // Important: Add a delay to ensure cookies are set properly
-      // before attempting navigation
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Verify session is active before redirecting
-      const { data } = await supabaseClient.auth.getSession();
-      console.log("Session verification:", {
-        hasSession: !!data.session,
-        email: data.session?.user?.email || 'none'
-      });
-      
-      if (data.session) {
-        console.log("Authentication successful, redirecting to:", redirect);
-        window.location.href = redirect;
-      } else {
-        setError("Session not established. Please try again.");
-        setIsLoading(false);
-      }
+      // Redirect to WorkOS AuthKit hosted login
+      // The state parameter will be used to redirect back after auth
+      const authUrl = `/api/auth/login?redirect_uri=${encodeURIComponent(window.location.origin)}/callback&state=${encodeURIComponent(redirect)}`;
+      window.location.href = authUrl;
     } catch (error) {
       console.error("Login error:", error);
-      setError(error.message || "Failed to sign in. Please check your credentials.");
+      setError("Failed to initiate sign in. Please try again.");
+      setIsLoading(false);
+    }
+  };
+
+  const handleSignUp = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      // Redirect to WorkOS AuthKit hosted signup
+      const authUrl = `/api/auth/login?redirect_uri=${encodeURIComponent(window.location.origin)}/callback&state=${encodeURIComponent(redirect)}&screen_hint=sign-up`;
+      window.location.href = authUrl;
+    } catch (error) {
+      console.error("Signup error:", error);
+      setError("Failed to initiate sign up. Please try again.");
       setIsLoading(false);
     }
   };
@@ -61,8 +50,8 @@ export default function LoginForm() {
   return (
     <div className="w-full max-w-md mx-auto space-y-6">
       <div className="text-center space-y-2">
-        <h1 className="text-3xl font-bold">Welcome back</h1>
-        <p className="text-muted-foreground">Enter your credentials to access your account</p>
+        <h1 className="text-3xl font-bold">Welcome</h1>
+        <p className="text-muted-foreground">Sign in to your account or create a new one</p>
       </div>
       
       {error && (
@@ -71,60 +60,47 @@ export default function LoginForm() {
         </Alert>
       )}
       
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            placeholder="you@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            disabled={isLoading}
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <Label htmlFor="password">Password</Label>
-            <Link 
-              href="/forgot-password" 
-              className="text-sm text-primary hover:underline"
-            >
-              Forgot password?
-            </Link>
-          </div>
-          <Input
-            id="password"
-            type="password"
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            disabled={isLoading}
-          />
-        </div>
-        
-        <Button type="submit" className="w-full" disabled={isLoading}>
+      <div className="space-y-4">
+        <Button 
+          onClick={handleSignIn} 
+          className="w-full" 
+          disabled={isLoading}
+          variant="default"
+        >
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Signing in...
+              Redirecting...
             </>
           ) : (
             'Sign In'
           )}
         </Button>
-      </form>
+
+        <Button 
+          onClick={handleSignUp} 
+          className="w-full" 
+          disabled={isLoading}
+          variant="outline"
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Redirecting...
+            </>
+          ) : (
+            'Create Account'
+          )}
+        </Button>
+      </div>
       
       <div className="text-center">
-        <p className="text-sm text-muted-foreground">
-          Don&apos;t have an account?{' '}
-          <Link href="/signup" className="text-primary hover:underline">
-            Create an account
-          </Link>
-        </p>
+        <Link 
+          href="/forgot-password" 
+          className="text-sm text-primary hover:underline"
+        >
+          Forgot your password?
+        </Link>
       </div>
     </div>
   );
