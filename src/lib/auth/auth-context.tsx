@@ -2,8 +2,26 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { supabaseClient } from '@/lib/supabase/client';
+import { WorkOS } from '@workos-inc/node';
+
+// Define User type to match your existing interface
+type User = {
+  id: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  emailVerified?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+// Define Session type to match your existing interface
+type Session = {
+  access_token: string;
+  refresh_token?: string;
+  expires_at?: number;
+  user: User;
+};
 
 type AuthState = {
   user: User | null;
@@ -20,7 +38,6 @@ export type AuthContextType = AuthState & {
   updatePassword: (password: string) => Promise<void>;
 };
 
-
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -30,33 +47,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isLoading: true,
     error: null,
   });
+
   useEffect(() => {
     // This logs the auth state whenever it changes
     console.log("Auth state changed:", { user: authState.user?.email, isLoading: authState.isLoading });
   }, [authState.user, authState.isLoading]);
+
   useEffect(() => {
     // Get initial session
     const getInitialSession = async () => {
       try {
-        const { data: { session }, error } = await supabaseClient.auth.getSession();
+        // Check for existing session in cookies/localStorage
+        const sessionData = await fetch('/api/auth/session', {
+          method: 'GET',
+          credentials: 'include',
+        });
         
-        if (error) {
-          throw error;
-        }
-        
-        if (session) {
-          const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+        if (sessionData.ok) {
+          const { user, session } = await sessionData.json();
           
-          if (userError) {
-            throw userError;
+          if (user && session) {
+            setAuthState({
+              user,
+              session,
+              isLoading: false,
+              error: null,
+            });
+          } else {
+            setAuthState({
+              user: null,
+              session: null,
+              isLoading: false,
+              error: null,
+            });
           }
-          
-          setAuthState({
-            user,
-            session,
-            isLoading: false,
-            error: null,
-          });
         } else {
           setAuthState({
             user: null,
@@ -78,60 +102,61 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     getInitialSession();
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabaseClient.auth.onAuthStateChange(
-      async (event, session) => {
-        if (session) {
-          const { data: { user }, error } = await supabaseClient.auth.getUser();
+    // Set up periodic session validation
+    const sessionCheckInterval = setInterval(async () => {
+      if (authState.session) {
+        try {
+          const response = await fetch('/api/auth/validate', {
+            method: 'GET',
+            credentials: 'include',
+          });
           
-          if (error) {
-            console.error('Error getting user:', error);
-            setAuthState((prev) => ({ ...prev, error }));
-            return;
+          if (!response.ok) {
+            // Session is invalid, clear auth state
+            setAuthState({
+              user: null,
+              session: null,
+              isLoading: false,
+              error: null,
+            });
           }
-          
-          setAuthState({
-            user,
-            session,
-            isLoading: false,
-            error: null,
-          });
-        } else {
-          setAuthState({
-            user: null,
-            session: null,
-            isLoading: false,
-            error: null,
-          });
+        } catch (error) {
+          console.error('Session validation error:', error);
         }
       }
-    );
+    }, 5 * 60 * 1000); // Check every 5 minutes
 
-    // Cleanup subscription on unmount
     return () => {
-      subscription.unsubscribe();
+      clearInterval(sessionCheckInterval);
     };
-  }, []);
+  }, [authState.session]);
 
   const signIn = async (email: string, password: string) => {
     try {
       setAuthState((prev) => ({ ...prev, isLoading: true, error: null }));
 
-      const { data, error } = await supabaseClient.auth.signInWithPassword({
-        email,
-        password,
+      const response = await fetch('/api/auth/signin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ email, password }),
       });
 
-      if (error) {
-        throw error;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to sign in');
       }
-//Introduce slight delay
- await new Promise((resolve) => setTimeout(resolve, 200));
-      // Wait a moment for cookies to be properly set (CRITICAL!)
+
+      const { user, session } = await response.json();
+
+      // Introduce slight delay to ensure cookies are set
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       setAuthState({
-        user: data.user,
-        session: data.session,
+        user,
+        session,
         isLoading: false,
         error: null,
       });
@@ -151,18 +176,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setAuthState((prev) => ({ ...prev, isLoading: true, error: null }));
       
-      const { data, error } = await supabaseClient.auth.signUp({
-        email,
-        password,
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ email, password }),
       });
-      
-      if (error) {
-        throw error;
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to sign up');
       }
+
+      const { user, session } = await response.json();
       
       setAuthState({
-        user: data.user,
-        session: data.session,
+        user,
+        session,
         isLoading: false,
         error: null,
       });
@@ -181,10 +213,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setAuthState((prev) => ({ ...prev, isLoading: true, error: null }));
       
-      const { error } = await supabaseClient.auth.signOut();
+      const response = await fetch('/api/auth/signout', {
+        method: 'POST',
+        credentials: 'include',
+      });
       
-      if (error) {
-        throw error;
+      if (!response.ok) {
+        console.error('Error during signout API call');
       }
       
       setAuthState({
@@ -208,12 +243,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setAuthState((prev) => ({ ...prev, isLoading: true, error: null }));
       
-      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+      const response = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          email,
+          redirectUrl: `${window.location.origin}/reset-password`
+        }),
       });
-      
-      if (error) {
-        throw error;
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to reset password');
       }
       
       setAuthState((prev) => ({
@@ -236,12 +279,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setAuthState((prev) => ({ ...prev, isLoading: true, error: null }));
       
-      const { error } = await supabaseClient.auth.updateUser({
-        password,
+      const response = await fetch('/api/auth/update-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ password }),
       });
-      
-      if (error) {
-        throw error;
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update password');
       }
       
       setAuthState((prev) => ({
