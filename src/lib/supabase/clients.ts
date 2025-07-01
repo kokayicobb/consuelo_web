@@ -1,3 +1,4 @@
+//src/lib/supabase/clients.ts
 import { supabase } from "./client"
 import { Customer } from "./customer"
 
@@ -110,9 +111,9 @@ export async function fetchClientById(clientId: string) {
 }
 
 // Update a client
-export async function updateClient(clientId: string, updates: Partial<DatabaseClient>) {
+export async function updateClient(clientId: string, updates: Partial<DatabaseClient> ,supabaseClient: any) {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from("clients")
       .update(updates)
       .eq("Client ID", clientId)
@@ -132,9 +133,9 @@ export async function updateClient(clientId: string, updates: Partial<DatabaseCl
 }
 
 // Create a new client
-export async function createClient(clientData: Omit<DatabaseClient, "Client ID">) {
+export async function createClient(clientData: Omit<DatabaseClient, "Client ID">,supabaseClient: any) {
   try {
-    const { data, error } = await supabase.from("clients").insert([clientData]).select().single()
+    const { data, error } = await supabaseClient.from("clients").insert([clientData]).select().single()
 
     if (error) {
       console.error("Error creating client:", error)
@@ -149,9 +150,9 @@ export async function createClient(clientData: Omit<DatabaseClient, "Client ID">
 }
 
 // Delete a client
-export async function deleteClient(clientId: string) {
+export async function deleteClient(clientId: string,supabaseClient: any) {
   try {
-    const { error } = await supabase.from("clients").delete().eq("Client ID", clientId)
+    const { error } = await supabaseClient.from("clients").delete().eq("Client ID", clientId)
 
     if (error) {
       console.error("Error deleting client:", error)
@@ -166,9 +167,9 @@ export async function deleteClient(clientId: string) {
 }
 
 // Search clients
-export async function searchClients(searchTerm: string) {
+export async function searchClients(searchTerm: string,supabaseClient: any) {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from("clients")
       .select("*")
       .or(`Client.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%`)
@@ -187,7 +188,7 @@ export async function searchClients(searchTerm: string) {
 }
 
 // Export clients data as CSV
-export function exportClientsToCSV(clients: Customer[]) {
+export function exportClientsToCSV(clients: Customer[],) {
   const headers = [
     "Client ID",
     "Name",
