@@ -1,3 +1,4 @@
+// src/app/clientLayout.tsx
 'use client';
 
 import Footer from "@/components/Footer/index";
@@ -46,7 +47,7 @@ export default function ClientLayout({
   return loading ? (
     <SimpleLoader />
   ) : (
-    <SessionProvider>
+ 
       <ThemeProvider
         attribute="class"
         enableSystem={true}
@@ -60,6 +61,6 @@ export default function ClientLayout({
         <Footer />
         <ScrollToTop />
       </ThemeProvider>
-    </SessionProvider>
+   
   );
 }
