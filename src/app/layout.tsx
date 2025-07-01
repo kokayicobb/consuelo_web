@@ -5,6 +5,7 @@ import "../styles/prism-vsc-dark-plus.css";
 import ClientLayout from './clientLayout';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import Analytics from '@/components/Analytics'
+import { PostHogProvider } from './providers'
 
 import { Toaster } from '@/components/ui/sonner';
 import {
@@ -31,7 +32,7 @@ export default function RootLayout({
       </head>
 
       <body> 
-     
+      <PostHogProvider>
             <Toaster /> 
             {/* <SignedOut>
               <SignInButton />
@@ -47,7 +48,7 @@ export default function RootLayout({
             <ClientLayout>{children}</ClientLayout>
             <Analytics />
             <SpeedInsights />
-         
+            </PostHogProvider>
         
       </body>
     </html>
