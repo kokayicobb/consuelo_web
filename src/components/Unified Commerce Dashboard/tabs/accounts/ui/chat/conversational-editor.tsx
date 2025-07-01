@@ -8,5 +8,8 @@ interface ConversationalEditorProps {
 }
 
 export function ConversationalEditor({ onBackToDashboard }: ConversationalEditorProps) {
+
+
   return <ConversationalInterface onBackToDashboard={onBackToDashboard} />
+  
 }
