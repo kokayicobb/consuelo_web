@@ -5,6 +5,7 @@ import "../styles/prism-vsc-dark-plus.css";
 import ClientLayout from './clientLayout';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import Analytics from '@/components/Analytics'
+import { PostHogProvider } from './providers'
 
 import { Toaster } from '@/components/ui/sonner';
 import {
@@ -24,14 +25,16 @@ export default function RootLayout({
   return (
     <ClerkProvider>
     <html suppressHydrationWarning={true} className="!scroll-smooth" lang="en">
+      
       <head>
+        
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
       </head>
 
       <body> 
-     
+      <PostHogProvider>
             <Toaster /> 
             {/* <SignedOut>
               <SignInButton />
@@ -47,7 +50,7 @@ export default function RootLayout({
             <ClientLayout>{children}</ClientLayout>
             <Analytics />
             <SpeedInsights />
-         
+            </PostHogProvider>
         
       </body>
     </html>
