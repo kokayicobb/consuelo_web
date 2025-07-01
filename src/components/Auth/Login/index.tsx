@@ -16,19 +16,13 @@ export default function LoginForm() {
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect') || '/dashboard';
   
-  const handleSignIn = async () => {
-    setIsLoading(true);
-    setError(null);
-    
+  const handleDirectLogin = () => {
     try {
-      // Redirect to WorkOS AuthKit hosted login
-      // The state parameter will be used to redirect back after auth
-      const authUrl = `/api/auth/login?redirect_uri=${encodeURIComponent(window.location.origin)}/callback&state=${encodeURIComponent(redirect)}`;
+      const redirect = '/app'; // Default redirect after login
+      const authUrl = `/api/auth/login?redirect_uri=${encodeURIComponent(window.location.origin + '/api/auth/callback')}&state=${encodeURIComponent(redirect)}`;
       window.location.href = authUrl;
     } catch (error) {
       console.error("Login error:", error);
-      setError("Failed to initiate sign in. Please try again.");
-      setIsLoading(false);
     }
   };
 
@@ -37,13 +31,12 @@ export default function LoginForm() {
     setError(null);
     
     try {
-      // Redirect to WorkOS AuthKit hosted signup
-      const authUrl = `/api/auth/login?redirect_uri=${encodeURIComponent(window.location.origin)}/callback&state=${encodeURIComponent(redirect)}&screen_hint=sign-up`;
+      const redirect = '/app'; // Default redirect after login
+      const authUrl = `/api/auth/login?redirect_uri=${encodeURIComponent(window.location.origin + '/api/auth/callback')}&state=${encodeURIComponent(redirect)}`;
       window.location.href = authUrl;
     } catch (error) {
-      console.error("Signup error:", error);
-      setError("Failed to initiate sign up. Please try again.");
-      setIsLoading(false);
+      console.error("Login error:", error);
+    
     }
   };
   
@@ -62,7 +55,7 @@ export default function LoginForm() {
       
       <div className="space-y-4">
         <Button 
-          onClick={handleSignIn} 
+          onClick={handleDirectLogin} 
           className="w-full" 
           disabled={isLoading}
           variant="default"
