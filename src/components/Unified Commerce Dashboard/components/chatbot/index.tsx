@@ -475,7 +475,7 @@ const fetchAvailableSlots = async () => {
     // Key Changes:
     // 1. Fully rounded corners to contain the button visually.
     // 2. Padding on the right (pr-12) to make space for the button.
-    className="block w-full rounded-md border-gray-300 dark:border-gray-600 p-2 pr-12 shadow-sm focus:ring-sky-500 focus:border-sky-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+    className="block w-full rounded-md border-gray-300 dark:border-gray-600 p-2 pr-12 shadow-sm focus:ring-teal-500 focus:border-teal-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
     disabled={isLoading}
   />
   <button
@@ -484,7 +484,7 @@ const fetchAvailableSlots = async () => {
     // 1. 'absolute' positioning to place it inside the textarea's container.
     // 2. 'right-2 top-1/2 -translate-y-1/2' to center it vertically on the right.
     // 3. Smaller size (h-8 w-8) and circular shape (rounded-full).
-    className="absolute right-2 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-sky-500 text-white hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:opacity-50"
+    className="absolute right-2 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-teal-500 text-white hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:opacity-50"
     disabled={isLoading}
   >
     <span className="sr-only">Send</span>
