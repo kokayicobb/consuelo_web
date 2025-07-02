@@ -73,6 +73,7 @@ import dynamic from "next/dynamic"
 import ModelGenerationContent from "@/components/Dashboard/model-generation-content"
 import RedditSearch from "./app-views/social-search/reddit-search"
 import PhoneCallComponent from "../on-call-coaching"
+import EmailComposer from "../../components/email/email-composer"
 
 // Dynamically import to avoid SSR issues with Google Maps
 const LeadGenerationSearch = dynamic(
@@ -371,7 +372,15 @@ const renderDrawerContent = () => {
     
     
   }
-//PhoneCallComponent
+   // Add handling for Google Maps Scraper
+   if (selectedApp.id === "warm-email") {
+    // Import at the top of the file:
+    // import LeadGenerationSearch from "./app-views/LeadGenerationSearch"
+    return <EmailComposer />
+    
+    
+  }
+//<EmailComposer />
   // Default content for other apps
   return (
     <div className="space-y-4">

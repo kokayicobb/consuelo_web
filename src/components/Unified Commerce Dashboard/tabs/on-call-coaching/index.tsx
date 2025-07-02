@@ -1,4 +1,3 @@
-"use client"
 import React, { useState, useEffect, useRef } from 'react';
 import { Phone, PhoneOff, AlertCircle } from 'lucide-react';
 
@@ -12,11 +11,18 @@ const PhoneCallComponent = () => {
   const [loading, setLoading] = useState(false);
   const intervalRef = useRef(null);
 
-  const API_BASE_URL = 'https://34a0-2600-4041-4558-5000-1832-db31-138e-76fe.ngrok-free.app';
+  // Use environment variable that works in both dev and prod
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://34a0-2600-4041-4558-5000-1832-db31-138e-76fe.ngrok-free.app';
 
   const initiateCall = async () => {
     setError('');
     setLoading(true);
+
+    // Convert formatted numbers to +1XXXXXXXXXX format
+    const cleanNumber = (formatted) => {
+      const digits = formatted.replace(/\D/g, '');
+      return digits.length === 10 ? `+1${digits}` : `+${digits}`;
+    };
 
     try {
       const response = await fetch(`${API_BASE_URL}/make_call`, {
@@ -25,8 +31,8 @@ const PhoneCallComponent = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          sales_agent_number: salesAgentNumber,
-          customer_number: customerNumber,
+          sales_agent_number: cleanNumber(salesAgentNumber),
+          customer_number: cleanNumber(customerNumber),
         }),
       });
 
