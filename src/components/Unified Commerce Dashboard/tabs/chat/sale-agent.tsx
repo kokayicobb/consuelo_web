@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 
 import { XCircle, MinusCircle, ChevronUp } from "lucide-react";
-import OrangeSalesAgent from "../../research";
+import RedditSearch from "../../reddit-search";
 import SegmentationForm from "./segmentation-form";
 
 const ChatWithOTFAgent = () => {
@@ -110,7 +110,7 @@ const ChatWithOTFAgent = () => {
                 <XCircle size={24} />
               </button>
             </div>
-            <OrangeSalesAgent />
+            <RedditSearch />
           </div>
         )}
 

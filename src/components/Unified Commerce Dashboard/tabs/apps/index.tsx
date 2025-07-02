@@ -71,6 +71,7 @@ import {
 import ApolloSearchComponent from "./app-views/apollo-search-component"
 import dynamic from "next/dynamic"
 import ModelGenerationContent from "@/components/Dashboard/model-generation-content"
+import RedditSearch from "./app-views/social-search/reddit-search"
 
 // Dynamically import to avoid SSR issues with Google Maps
 const LeadGenerationSearch = dynamic(
@@ -350,6 +351,16 @@ const renderDrawerContent = () => {
     // Import at the top of the file:
     // import LeadGenerationSearch from "./app-views/LeadGenerationSearch"
     return <ModelGenerationContent />
+    
+    
+  }
+   // Add handling for Google Maps Scraper
+   if (selectedApp.id === "social-monitor") {
+    // Import at the top of the file:
+    // import LeadGenerationSearch from "./app-views/LeadGenerationSearch"
+    return <RedditSearch />
+    
+    
   }
 //
   // Default content for other apps

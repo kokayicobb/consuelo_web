@@ -1,8 +1,5 @@
-import OrangeSalesAgent from "@/components/Unified Commerce Dashboard/research";
+import RedditSearch from "@/components/Unified Commerce Dashboard/reddit-search";
 import { Metadata } from "next";
-
-
-
 
 export const metadata: Metadata = {
   title: "Body Measurment | Consuelo - AI-Powered Fit Technology",
@@ -12,9 +9,7 @@ export const metadata: Metadata = {
 const SalesAgent = () => {
   return (
     <main>
-     
-        <OrangeSalesAgent />
-      
+      <RedditSearch />
     </main>
   );
 };

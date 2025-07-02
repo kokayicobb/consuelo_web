@@ -18,7 +18,7 @@ import {
   UserPlus,
   ArrowUpRight,
   Mail,
-  Save
+  Save,
 } from "lucide-react";
 import MicrosoftTeamsSVG from "@/components/ui/Logos/microsoft-teams";
 
@@ -54,7 +54,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { processRedditDataForLeads, generateSalesScript, generateKeyTalkingPoints } from "../lib/actions/prompt_actions";
+import {
+  processRedditDataForLeads,
+  generateSalesScript,
+  generateKeyTalkingPoints,
+} from "../../../../lib/actions/prompt_actions";
 
 // Define Lead type matching UI and PotentialLead from actions
 interface Lead {
@@ -75,7 +79,7 @@ interface OrangeSalesAgentProps {
   userQuery?: string;
 }
 
-// Main application component
+//DO NOT CHANGE EXPORT NAME REDDIT WILL BLOCK
 export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
   // State for multi-step form
   const [currentStep, setCurrentStep] = useState(1);
@@ -118,20 +122,20 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
 
     // Common settings
     keywords: [
-      "orange theory",
-      "fitness",
-      "workout",
-      "HIIT",
-      "gym",
-      "weight loss",
-      "Charlotte",
-      "recommendation",
-      "new to area",
-      "classes",
+      // "orange theory",
+      // "fitness",
+      // "workout",
+      // "HIIT",
+      // "gym",
+      // "weight loss",
+      // "Charlotte",
+      // "recommendation",
+      // "new to area",
+      // "classes",
     ],
     customKeyword: "",
     scanFrequency: "daily", // hourly, daily, weekly
-    notificationType: "teams", // email, teams, none
+    notificationType: "email", // email, teams, none
     emailAddress: "",
     teamsWebhook: "",
     contentFilter: {
@@ -145,8 +149,8 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
     // Platform selection
     platforms: {
       reddit: true,
-      facebook: true,
-      instagram: true,
+      facebook: false,
+      instagram: false,
     },
   });
 
@@ -154,58 +158,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
   const [searchTerm, setSearchTerm] = useState("");
 
   // Sample leads data - updated to match Lead interface with platform field
-  const [leads, setLeads] = useState<Lead[]>([
-    {
-      id: 1,
-      platform: "reddit",
-      subreddit: "charlottenc",
-      username: "user123",
-      content:
-        "Just moved to Charlotte and looking for a good gym in the South End area. Preferably something with classes as I'm not good at motivating myself.",
-      date: "2025-05-10T14:22:00Z",
-      sentiment: "seeking_recommendation",
-      status: "new",
-      score: 92,
-      url: "https://reddit.com/r/charlottenc/comments/abc123",
-    },
-    {
-      id: 2,
-      platform: "reddit",
-      subreddit: "fitness",
-      username: "fit_for_life",
-      content:
-        "I've tried several HIIT workouts but can't find one that works with my schedule in Charlotte. Ideally looking for something near Uptown with early morning and late evening classes.",
-      date: "2025-05-11T09:17:00Z",
-      sentiment: "pain_point",
-      status: "contacted",
-      score: 87,
-      url: "https://reddit.com/r/fitness/comments/def456",
-    },
-    {
-      id: 3,
-      platform: "facebook",
-      username: "jane.smith",
-      content:
-        "Hey Charlotte Fitness Community! I'm looking for workout classes that are high intensity but also fun. Any recommendations in the NoDa area?",
-      date: "2025-05-12T10:30:00Z",
-      sentiment: "seeking_recommendation",
-      status: "new",
-      score: 95,
-      url: "https://facebook.com/groups/charlottefitness/posts/123456",
-    },
-    {
-      id: 4,
-      platform: "instagram",
-      username: "fitness_enthusiast",
-      content:
-        "Trying to find a new workout routine in #charlottefitness that will help me lose these last 10 pounds. Any suggestions?",
-      date: "2025-05-13T15:45:00Z",
-      sentiment: "seeking_recommendation",
-      status: "new",
-      score: 89,
-      url: "https://instagram.com/p/abc123",
-    },
-  ]);
+  const [leads, setLeads] = useState<Lead[]>([]);
 
   const [filterStatus, setFilterStatus] = useState("all");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -572,8 +525,10 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
             </div>
             <Switch
               id="facebook-toggle"
-              checked={formData.platforms.facebook}
+              checked={false}
               onCheckedChange={() => handlePlatformToggle("facebook")}
+              // 2. Add the disabled prop
+              disabled={true}
             />
           </div>
 
@@ -586,7 +541,8 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
             </div>
             <Switch
               id="instagram-toggle"
-              checked={formData.platforms.instagram}
+              checked={false}
+              disabled={true}
               onCheckedChange={() => handlePlatformToggle("instagram")}
             />
           </div>
@@ -613,7 +569,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
               />
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-4 pt-4">
-              {["location", "fitness", "custom"].map((category) => {
+              {["custom"].map((category) => {
                 const categorySubreddits = formData.subreddits.filter(
                   (sr) => sr.category === category,
                 );
@@ -678,7 +634,8 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
                     value={formData.customSubreddit}
                     onChange={handleChange}
                     placeholder="Enter subreddit name"
-                    className="flex-1"
+                    // --- Updated classes below ---
+                    className="w-full bg-neutral-100"
                   />
                   <Button
                     onClick={handleAddSubreddit}
@@ -819,7 +776,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
       <CardFooter className="flex justify-end pt-2">
         <Button
           onClick={() => setCurrentStep(2)}
-          className="bg-blue-500 hover:bg-blue-600"
+           variant="default"
         >
           Next <ChevronRight className="ml-2 h-4 w-4" />
         </Button>
@@ -874,46 +831,16 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
           </div>
         </div>
 
-        <Separator />
+        
 
-        <div className="space-y-3">
-          <Label className="text-sm font-medium">Content Filters</Label>
-          <p className="text-xs text-gray-500">
-            Select types of content to prioritize:
-          </p>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {(
-              Object.keys(formData.contentFilter) as Array<
-                keyof typeof formData.contentFilter
-              >
-            ).map((filterKey) => (
-              <div
-                key={filterKey}
-                className="flex items-center justify-between rounded-lg bg-gray-50 p-3"
-              >
-                <Label
-                  htmlFor={`filter-${filterKey}`}
-                  className="text-sm capitalize"
-                >
-                  {filterKey.replace(/([A-Z])/g, " $1").toLowerCase()}
-                </Label>
-                <Switch
-                  id={`filter-${filterKey}`}
-                  checked={formData.contentFilter[filterKey]}
-                  onCheckedChange={() => handleContentFilterToggle(filterKey)}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
       </CardContent>
       <CardFooter className="flex justify-between pt-2">
-        <Button onClick={() => setCurrentStep(1)} variant="outline">
+        <Button onClick={() => setCurrentStep(1)} variant="ghost">
           Back
         </Button>
         <Button
           onClick={() => setCurrentStep(3)}
-          className="bg-blue-500 hover:bg-blue-600"
+         variant="default"
         >
           Next <ChevronRight className="ml-2 h-4 w-4" />
         </Button>
@@ -953,17 +880,17 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
             </SelectContent>
           </Select>
         </div>
-  
+
         <Separator />
-  
+
         <div className="space-y-3">
           <Label className="text-sm font-medium">
             Notification Preferences
           </Label>
           <div className="space-y-4">
-            <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3">
+            {/* <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3">
               <div className="flex items-center gap-2">
-              <MicrosoftTeamsSVG className="h-5 w-5" />
+                <MicrosoftTeamsSVG className="h-5 w-5" />
                 <Label htmlFor="teams-notification" className="text-sm">
                   Teams Notifications
                 </Label>
@@ -978,23 +905,23 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
                   }))
                 }
               />
-            </div>
-  
+            </div> */}
+{/* 
             {formData.notificationType === "teams" && (
               <div className="space-y-2 pl-4">
                 <button
                   id="teams-login"
                   className="flex items-center gap-1 text-blue-600 underline transition-colors hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                   onClick={() => {
-                    /* Your login with Teams function here */
+              
                   }}
                 >
                   Login with Teams
                   <ArrowUpRight className="h-4 w-4" />
                 </button>
               </div>
-            )}
-  
+            )} */}
+
             <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3">
               <div className="flex items-center gap-2">
                 <Mail className="h-5 w-5" />
@@ -1013,7 +940,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
                 }
               />
             </div>
-  
+
             {formData.notificationType === "email" && (
               <div className="space-y-2 pl-4">
                 <Label htmlFor="email-address" className="text-sm">
@@ -1029,7 +956,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
                 />
               </div>
             )}
-  
+
             <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3">
               <Label htmlFor="no-notification" className="text-sm">
                 No Notifications
@@ -1044,7 +971,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
             </div>
           </div>
         </div>
-  
+
         <div className="rounded-lg border border-blue-100 bg-blue-50 p-4">
           <h3 className="mb-2 font-medium text-blue-800">
             Configuration Summary
@@ -1100,24 +1027,18 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
         </div>
       </CardContent>
       <CardFooter className="flex justify-between pt-2">
-        <Button onClick={() => setCurrentStep(2)} variant="outline">
+        <Button onClick={() => setCurrentStep(2)} variant="default">
           Back
         </Button>
         <Button
           onClick={handleSubmitConfiguration}
           disabled={isProcessing}
-          className="bg-green-500 hover:bg-green-600 disabled:bg-gray-300 disabled:text-gray-500"
+           variant="default"
         >
-          {isProcessing ? (
-            <>
-              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-              Processing...
-            </>
-          ) : (
-            <>
-              Start Monitoring <ArrowRightCircle className="ml-2 h-4 w-4" />
-            </>
-          )}
+         
+              Start Monitoring <ChevronRight className="ml-2 h-4 w-4" />
+            
+     
         </Button>
       </CardFooter>
     </Card>
@@ -1146,7 +1067,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
               onClick={handleManualScan}
               disabled={isProcessing}
               size="sm"
-              className="flex items-center bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300"
+              variant="default"
             >
               <Save
                 className={`mr-2 h-4 w-4 ${isProcessing ? "animate-spin" : ""}`}
@@ -1340,7 +1261,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
                   {leads.length === 0 && !isProcessing && (
                     <Button
                       onClick={handleManualScan}
-                      className="mt-4 bg-blue-500 hover:bg-blue-600"
+                    variant="outline"
                     >
                       <RefreshCw className="mr-2 h-4 w-4" /> Scan for Leads Now
                     </Button>
@@ -1719,7 +1640,6 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
           <DialogHeader>
             <DialogTitle className="flex items-start justify-between">
               <span>Outreach Script for {selectedLeadForScript?.username}</span>
-             
             </DialogTitle>
           </DialogHeader>
 
@@ -1841,12 +1761,7 @@ export default function OrangeSalesAgent({ userQuery }: OrangeSalesAgentProps) {
       <div className="mx-auto mb-6 max-w-6xl">
         <div className="flex flex-col items-center justify-between gap-2 sm:flex-row">
           <div className="flex items-center">
-            <div className="rounded-md bg-orange-500 p-2 text-xl font-bold text-white">
-              OTF
-            </div>
-            <h1 className="ml-3 text-2xl font-bold text-gray-800">
-              Orange Theory Charlotte
-            </h1>
+            
             <div className="ml-4 hidden text-gray-500 md:block">
               Social Search
             </div>
