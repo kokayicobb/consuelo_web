@@ -72,6 +72,7 @@ import ApolloSearchComponent from "./app-views/apollo-search-component"
 import dynamic from "next/dynamic"
 import ModelGenerationContent from "@/components/Dashboard/model-generation-content"
 import RedditSearch from "./app-views/social-search/reddit-search"
+import PhoneCallComponent from "../on-call-coaching"
 
 // Dynamically import to avoid SSR issues with Google Maps
 const LeadGenerationSearch = dynamic(
@@ -362,7 +363,15 @@ const renderDrawerContent = () => {
     
     
   }
-//
+  // Add handling for Google Maps Scraper
+  if (selectedApp.id === "ai-chatbot") {
+    // Import at the top of the file:
+    // import LeadGenerationSearch from "./app-views/LeadGenerationSearch"
+    return <PhoneCallComponent />
+    
+    
+  }
+//PhoneCallComponent
   // Default content for other apps
   return (
     <div className="space-y-4">
