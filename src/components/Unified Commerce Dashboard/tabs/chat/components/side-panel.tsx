@@ -16,7 +16,7 @@ import { generateSalesScript } from "@/components/Unified Commerce Dashboard/lib
 import { SuggestedAction } from "../action-suggestions";
 import QueryResults from "../query-results";
 import ScriptModal from "../script-modal";
-import OrangeSalesAgent from "../../../research";
+import RedditSearch from "@/components/Unified Commerce Dashboard/tabs/apps/app-views/social-search/reddit-search";
 
 interface SideArtifactPanelProps {
   data: ChatMessageData | null;
@@ -91,7 +91,7 @@ const SideArtifactPanel: React.FC<SideArtifactPanelProps> = ({
       // Return the OrangeSalesAgent component
       return (
         <div className="h-full w-full">
-          <OrangeSalesAgent userQuery={currentQueryContext} />
+          <RedditSearch userQuery={currentQueryContext} />
         </div>
       );
     }

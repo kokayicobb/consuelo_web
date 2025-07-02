@@ -10,12 +10,12 @@ import {
   explainQuery,
   generateActionSuggestions,
   // No need to import generateSalesScript here, it's called by SideArtifactPanel
-} from "@/components/Unified Commerce Dashboard/lib/actions/prompt_actions";// Assuming this is your server actions file path
+} from "@/components/Unified Commerce Dashboard/lib/actions/prompt_actions"; // Assuming this is your server actions file path
 
 import type { ChatMessage, ChatMessageData } from "@/types/chats";
 
 import ChatMessageItem from "./components/chat-message-item";
-import SideArtifactPanel from "./components/side.panel"; // Ensure this path is correct
+import SideArtifactPanel from "./components/side-panel"; // Ensure this path is correct
 import ExampleQueries from "./example-queries";
 import SegmentationForm from "./segmentation-form";
 

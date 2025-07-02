@@ -1,4 +1,4 @@
-// Customer interface for the application
+// src/lib/supabase/customer.ts
 export interface Customer {
   id: string
   name: string
