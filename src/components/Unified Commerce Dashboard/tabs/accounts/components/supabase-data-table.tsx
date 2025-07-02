@@ -69,6 +69,8 @@ import DraggableTableHeader from "../ui/draggable-table-header";
 import InlineEditCell from "../ui/inline-edit-cell";
 import DetailedSidePanel from "../ui/side-panel-account";
 import DataHeader from "../ui/table-header";
+import { useSession } from "@clerk/nextjs"
+import { createClerkSupabaseClient } from "@/lib/supabase/client"
 
 interface SortRule {
   id: string
@@ -105,6 +107,7 @@ export default function SupabaseCustomerTable({
   onViewDetails,
 }: ProductionCustomerTableProps) {
   const { clients, loading, error, refreshClients } = useClients();
+  const { session } = useSession()
   const {
     visibleColumns,
    
@@ -233,6 +236,10 @@ export default function SupabaseCustomerTable({
     value: any,
   ) => {
     try {
+      // Get authenticated client
+      const token = await session?.getToken()
+      const supabaseClient = createClerkSupabaseClient(token)
+      
       const fieldMapping: Record<string, string> = {
         // Basic client information
         name: "Client",
@@ -268,11 +275,11 @@ export default function SupabaseCustomerTable({
         updatedAt: "updated_at",
         clientId: "Client ID"
       };
-
+  
       const dbField = fieldMapping[field] || field;
       const updates = { [dbField]: value };
-
-      await updateClient(customerId, updates);
+  
+      await updateClient(customerId, updates, supabaseClient);
       await refreshClients(); // Refresh the data
     } catch (error) {
       console.error("Failed to update client:", error);
@@ -336,6 +343,31 @@ export default function SupabaseCustomerTable({
 
   const handleSaveCustomer = async (customerData: CreateCustomerInput) => {
     try {
+      // Get authenticated client
+      const token = await session?.getToken()
+      const supabaseClient = createClerkSupabaseClient(token)
+      
+      // Helper function to clean date values
+      const cleanDateValue = (value: any) => {
+        if (!value || value === '') return null;
+        return value;
+      };
+      
+      // Helper function to clean all values
+      const cleanValue = (value: any, fieldName: string) => {
+        // List of date fields in your database
+        const dateFields = ['Last Visit', 'Expiration Date', 'last_review_date'];
+        
+        if (dateFields.includes(fieldName)) {
+          return cleanDateValue(value);
+        }
+        
+        // For other fields, convert empty strings to null
+        if (value === '') return null;
+        
+        return value;
+      };
+      
       if (editingCustomer) {
         // Update existing customer
         const updates = {
@@ -344,38 +376,84 @@ export default function SupabaseCustomerTable({
           phone: customerData.phone,
           "Pricing Option": customerData.pricingOption,
           "# Visits": customerData.visits,
-          "Last Visit": customerData.lastVisit,
+          "Last Visit": cleanDateValue(customerData.lastVisit),
           Staff: customerData.staff,
-          "Expiration Date": customerData.expirationDate,
+          "Expiration Date": cleanDateValue(customerData.expirationDate),
           "Cross Regional Visit": customerData.crossRegionalVisit,
           "Visit Type": customerData.visitType,
           "Booking Method": customerData.bookingMethod,
           "Referral Type": customerData.referralType,
+          // Add additional fields if they exist
+          title: customerData.title,
+          company: customerData.company,
+          address: customerData.address,
+          linkedin: customerData.linkedin,
+          priority: customerData.priority,
+          segment: customerData.segment,
+          relationship_manager: customerData.relationship_manager,
+          notes: customerData.notes,
+          total_assets_under_management: customerData.total_assets_under_management,
+          recent_deal_value: customerData.recent_deal_value,
+          product_interests: customerData.product_interests,
+          last_review_date: cleanDateValue(customerData.last_review_date),
         };
-        await updateClient(editingCustomer.id, updates);
+        
+        // Remove any undefined values
+        const cleanedUpdates = Object.entries(updates).reduce((acc, [key, value]) => {
+          if (value !== undefined) {
+            acc[key] = cleanValue(value, key);
+          }
+          return acc;
+        }, {} as any);
+        
+        await updateClient(editingCustomer.id, cleanedUpdates, supabaseClient);
       } else {
-        // Create new customer - format data according to DatabaseClient interface
+        // Create new customer - DON'T include user_id, the trigger will add it automatically
         const newClientData = {
           Client: customerData.name,
-          email: customerData.email,
-          phone: customerData.phone,
-          "Last Visit": customerData.lastVisit,
-          "# Visits": customerData.visits,
-          "Pricing Option": customerData.pricingOption,
-          "Expiration Date": customerData.expirationDate,
-          Staff: customerData.staff,
-          "Cross Regional Visit": customerData.crossRegionalVisit,
-          "Visit Type": customerData.visitType,
-          "Booking Method": customerData.bookingMethod,
-          "Referral Type": customerData.referralType,
+          email: customerData.email || null,
+          phone: customerData.phone || null,
+          "Last Visit": cleanDateValue(customerData.lastVisit),
+          "# Visits": customerData.visits || 0,
+          "Pricing Option": customerData.pricingOption || null,
+          "Expiration Date": cleanDateValue(customerData.expirationDate),
+          Staff: customerData.staff || null,
+          "Cross Regional Visit": customerData.crossRegionalVisit || null,
+          "Visit Type": customerData.visitType || null,
+          "Booking Method": customerData.bookingMethod || null,
+          "Referral Type": customerData.referralType || null,
+          // Add additional fields if they exist
+          title: customerData.title || null,
+          company: customerData.company || null,
+          address: customerData.address || null,
+          linkedin: customerData.linkedin || null,
+          priority: customerData.priority || null,
+          segment: customerData.segment || null,
+          relationship_manager: customerData.relationship_manager || null,
+          notes: customerData.notes || null,
+          total_assets_under_management: customerData.total_assets_under_management || null,
+          recent_deal_value: customerData.recent_deal_value || null,
+          product_interests: customerData.product_interests || null,
+          last_review_date: cleanDateValue(customerData.last_review_date),
         };
-        await createClient(newClientData);
+        
+        // Remove any undefined values and ensure empty strings become null
+        const cleanedData = Object.entries(newClientData).reduce((acc, [key, value]) => {
+          if (value !== undefined) {
+            acc[key] = cleanValue(value, key);
+          }
+          return acc;
+        }, {} as any);
+        
+        await createClient(cleanedData, supabaseClient);
       }
+      
       await refreshClients();
       setIsFormOpen(false);
       setEditingCustomer(null);
     } catch (error) {
       console.error("Failed to save customer:", error);
+      // You might want to show a toast notification here
       throw error;
     }
   };
@@ -430,9 +508,9 @@ export default function SupabaseCustomerTable({
   }
 
   const handleAddAccount = () => {
-    // Your add account logic here
-    console.log("Add account clicked")
-  }
+    setEditingCustomer(null); // Clear any existing customer data
+    setIsFormOpen(true); // Open the form in create mode
+  };
 
 
   const getFieldOptions = (field: string) => {

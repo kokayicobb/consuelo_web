@@ -3,8 +3,9 @@
 import React, { useState, useRef, useEffect } from "react";
 
 import { XCircle, MinusCircle, ChevronUp } from "lucide-react";
-import OrangeSalesAgent from "../../research";
+
 import SegmentationForm from "./segmentation-form";
+import OrangeSalesAgent from "../apps/app-views/social-search/reddit-search";
 
 const ChatWithOTFAgent = () => {
   const [inputValue, setInputValue] = useState("");

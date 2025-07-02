@@ -1,3 +1,4 @@
+//src/components/Unified Commerce Dashboard/components/chatbot/index.tsx
 "use client";
 
 import type React from "react";
@@ -5,6 +6,8 @@ import { useState, useEffect, useRef } from "react";
 import TypingIndicator from "./typing-indicator";
 import SchedulingButtons from "./cal-com/scheduling-buttons";
 import { sendChatMessage } from "@/components/Unified Commerce Dashboard/lib/actions/chatbot-actions";
+import { MarkdownContent } from "@/components/ui/markdown-content"
+import ThinkingBlock from "./thinking-block";
 
 // --- Interfaces for a structured component ---
 interface HelpTopic {
@@ -78,12 +81,60 @@ const ChatBot: React.FC<ChatBotProps> = ({
   const [selectedTime, setSelectedTime] = useState<string>("");
   const [isBooking, setIsBooking] = useState(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const isAtBottomRef = useRef(true); 
+ 
+  // AROUND LINE 95
+const scrollToBottom = () => {
+  chatContainerRef.current?.scrollTo({
+      top: chatContainerRef.current.scrollHeight,
+      behavior: 'smooth'
+  });
+};
 
+// --- ADD THIS FUNCTION ---
+const scrollToTop = () => {
+  chatContainerRef.current?.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+  });
+};
+
+  // REPLACE the existing useEffect with this one
   useEffect(() => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    // Only perform auto-scroll if there's more than one message (i.e., not the initial load)
+    if (messages.length > 1 && chatContainerRef.current && isAtBottomRef.current) {
+        chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
-  }, [messages]);
+}, [messages]);
+
+  // Place this helper function right above your ChatBot component definition
+const parseMessageContent = (text: string): React.ReactNode[] => {
+  if (!text) return [];
+  // Regex to find <think>...</think> blocks non-greedily
+  const regex = /<think>(.*?)<\/think>/gs;
+  
+  const parts = [];
+  let lastIndex = 0;
+  let match;
+
+  while ((match = regex.exec(text)) !== null) {
+    // 1. Add the text *before* the <think> block
+    if (match.index > lastIndex) {
+      parts.push(text.substring(lastIndex, match.index));
+    }
+    // 2. Add the ThinkingBlock component with the content inside the tags
+    parts.push(<ThinkingBlock content={match[1].trim()} />);
+    
+    lastIndex = regex.lastIndex;
+  }
+
+  // 3. Add any remaining text *after* the last <think> block
+  if (lastIndex < text.length) {
+    parts.push(text.substring(lastIndex));
+  }
+
+  return parts;
+};
 
   // Function to fetch available time slots from Cal.com
   
@@ -154,6 +205,15 @@ const fetchAvailableSlots = async () => {
   const handleSendMessage = async (messageText?: string) => {
     const userInputText = (messageText || input).trim();
     if (!userInputText || isLoading) return;
+    const chatContainer = chatContainerRef.current;
+    if (chatContainer) {
+      const isScrolledToBottom =
+        chatContainer.scrollHeight - chatContainer.scrollTop <= chatContainer.clientHeight + 20;
+      isAtBottomRef.current = isScrolledToBottom;
+    }
+    // --- END BLOCK ---
+
+ 
 
     // Clear suggestions from previous messages before adding a new one
     const historyWithoutSuggestions = messages.map(({ suggestions, schedulingData, ...rest }) => rest);
@@ -304,7 +364,26 @@ const fetchAvailableSlots = async () => {
                   <span className="text-sm font-semibold">{botName}</span>
                 </div>
               )}
-              <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+           {/* --- NEW REPLACEMENT --- */}
+           {message.role === 'bot' ? (
+                <div>
+                  {parseMessageContent(message.content).map((part, i) => {
+                    // If the part is just a string, render it with Markdown
+                    if (typeof part === 'string') {
+                      return (
+                        <div key={i} className="prose prose-sm dark:prose-invert max-w-none">
+                          <MarkdownContent content={part} id={`bot-msg-${index}-part-${i}`} />
+                        </div>
+                      );
+                    }
+                    // Otherwise, it's our ThinkingBlock component, so just render it
+                    return <div key={i}>{part}</div>;
+                  })}
+                </div>
+              ) : (
+                // User messages are still plain text
+                <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+              )}
 
               {/* Render Suggestion Buttons */}
               {message.suggestions && (
@@ -337,6 +416,32 @@ const fetchAvailableSlots = async () => {
           </div>
         ))}
         {isLoading && <TypingIndicator />}
+       {/* --- THIS IS THE NEW, UPDATED BLOCK --- */}
+{/* Conditionally render the buttons only after the conversation has started */}
+{messages.length > 1 && (
+    <div className="absolute bottom-[10rem] right-2 md:right-4 z-20 flex flex-col space-y-2">
+        {/* Scroll to Top Button (no changes inside) */}
+        <button
+            onClick={scrollToTop}
+            className="flex h-16 w-6 items-center justify-center rounded-full bg-neutral-600/75 text-white shadow-lg transition-colors hover:bg-neutral-700 "
+            aria-label="Scroll to top"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v17" />
+            </svg>
+        </button>
+        {/* Scroll to Bottom Button (no changes inside) */}
+        <button
+            onClick={scrollToBottom}
+            className="flex h-16 w-6 items-center justify-center rounded-full bg-neutral-600/75 text-white shadow-lg transition-colors hover:bg-neutral-700 "
+            aria-label="Scroll to bottom"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+            </svg>
+        </button>
+    </div>
+)}
       </div>
       
       {/* --- Permanent Footer with Input --- */}
@@ -360,22 +465,44 @@ const fetchAvailableSlots = async () => {
           </button>
         </div>
 
-        <div className="flex rounded-md shadow-sm">
-          <textarea
-            rows={1}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder={inputPlaceholder || "Type your message..."}
-            className="shadow-sm focus:ring-3cb878 focus:border-sky-500 block w-full min-w-0 flex-1 border border-gray-300 dark:border-gray-600 rounded-none rounded-l-md sm:text-sm p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
-            disabled={isLoading}
-          />
-          <button
-            onClick={() => handleSendMessage()}
-            className={`inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-r-md shadow-sm text-white ${sendButtonClassName || "bg-sky-600 hover:bg-sky-700"} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 disabled:opacity-50`}
-            disabled={isLoading}>
-            Send
-          </button>
+        <div className="relative w-full">
+  <textarea
+    rows={1}
+    value={input}
+    onChange={(e) => setInput(e.target.value)}
+    onKeyPress={handleKeyPress}
+    placeholder={inputPlaceholder || "Type your message..."}
+    // Key Changes:
+    // 1. Fully rounded corners to contain the button visually.
+    // 2. Padding on the right (pr-12) to make space for the button.
+    className="block w-full rounded-md border-gray-300 dark:border-gray-600 p-2 pr-12 shadow-sm focus:ring-teal-500 focus:border-teal-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+    disabled={isLoading}
+  />
+  <button
+    onClick={() => handleSendMessage()}
+    // Key Changes:
+    // 1. 'absolute' positioning to place it inside the textarea's container.
+    // 2. 'right-2 top-1/2 -translate-y-1/2' to center it vertically on the right.
+    // 3. Smaller size (h-8 w-8) and circular shape (rounded-full).
+    className="absolute right-2 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-teal-500 text-white hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:opacity-50"
+    disabled={isLoading}
+  >
+    <span className="sr-only">Send</span>
+    {/* The basic right-arrow icon from your example, sized down */}
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 20 20"
+      fill="currentColor"
+      className="h-5 w-5"
+    >
+     
+      <path // I've combined the two paths from your example into one SVG
+        fillRule="evenodd"
+        d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z"
+        clipRule="evenodd"
+      />
+    </svg>
+  </button>
         </div>
       </div>
     </div>

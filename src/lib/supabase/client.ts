@@ -6,7 +6,6 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 // Check if required environment variables are set
 if (!supabaseUrl || !supabaseAnonKey) {
-  // In development, show a helpful error message
   if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'production') {
     console.error(
       '⚠️ Supabase URL and Anon Key are required! Check your .env.local file.'
@@ -19,6 +18,21 @@ export const supabase = createClient(
   supabaseUrl || 'https://placeholder-url.supabase.co',
   supabaseAnonKey || 'placeholder-key'
 );
+
+// Create a Supabase client that accepts a Clerk token
+export function createClerkSupabaseClient(clerkToken?: string | null) {
+  return createClient(
+    supabaseUrl || 'https://placeholder-url.supabase.co',
+    supabaseAnonKey || 'placeholder-key',
+    {
+      global: {
+        headers: {
+          Authorization: clerkToken ? `Bearer ${clerkToken}` : '',
+        }
+      }
+    }
+  )
+}
 
 // Create a function to get the admin client
 // This ensures the Service Role Key is only used in server context
