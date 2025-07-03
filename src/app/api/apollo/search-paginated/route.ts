@@ -1,8 +1,8 @@
-// app/api/apollo/search/route.ts - Updated to get more results
+// app/api/apollo/search-paginated/route.ts - Single page search
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
-  console.log('🚀 Apollo API route called');
+  console.log('🚀 Apollo paginated search called');
   
   try {
     const apiKey = process.env.APOLLO_API_KEY;
@@ -15,22 +15,29 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    const page = body.page || 1;
+    const perPage = body.per_page || 25;
+    
     console.log('📦 Request body:', body);
+    console.log(`📄 Requesting page ${page} with ${perPage} results per page`);
 
-    // Build search payload with more results
-    const apolloPayload: any = {
-      page: 1,
-      per_page: 25, // ← Increased from 25 to 100 (max allowed)
+    // Build search payload
+    const searchPayload: any = {
+      page: page,
+      per_page: perPage,
+      // These flags tell Apollo to include emails/phones if available without credits
       reveal_personal_emails: true,
       reveal_phone_number: true,
+      // This might help get LinkedIn URLs without credits
+      include_linkedin_url: true,
     };
 
     if (body.jobTitle && body.jobTitle.trim()) {
-      apolloPayload.person_titles = [body.jobTitle.trim()];
+      searchPayload.person_titles = [body.jobTitle.trim()];
     }
 
     if (body.location && body.location.trim()) {
-      apolloPayload.person_locations = [body.location.trim()];
+      searchPayload.person_locations = [body.location.trim()];
     }
 
     if (body.industry && body.industry !== 'any') {
@@ -44,23 +51,22 @@ export async function POST(request: NextRequest) {
       };
       
       const mappedIndustry = industryMap[body.industry.toLowerCase()] || body.industry;
-      apolloPayload.organization_industries = [mappedIndustry];
+      searchPayload.organization_industries = [mappedIndustry];
     }
 
     if (body.companySize && body.companySize !== 'any') {
-      apolloPayload.organization_num_employees_ranges = [body.companySize];
+      searchPayload.organization_num_employees_ranges = [body.companySize];
     }
 
-    console.log('📤 Apollo search payload:', apolloPayload);
+    console.log('📤 Sending request to Apollo API...');
 
-    // Search for people
     const searchResponse = await fetch('https://api.apollo.io/api/v1/mixed_people/search', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-Api-Key': apiKey,
       },
-      body: JSON.stringify(apolloPayload),
+      body: JSON.stringify(searchPayload),
     });
 
     if (!searchResponse.ok) {
@@ -78,11 +84,10 @@ export async function POST(request: NextRequest) {
     }
 
     const searchData = await searchResponse.json();
-    console.log('✅ Found', searchData.people?.length || 0, 'people from search');
-    console.log('📊 Total available:', searchData.pagination?.total_entries || 0);
+    console.log(`✅ Found ${searchData.people?.length || 0} people on page ${page}`);
 
     // Process the people data
-    const processedPeople = searchData.people?.map((person: any) => {
+    const processedPeople = (searchData.people || []).map((person: any) => {
       // Clean up email
       let email = person.email;
       if (email && email.includes('email_not_unlocked')) {
@@ -117,25 +122,25 @@ export async function POST(request: NextRequest) {
         organization: person.organization,
         linkedin_url: person.linkedin_url,
       };
-    }) || [];
+    });
 
-    console.log(`✅ Returning ${processedPeople.length} processed contacts`);
+    const withEmail = processedPeople.filter((p: any) => p.email).length;
+    const withPhone = processedPeople.filter((p: any) => p.phone).length;
 
-    // Log summary
-    const withEmail = processedPeople.filter(p => p.email).length;
-    const withPhone = processedPeople.filter(p => p.phone).length;
-    console.log(`📊 Contacts with email: ${withEmail}, with phone: ${withPhone}`);
+    console.log(`📊 Page ${page} results: ${processedPeople.length} contacts, ${withEmail} with email, ${withPhone} with phone`);
 
     return NextResponse.json({
       people: processedPeople,
-      pagination: searchData.pagination,
+      pagination: {
+        page: searchData.pagination?.page || page,
+        per_page: searchData.pagination?.per_page || perPage,
+        total_entries: searchData.pagination?.total_entries || 0,
+        total_pages: searchData.pagination?.total_pages || 0,
+      },
       summary: {
         returned: processedPeople.length,
-        totalAvailable: searchData.pagination?.total_entries || 0,
-        currentPage: searchData.pagination?.page || 1,
-        totalPages: searchData.pagination?.total_pages || 1,
         withEmail: withEmail,
-        withPhone: withPhone
+        withPhone: withPhone,
       }
     });
 
@@ -149,13 +154,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
-
-export async function GET() {
-  const apiKey = process.env.APOLLO_API_KEY;
-  return NextResponse.json({ 
-    status: 'Apollo API route is working',
-    hasApiKey: !!apiKey,
-    timestamp: new Date().toISOString()
-  });
 }

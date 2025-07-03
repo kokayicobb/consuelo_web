@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
 
     // Build base search payload
     const basePayload: any = {
-      per_page: 100, // Max per page
+      per_page: 25, // Max per page
       reveal_personal_emails: true,
       reveal_phone_number: true,
     };
