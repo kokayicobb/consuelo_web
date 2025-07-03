@@ -74,6 +74,8 @@ import ModelGenerationContent from "@/components/Dashboard/model-generation-cont
 import RedditSearch from "./app-views/social-search/reddit-search"
 import PhoneCallComponent from "../on-call-coaching"
 import EmailComposer from "../../components/email/email-composer"
+import FacebookGroupsSearch from "./app-views/social-search/facebook-group-search"
+import FormSelector from "./app-views/social-search/form-selector"
 
 // Dynamically import to avoid SSR issues with Google Maps
 const LeadGenerationSearch = dynamic(
@@ -360,7 +362,7 @@ const renderDrawerContent = () => {
    if (selectedApp.id === "social-monitor") {
     // Import at the top of the file:
     // import LeadGenerationSearch from "./app-views/LeadGenerationSearch"
-    return <RedditSearch />
+    return <FormSelector />
     
     
   }
