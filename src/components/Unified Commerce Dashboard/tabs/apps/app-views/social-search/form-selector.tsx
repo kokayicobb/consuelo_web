@@ -17,7 +17,8 @@ import {
 	ChevronDoubleLeftIcon
 } from '@heroicons/react/24/outline'
 import FacebookGroupsSearch from "./facebook-group-search";
-import OrangeSalesAgent from "./reddit-search";
+import RedditSearch from "./reddit";
+
 
 const FormSelector = ({ onClose, isFullScreen, setIsFullScreen }) => {
   const [selectedForm, setSelectedForm] = useState<"none" | "facebook-group" | "social">("none");
@@ -184,7 +185,7 @@ const FormSelector = ({ onClose, isFullScreen, setIsFullScreen }) => {
             {/* Main content */}
             <div>
               {selectedForm === "facebook-group" && <FacebookGroupsSearch />}
-              {selectedForm === "social" && <OrangeSalesAgent />}
+              {selectedForm === "social" && <RedditSearch />}
             </div>
           </div>
         )}
