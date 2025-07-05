@@ -89,12 +89,12 @@ interface ApiResponse {
 
 const RedditSearch = () => {
   // Form state with examples
-  const [subreddits, setSubreddits] = useState<string[]>(['entrepreneur', 'smallbusiness']);
+  const [subreddits, setSubreddits] = useState<string[]>(['startups', 'business']);
   const [subredditInput, setSubredditInput] = useState("");
-  const [keywords, setKeywords] = useState<string[]>(['startup', 'funding', 'investor']);
+  const [keywords, setKeywords] = useState<string[]>(['help', 'advice', 'question']);
   const [keywordInput, setKeywordInput] = useState("");
-  const [sortType, setSortType] = useState<'relevance' | 'hot' | 'top' | 'new' | 'comments'>('relevance');
-  const [timeFilter, setTimeFilter] = useState<'all' | 'year' | 'month' | 'week' | 'day' | 'hour'>('month');
+  const [sortType, setSortType] = useState<'relevance' | 'hot' | 'top' | 'new' | 'comments'>('new');
+  const [timeFilter, setTimeFilter] = useState<'all' | 'year' | 'month' | 'week' | 'day' | 'hour'>('week');
   
   // Results state
   const [posts, setPosts] = useState<RedditPost[]>([]);
@@ -111,6 +111,8 @@ const RedditSearch = () => {
   // UI state
   const [expandedPosts, setExpandedPosts] = useState<Set<string>>(new Set());
   const [selectedPosts, setSelectedPosts] = useState<Set<string>>(new Set());
+  const [fullPostContent, setFullPostContent] = useState<Map<string, string>>(new Map());
+  const [loadingFullPost, setLoadingFullPost] = useState<Set<string>>(new Set());
 
   // --- FORM MANAGEMENT FUNCTIONS ---
   const addSubreddit = () => {
@@ -169,6 +171,7 @@ const RedditSearch = () => {
       if (page === 1) {
         setExpandedPosts(new Set());
         setSelectedPosts(new Set());
+        setFullPostContent(new Map());
       }
     } catch (err: any) {
       setError(err.message);
@@ -212,12 +215,44 @@ const RedditSearch = () => {
   };
 
   // --- UI & HELPER FUNCTIONS ---
-  const togglePostExpansion = (postId: string) => setExpandedPosts(prev => {
-    const newSet = new Set(prev);
-    if (newSet.has(postId)) newSet.delete(postId);
-    else newSet.add(postId);
-    return newSet;
-  });
+  const togglePostExpansion = async (postId: string, postUrl?: string) => {
+    const isCurrentlyExpanded = expandedPosts.has(postId);
+    
+    if (!isCurrentlyExpanded && postUrl && !fullPostContent.has(postId)) {
+      // Fetch full post content
+      setLoadingFullPost(prev => new Set(prev).add(postId));
+      
+      try {
+        const response = await fetch('/api/reddit/post-details', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: postUrl }),
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.content) {
+            setFullPostContent(prev => new Map(prev).set(postId, data.content));
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching full post:', error);
+      } finally {
+        setLoadingFullPost(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(postId);
+          return newSet;
+        });
+      }
+    }
+    
+    setExpandedPosts(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(postId)) newSet.delete(postId);
+      else newSet.add(postId);
+      return newSet;
+    });
+  };
   
   const togglePostSelection = (postId: string) => setSelectedPosts(prev => {
     const newSet = new Set(prev);
@@ -571,17 +606,25 @@ const RedditSearch = () => {
                             </div>
 
                             {/* Post Content */}
-                            {post.text && (
+                            {(post.text || fullPostContent.get(post.id)) && (
                               <div className="text-sm text-slate-700">
-                                <p className={`whitespace-pre-wrap ${!isExpanded && post.text.length > 300 ? 'line-clamp-3' : ''}`}>
-                                  {post.text}
+                                <p className={`whitespace-pre-wrap ${!isExpanded ? 'line-clamp-3' : ''}`}>
+                                  {fullPostContent.get(post.id) || post.text}
                                 </p>
-                                {post.text.length > 300 && (
+                                {(post.text.length > 200 || fullPostContent.has(post.id) || !post.is_self) && (
                                   <button 
-                                    onClick={() => togglePostExpansion(post.id)} 
-                                    className="mt-1 text-xs font-medium text-orange-600 hover:underline"
+                                    onClick={() => togglePostExpansion(post.id, `https://reddit.com${post.permalink}`)} 
+                                    disabled={loadingFullPost.has(post.id)}
+                                    className="mt-1 text-xs font-medium text-orange-600 hover:underline disabled:opacity-50"
                                   >
-                                    {isExpanded ? 'Show less' : 'Show more'}
+                                    {loadingFullPost.has(post.id) ? (
+                                      <>
+                                        <Loader2 className="inline h-3 w-3 animate-spin mr-1" />
+                                        Loading...
+                                      </>
+                                    ) : (
+                                      isExpanded ? 'Show less' : 'Show more'
+                                    )}
                                   </button>
                                 )}
                               </div>
