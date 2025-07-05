@@ -85,11 +85,11 @@ const SideArtifactPanel: React.FC<SideArtifactPanelProps> = ({
     // Explicitly check for leadGenerator mode
     if (data.viewMode === "leadGenerator") {
       console.log(
-        "Should render OrangeSalesAgent with query:",
+        "Should render RedditSearch with query:",
         currentQueryContext,
       );
 
-      // Return the OrangeSalesAgent component
+      // Return the RedditSearch component
       return (
         <div className="h-full w-full">
           <RedditSearch  />
