@@ -27,6 +27,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+
 import {
   Select,
   SelectContent,
@@ -34,11 +35,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { sendChatMessage } from "@/components/Unified Commerce Dashboard/lib/actions/reddit-actions";
 
 // Reddit logo component
 const RedditLogo = () => (
   <svg viewBox="0 0 24 24" className="h-6 w-6" fill="#FF4500">
-    <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221a1.334 1.334 0 0 0-2.224-.502c-1.098-.71-2.612-1.158-4.282-1.214l.731-3.445 2.385.507a.952.952 0 1 0 .095-.451l-2.664-.567a.233.233 0 0 0-.273.177l-.813 3.836c-1.705.046-3.237.495-4.35 1.214a1.333 1.333 0 1 0-1.469 2.157c-.018.147-.027.297-.027.449 0 2.281 2.656 4.13 5.932 4.13s5.932-1.849 5.932-4.13a2.29 2.29 0 0 0-.027-.449 1.332 1.332 0 0 0 .754-1.712zM8.444 13.069a.951.951 0 1 1 0-1.902.951.951 0 0 1 0 1.902zm6.601-.316c-.722.722-2.103.778-2.508.778s-1.787-.056-2.508-.778a.268.268 0 0 1 0-.379.268.268 0 0 1 .379 0c.454.454 1.442.615 2.129.615s1.675-.161 2.129-.615a.268.268 0 0 1 .379 0 .269.269 0 0 1 0 .379zm-.498-1.685a.951.951 0 1 1 0 1.902.951.951 0 0 1 0-1.902z"/>
+    <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221a1.334 1.334 0 0 0-2.224-.502c-1.098-.71-2.612-1.158-4.282-1.214l.731-3.445 2.385.507a.952.952 0 1 0 .095-.451l-2.664-.567a.233.233 0 0 0-.273.177l-.813 3.836c-1.705.046-3.237.495-4.35 1.214a1.333 1.333 0 1 0-1.469 2.157c-.018.147-.027.297-.027.449 0 2.281 2.656 4.13 5.932 4.13s5.932-1.849 5.932-4.13a2.29 2.29 0 0 0-.027-.449 1.332 1.332 0 0 0 .754-1.712zM8.444 13.069a.951.951 0 1 1 0-1.902.951.951 0 0 1 0 1.902zm6.601-.316c-.722.722-2.103.778-2.508.778s-1.787-.056-2.508-.778a.268.268 0 0 1 0-.379.268.268 0 0 1 .379 0c.454.454 1.442.615 2.129.615s1.675-.161 2.129-.615a.268.268 0 0 1 .379 0 .269.269 0 0 1 0 .379zm-.498-1.685a.951.951 0 1 1 0 1.902.951.951 0 0 1 0-1.902z" />
   </svg>
 );
 
@@ -89,48 +91,189 @@ interface ApiResponse {
 
 const RedditSearch = () => {
   // Form state with examples
-  const [subreddits, setSubreddits] = useState<string[]>(['startups', 'business']);
+  const [subreddits, setSubreddits] = useState<string[]>([
+    "startups",
+    "business",
+  ]);
   const [subredditInput, setSubredditInput] = useState("");
-  const [keywords, setKeywords] = useState<string[]>(['help', 'advice', 'question']);
+  const [keywords, setKeywords] = useState<string[]>([
+    "help",
+    "advice",
+    "question",
+  ]);
   const [keywordInput, setKeywordInput] = useState("");
-  const [sortType, setSortType] = useState<'relevance' | 'hot' | 'top' | 'new' | 'comments'>('new');
-  const [timeFilter, setTimeFilter] = useState<'all' | 'year' | 'month' | 'week' | 'day' | 'hour'>('week');
-  
+  const [sortType, setSortType] = useState<
+    "relevance" | "hot" | "top" | "new" | "comments"
+  >("new");
+  const [timeFilter, setTimeFilter] = useState<
+    "all" | "year" | "month" | "week" | "day" | "hour"
+  >("week");
+
   // Results state
   const [posts, setPosts] = useState<RedditPost[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
-  
+
+  // Add this helper function after your other functions in the RedditSearch component
+  const markdownToPlainText = (text: string): string => {
+    return (
+      text
+        // Remove bold/italic markers
+        .replace(/\*\*([^*]+)\*\*/g, "$1") // **bold**
+        .replace(/\*([^*]+)\*/g, "$1") // *italic*
+        .replace(/__([^_]+)__/g, "$1") // __bold__
+        .replace(/_([^_]+)_/g, "$1") // _italic_
+        // Remove headers
+        .replace(/^#{1,6}\s+(.+)$/gm, "$1")
+        // Remove code blocks
+        .replace(/```[^`]*```/g, (match) => {
+          const code = match.replace(/```[^`]*\n?/g, "").replace(/```/g, "");
+          return code;
+        })
+        .replace(/`([^`]+)`/g, "$1") // inline code
+        // Remove links but keep text
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+        // Remove blockquotes
+        .replace(/^>\s+(.+)$/gm, "$1")
+        // Remove horizontal rules
+        .replace(/^---+$/gm, "")
+        .replace(/^\*\*\*+$/gm, "")
+        // Remove list markers
+        .replace(/^[\*\-\+]\s+(.+)$/gm, "• $1") // Unordered lists
+        .replace(/^\d+\.\s+(.+)$/gm, "$1") // Ordered lists
+        // Clean up extra whitespace
+        .replace(/\n{3,}/g, "\n\n")
+        .trim()
+    );
+  };
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [totalResults, setTotalResults] = useState(0);
   const perPage = 10;
-  
+
   // UI state
   const [expandedPosts, setExpandedPosts] = useState<Set<string>>(new Set());
   const [selectedPosts, setSelectedPosts] = useState<Set<string>>(new Set());
-  const [fullPostContent, setFullPostContent] = useState<Map<string, string>>(new Map());
-  const [loadingFullPost, setLoadingFullPost] = useState<Set<string>>(new Set());
+  const [fullPostContent, setFullPostContent] = useState<Map<string, string>>(
+    new Map(),
+  );
+  const [loadingFullPost, setLoadingFullPost] = useState<Set<string>>(
+    new Set(),
+  );
+  // Add these state variables after your existing state declarations
+  const [generatingMessage, setGeneratingMessage] = useState<Set<string>>(
+    new Set(),
+  );
+  const [generatedMessages, setGeneratedMessages] = useState<
+    Map<string, { subject: string; body: string }>
+  >(new Map());
+  // Add this after your state declarations in the RedditSearch component
+  const redditOutreachPrompt = `You are a professional business development representative for United Capital Source. You're reaching out to business owners on Reddit who have expressed challenges or questions that our funding solutions can help with.
+
+CONTEXT: You're reading a Reddit post and crafting a personalized, helpful response that provides value while subtly introducing our services when relevant.
+
+CRITICAL FORMATTING RULE: Write in PLAIN TEXT ONLY. Do not use any markdown formatting:
+- NO asterisks (*) for bold or italic
+- NO underscores (_) for emphasis  
+- NO backticks () for code
+- NO hashtags (#) for headers
+- Just use plain, clear text
+
+GUIDELINES:
+1. Be genuinely helpful first - answer their question or acknowledge their challenge
+2. Keep it conversational and Reddit-appropriate (not too formal)
+3. Only mention UCS if it's directly relevant to their problem
+4. Never be pushy or salesy - Reddit users hate that
+5. Keep messages concise (2-3 paragraphs max)
+6. Use their language and reference specific details from their post
+7. If they mention specific funding needs, briefly explain how we could help
+8. End with an offer to chat more if they're interested, not a hard sell
+
+TONE: Friendly, knowledgeable, helpful colleague - not a salesperson`;
+
+  // Add this function after your other handler functions
+  // Replace the generateAIMessage function with this updated version:
+const generateAIMessage = async (post: RedditPost) => {
+  setGeneratingMessage(prev => new Set(prev).add(post.id));
+  
+  try {
+    // Prepare context about the post
+    const postContext = `
+Reddit Post Details:
+- Subreddit: r/${post.subreddit.name}
+- Author: u/${post.author.name}
+- Title: ${post.title}
+- Content: ${fullPostContent.get(post.id) || post.text || 'No content available'}
+- Posted: ${formatTimestamp(post.timestamp)}
+- Engagement: ${post.score} upvotes, ${post.num_comments} comments
+
+Task: Write a personalized Reddit message to this user. Include a subject line and message body.
+Format your response as:
+SUBJECT: [your subject line here]
+BODY: [your message here]
+
+IMPORTANT: Write in plain text only. Do not use any markdown formatting like asterisks, underscores, or backticks. Reddit messages don't support formatting.
+`;
+
+    // Call without streaming for simpler handling
+    const response = await sendChatMessage(
+      [{ role: "user", content: postContext }],
+      "deepseek-r1-distill-llama-70b",
+      512,
+      undefined, // no streaming
+      undefined, // no tool calls
+      redditOutreachPrompt
+    );
+
+    // Parse the response to extract subject and body
+    const subjectMatch = response.match(/SUBJECT:\s*(.+?)(?:\n|BODY:)/s);
+    const bodyMatch = response.match(/BODY:\s*(.+)/s);
+    
+    let subject = subjectMatch ? subjectMatch[1].trim() : "Quick question about your post";
+    let body = bodyMatch ? bodyMatch[1].trim() : response;
+
+    // Clean up any markdown that might have slipped through
+    subject = markdownToPlainText(subject);
+    body = markdownToPlainText(body);
+
+    setGeneratedMessages(prev => new Map(prev).set(post.id, { subject, body }));
+    
+    return { subject, body };
+  } catch (error) {
+    console.error('Error generating message:', error);
+    alert('Failed to generate message. Please try again.');
+    return null;
+  } finally {
+    setGeneratingMessage(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(post.id);
+      return newSet;
+    });
+  }
+};
 
   // --- FORM MANAGEMENT FUNCTIONS ---
   const addSubreddit = () => {
     if (subredditInput.trim()) {
-      const cleanSubreddit = subredditInput.trim().replace(/^r\//, '');
+      const cleanSubreddit = subredditInput.trim().replace(/^r\//, "");
       setSubreddits([...subreddits, cleanSubreddit]);
       setSubredditInput("");
     }
   };
-  const removeSubreddit = (subreddit: string) => setSubreddits(subreddits.filter(s => s !== subreddit));
-  
+  const removeSubreddit = (subreddit: string) =>
+    setSubreddits(subreddits.filter((s) => s !== subreddit));
+
   const addKeyword = () => {
     if (keywordInput.trim()) {
       setKeywords([...keywords, keywordInput.trim()]);
       setKeywordInput("");
     }
   };
-  const removeKeyword = (keyword: string) => setKeywords(keywords.filter(k => k !== keyword));
+  const removeKeyword = (keyword: string) =>
+    setKeywords(keywords.filter((k) => k !== keyword));
 
   // --- CORE API & DATA FUNCTIONS ---
   const searchReddit = async (page: number = 1) => {
@@ -142,7 +285,7 @@ const RedditSearch = () => {
     setIsLoading(true);
     setError(null);
     setHasSearched(true);
-    
+
     try {
       const response = await fetch("/api/reddit/search", {
         method: "POST",
@@ -153,7 +296,7 @@ const RedditSearch = () => {
           sort_type: sortType,
           time_filter: timeFilter,
           page,
-          per_page: perPage
+          per_page: perPage,
         }),
       });
 
@@ -167,7 +310,7 @@ const RedditSearch = () => {
       setCurrentPage(data.pagination.page);
       setTotalPages(data.pagination.total_pages);
       setTotalResults(data.pagination.total_entries);
-      
+
       if (page === 1) {
         setExpandedPosts(new Set());
         setSelectedPosts(new Set());
@@ -188,78 +331,104 @@ const RedditSearch = () => {
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
       searchReddit(newPage);
-      document.querySelector('.results-container')?.scrollTo(0, 0);
+      document.querySelector(".results-container")?.scrollTo(0, 0);
     }
   };
-  
-  const handleMessageSingle = (post: RedditPost) => {
-    const messageUrl = `https://www.reddit.com/message/compose/?to=${post.author.name}`;
-    window.open(messageUrl, '_blank', 'noopener,noreferrer');
+
+  // Replace the existing handleMessageSingle function
+  const handleMessageSingle = async (post: RedditPost) => {
+    // Generate AI message first
+    const aiMessage = await generateAIMessage(post);
+    if (!aiMessage) return;
+
+    // Encode the message for URL
+    const encodedSubject = encodeURIComponent(aiMessage.subject);
+    const encodedBody = encodeURIComponent(aiMessage.body);
+
+    // Open Reddit message with pre-filled content
+    const messageUrl = `https://www.reddit.com/message/compose/?to=${post.author.name}&subject=${encodedSubject}&message=${encodedBody}`;
+    window.open(messageUrl, "_blank", "noopener,noreferrer");
   };
 
-  const handleMessageSelected = () => {
-    const messageablePosts = posts.filter(p => selectedPosts.has(p.id));
+  // Replace the existing handleMessageSelected function
+  const handleMessageSelected = async () => {
+    const messageablePosts = posts.filter((p) => selectedPosts.has(p.id));
     if (messageablePosts.length === 0) {
       alert("No posts selected.");
       return;
     }
-    
-    if (messageablePosts.length > 1) {
-      alert(`This will attempt to open ${messageablePosts.length} Reddit message tabs. Please allow pop-ups for this site.`);
+
+    if (messageablePosts.length > 5) {
+      const confirm = window.confirm(
+        `This will generate ${messageablePosts.length} personalized messages and open multiple tabs. Continue?`,
+      );
+      if (!confirm) return;
     }
-    
-    messageablePosts.forEach(post => {
-      const messageUrl = `https://www.reddit.com/message/compose/?to=${post.author.name}`;
-      window.open(messageUrl, '_blank', 'noopener,noreferrer');
-    });
+
+    // Generate messages for each post sequentially
+    for (const post of messageablePosts) {
+      const aiMessage = await generateAIMessage(post);
+      if (aiMessage) {
+        const encodedSubject = encodeURIComponent(aiMessage.subject);
+        const encodedBody = encodeURIComponent(aiMessage.body);
+        const messageUrl = `https://www.reddit.com/message/compose/?to=${post.author.name}&subject=${encodedSubject}&message=${encodedBody}`;
+
+        // Small delay between opening tabs to prevent browser blocking
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        window.open(messageUrl, "_blank", "noopener,noreferrer");
+      }
+    }
   };
 
   // --- UI & HELPER FUNCTIONS ---
   const togglePostExpansion = async (postId: string, postUrl?: string) => {
     const isCurrentlyExpanded = expandedPosts.has(postId);
-    
+
     if (!isCurrentlyExpanded && postUrl && !fullPostContent.has(postId)) {
       // Fetch full post content
-      setLoadingFullPost(prev => new Set(prev).add(postId));
-      
+      setLoadingFullPost((prev) => new Set(prev).add(postId));
+
       try {
-        const response = await fetch('/api/reddit/post-details', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const response = await fetch("/api/reddit/post-details", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ url: postUrl }),
         });
-        
+
         if (response.ok) {
           const data = await response.json();
           if (data.content) {
-            setFullPostContent(prev => new Map(prev).set(postId, data.content));
+            setFullPostContent((prev) =>
+              new Map(prev).set(postId, data.content),
+            );
           }
         }
       } catch (error) {
-        console.error('Error fetching full post:', error);
+        console.error("Error fetching full post:", error);
       } finally {
-        setLoadingFullPost(prev => {
+        setLoadingFullPost((prev) => {
           const newSet = new Set(prev);
           newSet.delete(postId);
           return newSet;
         });
       }
     }
-    
-    setExpandedPosts(prev => {
+
+    setExpandedPosts((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(postId)) newSet.delete(postId);
       else newSet.add(postId);
       return newSet;
     });
   };
-  
-  const togglePostSelection = (postId: string) => setSelectedPosts(prev => {
-    const newSet = new Set(prev);
-    if (newSet.has(postId)) newSet.delete(postId);
-    else newSet.add(postId);
-    return newSet;
-  });
+
+  const togglePostSelection = (postId: string) =>
+    setSelectedPosts((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(postId)) newSet.delete(postId);
+      else newSet.add(postId);
+      return newSet;
+    });
 
   const formatTimestamp = (timestamp: string) => {
     try {
@@ -280,14 +449,14 @@ const RedditSearch = () => {
     if (posts.length === 0) return;
 
     const csvData = posts.map((post) => ({
-      "Subreddit": post.subreddit.name,
-      "Title": post.title,
-      "Author": post.author.name,
+      Subreddit: post.subreddit.name,
+      Title: post.title,
+      Author: post.author.name,
       "Post Text": post.text,
-      "Date": new Date(post.timestamp).toLocaleDateString(),
-      "Time": new Date(post.timestamp).toLocaleTimeString(),
-      "Score": post.score,
-      "Comments": post.num_comments,
+      Date: new Date(post.timestamp).toLocaleDateString(),
+      Time: new Date(post.timestamp).toLocaleTimeString(),
+      Score: post.score,
+      Comments: post.num_comments,
       "Author Profile": post.author.profile_url,
       "Post Link": `https://reddit.com${post.permalink}`,
     }));
@@ -381,9 +550,11 @@ const RedditSearch = () => {
                   ))}
                 </div>
               )}
-              
+
               {subreddits.length === 0 && (
-                <p className="text-xs text-slate-500">Leave empty to search across all of Reddit</p>
+                <p className="text-xs text-slate-500">
+                  Leave empty to search across all of Reddit
+                </p>
               )}
             </div>
 
@@ -505,7 +676,7 @@ const RedditSearch = () => {
               <Info className="h-4 w-4 text-slate-600" />
               <AlertDescription className="text-slate-700">
                 Found {totalResults} posts matching your keywords
-                {subreddits.length > 0 && ` in r/${subreddits.join(', r/')}`}
+                {subreddits.length > 0 && ` in r/${subreddits.join(", r/")}`}
               </AlertDescription>
             </Alert>
           )}
@@ -517,14 +688,36 @@ const RedditSearch = () => {
             {posts.length > 0 && (
               <>
                 <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-slate-900">Search Results</h2>
+                  <h2 className="text-lg font-semibold text-slate-900">
+                    Search Results
+                  </h2>
                   <div className="flex items-center gap-2">
                     {selectedPosts.size > 0 && (
-                      <Button variant="default" size="sm" onClick={handleMessageSelected}>
-                        <MessageCircle className="mr-2 h-4 w-4" /> Message {selectedPosts.size} Selected
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={handleMessageSelected}
+                        disabled={generatingMessage.size > 0} // ADD THIS
+                      >
+                        {generatingMessage.size > 0 ? ( // ADD THIS CONDITIONAL
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Generating Messages...
+                          </>
+                        ) : (
+                          <>
+                            <MessageCircle className="mr-2 h-4 w-4" />
+                            Message {selectedPosts.size} Selected
+                          </>
+                        )}
                       </Button>
                     )}
-                    <Button variant="outline" size="sm" onClick={exportPosts} className="border-slate-300">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={exportPosts}
+                      className="border-slate-300"
+                    >
                       <Download className="mr-2 h-4 w-4" /> Export Page
                     </Button>
                   </div>
@@ -536,52 +729,68 @@ const RedditSearch = () => {
                     const isSelected = selectedPosts.has(post.id);
 
                     return (
-                      <Card key={post.id} className={`border-slate-200 bg-white transition-all ${isSelected ? 'ring-2 ring-orange-500' : ''}`}>
+                      <Card
+                        key={post.id}
+                        className={`border-slate-200 bg-white transition-all ${isSelected ? "ring-2 ring-orange-500" : ""}`}
+                      >
                         <CardContent className="p-4">
                           <div className="space-y-3">
                             {/* Selection and Actions */}
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
-                                <input 
-                                  type="checkbox" 
-                                  checked={isSelected} 
-                                  onChange={() => togglePostSelection(post.id)} 
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={() => togglePostSelection(post.id)}
                                   className="h-4 w-4 rounded border-slate-300 text-orange-600 focus:ring-orange-500"
                                 />
-                                <span className="text-xs text-slate-500">Select</span>
+                                <span className="text-xs text-slate-500">
+                                  Select
+                                </span>
                               </div>
                               <div className="flex items-center gap-2">
                                 <Button
-                                  variant="outline" 
-                                  size="sm" 
+                                  variant="outline"
+                                  size="sm"
                                   onClick={() => handleMessageSingle(post)}
+                                  disabled={generatingMessage.has(post.id)} // ADD THIS
                                   className="border-slate-300 text-orange-600 hover:bg-orange-50"
                                 >
-                                  <MessageCircle className="mr-1 h-3 w-3" /> Message
+                                  {generatingMessage.has(post.id) ? ( // ADD THIS CONDITIONAL
+                                    <>
+                                      <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                                      Generating...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <MessageCircle className="mr-1 h-3 w-3" />
+                                      Message
+                                    </>
+                                  )}
                                 </Button>
                               </div>
                             </div>
 
                             {/* Post Header */}
                             <div className="space-y-2">
-                              <h3 className="font-semibold text-slate-900 leading-tight">
-                                <a 
-                                  href={`https://reddit.com${post.permalink}`} 
-                                  target="_blank" 
+                              <h3 className="font-semibold leading-tight text-slate-900">
+                                <a
+                                  href={`https://reddit.com${post.permalink}`}
+                                  target="_blank"
                                   rel="noopener noreferrer"
                                   className="hover:text-orange-600 hover:underline"
                                 >
                                   {post.title}
                                 </a>
                               </h3>
-                              
+
                               <div className="flex flex-wrap items-center gap-x-3 text-xs text-slate-500">
                                 <div className="flex items-center gap-1">
                                   <Users className="h-3 w-3" />
-                                  <a 
-                                    href={post.subreddit.url} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer" 
+                                  <a
+                                    href={post.subreddit.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
                                     className="hover:underline"
                                   >
                                     r/{post.subreddit.name}
@@ -589,10 +798,10 @@ const RedditSearch = () => {
                                 </div>
                                 <div className="flex items-center gap-1">
                                   <User className="h-3 w-3" />
-                                  <a 
-                                    href={post.author.profile_url} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer" 
+                                  <a
+                                    href={post.author.profile_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
                                     className="hover:underline"
                                   >
                                     u/{post.author.name}
@@ -608,22 +817,33 @@ const RedditSearch = () => {
                             {/* Post Content */}
                             {(post.text || fullPostContent.get(post.id)) && (
                               <div className="text-sm text-slate-700">
-                                <p className={`whitespace-pre-wrap ${!isExpanded ? 'line-clamp-3' : ''}`}>
+                                <p
+                                  className={`whitespace-pre-wrap ${!isExpanded ? "line-clamp-3" : ""}`}
+                                >
                                   {fullPostContent.get(post.id) || post.text}
                                 </p>
-                                {(post.text.length > 200 || fullPostContent.has(post.id) || !post.is_self) && (
-                                  <button 
-                                    onClick={() => togglePostExpansion(post.id, `https://reddit.com${post.permalink}`)} 
+                                {(post.text.length > 200 ||
+                                  fullPostContent.has(post.id) ||
+                                  !post.is_self) && (
+                                  <button
+                                    onClick={() =>
+                                      togglePostExpansion(
+                                        post.id,
+                                        `https://reddit.com${post.permalink}`,
+                                      )
+                                    }
                                     disabled={loadingFullPost.has(post.id)}
                                     className="mt-1 text-xs font-medium text-orange-600 hover:underline disabled:opacity-50"
                                   >
                                     {loadingFullPost.has(post.id) ? (
                                       <>
-                                        <Loader2 className="inline h-3 w-3 animate-spin mr-1" />
+                                        <Loader2 className="mr-1 inline h-3 w-3 animate-spin" />
                                         Loading...
                                       </>
+                                    ) : isExpanded ? (
+                                      "Show less"
                                     ) : (
-                                      isExpanded ? 'Show less' : 'Show more'
+                                      "Show more"
                                     )}
                                   </button>
                                 )}
@@ -634,7 +854,10 @@ const RedditSearch = () => {
                             {post.preview?.images?.[0] && (
                               <div className="mt-2">
                                 <img
-                                  src={post.preview.images[0].source.url.replace(/&amp;/g, '&')}
+                                  src={post.preview.images[0].source.url.replace(
+                                    /&amp;/g,
+                                    "&",
+                                  )}
                                   alt="Post preview"
                                   className="h-48 w-full rounded-lg object-cover"
                                 />
@@ -706,7 +929,8 @@ const RedditSearch = () => {
                 <MessageSquare className="mx-auto mb-2 h-10 w-10 text-slate-400" />
                 <h3 className="font-medium text-slate-800">No posts found</h3>
                 <p className="text-sm">
-                  Try adjusting your search criteria or using different keywords.
+                  Try adjusting your search criteria or using different
+                  keywords.
                 </p>
               </div>
             )}

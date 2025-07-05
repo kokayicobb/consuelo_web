@@ -142,7 +142,20 @@ export default function SupabaseCustomerTable({
   const [activeFilters, setActiveFilters] = useState<FilterRule[]>([])
   const availableStaff = ["John Doe", "Jane Smith", "Mike Johnson", "Sarah Wilson", "Me"]
   const availablePricingOptions = ["Premium", "Standard", "Basic", "Enterprise"]
-  const availableSegments = ["High Net Worth", "Corporate", "Retail", "Institutional"]
+  const availableSegments = useMemo(() => {
+    // Use a Set to automatically handle uniqueness.
+    const segmentSet = new Set<string>();
+  
+    clients.forEach(client => {
+      // The segment column can be null, so we check if it's a valid, non-empty string.
+      if (client.segment && typeof client.segment === 'string') {
+        segmentSet.add(client.segment);
+      }
+    });
+  
+    // Convert the Set back to an array and sort it for a consistent UI.
+    return Array.from(segmentSet).sort();
+  }, [clients]); // This dependency array ensures the code only runs when 'clients' data changes.
   const availableVisitTypes = ["In-Person", "Virtual", "Phone", "Email"]
   const availableBookingMethods = ["Online", "Phone", "Walk-in", "Referral"]
   const availableReferralTypes = ["Client Referral", "Partner", "Marketing", "Cold Outreach"]
