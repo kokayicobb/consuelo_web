@@ -67,7 +67,7 @@ import {
   ChartBarIcon,
   CalendarIcon,
   ChevronDoubleRightIcon,
-} from '@heroicons/react/24/solid'
+} from '@heroicons/react/24/outline'
 import ApolloSearchComponent from "./app-views/apollo-search-component"
 import dynamic from "next/dynamic"
 import ModelGenerationContent from "@/components/Dashboard/model-generation-content"
@@ -356,14 +356,17 @@ const renderDrawerContent = () => {
     // import LeadGenerationSearch from "./app-views/LeadGenerationSearch"
     return <ModelGenerationContent />
     
-    
+    //
   }
    // Add handling for Google Maps Scraper
    if (selectedApp.id === "social-monitor") {
     // Import at the top of the file:
     // import LeadGenerationSearch from "./app-views/LeadGenerationSearch"
-    return <FormSelector />
-    
+    return <FormSelector 
+    onClose={() => setIsDrawerOpen(false)}
+    isFullScreen={isFullScreen}
+    setIsFullScreen={setIsFullScreen}
+  />
     
   }
   // Add handling for Google Maps Scraper
