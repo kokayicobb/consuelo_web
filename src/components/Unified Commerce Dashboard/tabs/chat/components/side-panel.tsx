@@ -92,7 +92,7 @@ const SideArtifactPanel: React.FC<SideArtifactPanelProps> = ({
       // Return the OrangeSalesAgent component
       return (
         <div className="h-full w-full">
-          <RedditSearch userQuery={currentQueryContext} />
+          <RedditSearch  />
         </div>
       );
     }
