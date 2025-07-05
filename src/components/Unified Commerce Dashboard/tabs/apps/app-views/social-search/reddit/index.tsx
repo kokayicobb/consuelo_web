@@ -35,7 +35,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { sendChatMessage } from "@/components/Unified Commerce Dashboard/lib/actions/chatbot-actions";
+import { sendChatMessage } from "@/components/Unified Commerce Dashboard/lib/actions/reddit-actions";
 
 // Reddit logo component
 const RedditLogo = () => (
@@ -155,17 +155,18 @@ GUIDELINES:
 TONE: Friendly, knowledgeable, helpful colleague - not a salesperson`;
 
   // Add this function after your other handler functions
-  const generateAIMessage = async (post: RedditPost) => {
-    setGeneratingMessage((prev) => new Set(prev).add(post.id));
-
-    try {
-      // Prepare context about the post
-      const postContext = `
+ // Replace the generateAIMessage function with this simpler version:
+const generateAIMessage = async (post: RedditPost) => {
+  setGeneratingMessage(prev => new Set(prev).add(post.id));
+  
+  try {
+    // Prepare context about the post
+    const postContext = `
 Reddit Post Details:
 - Subreddit: r/${post.subreddit.name}
 - Author: u/${post.author.name}
 - Title: ${post.title}
-- Content: ${fullPostContent.get(post.id) || post.text || "No content available"}
+- Content: ${fullPostContent.get(post.id) || post.text || 'No content available'}
 - Posted: ${formatTimestamp(post.timestamp)}
 - Engagement: ${post.score} upvotes, ${post.num_comments} comments
 
@@ -175,41 +176,38 @@ SUBJECT: [your subject line here]
 BODY: [your message here]
 `;
 
-      const response = await sendChatMessage(
-        [{ role: "user", content: postContext }],
-        "deepseek-r1-distill-llama-70b",
-        512,
-        undefined,
-        undefined,
-        redditOutreachPrompt,
-      );
+    // Call without streaming for simpler handling
+    const response = await sendChatMessage(
+      [{ role: "user", content: postContext }],
+      "deepseek-r1-distill-llama-70b",
+      512,
+      undefined, // no streaming
+      undefined, // no tool calls
+      redditOutreachPrompt
+    );
 
-      // Parse the response to extract subject and body
-      const subjectMatch = response.match(/SUBJECT:\s*(.+?)(?:\n|BODY:)/s);
-      const bodyMatch = response.match(/BODY:\s*(.+)/s);
+    // Parse the response to extract subject and body
+    const subjectMatch = response.match(/SUBJECT:\s*(.+?)(?:\n|BODY:)/s);
+    const bodyMatch = response.match(/BODY:\s*(.+)/s);
+    
+    const subject = subjectMatch ? subjectMatch[1].trim() : "Quick question about your post";
+    const body = bodyMatch ? bodyMatch[1].trim() : response;
 
-      const subject = subjectMatch
-        ? subjectMatch[1].trim()
-        : "Quick question about your post";
-      const body = bodyMatch ? bodyMatch[1].trim() : response;
-
-      setGeneratedMessages((prev) =>
-        new Map(prev).set(post.id, { subject, body }),
-      );
-
-      return { subject, body };
-    } catch (error) {
-      console.error("Error generating message:", error);
-      alert("Failed to generate message. Please try again.");
-      return null;
-    } finally {
-      setGeneratingMessage((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(post.id);
-        return newSet;
-      });
-    }
-  };
+    setGeneratedMessages(prev => new Map(prev).set(post.id, { subject, body }));
+    
+    return { subject, body };
+  } catch (error) {
+    console.error('Error generating message:', error);
+    alert('Failed to generate message. Please try again.');
+    return null;
+  } finally {
+    setGeneratingMessage(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(post.id);
+      return newSet;
+    });
+  }
+};
 
   // --- FORM MANAGEMENT FUNCTIONS ---
   const addSubreddit = () => {
