@@ -16,7 +16,8 @@ import { generateSalesScript } from "@/components/Unified Commerce Dashboard/lib
 import { SuggestedAction } from "../action-suggestions";
 import QueryResults from "../query-results";
 import ScriptModal from "../script-modal";
-import RedditSearch from "@/components/Unified Commerce Dashboard/tabs/apps/app-views/social-search/reddit-search";
+import RedditSearch from "../../apps/app-views/social-search/reddit";
+
 
 interface SideArtifactPanelProps {
   data: ChatMessageData | null;
@@ -84,14 +85,14 @@ const SideArtifactPanel: React.FC<SideArtifactPanelProps> = ({
     // Explicitly check for leadGenerator mode
     if (data.viewMode === "leadGenerator") {
       console.log(
-        "Should render OrangeSalesAgent with query:",
+        "Should render RedditSearch with query:",
         currentQueryContext,
       );
 
-      // Return the OrangeSalesAgent component
+      // Return the RedditSearch component
       return (
         <div className="h-full w-full">
-          <RedditSearch userQuery={currentQueryContext} />
+          <RedditSearch  />
         </div>
       );
     }
