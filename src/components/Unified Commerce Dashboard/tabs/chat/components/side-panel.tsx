@@ -16,7 +16,8 @@ import { generateSalesScript } from "@/components/Unified Commerce Dashboard/lib
 import { SuggestedAction } from "../action-suggestions";
 import QueryResults from "../query-results";
 import ScriptModal from "../script-modal";
-import RedditSearch from "@/components/Unified Commerce Dashboard/tabs/apps/app-views/social-search/reddit-search";
+import RedditSearch from "../../apps/app-views/social-search/reddit";
+
 
 interface SideArtifactPanelProps {
   data: ChatMessageData | null;
