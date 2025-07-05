@@ -168,13 +168,14 @@ Clear next steps defined
 Remember: You're not just offering funding - you're providing access to the entire UCS marketplace advantage. Lead with expertise, close with confidence.
 `;
 
+// In src/lib/actions.ts - REPLACE the entire sendChatMessage function with this:
 export async function sendChatMessage(
   messages: ChatMessage[],
   model = "deepseek-r1-distill-llama-70b",
   maxTokens = 1024,
   onStream?: (chunk: string) => void,
   onToolCall?: (toolCall: any) => void,
-  customSystemPrompt?: string, // ADD THIS PARAMETER
+  customSystemPrompt?: string,
 ): Promise<string> {
   try {
     const response = await fetch("/api/chat", {
@@ -186,13 +187,14 @@ export async function sendChatMessage(
         messages: [
           {
             role: "system",
-            content: customSystemPrompt || systemPrompt, // USE CUSTOM OR DEFAULT
+            content: customSystemPrompt || systemPrompt,
           },
           ...messages,
         ],
         model: model,
         max_tokens: maxTokens,
-        tools: [
+        stream: !!onStream, // Explicitly set stream mode
+        tools: customSystemPrompt ? undefined : [ // Only include tools if not using custom prompt
           {
             type: "function",
             function: {
@@ -206,7 +208,7 @@ export async function sendChatMessage(
             },
           },
         ],
-        tool_choice: "auto",
+        tool_choice: customSystemPrompt ? undefined : "auto",
       }),
     })
 
@@ -216,7 +218,7 @@ export async function sendChatMessage(
       throw new Error(`Failed to get response from API: ${response.status} ${response.statusText}. ${errorBody}`)
     }
 
-    // Handle streaming with tool call support
+    // Handle streaming if onStream is provided
     if (onStream && response.body) {
       const reader = response.body.getReader()
       const decoder = new TextDecoder()
@@ -259,8 +261,40 @@ export async function sendChatMessage(
       }
       return fullText
     } else {
-      const data = await response.json()
-      return data?.choices?.[0]?.message?.content || data.content || "No response received"
+      // For non-streaming responses, check if the response is text or JSON
+      const contentType = response.headers.get("content-type");
+      
+      if (contentType && contentType.includes("application/json")) {
+        const data = await response.json()
+        return data?.choices?.[0]?.message?.content || data.content || "No response received"
+      } else {
+        // Handle text/event-stream or other text responses
+        const text = await response.text()
+        
+        // If it's a streaming response but we didn't request streaming, parse it
+        if (text.includes("\n") && text.includes("0:")) {
+          let fullContent = ""
+          const lines = text.split("\n")
+          
+          for (const line of lines) {
+            if (line.startsWith("0:")) {
+              try {
+                const content = JSON.parse(line.substring(2))
+                if (typeof content === "string") {
+                  fullContent += content
+                }
+              } catch (e) {
+                // Skip invalid lines
+              }
+            }
+          }
+          
+          return fullContent || "No response received"
+        }
+        
+        // Otherwise return the text as is
+        return text
+      }
     }
   } catch (error) {
     console.error("Error sending chat message:", error)

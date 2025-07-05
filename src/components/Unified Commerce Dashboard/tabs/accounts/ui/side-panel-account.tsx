@@ -48,7 +48,7 @@ import {
   ChartBarIcon,
   CalendarIcon,
   ChevronDoubleRightIcon,
-} from '@heroicons/react/24/solid'
+} from '@heroicons/react/24/outline'
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
