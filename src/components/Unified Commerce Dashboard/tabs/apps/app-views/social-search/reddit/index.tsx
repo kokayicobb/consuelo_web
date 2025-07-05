@@ -115,6 +115,39 @@ const RedditSearch = () => {
   const [error, setError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
 
+  // Add this helper function after your other functions in the RedditSearch component
+  const markdownToPlainText = (text: string): string => {
+    return (
+      text
+        // Remove bold/italic markers
+        .replace(/\*\*([^*]+)\*\*/g, "$1") // **bold**
+        .replace(/\*([^*]+)\*/g, "$1") // *italic*
+        .replace(/__([^_]+)__/g, "$1") // __bold__
+        .replace(/_([^_]+)_/g, "$1") // _italic_
+        // Remove headers
+        .replace(/^#{1,6}\s+(.+)$/gm, "$1")
+        // Remove code blocks
+        .replace(/```[^`]*```/g, (match) => {
+          const code = match.replace(/```[^`]*\n?/g, "").replace(/```/g, "");
+          return code;
+        })
+        .replace(/`([^`]+)`/g, "$1") // inline code
+        // Remove links but keep text
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+        // Remove blockquotes
+        .replace(/^>\s+(.+)$/gm, "$1")
+        // Remove horizontal rules
+        .replace(/^---+$/gm, "")
+        .replace(/^\*\*\*+$/gm, "")
+        // Remove list markers
+        .replace(/^[\*\-\+]\s+(.+)$/gm, "• $1") // Unordered lists
+        .replace(/^\d+\.\s+(.+)$/gm, "$1") // Ordered lists
+        // Clean up extra whitespace
+        .replace(/\n{3,}/g, "\n\n")
+        .trim()
+    );
+  };
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
@@ -142,6 +175,13 @@ const RedditSearch = () => {
 
 CONTEXT: You're reading a Reddit post and crafting a personalized, helpful response that provides value while subtly introducing our services when relevant.
 
+CRITICAL FORMATTING RULE: Write in PLAIN TEXT ONLY. Do not use any markdown formatting:
+- NO asterisks (*) for bold or italic
+- NO underscores (_) for emphasis  
+- NO backticks () for code
+- NO hashtags (#) for headers
+- Just use plain, clear text
+
 GUIDELINES:
 1. Be genuinely helpful first - answer their question or acknowledge their challenge
 2. Keep it conversational and Reddit-appropriate (not too formal)
@@ -155,7 +195,7 @@ GUIDELINES:
 TONE: Friendly, knowledgeable, helpful colleague - not a salesperson`;
 
   // Add this function after your other handler functions
- // Replace the generateAIMessage function with this simpler version:
+  // Replace the generateAIMessage function with this updated version:
 const generateAIMessage = async (post: RedditPost) => {
   setGeneratingMessage(prev => new Set(prev).add(post.id));
   
@@ -174,6 +214,8 @@ Task: Write a personalized Reddit message to this user. Include a subject line a
 Format your response as:
 SUBJECT: [your subject line here]
 BODY: [your message here]
+
+IMPORTANT: Write in plain text only. Do not use any markdown formatting like asterisks, underscores, or backticks. Reddit messages don't support formatting.
 `;
 
     // Call without streaming for simpler handling
@@ -190,8 +232,12 @@ BODY: [your message here]
     const subjectMatch = response.match(/SUBJECT:\s*(.+?)(?:\n|BODY:)/s);
     const bodyMatch = response.match(/BODY:\s*(.+)/s);
     
-    const subject = subjectMatch ? subjectMatch[1].trim() : "Quick question about your post";
-    const body = bodyMatch ? bodyMatch[1].trim() : response;
+    let subject = subjectMatch ? subjectMatch[1].trim() : "Quick question about your post";
+    let body = bodyMatch ? bodyMatch[1].trim() : response;
+
+    // Clean up any markdown that might have slipped through
+    subject = markdownToPlainText(subject);
+    body = markdownToPlainText(body);
 
     setGeneratedMessages(prev => new Map(prev).set(post.id, { subject, body }));
     
@@ -646,7 +692,6 @@ BODY: [your message here]
                     Search Results
                   </h2>
                   <div className="flex items-center gap-2">
-                   
                     {selectedPosts.size > 0 && (
                       <Button
                         variant="default"
