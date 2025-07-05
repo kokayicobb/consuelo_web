@@ -174,6 +174,7 @@ export async function sendChatMessage(
   maxTokens = 1024,
   onStream?: (chunk: string) => void,
   onToolCall?: (toolCall: any) => void,
+  customSystemPrompt?: string, // ADD THIS PARAMETER
 ): Promise<string> {
   try {
     const response = await fetch("/api/chat", {
@@ -185,7 +186,7 @@ export async function sendChatMessage(
         messages: [
           {
             role: "system",
-            content: systemPrompt,
+            content: customSystemPrompt || systemPrompt, // USE CUSTOM OR DEFAULT
           },
           ...messages,
         ],

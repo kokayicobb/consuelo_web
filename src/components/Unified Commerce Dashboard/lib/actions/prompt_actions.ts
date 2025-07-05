@@ -747,7 +747,7 @@ Your task is to generate a compelling and effective ${scriptType} script.`;
     // If issues arise with script formatting due to SQL-specific cleaning in safeStreamText,
     // a simpler text extraction method from the stream might be needed.
     const script = await safeStreamText({
-      model: groq("llama3-8b-8192"), // Or your preferred model, e.g., "deepseek-r1-distill-llama-70b"
+      model: groq("deepseek-r1-distill-llama-70b"), // Or your preferred model, e.g., "deepseek-r1-distill-llama-70b"
       system: `You are an expert sales scriptwriter for ${businessName}. Your goal is to produce high-quality, ready-to-use scripts.`,
       prompt: promptContent,
       maxTokens: 700, // Increased for potentially longer scripts
@@ -803,7 +803,7 @@ Example of desired output format:
   try {
     // Use safeStreamGenericText
     const aiResponse = await safeStreamText({
-      model: groq("llama3-8b-8192"), // Or another capable model
+      model: groq("deepseek-r1-distill-llama-70b"), // Or another capable model
       // REMOVED response_format: { type: "json_object" } - Let the prompt guide it
       system: "You are an expert sales coach. Your task is to identify the 3-5 most crucial talking points from a sales script. Output ONLY a JSON array of strings as requested.",
       prompt: promptContent,
@@ -922,11 +922,6 @@ Example of desired output format:
   }
 }
 
-
-
-
-
-
 // Define the suggestion type
 interface ScriptSuggestion {
   original?: string;
@@ -984,7 +979,7 @@ Important: Output only the JSON array with no other text, explanation, or format
 
   try {
     const aiResponse = await streamText({
-      model: groq("llama3-8b-8192"),
+      model: groq("deepseek-r1-distill-llama-70b"),
       system: "You are an expert sales coach specializing in creating effective client communication. You provide concise, actionable suggestions to improve sales scripts.",
       prompt: promptContent,
       maxTokens: 800,
@@ -1051,11 +1046,6 @@ Important: Output only the JSON array with no other text, explanation, or format
     ];
   }
 }
-// In your actions.ts file
-
-
-
-// Interface for posts from Reddit API
 // Interface for posts from Reddit API
 interface RedditPostData {
   id: string;
