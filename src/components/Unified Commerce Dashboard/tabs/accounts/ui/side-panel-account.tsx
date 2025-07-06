@@ -714,7 +714,7 @@ export default function DetailedSidePanel({
 
           {/* Financial Overview */}
           <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-            <h4 className="font-semibold text-lg mb-3 text-slate-800">Financial Overview</h4>
+            <h4 className="font-semibold text-lg mb-3 text-slate-800">Client Overview</h4>
             <ul className="space-y-2 text-sm text-slate-700">
               {customer.staff && (
                 <li className="flex items-center">
