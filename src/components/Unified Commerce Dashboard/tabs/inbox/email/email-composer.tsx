@@ -22,23 +22,57 @@ interface EmailFormData {
   html: string
 }
 
-export default function EmailComposer() {
+interface EmailComposerProps {
+  initialTo?: string
+  initialSubject?: string
+  initialBody?: string
+  onSuccess?: () => void
+  isModal?: boolean // If true, removes the container styling
+}
+
+export default function EmailComposer({ 
+  initialTo = '', 
+  initialSubject = '', 
+  initialBody = '',
+  onSuccess,
+  isModal = false
+}: EmailComposerProps) {
   const { user, isLoaded } = useUser()
   const { toast } = useToast()
   
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showCcBcc, setShowCcBcc] = useState(false)
-  const [charCount, setCharCount] = useState(0)
+  const [charCount, setCharCount] = useState(initialBody.length)
   const [showPreview, setShowPreview] = useState(false)
   
   const [formData, setFormData] = useState<EmailFormData>({
     from: '',
-    to: '',
+    to: initialTo,
     cc: '',
     bcc: '',
-    subject: '',
-    html: ''
+    subject: initialSubject,
+    html: initialBody
   })
+
+  // Load draft from localStorage if no initial values
+  useEffect(() => {
+    if (!initialTo && !initialSubject && !initialBody) {
+      const savedDraft = localStorage.getItem('emailDraft')
+      if (savedDraft) {
+        try {
+          const draft = JSON.parse(savedDraft)
+          setFormData(prev => ({
+            ...prev,
+            ...draft,
+            from: prev.from // Keep the current from address
+          }))
+          setCharCount(draft.html?.length || 0)
+        } catch (e) {
+          console.error('Failed to load draft:', e)
+        }
+      }
+    }
+  }, [initialTo, initialSubject, initialBody])
 
   // Set the from email when user data loads
   useEffect(() => {
@@ -89,7 +123,12 @@ export default function EmailComposer() {
           subject: formData.subject,
           html: `<div style="font-family: Arial, sans-serif; color: #334155; line-height: 1.6;">
             ${formData.html.split('\n').map(line => `<p style="margin: 0 0 10px 0;">${line || '&nbsp;'}</p>`).join('')}
-          </div>`
+          </div>`,
+          // Add tags for unified inbox
+          tags: [
+            { name: 'source', value: 'unified-inbox' },
+            { name: 'type', value: initialSubject ? 'reply' : 'new' }
+          ]
         }),
       })
 
@@ -104,6 +143,9 @@ export default function EmailComposer() {
         description: "Your email has been sent successfully.",
       })
 
+      // Clear draft from localStorage
+      localStorage.removeItem('emailDraft')
+
       // Reset form
       setFormData(prev => ({
         from: prev.from,
@@ -115,6 +157,11 @@ export default function EmailComposer() {
       }))
       setCharCount(0)
       setShowCcBcc(false)
+
+      // Call success callback if provided
+      if (onSuccess) {
+        onSuccess()
+      }
     } catch (error) {
       console.error('Error sending email:', error)
       toast({
@@ -129,25 +176,29 @@ export default function EmailComposer() {
 
   if (!isLoaded) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-[400px]">
         <Loader2 className="h-8 w-8 animate-spin text-sky-600" />
       </div>
     )
   }
 
-  return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <div className="mb-8 animate-fade-in">
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">Compose Email</h1>
-        <p className="text-slate-600">Create and send professional emails with AI-powered assistance</p>
-      </div>
+  const content = (
+    <>
+      {!isModal && (
+        <div className="mb-8 animate-fade-in">
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">Compose Email</h1>
+          <p className="text-slate-600">Create and send professional emails with AI-powered assistance</p>
+        </div>
+      )}
 
-      <Card className="shadow-xl border-slate-200">
-        <CardHeader>
-          <CardTitle className="text-xl">New Email</CardTitle>
-          <CardDescription>Fill in the details below to compose your email</CardDescription>
-        </CardHeader>
-        <CardContent>
+      <Card className={isModal ? "shadow-none border-0" : "shadow-xl border-slate-200"}>
+        {!isModal && (
+          <CardHeader>
+            <CardTitle className="text-xl">New Email</CardTitle>
+            <CardDescription>Fill in the details below to compose your email</CardDescription>
+          </CardHeader>
+        )}
+        <CardContent className={isModal ? "px-0" : ""}>
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* From field */}
             <div className="space-y-2">
@@ -374,6 +425,12 @@ export default function EmailComposer() {
           </form>
         </CardContent>
       </Card>
+    </>
+  )
+
+  return isModal ? content : (
+    <div className="container mx-auto px-4 py-8 max-w-4xl">
+      {content}
     </div>
   )
 }
