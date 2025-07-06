@@ -102,6 +102,7 @@ import PhoneCallComponent from "../tabs/on-call-coaching";
 import FormSelector from "../tabs/apps/app-views/social-search/form-selector";
 import ApolloSearchComponent from "../tabs/apps/app-views/apollo-search-component";
 import { Drawer } from "vaul";
+import UnifiedInbox from "../tabs/inbox";
 
 // Chat Interface Component for use with ExpandableChat
 // NOTE: This component is currently not used in MainLayout but is kept for reference.
@@ -209,8 +210,8 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
         return <ChatContent />;
       case "dashboard":
         return <HomeContent />;
-      case "channels":
-        return <ChannelsContent />;
+      case "inbox":
+        return <UnifiedInbox />;
       case "inventory":
         return <InventoryContent />;
       case "accounts":
@@ -377,9 +378,9 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
     },
     {
       label: "Inbox",
-      href: "#pipeline-builder",
+      href: "#inbox",
       icon: <Inbox size={20} className="text-gray-600" />,
-      onClick: () => {}, // No functionality for now
+      onClick: () => setActiveTab("inbox"), // No functionality for now
     },
     {
       label: "Analytics",
