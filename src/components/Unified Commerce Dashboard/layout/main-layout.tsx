@@ -1,5 +1,5 @@
 "use client";
-
+import React from "react"; 
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { useState, useEffect, useRef } from "react";
 import {
@@ -24,6 +24,7 @@ import {
   BarChart3,
   Package,
   Users,
+  Inbox,
   PieChart,
   Lightbulb,
   FilePenLine,
@@ -31,6 +32,7 @@ import {
   Globe,
   MessageCircle,
   Send,
+  Eye,
   Search,
   ChevronRight,
   Mic,
@@ -42,6 +44,10 @@ import {
   Check,
   Workflow,
   Route,
+  Bot,
+  Camera,
+  Instagram,
+  Mail,
 } from "lucide-react";
 import {
   ArrowsPointingOutIcon,
@@ -91,6 +97,11 @@ import ActionSearchBar from "@/components/ui/action-search-bar";
 import ChatBot from "../components/chatbot";
 import AutomationsPage from "../tabs/apps/automations";
 import AppsPage from "../tabs/apps";
+import LeadGenerationSearch from "../tabs/apps/app-views/google-maps";
+import PhoneCallComponent from "../tabs/on-call-coaching";
+import FormSelector from "../tabs/apps/app-views/social-search/form-selector";
+import ApolloSearchComponent from "../tabs/apps/app-views/apollo-search-component";
+import { Drawer } from "vaul";
 
 // Chat Interface Component for use with ExpandableChat
 // NOTE: This component is currently not used in MainLayout but is kept for reference.
@@ -220,7 +231,119 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
         return <HomeContent />;
     }
   };
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [selectedApp, setSelectedApp] = useState<AppCard | null>(null);
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const businessFunctions = [
+    {
+      id: "lead-generation",
+      apps: [
+        {
+          id: "social-monitor",
+          name: "Social Media Monitor",
+          description: "Reddit/LinkedIn/Facebook prospect finder",
+          icon: <Eye className="h-5 w-5" />,
+          color: "bg-slate-300",
+        },
 
+        {
+          id: "Database-search",
+          name: "Leads Search",
+          description: "Scrape platforms like Apollo, ZoomInfo, and LinkedIn",
+          icon: <Users className="h-5 w-5" />,
+          color: "bg-slate-300",
+        },
+      ],
+    },
+    {
+      id: "customer-retention",
+      apps: [
+        {
+          id: "coaching",
+          name: "On-Call Coaching",
+          description: "Customer service and guidance",
+          icon: <Bot className="h-5 w-5" />,
+          color: "bg-slate-300",
+        },
+        {
+          id: "warm-email",
+          name: "Warm Email System",
+          description: "Salesforce integration for nurturing",
+          icon: <Mail className="h-5 w-5" />,
+          color: "bg-slate-300",
+        },
+      ],
+    },
+    {
+      id: "marketing-content",
+      apps: [
+        {
+          id: "social-poster",
+          name: "Social Media Poster",
+          description: "Multi-platform publishing automation",
+          icon: <Instagram className="h-5 w-5" />,
+          color: "bg-slate-300",
+        },
+        {
+          id: "content-creator",
+          name: "Content Creator",
+          description: "Ads/images/infographics generator",
+          icon: <Camera className="h-5 w-5" />,
+          color: "bg-slate-300",
+        },
+      ],
+    },
+  ];
+
+  // 🚀 ADD: Helper function to find an app by its ID
+  const findAppById = (id: string): AppCard | undefined => {
+    for (const func of businessFunctions) {
+      const app = func.apps.find((app) => app.id === id);
+      if (app) return app;
+    }
+    return undefined;
+  };
+
+  // 🚀 ADD: Drawer content rendering logic (copied from AppsPage)
+  const renderDrawerContent = () => {
+    if (!selectedApp) return null;
+    switch (selectedApp.id) {
+      case "coaching":
+        return <PhoneCallComponent />;
+      case "social-monitor":
+        return (
+          <FormSelector
+            onClose={() => setIsDrawerOpen(false)}
+            isFullScreen={isFullScreen}
+            setIsFullScreen={setIsFullScreen}
+          />
+        );
+      case "Database-search":
+        return <ApolloSearchComponent />;
+
+      default:
+        return <div className="p-4 text-center">Component coming soon.</div>;
+    }
+  };
+
+  // 🚀 ADD: Handler to open the drawer from a sidebar click
+  const handleAppClick = (appId: string) => {
+    const app = findAppById(appId);
+    if (app) {
+      setSelectedApp(app);
+      setIsDrawerOpen(true);
+      // Optional: you can remove this if you don't want the URL to change
+      // window.location.hash = app.id;
+    }
+  };
+
+  interface AppCard {
+    id: string;
+    name: string;
+    description: string;
+    icon: React.ReactNode;
+    color: string;
+  }
   // FIX: Removed duplicated state, ref, and useEffect hook. This is the correct, single version.
   const [isChatOpen, setIsChatOpen] = useState(false);
   const chatRef = useRef(null);
@@ -247,27 +370,32 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
       onClick: () => setActiveTab("home"),
     },
     {
-      label: "Dashboard",
-      href: "#dashboard",
-      icon: <LayoutDashboard size={20} className="text-gray-600" />,
-      onClick: () => setActiveTab("dashboard"),
-    },
-   
-  ];
-
-  const retentionItems = [
-    {
       label: "Accounts",
       href: "#accounts",
       icon: <Users size={20} className="text-gray-600" />,
       onClick: () => setActiveTab("accounts"),
     },
     {
-      label: "Cohorts",
-      href: "#channels",
-      icon: <BarChart3 size={20} className="text-gray-600" />,
-      onClick: () => setActiveTab("channels"),
+      label: "Inbox",
+      href: "#pipeline-builder",
+      icon: <Inbox size={20} className="text-gray-600" />,
+      onClick: () => {}, // No functionality for now
     },
+    {
+      label: "Analytics",
+      href: "#dashboard",
+      icon: <LayoutDashboard size={20} className="text-gray-600" />,
+      onClick: () => setActiveTab("dashboard"),
+    },
+  ];
+
+  const retentionItems = [
+    // {
+    //   label: "Cohorts",
+    //   href: "#channels",
+    //   icon: <BarChart3 size={20} className="text-gray-600" />,
+    //   onClick: () => setActiveTab("channels"),
+    // },
     // {
     //   label: "Product Insights",
     //   href: "#inventory",
@@ -276,17 +404,33 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
     // },
   ];
 
-  const prospectingItems = [
+  const appItems = [
     {
       label: "All Apps",
       href: "#automations",
       icon: <Workflow size={20} className="text-gray-600" />,
       // FIX: Removed duplicated onClick property
       onClick: () => setActiveTab("automations"),
-      
     },
-  
 
+    {
+      label: "On-Call Coaching",
+      href: "#coaching",
+      icon: <Mic size={20} className="text-gray-600" />,
+      onClick: () => handleAppClick("coaching"),
+    },
+    {
+      label: "Social Media Monitor",
+      href: "#social-monitor",
+      icon: <Eye size={20} className="text-gray-600" />,
+      onClick: () => handleAppClick("social-monitor"),
+    },
+    {
+      label: "Leads Search",
+      href: "#Database-search",
+      icon: <Users size={20} className="text-gray-600" />,
+      onClick: () => handleAppClick("Database-search"),
+    },
 
     // {
     //   label: "Pipeline Builder",
@@ -311,17 +455,6 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
 
   const dialerItems = [
     {
-      label: "On-Call Coaching",
-      href: "#pipeline-builder",
-      icon: <Mic size={20} className="text-gray-600" />,
-      onClick: () => {}, // No functionality for now
-    },
-    {
-      label: "Draft Emails",
-      href: "#pipeline-builder",
-      icon: <FilePenLine size={20} className="text-gray-600" />,
-      onClick: () => {}, // No functionality for now
-    },  {
       label: "Create Script",
       href: "#pipeline-builder",
       icon: <Plus size={20} className="text-gray-600" />,
@@ -338,6 +471,9 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
     // },
   ];
 
+  const allAppsItem = appItems[0];
+  // Get all the other items
+  const otherAppItems = appItems.slice(1);
   // FIX: Removed duplicated config objects and a stray closing bracket.
   const unitedCapitalSourceConfig = {
     name: "United Capital Source",
@@ -507,25 +643,54 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
                   } transition-colors duration-150`}
                 />
               ))}
-                <div className="pt-4">
+              <div className="pt-4">
                 <Collapsible defaultOpen className="group/collapsible">
                   <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm font-medium text-gray-600 transition-colors duration-150 hover:bg-gray-50 hover:text-gray-800">
                     Apps
                     <ChevronRight className="h-3 w-3 transition-transform group-data-[state=open]/collapsible:rotate-90" />
                   </CollapsibleTrigger>
                   <CollapsibleContent className="mt-1 space-y-1 pl-4">
-                    {prospectingItems.map((item) => (
+                    {/* --- START: MODIFIED SECTION --- */}
+
+                    {/* 1. Render the "All Apps" link by itself */}
+                    {allAppsItem && (
+                      <SidebarLink
+                        key={allAppsItem.href}
+                        link={allAppsItem}
+                        isActive={
+                          activeTab === allAppsItem.href.replace("#", "")
+                        }
+                        onTabReset={() => {
+                          /* Your existing onTabReset logic */
+                        }}
+                        className={`${
+                          activeTab === allAppsItem.href.replace("#", "")
+                            ? "bg-gray-100 font-medium text-gray-900"
+                            : "text-gray-700 hover:bg-gray-50"
+                        } transition-colors duration-150`}
+                      />
+                    )}
+
+                    {/* 2. Render the custom divider with the "Add" button */}
+                    <div className="my-2 flex items-center pr-2">
+                      <div className="flex-grow border-t border-dashed border-gray-300"></div>
+                      <button
+                        type="button"
+                        className="ml-3 flex flex-shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800"
+                      >
+                        <Plus className="h-3 w-3" />
+                        my apps
+                      </button>
+                    </div>
+
+                    {/* 3. Render the rest of the apps */}
+                    {otherAppItems.map((item) => (
                       <SidebarLink
                         key={item.href}
                         link={item}
                         isActive={activeTab === item.href.replace("#", "")}
                         onTabReset={() => {
-                          const currentTab = item.href.replace("#", "");
-                          setActiveTab("blank");
-                          setTimeout(() => {
-                            setActiveTab(currentTab);
-                            window.scrollTo(0, 0);
-                          }, 0);
+                          /* Your existing onTabReset logic */
                         }}
                         className={`${
                           activeTab === item.href.replace("#", "")
@@ -537,7 +702,7 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
                   </CollapsibleContent>
                 </Collapsible>
               </div>
-              <div className="pt-4">
+              {/* <div className="pt-4">
                 <Collapsible defaultOpen className="group/collapsible">
                   <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm font-medium text-gray-600 transition-colors duration-150 hover:bg-gray-50 hover:text-gray-800">
                     Retention
@@ -566,9 +731,9 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
                     ))}
                   </CollapsibleContent>
                 </Collapsible>
-              </div>
-            
-              <div className="pt-4">
+              </div> */}
+
+              {/* <div className="pt-4">
                 <Collapsible defaultOpen className="group/collapsible">
                   <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm font-medium text-gray-600 transition-colors duration-150 hover:bg-gray-50 hover:text-gray-800">
                     Contacting
@@ -597,7 +762,7 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
                     ))}
                   </CollapsibleContent>
                 </Collapsible>
-              </div>
+              </div> */}
               {standaloneItems.map((item) => (
                 <SidebarLink
                   key={item.href}
@@ -658,6 +823,59 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
             </ExpandableChat>
           </div>
         )}
+        <Drawer.Root 
+        open={isDrawerOpen} 
+        onOpenChange={setIsDrawerOpen} 
+        direction="right"
+        modal={false}
+      >
+        <Drawer.Portal>
+          <Drawer.Content
+            className={`bg-neutral-50 h-full fixed top-0 right-0 z-50 outline-none overflow-hidden ${
+              isFullScreen ? "w-full" : "w-full max-w-2xl"
+            }`}
+          >
+            <div className="h-full flex flex-col">
+              {/* Header */}
+              <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-neutral-50 flex-shrink-0">
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setIsDrawerOpen(false)} className="p-2 rounded hover:bg-gray-200"><ChevronDoubleRightIcon className="h-5 w-5" /></button>
+                  <button onClick={() => setIsFullScreen(!isFullScreen)} className="p-2 rounded hover:bg-gray-200">
+                    {isFullScreen ? <ArrowsPointingInIcon className="h-5 w-5" /> : <ArrowsPointingOutIcon className="h-5 w-5" />}
+                  </button>
+                  <h2 className="text-lg font-semibold">{selectedApp?.name || "App Details"}</h2>
+                </div>
+                
+                <div className="flex items-center gap-1">
+                  {/* These buttons are decorative for now */}
+                  <Button variant="ghost" size="sm" className="h-8 px-3 text-slate-600 hover:text-slate-900">Share</Button>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-600 hover:text-slate-900"><ChatBubbleLeftIcon className="h-5 w-5" /></Button>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-600 hover:text-slate-900"><StarIcon className="h-5 w-5" /></Button>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-600 hover:text-slate-900"><EllipsisHorizontalIcon className="h-6 w-6" /></Button>
+                </div>
+              </div>
+
+              {/* Scrollable Content */}
+              <div className="flex-1 overflow-y-auto">
+                <div className="p-6">
+                  {selectedApp && (
+                    <div className="flex items-center space-x-4 pb-4 border-b border-slate-200 mb-6">
+                      <div className={`flex items-center justify-center h-16 w-16 rounded-lg ${selectedApp.color}`}>
+                        <div className="text-white">{selectedApp.icon}</div>
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-bold text-slate-900">{selectedApp.name}</h3>
+                        <p className="text-md text-slate-600">{selectedApp.description}</p>
+                      </div>
+                    </div>
+                  )}
+                  {renderDrawerContent()}
+                </div>
+              </div>
+            </div>
+          </Drawer.Content>
+        </Drawer.Portal>
+      </Drawer.Root>
       </div>
     </div>
   );
