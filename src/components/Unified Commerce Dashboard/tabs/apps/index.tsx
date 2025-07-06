@@ -73,7 +73,7 @@ import dynamic from "next/dynamic"
 import ModelGenerationContent from "@/components/Dashboard/model-generation-content"
 
 import PhoneCallComponent from "../on-call-coaching"
-import EmailComposer from "../../components/email/email-composer"
+import EmailComposer from "../inbox/email/email-composer"
 import FacebookGroupsSearch from "./app-views/social-search/facebook-group-search"
 import FormSelector from "./app-views/social-search/form-selector"
 
@@ -499,7 +499,7 @@ const renderDrawerContent = () => {
           className="inline-flex items-center gap-2 px-3 py-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-full transition-colors duration-150 border-2 border-dashed border-gray-200 hover:border-gray-300"
         >
           <Plus className="w-3.5 h-3.5" />
-          <span className="text-sm font-medium">New category</span>
+          <span className="text-sm font-medium">Request App</span>
         </button>
       </div>
 
