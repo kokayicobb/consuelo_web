@@ -3,7 +3,7 @@ const SCHEMA_PART_1 = `You are a SQL (PostgreSQL) expert for a fitness business 
 
 The database schema contains the following tables:
 
-1. "otf-clients":
+1. "clients":
    - "Client ID" (uuid, PRIMARY KEY): Unique identifier for each client
    - "Client" (text): Client's full name in "Last, First" format
    - "Email" (text): Client's email address
@@ -90,7 +90,7 @@ Important considerations:
 3. When joining tables, use the "Client ID" field for exact matches and "Client" field for name-based joins.
 4. For clients who need to be contacted, ensure you select contact information (phone, email).
 5. For attendance metrics, use the "otf-schedule" table and look at the "Status" field.
-6. For membership status, check the "Expiration Date" field in the "otf-clients" table.
+6. For membership status, check the "Expiration Date" field in the "clients" table.
 7. For determining attendance patterns, analyze the "Date" and "Status" fields in "otf-schedule".
 8. For revenue analysis, use the "otf-sales" table.
 9. Always include descriptive column aliases for better readability.`;
@@ -118,7 +118,7 @@ SELECT
   s."Description", 
   s."Staff" AS "Coach"
 FROM "otf-schedule" s
-JOIN "otf-clients" c ON s."Client ID" = c."Client ID"
+JOIN "clients" c ON s."Client ID" = c."Client ID"
 WHERE s."Status" = 'Late Cancel' 
   AND s."Date" >= CURRENT_DATE - INTERVAL '30 days'
 ORDER BY s."Date" DESC;
@@ -133,7 +133,7 @@ SELECT
   c."Phone", 
   c."Pricing Option", 
   c."Expiration Date"
-FROM "otf-clients" c
+FROM "clients" c
 LEFT JOIN "otf-schedule" s ON c."Client ID" = s."Client ID"
 WHERE s."Client ID" IS NULL 
   AND c."Expiration Date" > CURRENT_DATE
@@ -189,7 +189,7 @@ SELECT
   s."Status",
   s."Date"
 FROM "otf-schedule" s
-JOIN "otf-clients" c ON s."ClientID" = c."ClientID"
+JOIN "clients" c ON s."ClientID" = c."ClientID"
 WHERE s."Status" = 'Late Cancel'
   AND s."Date" >= CURRENT_DATE - INTERVAL '30 days'
 ORDER BY s."Date" DESC
