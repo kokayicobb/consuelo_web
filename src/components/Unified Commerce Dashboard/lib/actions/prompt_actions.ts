@@ -198,7 +198,7 @@ export async function generateQuery(input: string) {
         ORDER BY cl."Log Date" DESC
       ) as log_data
     ) as "contact_logs"
-  FROM "otf-clients" c
+  FROM "clients" c
   JOIN "otf-schedule" s ON s."Client ID" = c."Client ID"
   WHERE s.Status = 'Late Cancel' 
     AND s.Date >= CURRENT_DATE - INTERVAL '${days} days'
@@ -231,7 +231,7 @@ export async function generateQuery(input: string) {
         ORDER BY cl."Log Date" DESC
       ) as log_data
     ) as "contact_logs"
-  FROM "otf-clients" c
+  FROM "clients" c
   LEFT JOIN "otf-schedule" s ON c."Client ID" = s."Client ID"
   WHERE s."Client ID" IS NULL 
     AND c."Expiration Date" > CURRENT_DATE
@@ -289,7 +289,7 @@ export async function generateQuery(input: string) {
         ORDER BY cl."Log Date" DESC
       ) as log_data
     ) as "contact_logs"
-  FROM "otf-clients" c
+  FROM "clients" c
   WHERE c."Last Visit" < CURRENT_DATE - INTERVAL '${days} days'
     AND c."Expiration Date" > CURRENT_DATE
   ORDER BY c."Last Visit" ASC;`
@@ -327,7 +327,7 @@ export async function generateQuery(input: string) {
         ORDER BY cl."Log Date" DESC
       ) as log_data
     ) as "contact_logs"
-  FROM "otf-clients" c
+  FROM "clients" c
   WHERE c."Expiration Date" BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '${days} days'
   ORDER BY c."Expiration Date" ASC;`
     } else if (
@@ -363,7 +363,7 @@ export async function generateQuery(input: string) {
         ORDER BY cl."Log Date" DESC
       ) as log_data
     ) as "contact_logs"
-  FROM "otf-clients" c
+  FROM "clients" c
   LEFT JOIN (
     SELECT "Client", MAX("Log Date") AS "Log Date"
     FROM "otf-contact-logs"
@@ -397,7 +397,7 @@ export async function generateQuery(input: string) {
         ORDER BY cl."Log Date" DESC
       ) as log_data
     ) as "contact_logs"
-  FROM "otf-clients" c
+  FROM "clients" c
   ORDER BY c."Last Visit" DESC
   LIMIT 50;`
     }
