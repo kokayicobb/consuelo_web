@@ -35,6 +35,7 @@ import {
   Check,
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
+import EmailComposer from "./email/email-composer";
 
 // Types
 interface Message {
@@ -1152,6 +1153,21 @@ export default function UnifiedInbox() {
             </div>
           </div>
         )}
+       {showCompose && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="w-full max-w-4xl h-[90vh] max-h-[800px]">
+          <EmailComposer
+            // This function will be called when the user clicks Cancel or the 'X'
+            onCancel={() => setShowCompose(false)}
+            // This function will be called on a successful send
+            onSuccess={() => {
+              console.log("Email sent successfully!");
+              setShowCompose(false); // Close the composer after sending
+            }}
+          />
+        </div>
+      </div>
+    )} 
       </div>
     </div>
   );
