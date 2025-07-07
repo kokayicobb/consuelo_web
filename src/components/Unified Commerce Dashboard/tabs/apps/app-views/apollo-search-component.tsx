@@ -528,7 +528,7 @@ const ApolloSearchComponent = () => {
       <div className="flex-shrink-0 space-y-4 bg-white p-4 shadow-sm">
         {/* Header with Mode Toggle */}
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold text-slate-900">Apollo Search</h1>
+          <h1 className="text-xl font-bold text-slate-900">Lead Search</h1>
           <div className="flex rounded-lg bg-slate-200 p-1">
             <button
               onClick={() => setSearchMode("general")}
