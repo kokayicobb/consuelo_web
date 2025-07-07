@@ -250,7 +250,7 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
         {
           id: "Database-search",
           name: "Leads Search",
-          description: "Scrape platforms like Apollo, ZoomInfo, and LinkedIn",
+          description: "Search platforms like Apollo, ZoomInfo, and LinkedIn",
           icon: <Users className="h-5 w-5" />,
           color: "bg-slate-300",
         },

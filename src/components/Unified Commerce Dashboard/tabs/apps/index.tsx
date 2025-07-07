@@ -239,7 +239,7 @@ const businessFunctions: BusinessFunction[] = [
       {
         id: "apollo-scraper",
         name: "Leads Search",
-        description: "Scrape platforms like Apollo, ZoomInfo, and LinkedIn",
+        description: "Search platforms like Apollo, ZoomInfo, and LinkedIn",
         icon: <Users className="w-5 h-5" />,
         color: "bg-slate-300",
       },
