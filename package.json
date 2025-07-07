@@ -108,6 +108,7 @@
     "tailwind-scrollbar-hide": "^4.0.0",
     "tailwindcss-animate": "^1.0.7",
     "three": "^0.171.0",
+    "twilio": "^5.7.2",
     "vaul": "^1.1.2",
     "zod": "^3.22.4"
   },
