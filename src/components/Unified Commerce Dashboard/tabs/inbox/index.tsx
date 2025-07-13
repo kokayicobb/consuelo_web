@@ -36,6 +36,7 @@ import {
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import EmailComposer from "./email/email-composer";
+import { WarmingAgentLog } from "./warming-agent/logs";
 
 // Types
 interface Message {
@@ -657,7 +658,7 @@ export default function UnifiedInbox() {
                     Active Campaigns
                   </h2>
                 </div>
-                <div className="overflow-x-auto">
+                {/* <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
@@ -750,8 +751,9 @@ export default function UnifiedInbox() {
                       ))}
                     </tbody>
                   </table>
-                </div>
+                </div> */}
               </div>
+              <WarmingAgentLog />
             </div>
           ) : (
             // Messages View

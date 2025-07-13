@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { User, Activity, Mail, Phone, Briefcase, FileText as NotesIconFS, DollarSign, Tag, Paperclip } from 'lucide-react'; // Renamed NotesIcon to NotesIconFS to avoid conflict
 import { DetailedContact } from '../detailed-contacts';
 import { ActivityTabContent } from './activity';
-import { EmailsTabContent } from './email';
+import { EmailsTabContent } from './email-profile';
 import { FilesTabContent } from './files';
 import { NotesTabContent } from './notes';
 import { TicketsTabContent } from './tickets';
