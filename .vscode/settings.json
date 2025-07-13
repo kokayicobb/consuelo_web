@@ -1,4 +1,20 @@
 {
   "css.validate": false,
-  "editor.tabSize": 2
+  "editor.tabSize": 2,
+
+   // Enable the Deno extension for this workspace
+   "deno.enable": true,
+
+   // Enable Deno linting (recommended)
+   "deno.lint": true,
+ 
+   // Often needed for Supabase Functions which might use unstable APIs
+   "deno.unstable": true,
+ 
+   // *** THIS IS THE MOST IMPORTANT PART ***
+   // Tell the extension to ONLY activate for your functions folder.
+   // I am adjusting this path based on your error message.
+   "deno.enablePaths": [
+     "src/lib/supabase/functions"
+   ]
 }

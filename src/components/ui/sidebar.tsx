@@ -245,12 +245,11 @@ export const SidebarLink = ({
     <Link
       href={link.href || ""}
       className={cn(
-        "flex items-center rounded-md px-2 py-1.5 text-sm justify-start",
-        "transition-all duration-300 ease-out", 
-        // THIS IS THE CORE LOGIC CHANGE:
+       "flex items-center rounded-md px-2 py-1 text-xs justify-start",
+        "transition-all duration-300 ease-out",
         {
-          "bg-neutral-200 text-neutral-900 font-medium": isActive, // Active state
-          "text-neutral-700 hover:bg-neutral-200 hover:text-neutral-900 hover:font-medium": !isActive, // Default and Hover state
+          "bg-neutral-200 text-neutral-900 font-medium": isActive,
+          "text-neutral-700 hover:bg-neutral-200 hover:text-neutral-900 hover:font-medium": !isActive,
         },
         className,
       )}
