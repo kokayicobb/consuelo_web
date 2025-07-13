@@ -48,6 +48,7 @@ import { createClerkSupabaseClient } from "@/lib/supabase/client"
 import { useSession } from "@clerk/nextjs"
 import { toast } from "sonner"
 import { Drawer } from "vaul"
+import { formatDate } from "@/components/Unified Commerce Dashboard/utils/utils"
 
 // Interfaces
 interface SocialMediaClient {
@@ -73,6 +74,9 @@ interface SocialMediaClient {
   first_contact_date: string | null;
   total_messages_count: number;
   engagement_score: number;
+  current_cadence_name: string | null;
+  next_contact_date: string | null;
+  "Expiration Date": string | null; // Use quotes if the key has spaces
 }
 
 interface Message {
@@ -142,6 +146,118 @@ interface SocialMediaSidePanelProps {
   isFullScreen: boolean;
   onToggleFullScreen: () => void;
   onClientUpdate?: (updatedClient: SocialMediaClient) => void;
+}
+
+// You can create this inside your SocialMediaSidePanel.tsx file or as a separate file.
+
+// This list should ideally come from a shared config or your backend
+// to stay in sync with the warming agent's cadences.
+const CADENCE_OPTIONS = [
+  "LeadEngagement",
+  "NewClientOnboarding",
+  "RenewalPush",
+  "StandardNurture",
+  "ReEngagement",
+];
+
+// Helper to format date for input type="date"
+const formatDateForInput = (dateString: string | null) => {
+  if (!dateString) return "";
+  try {
+    return new Date(dateString).toISOString().split("T")[0];
+  } catch (e) {
+    return "";
+  }
+};
+
+interface CadenceInfoProps {
+  client: SocialMediaClient; // Use the updated interface
+  isEditing: boolean;
+  onChange: (field: keyof SocialMediaClient | "Expiration Date", value: any) => void;
+}
+
+function CadenceInfo({ client, isEditing, onChange }: CadenceInfoProps) {
+  if (isEditing) {
+    // --- EDITING VIEW ---
+    return (
+      <div className="space-y-4">
+        <div>
+          <label className="text-sm font-medium">Status</label>
+          <Select
+            value={client.status || ""}
+            onValueChange={(value) => onChange("status", value)}
+          >
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <label className="text-sm font-medium">Current Cadence</label>
+          <Select
+            value={client.current_cadence_name || "None"}
+            onValueChange={(value) => onChange("current_cadence_name", value === "None" ? null : value)}
+          >
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="None">None (Stop Cadence)</SelectItem>
+              {CADENCE_OPTIONS.map(cadence => (
+                <SelectItem key={cadence} value={cadence}>{cadence}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <label className="text-sm font-medium">Next Contact Date</label>
+          <Input
+            type="date"
+            value={formatDateForInput(client.next_contact_date)}
+            onChange={(e) => onChange("next_contact_date", e.target.value)}
+          />
+        </div>
+        <div>
+          <label className="text-sm font-medium">Contract Expiration Date</label>
+          <Input
+            type="date"
+            value={formatDateForInput(client["Expiration Date"])}
+            onChange={(e) => onChange("Expiration Date", e.target.value)}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // --- DISPLAY VIEW ---
+  return (
+    <div className="space-y-3 text-sm">
+      <div className="flex justify-between">
+        <span className="text-gray-600">Status:</span>
+        <span className="font-medium">{client.status || "N/A"}</span>
+      </div>
+      <div className="flex justify-between">
+        <span className="text-gray-600">Current Cadence:</span>
+        <span className="font-medium">{client.current_cadence_name || "None"}</span>
+      </div>
+      <div className="flex justify-between">
+        <span className="text-gray-600">Last Contact:</span>
+        <span className="font-medium">{formatDate(client.last_contact_date)}</span>
+      </div>
+      <div className="flex justify-between">
+        <span className="text-gray-600">Next Contact:</span>
+        <span className="font-medium">{formatDate(client.next_contact_date)}</span>
+      </div>
+       <div className="flex justify-between">
+        <span className="text-gray-600">Expires On:</span>
+        <span className="font-medium">{formatDate(client["Expiration Date"])}</span>
+      </div>
+      <div className="flex justify-between">
+        <span className="text-gray-600">Messages Sent:</span>
+        <span className="font-medium">{client.total_messages_count || 0}</span>
+      </div>
+    </div>
+  );
 }
 
 // Platform icon component
@@ -351,6 +467,9 @@ export default function SocialMediaSidePanel({
           assigned_to: editedClient.assigned_to,
           notes: editedClient.notes,
           tags: editedClient.tags,
+          current_cadence_name: editedClient.current_cadence_name,
+          next_contact_date: editedClient.next_contact_date,
+          "Expiration Date": editedClient["Expiration Date"],
         })
         .eq('id', client.id);
 
@@ -518,7 +637,14 @@ export default function SocialMediaSidePanel({
               )}
             </div>
           </div>
-
+          <div className="space-y-3">
+            <h4 className="font-semibold text-sm text-gray-700">Automation Status</h4>
+            <Card className="p-4">
+              {/* Note: We pass isEditingClient=false here because this view is for display only. */}
+              {/* Editing happens in the main dialog. */}
+              <CadenceInfo client={client} isEditing={false} onChange={() => {}} />
+            </Card>
+          </div>
           {/* Engagement Stats */}
           <div className="grid grid-cols-2 gap-4">
             <Card>
@@ -671,7 +797,32 @@ export default function SocialMediaSidePanel({
                     </div>
                   </CardContent>
                 </Card>
-
+                <Card>
+    <CardHeader>
+      <CardTitle className="flex items-center justify-between">
+        Cadence & Automation
+        {/* The main edit button controls this whole section */}
+        <Button size="sm" variant="ghost" onClick={() => setIsEditingClient(true)}>
+          <Edit2 className="h-4 w-4" />
+        </Button>
+      </CardTitle>
+    </CardHeader>
+    <CardContent>
+      {/* 
+        This is the magic part. The component will show inputs when `isEditingClient` is true,
+        and plain text when it's false.
+      */}
+      {editedClient && (
+         <CadenceInfo
+            client={editedClient}
+            isEditing={isEditingClient}
+            onChange={(field, value) => {
+              setEditedClient(prev => prev ? { ...prev, [field]: value } : null);
+            }}
+          />
+      )}
+    </CardContent>
+  </Card>
                 {/* Social Media Presence */}
                 <Card>
                   <CardHeader>

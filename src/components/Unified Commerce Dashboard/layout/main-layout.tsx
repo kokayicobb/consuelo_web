@@ -1,5 +1,5 @@
 "use client";
-import React from "react"; 
+import React from "react";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { useState, useEffect, useRef } from "react";
 import {
@@ -371,17 +371,18 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
       onClick: () => setActiveTab("home"),
     },
     {
-      label: "Accounts",
-      href: "#accounts",
-      icon: <Users size={20} className="text-gray-600" />,
-      onClick: () => setActiveTab("accounts"),
-    },
-    {
       label: "Inbox",
       href: "#inbox",
       icon: <Inbox size={20} className="text-gray-600" />,
       onClick: () => setActiveTab("inbox"), // No functionality for now
     },
+    {
+      label: "Accounts",
+      href: "#accounts",
+      icon: <Users size={20} className="text-gray-600" />,
+      onClick: () => setActiveTab("accounts"),
+    },
+
     {
       label: "Analytics",
       href: "#dashboard",
@@ -824,59 +825,103 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
             </ExpandableChat>
           </div>
         )}
-        <Drawer.Root 
-        open={isDrawerOpen} 
-        onOpenChange={setIsDrawerOpen} 
-        direction="right"
-        modal={false}
-      >
-        <Drawer.Portal>
-          <Drawer.Content
-            className={`bg-neutral-50 h-full fixed top-0 right-0 z-50 outline-none overflow-hidden ${
-              isFullScreen ? "w-full" : "w-full max-w-2xl"
-            }`}
-          >
-            <div className="h-full flex flex-col">
-              {/* Header */}
-              <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-neutral-50 flex-shrink-0">
-                <div className="flex items-center gap-2">
-                  <button onClick={() => setIsDrawerOpen(false)} className="p-2 rounded hover:bg-gray-200"><ChevronDoubleRightIcon className="h-5 w-5" /></button>
-                  <button onClick={() => setIsFullScreen(!isFullScreen)} className="p-2 rounded hover:bg-gray-200">
-                    {isFullScreen ? <ArrowsPointingInIcon className="h-5 w-5" /> : <ArrowsPointingOutIcon className="h-5 w-5" />}
-                  </button>
-                  <h2 className="text-lg font-semibold">{selectedApp?.name || "App Details"}</h2>
-                </div>
-                
-                <div className="flex items-center gap-1">
-                  {/* These buttons are decorative for now */}
-                  <Button variant="ghost" size="sm" className="h-8 px-3 text-slate-600 hover:text-slate-900">Share</Button>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-600 hover:text-slate-900"><ChatBubbleLeftIcon className="h-5 w-5" /></Button>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-600 hover:text-slate-900"><StarIcon className="h-5 w-5" /></Button>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-600 hover:text-slate-900"><EllipsisHorizontalIcon className="h-6 w-6" /></Button>
-                </div>
-              </div>
+        <Drawer.Root
+          open={isDrawerOpen}
+          onOpenChange={setIsDrawerOpen}
+          direction="right"
+          modal={false}
+        >
+          <Drawer.Portal>
+            <Drawer.Content
+              className={`fixed right-0 top-0 z-50 h-full overflow-hidden bg-neutral-50 outline-none ${
+                isFullScreen ? "w-full" : "w-full max-w-2xl"
+              }`}
+            >
+              <div className="flex h-full flex-col">
+                {/* Header */}
+                <div className="flex flex-shrink-0 items-center justify-between border-b border-slate-200 bg-neutral-50 p-4">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setIsDrawerOpen(false)}
+                      className="rounded p-2 hover:bg-gray-200"
+                    >
+                      <ChevronDoubleRightIcon className="h-5 w-5" />
+                    </button>
+                    <button
+                      onClick={() => setIsFullScreen(!isFullScreen)}
+                      className="rounded p-2 hover:bg-gray-200"
+                    >
+                      {isFullScreen ? (
+                        <ArrowsPointingInIcon className="h-5 w-5" />
+                      ) : (
+                        <ArrowsPointingOutIcon className="h-5 w-5" />
+                      )}
+                    </button>
+                    <h2 className="text-lg font-semibold">
+                      {selectedApp?.name || "App Details"}
+                    </h2>
+                  </div>
 
-              {/* Scrollable Content */}
-              <div className="flex-1 overflow-y-auto">
-                <div className="p-6">
-                  {selectedApp && (
-                    <div className="flex items-center space-x-4 pb-4 border-b border-slate-200 mb-6">
-                      <div className={`flex items-center justify-center h-16 w-16 rounded-lg ${selectedApp.color}`}>
-                        <div className="text-white">{selectedApp.icon}</div>
+                  <div className="flex items-center gap-1">
+                    {/* These buttons are decorative for now */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 px-3 text-slate-600 hover:text-slate-900"
+                    >
+                      Share
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 text-slate-600 hover:text-slate-900"
+                    >
+                      <ChatBubbleLeftIcon className="h-5 w-5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 text-slate-600 hover:text-slate-900"
+                    >
+                      <StarIcon className="h-5 w-5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 text-slate-600 hover:text-slate-900"
+                    >
+                      <EllipsisHorizontalIcon className="h-6 w-6" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Scrollable Content */}
+                <div className="flex-1 overflow-y-auto">
+                  <div className="p-6">
+                    {selectedApp && (
+                      <div className="mb-6 flex items-center space-x-4 border-b border-slate-200 pb-4">
+                        <div
+                          className={`flex h-16 w-16 items-center justify-center rounded-lg ${selectedApp.color}`}
+                        >
+                          <div className="text-white">{selectedApp.icon}</div>
+                        </div>
+                        <div>
+                          <h3 className="text-2xl font-bold text-slate-900">
+                            {selectedApp.name}
+                          </h3>
+                          <p className="text-md text-slate-600">
+                            {selectedApp.description}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="text-2xl font-bold text-slate-900">{selectedApp.name}</h3>
-                        <p className="text-md text-slate-600">{selectedApp.description}</p>
-                      </div>
-                    </div>
-                  )}
-                  {renderDrawerContent()}
+                    )}
+                    {renderDrawerContent()}
+                  </div>
                 </div>
               </div>
-            </div>
-          </Drawer.Content>
-        </Drawer.Portal>
-      </Drawer.Root>
+            </Drawer.Content>
+          </Drawer.Portal>
+        </Drawer.Root>
       </div>
     </div>
   );
