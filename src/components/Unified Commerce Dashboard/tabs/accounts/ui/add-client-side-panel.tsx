@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -38,6 +38,18 @@ import {
   CalendarIcon,
   ChevronDoubleRightIcon,
 } from "@heroicons/react/24/outline";
+// Define the cadence options
+const CADENCE_OPTIONS = [
+  "LeadEngagement",
+  "NewClientOnboarding",
+  "RenewalPush",
+  "StandardNurture",
+  "ReEngagement",
+]
+
+// Define other common options
+const PRIORITY_OPTIONS = ["Low", "Medium", "High"]
+const STATUS_OPTIONS = ["Active", "Inactive", "Pending", "Suspended"]
 
 interface DynamicFormSidePanelProps {
   fields: CustomField[]
@@ -60,17 +72,30 @@ export default function DynamicFormSidePanel({
   isFullScreen = false,
   onToggleFullScreen,
 }: DynamicFormSidePanelProps) {
-  const [formData, setFormData] = useState<Record<string, any>>(
-    customer ||
-      fields.reduce(
-        (acc, field) => {
-          acc[field.name] = field.defaultValue || ""
-          return acc
-        },
-        {} as Record<string, any>,
-      ),
-  )
+  const [formData, setFormData] = useState<Record<string, any>>({})
   const [errors, setErrors] = useState<Record<string, string>>({})
+
+  // Initialize form data when customer changes or when creating new
+  useEffect(() => {
+    if (customer) {
+      // Editing existing customer
+      setFormData(customer)
+    } else {
+      // Creating new customer - initialize with defaults
+      const initialData = fields.reduce((acc, field) => {
+        // Handle special field mappings
+        if (field.name === 'currentCadenceName') {
+          acc['current_cadence_name'] = field.defaultValue || ""
+        } else if (field.name === 'nextContactDate') {
+          acc['next_contact_date'] = field.defaultValue || ""
+        } else {
+          acc[field.name] = field.defaultValue || ""
+        }
+        return acc
+      }, {} as Record<string, any>)
+      setFormData(initialData)
+    }
+  }, [customer, fields])
 
   const handleFieldChange = (fieldName: string, value: any) => {
     setFormData((prev) => ({ ...prev, [fieldName]: value }))
@@ -84,20 +109,22 @@ export default function DynamicFormSidePanel({
     const newErrors: Record<string, string> = {}
 
     fields.forEach((field) => {
-      if (field.required && !formData[field.name]) {
+      const fieldValue = field.name === 'currentCadenceName' ? formData['current_cadence_name'] : formData[field.name]
+      
+      if (field.required && !fieldValue) {
         newErrors[field.name] = `${field.label} is required`
       }
 
-      if (field.type === "email" && formData[field.name]) {
+      if (field.type === "email" && fieldValue) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-        if (!emailRegex.test(formData[field.name])) {
+        if (!emailRegex.test(fieldValue)) {
           newErrors[field.name] = "Please enter a valid email address"
         }
       }
 
-      if (field.type === "phone" && formData[field.name]) {
+      if (field.type === "phone" && fieldValue) {
         const phoneRegex = /^[+]?[1-9][\d]{0,15}$/
-        if (!phoneRegex.test(formData[field.name].replace(/\D/g, ""))) {
+        if (!phoneRegex.test(fieldValue.replace(/\D/g, ""))) {
           newErrors[field.name] = "Please enter a valid phone number"
         }
       }
@@ -107,16 +134,61 @@ export default function DynamicFormSidePanel({
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = () => {
     if (validateForm()) {
-      onSave(formData)
-      onClose()
+      // Map the form data to match database fields
+      const mappedData = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        title: formData.title,
+        company: formData.company,
+        address: formData.address,
+        linkedin: formData.linkedin,
+        priority: formData.priority,
+        status: formData.status,
+        segment: formData.segment,
+        staff: formData.staff,
+        relationshipManager: formData.relationshipManager,
+        notes: formData.notes,
+        visits: formData.visits ? parseInt(formData.visits) : 0,
+        lastVisit: formData.lastVisit,
+        expirationDate: formData.expirationDate,
+        pricingOption: formData.pricingOption,
+        crossRegionalVisit: formData.crossRegionalVisit,
+        visitType: formData.visitType,
+        bookingMethod: formData.bookingMethod,
+        referralType: formData.referralType,
+        totalAssetsUnderManagement: formData.totalAssetsUnderManagement,
+        recentDealValue: formData.recentDealValue,
+        productInterests: formData.productInterests,
+        lastReviewDate: formData.lastReviewDate,
+        current_cadence_name: formData.current_cadence_name || formData.currentCadenceName,
+        next_contact_date: formData.next_contact_date || formData.nextContactDate,
+      }
+      
+      onSave(mappedData)
+    }
+  }
+
+  const getFieldOptions = (field: CustomField) => {
+    // Return predefined options based on field name
+    switch (field.name) {
+      case 'currentCadenceName':
+      case 'current_cadence_name':
+        return CADENCE_OPTIONS
+      case 'priority':
+        return field.options || PRIORITY_OPTIONS
+      case 'status':
+        return field.options || STATUS_OPTIONS
+      default:
+        return field.options || []
     }
   }
 
   const renderField = (field: CustomField) => {
-    const value = formData[field.name] || ""
+    const fieldKey = field.name === 'currentCadenceName' ? 'current_cadence_name' : field.name
+    const value = formData[fieldKey] || ""
     const hasError = !!errors[field.name]
 
     switch (field.type) {
@@ -127,7 +199,7 @@ export default function DynamicFormSidePanel({
           <Input
             type={field.type}
             value={value}
-            onChange={(e) => handleFieldChange(field.name, e.target.value)}
+            onChange={(e) => handleFieldChange(fieldKey, e.target.value)}
             placeholder={`Enter ${field.label.toLowerCase()}`}
             className={hasError ? "border-red-500" : ""}
           />
@@ -138,7 +210,7 @@ export default function DynamicFormSidePanel({
           <Input
             type="number"
             value={value}
-            onChange={(e) => handleFieldChange(field.name, e.target.value)}
+            onChange={(e) => handleFieldChange(fieldKey, e.target.value)}
             placeholder={`Enter ${field.label.toLowerCase()}`}
             className={hasError ? "border-red-500" : ""}
           />
@@ -149,19 +221,23 @@ export default function DynamicFormSidePanel({
           <Input
             type="date"
             value={value}
-            onChange={(e) => handleFieldChange(field.name, e.target.value)}
+            onChange={(e) => handleFieldChange(fieldKey, e.target.value)}
             className={hasError ? "border-red-500" : ""}
           />
         )
 
       case "select":
+        const options = getFieldOptions(field)
         return (
-          <Select value={value} onValueChange={(newValue) => handleFieldChange(field.name, newValue)}>
+          <Select 
+            value={value || ""} 
+            onValueChange={(newValue) => handleFieldChange(fieldKey, newValue)}
+          >
             <SelectTrigger className={hasError ? "border-red-500" : ""}>
               <SelectValue placeholder={`Select ${field.label.toLowerCase()}`} />
             </SelectTrigger>
             <SelectContent>
-              {field.options?.map((option) => (
+              {options.map((option) => (
                 <SelectItem key={option} value={option}>
                   {option}
                 </SelectItem>
@@ -175,7 +251,7 @@ export default function DynamicFormSidePanel({
           <div className="flex items-center space-x-2">
             <Switch
               checked={value === true || value === "true"}
-              onCheckedChange={(checked) => handleFieldChange(field.name, checked)}
+              onCheckedChange={(checked) => handleFieldChange(fieldKey, checked)}
             />
             <Label>{value === true || value === "true" ? "Yes" : "No"}</Label>
           </div>
@@ -185,7 +261,7 @@ export default function DynamicFormSidePanel({
         return (
           <Textarea
             value={value}
-            onChange={(e) => handleFieldChange(field.name, e.target.value)}
+            onChange={(e) => handleFieldChange(fieldKey, e.target.value)}
             placeholder={`Enter ${field.label.toLowerCase()}`}
             className={hasError ? "border-red-500" : ""}
             rows={3}
@@ -196,7 +272,7 @@ export default function DynamicFormSidePanel({
         return (
           <Input
             value={value}
-            onChange={(e) => handleFieldChange(field.name, e.target.value)}
+            onChange={(e) => handleFieldChange(fieldKey, e.target.value)}
             placeholder={`Enter ${field.label.toLowerCase()}`}
             className={hasError ? "border-red-500" : ""}
           />
@@ -212,7 +288,7 @@ export default function DynamicFormSidePanel({
       <div className="flex flex-shrink-0 items-center justify-between border-b border-slate-200 bg-neutral-50 p-4">
         <div className="flex items-center gap-2">
           <Button
-            variant="default"
+            variant="ghost"
             size="sm"
             onClick={onClose}
             className="h-8 w-8 p-0"
@@ -221,15 +297,15 @@ export default function DynamicFormSidePanel({
           </Button>
           {onToggleFullScreen && (
             <Button
-              variant="default"
+              variant="ghost"
               size="sm"
               onClick={onToggleFullScreen}
               className="h-8 w-8 p-0"
             >
               {isFullScreen ? (
-                <ArrowsPointingInIcon className="h-5 w-5" />
-              ) : (
                 <ArrowsPointingOutIcon className="h-5 w-5" />
+              ) : (
+                <ArrowsPointingInIcon className="h-5 w-5" />
               )}
             </Button>
           )}
@@ -239,7 +315,7 @@ export default function DynamicFormSidePanel({
 
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto">
-        <form onSubmit={handleSubmit} className="space-y-6 p-6">
+        <div className="space-y-6 p-6">
           <div className="space-y-6">
             {/* Customer Info Section */}
             <div className="rounded-lg border border-slate-200 bg-white p-4">
@@ -265,12 +341,36 @@ export default function DynamicFormSidePanel({
               </div>
             </div>
 
+            {/* Cadence and Automation Section */}
+            <div className="rounded-lg border border-slate-200 bg-white p-4">
+              <h3 className="mb-4 text-lg font-semibold text-slate-800">Cadence & Automation</h3>
+              <div className="grid gap-4">
+                {visibleFields
+                  .filter(field => ['currentCadenceName', 'nextContactDate', 'current_cadence_name', 'next_contact_date'].includes(field.name))
+                  .map((field) => (
+                    <div key={field.id} className="space-y-2">
+                      <Label htmlFor={field.name} className="flex items-center gap-2">
+                        {field.label}
+                        {field.required && (
+                          <Badge variant="destructive" className="text-xs">
+                            Required
+                          </Badge>
+                        )}
+                      </Label>
+                      {field.description && <p className="text-sm text-gray-500">{field.description}</p>}
+                      {renderField(field)}
+                      {errors[field.name] && <p className="text-sm text-red-600">{errors[field.name]}</p>}
+                    </div>
+                  ))}
+              </div>
+            </div>
+
             {/* Additional Details Section */}
             <div className="rounded-lg border border-slate-200 bg-white p-4">
               <h3 className="mb-4 text-lg font-semibold text-slate-800">Additional Details</h3>
               <div className="grid gap-4">
                 {visibleFields
-                  .filter(field => !['name', 'email', 'phone', 'title', 'company'].includes(field.name))
+                  .filter(field => !['name', 'email', 'phone', 'title', 'company', 'currentCadenceName', 'nextContactDate', 'current_cadence_name', 'next_contact_date'].includes(field.name))
                   .map((field) => (
                     <div key={field.id} className="space-y-2">
                       <Label htmlFor={field.name} className="flex items-center gap-2">
@@ -289,14 +389,14 @@ export default function DynamicFormSidePanel({
               </div>
             </div>
           </div>
-        </form>
+        </div>
       </div>
 
       {/* Footer with action buttons */}
       <div className="flex flex-shrink-0 items-center justify-end gap-2 border-t border-slate-200 bg-neutral-50 p-4">
         <Button 
           type="button" 
-          className="bg-transparent text-black shadow-none hover:bg-slate-100" 
+          variant="outline"
           onClick={onClose}
         >
           <X className="mr-2 h-4 w-4" />
@@ -304,7 +404,7 @@ export default function DynamicFormSidePanel({
         </Button>
         <Button 
           onClick={handleSubmit}
-          className="bg-transparent text-black shadow-none hover:bg-slate-100"
+          variant="default"
         >
           <Save className="mr-2 h-4 w-4" />
           {customer ? "Update Customer" : "Add Customer"}
@@ -318,11 +418,11 @@ export default function DynamicFormSidePanel({
       open={isOpen}
       onOpenChange={onClose}
       direction="right"
-      modal={false}
+      modal={false} // This allows background interaction
     >
       <Drawer.Portal>
         <Drawer.Content
-          className={`fixed right-0 top-0 z-50 h-full overflow-hidden bg-neutral-50 outline-none ${
+          className={`fixed right-0 top-0 z-50 h-full overflow-hidden bg-neutral-50 shadow-xl outline-none ${
             isFullScreen ? "w-full" : "w-full max-w-2xl"
           }`}
         >
@@ -332,3 +432,4 @@ export default function DynamicFormSidePanel({
     </Drawer.Root>
   )
 }
+

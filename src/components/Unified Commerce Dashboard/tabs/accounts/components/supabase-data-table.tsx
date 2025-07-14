@@ -132,7 +132,13 @@ export default function SupabaseCustomerTable({
   const [showColumnSettings, setShowColumnSettings] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
-
+  const CADENCE_OPTIONS = [
+    "LeadEngagement",
+    "NewClientOnboarding",
+    "RenewalPush",
+    "StandardNurture",
+    "ReEngagement",
+  ]
   // Get unique pricing options for filter
   const pricingOptions = useMemo(() => {
     const options = new Set(
@@ -979,7 +985,16 @@ export default function SupabaseCustomerTable({
       filterable: true,
       visible: true,
       order: col.order,
-      options: getFieldOptions(col.key),
+      options: col.key === 'currentCadenceName' ? CADENCE_OPTIONS :
+               col.key === 'priority' ? ['Low', 'Medium', 'High'] :
+               col.key === 'status' ? ['Active', 'Inactive', 'Pending'] :
+               col.key === 'staff' ? availableStaff :
+               col.key === 'pricingOption' ? availablePricingOptions :
+               col.key === 'segment' ? availableSegments :
+               col.key === 'visitType' ? availableVisitTypes :
+               col.key === 'bookingMethod' ? availableBookingMethods :
+               col.key === 'referralType' ? availableReferralTypes :
+               getFieldOptions(col.key),
     }))}
   customer={editingCustomer}
   isOpen={isFormOpen}
