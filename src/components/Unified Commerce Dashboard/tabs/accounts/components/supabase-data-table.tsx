@@ -517,15 +517,20 @@ export default function SupabaseCustomerTable({
         };
 
         // Remove any undefined values and ensure empty strings become null
-        const cleanedData = Object.entries(newClientData).reduce(
-          (acc, [key, value]) => {
-            if (value !== undefined) {
-              acc[key] = cleanValue(value, key);
-            }
-            return acc;
-          },
-          {} as any,
-        );
+      // In handleSaveCustomer, make sure to filter out undefined values:
+const cleanedData = Object.entries(newClientData).reduce(
+  (acc, [key, value]) => {
+    // Only include defined values
+    if (value !== undefined) {
+      acc[key] = value === "" ? null : value; // Convert empty strings to null
+    }
+    return acc;
+  },
+  {} as any,
+);
+
+console.log('Final cleaned data being sent to createClient:', cleanedData);
+await createClient(cleanedData, supabaseClient);
 
         await createClient(cleanedData, supabaseClient);
       }
