@@ -71,6 +71,7 @@ import DetailedSidePanel from "../ui/side-panel-account";
 import DataHeader from "../ui/table-header";
 import { useSession } from "@clerk/nextjs";
 import { createClerkSupabaseClient } from "@/lib/supabase/client";
+import DynamicFormSidePanel from "../ui/add-client-side-panel";
 
 interface SortRule {
   id: string;
@@ -965,30 +966,32 @@ export default function SupabaseCustomerTable({
         </CardFooter>
       </Card>
 
-      <DynamicCustomerForm
-        fields={columns
-          .filter((col) => col.visible)
-          .map((col) => ({
-            id: col.id,
-            name: col.key,
-            label: col.label,
-            type: getFieldType(col.key) as any,
-            required: col.key === "name",
-            sortable: true,
-            filterable: true,
-            visible: true,
-            order: col.order,
-            options: getFieldOptions(col.key),
-          }))}
-        customer={editingCustomer}
-        isOpen={isFormOpen}
-        onClose={() => {
-          setIsFormOpen(false);
-          setEditingCustomer(null);
-        }}
-        onSave={handleSaveCustomer}
-        title={editingCustomer ? "Edit Customer" : "Add Customer"}
-      />
+      <DynamicFormSidePanel
+  fields={columns
+    .filter((col) => col.visible)
+    .map((col) => ({
+      id: col.id,
+      name: col.key,
+      label: col.label,
+      type: getFieldType(col.key) as any,
+      required: col.key === "name",
+      sortable: true,
+      filterable: true,
+      visible: true,
+      order: col.order,
+      options: getFieldOptions(col.key),
+    }))}
+  customer={editingCustomer}
+  isOpen={isFormOpen}
+  onClose={() => {
+    setIsFormOpen(false);
+    setEditingCustomer(null);
+  }}
+  onSave={handleSaveCustomer}
+  title={editingCustomer ? "Edit Customer" : "Add Customer"}
+  isFullScreen={false}
+  onToggleFullScreen={() => {}} // You can add state for fullscreen if needed
+/>
       <DetailedSidePanel
         isOpen={isSidePanelOpen}
         onClose={() => setIsSidePanelOpen(false)}
