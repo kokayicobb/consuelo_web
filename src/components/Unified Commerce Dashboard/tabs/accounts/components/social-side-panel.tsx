@@ -74,9 +74,9 @@ interface SocialMediaClient {
   first_contact_date: string | null;
   total_messages_count: number;
   engagement_score: number;
-  current_cadence_name: string | null;
-  next_contact_date: string | null;
-  "Expiration Date": string | null; // Use quotes if the key has spaces
+  current_cadence_name?: string | null;
+  next_contact_date?: string | null;
+  "Expiration Date"?: string | null; // Use quotes if the key has spaces
 }
 
 interface Message {
