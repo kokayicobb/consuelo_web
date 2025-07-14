@@ -1,5 +1,4 @@
-
-# .github/workflows/warming-agent.yml
+# .github/workflows/main.yml
 name: Warming Agent
 
 on:
@@ -17,7 +16,7 @@ jobs:
     steps:
       - name: Call Supabase Edge Function
         run: |
-          curl -i -X POST "${{ secrets.https://bfsvjatcbhkxopdwzvhs.supabase.co/functions/v1/warming-agent}}" \
-            -H "Authorization: Bearer ${{ secrets.0382e6ffac9fa366ae77941fbbc9e62734b8ee18d3423578ad397ec82b17fe56}}" \
+          curl -i -X POST "${{ secrets.SUPABASE_FUNCTION_URL }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
             -H "Content-Type: application/json" \
             -d '{}'
