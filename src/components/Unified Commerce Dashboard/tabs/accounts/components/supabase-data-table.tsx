@@ -485,36 +485,36 @@ export default function SupabaseCustomerTable({
         await updateClient(editingCustomer.id, cleanedUpdates, supabaseClient);
       } else {
         // Create new customer - DON'T include user_id, the trigger will add it automatically
-        const newClientData = {
-          Client: customerData.name,
-          email: customerData.email || null,
-          phone: customerData.phone || null,
-          "Last Visit": cleanDateValue(customerData.lastVisit),
-          "# Visits": customerData.visits || 0,
-          "Pricing Option": customerData.pricingOption || null,
-          "Expiration Date": cleanDateValue(customerData.expirationDate),
-          Staff: customerData.staff || null,
-          "Cross Regional Visit": customerData.crossRegionalVisit || null,
-          "Visit Type": customerData.visitType || null,
-          "Booking Method": customerData.bookingMethod || null,
-          "Referral Type": customerData.referralType || null,
-          // Add additional fields if they exist
-          title: customerData.title || null,
-          company: customerData.company || null,
-          address: customerData.address || null,
-          linkedin: customerData.linkedin || null,
-          priority: customerData.priority || null,
-          segment: customerData.segment || null,
-          relationship_manager: customerData.relationship_manager || null,
-          notes: customerData.notes || null,
-          total_assets_under_management:
-            customerData.total_assets_under_management || null,
-          recent_deal_value: customerData.recent_deal_value || null,
-          product_interests: customerData.product_interests || null,
-          last_review_date: cleanDateValue(customerData.last_review_date),
-          current_cadence_name: customerData.current_cadence_name || customerData.current_cadence_name || null,
+       // In your handleSaveCustomer function, make sure you're NOT including user_id:
+const newClientData = {
+  Client: customerData.name,
+  email: customerData.email || null,
+  phone: customerData.phone || null,
+  "Last Visit": cleanDateValue(customerData.lastVisit),
+  "# Visits": customerData.visits || 0,
+  "Pricing Option": customerData.pricingOption || null,
+  "Expiration Date": cleanDateValue(customerData.expirationDate),
+  Staff: customerData.staff || null,
+  "Cross Regional Visit": customerData.crossRegionalVisit || null,
+  "Visit Type": customerData.visitType || null,
+  "Booking Method": customerData.bookingMethod || null,
+  "Referral Type": customerData.referralType || null,
+  title: customerData.title || null,
+  company: customerData.company || null,
+  address: customerData.address || null,
+  linkedin: customerData.linkedin || null,
+  priority: customerData.priority || null,
+  segment: customerData.segment || null,
+  relationship_manager: customerData.relationship_manager || null,
+  notes: customerData.notes || null,
+  total_assets_under_management: customerData.total_assets_under_management || null,
+  recent_deal_value: customerData.recent_deal_value || null,
+  product_interests: customerData.product_interests || null,
+  last_review_date: cleanDateValue(customerData.last_review_date),
+  current_cadence_name: customerData.current_cadence_name || customerData.current_cadence_name || null,
   next_contact_date: cleanDateValue(customerData.next_contact_date || customerData.next_contact_date),
-        };
+  // DO NOT include user_id here - let the trigger handle it
+};
 
         // Remove any undefined values and ensure empty strings become null
       // In handleSaveCustomer, make sure to filter out undefined values:
