@@ -105,70 +105,89 @@ useEffect(() => {
   }
 
   const validateForm = () => {
-    const newErrors: Record<string, string> = {}
-
-    fields.forEach((field) => {
-      const fieldValue = field.name === 'currentCadenceName' ? formData['current_cadence_name'] : formData[field.name]
-      
-      if (field.required && !fieldValue) {
-        newErrors[field.name] = `${field.label} is required`
-      }
-
-      if (field.type === "email" && fieldValue) {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-        if (!emailRegex.test(fieldValue)) {
-          newErrors[field.name] = "Please enter a valid email address"
-        }
-      }
-
-      if (field.type === "phone" && fieldValue) {
-        const phoneRegex = /^[+]?[1-9][\d]{0,15}$/
-        if (!phoneRegex.test(fieldValue.replace(/\D/g, ""))) {
-          newErrors[field.name] = "Please enter a valid phone number"
-        }
-      }
-    })
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
+		const newErrors: Record<string, string> = {}
+		
+		fields.forEach((field) => {
+			// Handle field name mapping for validation
+			let fieldValue
+			if (field.name === 'currentCadenceName' || field.name === 'current_cadence_name') {
+				fieldValue = formData['current_cadence_name'] || formData['currentCadenceName']
+			} else if (field.name === 'nextContactDate' || field.name === 'next_contact_date') {
+				fieldValue = formData['next_contact_date'] || formData['nextContactDate']
+			} else {
+				fieldValue = formData[field.name]
+			}
+			
+			if (field.required && !fieldValue) {
+				newErrors[field.name] = `${field.label} is required`
+			}
+			
+			if (field.type === "email" && fieldValue) {
+				const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+				if (!emailRegex.test(fieldValue)) {
+					newErrors[field.name] = "Please enter a valid email address"
+				}
+			}
+			
+			if (field.type === "phone" && fieldValue) {
+				const phoneRegex = /^[+]?[1-9][\d]{0,15}$/
+				if (!phoneRegex.test(fieldValue.replace(/\D/g, ""))) {
+					newErrors[field.name] = "Please enter a valid phone number"
+				}
+			}
+		})
+		
+		console.log('Validation errors found:', newErrors)
+		setErrors(newErrors)
+		return Object.keys(newErrors).length === 0
+	}
 
   const handleSubmit = () => {
-    if (validateForm()) {
-      // Map the form data to match database fields
-      const mappedData = {
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        title: formData.title,
-        company: formData.company,
-        address: formData.address,
-        linkedin: formData.linkedin,
-        priority: formData.priority,
-        status: formData.status,
-        segment: formData.segment,
-        staff: formData.staff,
-        relationshipManager: formData.relationshipManager,
-        notes: formData.notes,
-        visits: formData.visits ? parseInt(formData.visits) : 0,
-        lastVisit: formData.lastVisit,
-        expirationDate: formData.expirationDate,
-        pricingOption: formData.pricingOption,
-        crossRegionalVisit: formData.crossRegionalVisit,
-        visitType: formData.visitType,
-        bookingMethod: formData.bookingMethod,
-        referralType: formData.referralType,
-        totalAssetsUnderManagement: formData.totalAssetsUnderManagement,
-        recentDealValue: formData.recentDealValue,
-        productInterests: formData.productInterests,
-        lastReviewDate: formData.lastReviewDate,
-        current_cadence_name: formData.current_cadence_name || formData.currentCadenceName,
-        next_contact_date: formData.next_contact_date || formData.nextContactDate,
-      }
-      
-      onSave(mappedData)
-    }
-  }
+		console.log('Form submitted, current formData:', formData)
+		console.log('Validation errors before submit:', errors)
+		
+		const isValid = validateForm()
+		console.log('Form is valid:', isValid)
+		console.log('Validation errors after validate:', errors)
+		
+		if (isValid) {
+			// Map the form data to match database fields
+			const mappedData = {
+				name: formData.name,
+				email: formData.email,
+				phone: formData.phone,
+				title: formData.title,
+				company: formData.company,
+				address: formData.address,
+				linkedin: formData.linkedin,
+				priority: formData.priority,
+				status: formData.status,
+				segment: formData.segment,
+				staff: formData.staff,
+				relationshipManager: formData.relationshipManager,
+				notes: formData.notes,
+				visits: formData.visits ? parseInt(formData.visits) : 0,
+				lastVisit: formData.lastVisit,
+				expirationDate: formData.expirationDate,
+				pricingOption: formData.pricingOption,
+				crossRegionalVisit: formData.crossRegionalVisit,
+				visitType: formData.visitType,
+				bookingMethod: formData.bookingMethod,
+				referralType: formData.referralType,
+				totalAssetsUnderManagement: formData.totalAssetsUnderManagement,
+				recentDealValue: formData.recentDealValue,
+				productInterests: formData.productInterests,
+				lastReviewDate: formData.lastReviewDate,
+				current_cadence_name: formData.current_cadence_name || formData.currentCadenceName,
+				next_contact_date: formData.next_contact_date || formData.nextContactDate,
+			}
+			
+			console.log('Mapped data being sent to onSave:', mappedData)
+			onSave(mappedData)
+		} else {
+			console.log('Form validation failed, not saving')
+		}
+	}
 	const getFieldOptions = (field: CustomField) => {
 		switch (field.name) {
 			case 'currentCadenceName':
