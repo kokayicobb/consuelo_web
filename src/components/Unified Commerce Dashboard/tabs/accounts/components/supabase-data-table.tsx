@@ -512,6 +512,8 @@ export default function SupabaseCustomerTable({
           recent_deal_value: customerData.recent_deal_value || null,
           product_interests: customerData.product_interests || null,
           last_review_date: cleanDateValue(customerData.last_review_date),
+          current_cadence_name: customerData.current_cadence_name || customerData.current_cadence_name || null,
+  next_contact_date: cleanDateValue(customerData.next_contact_date || customerData.next_contact_date),
         };
 
         // Remove any undefined values and ensure empty strings become null
@@ -538,28 +540,32 @@ export default function SupabaseCustomerTable({
     }
   };
 
-  const getFieldType = (field: string) => {
-    const typeMap: Record<string, string> = {
-      email: "email",
-      phone: "phone",
-      title: "title",
-      visits: "number",
-      lastVisit: "date",
-      expirationDate: "date",
-      lastReviewDate: "date",
-      totalAssetsUnderManagement: "number",
-      recentDealValue: "number",
-      priority: "select",
-      status: "select",
-      segment: "select",
-      pricingOption: "select",
-      crossRegionalVisit: "select",
-      visitType: "select",
-      bookingMethod: "select",
-      referralType: "select",
-    };
-    return typeMap[field] || "text";
+ // In SupabaseCustomerTable, update the getFieldType function:
+const getFieldType = (field: string) => {
+  const typeMap: Record<string, string> = {
+    email: "email",
+    phone: "phone",
+    title: "title",
+    visits: "number",
+    lastVisit: "date",
+    expirationDate: "date",
+    lastReviewDate: "date",
+    totalAssetsUnderManagement: "number",
+    recentDealValue: "number",
+    priority: "select",
+    status: "select",
+    segment: "select",
+    pricingOption: "select",
+    crossRegionalVisit: "select",
+    visitType: "select",
+    bookingMethod: "select",
+    referralType: "select",
+    // Add these lines:
+    currentCadenceName: "select",
+    current_cadence_name: "select",
   };
+  return typeMap[field] || "text";
+};
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const handleToggleColumnVisibility = (id: string) => {

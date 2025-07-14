@@ -76,27 +76,26 @@ export default function DynamicFormSidePanel({
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   // Initialize form data when customer changes or when creating new
-  useEffect(() => {
-    if (customer) {
-      // Editing existing customer
-      setFormData(customer)
-    } else {
-      // Creating new customer - initialize with defaults
-      const initialData = fields.reduce((acc, field) => {
-        // Handle special field mappings
-        if (field.name === 'currentCadenceName') {
-          acc['current_cadence_name'] = field.defaultValue || ""
-        } else if (field.name === 'nextContactDate') {
-          acc['next_contact_date'] = field.defaultValue || ""
-        } else {
-          acc[field.name] = field.defaultValue || ""
-        }
-        return acc
-      }, {} as Record<string, any>)
-      setFormData(initialData)
-    }
-  }, [customer, fields])
-
+// In DynamicFormSidePanel, update the useEffect:
+useEffect(() => {
+  if (customer) {
+    setFormData(customer)
+  } else {
+    const initialData = fields.reduce((acc, field) => {
+      if (field.name === 'currentCadenceName' || field.name === 'current_cadence_name') {
+        acc['current_cadence_name'] = field.defaultValue || ""
+        acc['currentCadenceName'] = field.defaultValue || ""
+      } else if (field.name === 'nextContactDate' || field.name === 'next_contact_date') {
+        acc['next_contact_date'] = field.defaultValue || ""
+        acc['nextContactDate'] = field.defaultValue || ""
+      } else {
+        acc[field.name] = field.defaultValue || ""
+      }
+      return acc
+    }, {} as Record<string, any>)
+    setFormData(initialData)
+  }
+}, [customer, fields])
   const handleFieldChange = (fieldName: string, value: any) => {
     setFormData((prev) => ({ ...prev, [fieldName]: value }))
     // Clear error when user starts typing
@@ -170,21 +169,19 @@ export default function DynamicFormSidePanel({
       onSave(mappedData)
     }
   }
-
-  const getFieldOptions = (field: CustomField) => {
-    // Return predefined options based on field name
-    switch (field.name) {
-      case 'currentCadenceName':
-      case 'current_cadence_name':
-        return CADENCE_OPTIONS
-      case 'priority':
-        return field.options || PRIORITY_OPTIONS
-      case 'status':
-        return field.options || STATUS_OPTIONS
-      default:
-        return field.options || []
-    }
-  }
+	const getFieldOptions = (field: CustomField) => {
+		switch (field.name) {
+			case 'currentCadenceName':
+			case 'current_cadence_name':
+				return CADENCE_OPTIONS
+			case 'priority':
+				return field.options || PRIORITY_OPTIONS
+			case 'status':
+				return field.options || STATUS_OPTIONS
+			default:
+				return field.options || []
+		}
+	}
 
   const renderField = (field: CustomField) => {
     const fieldKey = field.name === 'currentCadenceName' ? 'current_cadence_name' : field.name
