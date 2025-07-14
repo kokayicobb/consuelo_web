@@ -8,7 +8,7 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 if (!supabaseUrl || !supabaseAnonKey) {
   if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'production') {
     console.error(
-      '⚠️ Supabase URL and Anon Key are required! Check your .env.local file.'
+      '⚠️ Supabase URL a nd Anon Key are required! Check your .env.local file.'
     );
   }
 }
