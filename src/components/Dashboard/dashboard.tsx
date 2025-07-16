@@ -8,7 +8,7 @@ import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar"; // 
 // Tab content components
 import HomeContent from "./home-content";
 import TryOnStudioContent from "./try-on-studio-content";
-import ModelGenerationContent from "./model-generation-content";
+import ModelGenerationContent from "../Unified Commerce Dashboard/tabs/apps/app-views/model-generation-content";
 import DeveloperAPIContent from "./developer-api-content";
 
 // Import or create new content components for bottom links
@@ -21,7 +21,15 @@ import StoreContent from "./bottom-links/store-content";
 import FinanceContent from "./bottom-links/finance-content";
 
 type Tab = "try-on" | "history" | "model-generation" | "developer-api";
-type BottomLink = "pro" | "enterprise" | "api" | "blog" | "careers" | "store" | "investors" | null;
+type BottomLink =
+  | "pro"
+  | "enterprise"
+  | "api"
+  | "blog"
+  | "careers"
+  | "store"
+  | "investors"
+  | null;
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<Tab>("try-on");
@@ -116,14 +124,14 @@ export default function Dashboard() {
     { text: "Blog", onClick: () => setActiveBottomLink("blog") },
     { text: "Careers", onClick: () => setActiveBottomLink("careers") },
     { text: "Store", onClick: () => setActiveBottomLink("store") },
-    { text: "Investors", onClick: () => setActiveBottomLink("investors") }
+    { text: "Investors", onClick: () => setActiveBottomLink("investors") },
   ];
 
   return (
-    <div className="dark flex flex-col md:flex-row h-screen w-full overflow-hidden bg-background">
-    {/* Sidebar with the new component */}
-    <Sidebar open={sidebarOpen} setOpen={setSidebarOpen}>
-      <SidebarBody className="flex flex-col justify-between">
+    <div className="dark flex h-screen w-full flex-col overflow-hidden bg-background md:flex-row">
+      {/* Sidebar with the new component */}
+      <Sidebar open={sidebarOpen} setOpen={setSidebarOpen}>
+        <SidebarBody className="flex flex-col justify-between">
           <div>
             {/* Logo */}
             <div className="mb-6 flex items-center gap-2 px-2">
@@ -185,17 +193,19 @@ export default function Dashboard() {
       </Sidebar>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
-      {/* Header */}
+      <div className="flex min-w-0 flex-1 flex-col">
+        {/* Header */}
         <header className="flex items-center justify-between border-b border-border bg-card p-4">
           <div className="flex items-center">
             <h1 className="mr-4 text-xl font-bold text-white">
-              {activeBottomLink 
-                ? bottomLinks.find(link => link.text.toLowerCase() === activeBottomLink)?.text 
-                : activeTab === "try-on" && "Try-on Studio" ||
-                  activeTab === "history" && "History" ||
-                  activeTab === "model-generation" && "Model Generation" ||
-                  activeTab === "developer-api" && "Developer API"}
+              {activeBottomLink
+                ? bottomLinks.find(
+                    (link) => link.text.toLowerCase() === activeBottomLink,
+                  )?.text
+                : (activeTab === "try-on" && "Try-on Studio") ||
+                  (activeTab === "history" && "History") ||
+                  (activeTab === "model-generation" && "Model Generation") ||
+                  (activeTab === "developer-api" && "Developer API")}
             </h1>
             <span className="rounded-full bg-muted px-3 py-1 text-xs text-white">
               Free Plan
@@ -218,24 +228,27 @@ export default function Dashboard() {
             </div>
           </div>
         </header>
-{/* Content Area */}
-<main className="flex-1 overflow-auto bg-background p-4 md:p-6"> {/* Added responsive padding */}
-      <div className="w-full h-full mx-auto max-w-full"> {/* Containment wrapper */}
-        {renderContent()}
-      </div>
-    </main>
+        {/* Content Area */}
+        <main className="flex-1 overflow-auto bg-background p-4 md:p-6">
+          {" "}
+          {/* Added responsive padding */}
+          <div className="mx-auto h-full w-full max-w-full">
+            {" "}
+            {/* Containment wrapper */}
+            {renderContent()}
+          </div>
+        </main>
         {/* Bottom Links */}
-        <div className="mt-auto px-4 py-2 border-t border-border bg-card">
+        <div className="mt-auto border-t border-border bg-card px-4 py-2">
           <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1 text-xs">
             {bottomLinks.map((item, index) => (
-              <div 
-                key={item.text} 
-                className="transition-opacity duration-300"
-              >
+              <div key={item.text} className="transition-opacity duration-300">
                 <button
                   onClick={item.onClick}
                   className={`text-muted-foreground transition-colors hover:text-accent ${
-                    activeBottomLink === item.text.toLowerCase() ? "text-accent font-medium" : ""
+                    activeBottomLink === item.text.toLowerCase()
+                      ? "font-medium text-accent"
+                      : ""
                   }`}
                 >
                   {item.text}
@@ -243,9 +256,7 @@ export default function Dashboard() {
               </div>
             ))}
             <div className="flex items-center gap-1">
-              <button
-                className="text-muted-foreground transition-colors hover:text-accent"
-              >
+              <button className="text-muted-foreground transition-colors hover:text-accent">
                 English
               </button>
               <svg
