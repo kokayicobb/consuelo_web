@@ -1,15 +1,19 @@
-// src/app/api/scraping/campaigns/[id]/route.ts
-
 import { type NextRequest, NextResponse } from "next/server"
 import { auth } from "@clerk/nextjs/server"
 import { neon } from "@neondatabase/serverless"
 
 const sql = neon(process.env.DATABASE_URL!)
 
-// Corrected PATCH function signature
+// Define an interface for the route context to explicitly type the params
+interface RouteContext {
+  params: {
+    id: string
+  }
+}
+
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteContext, // Use the defined interface here
 ) {
   try {
     const { userId } = await auth()
@@ -21,7 +25,7 @@ export async function PATCH(
     const campaignId = params.id // The 'id' comes from 'params'
 
     const [campaign] = await sql`
-      UPDATE scraping_campaigns 
+      UPDATE scraping_campaigns
       SET ${sql(data)}, updated_at = NOW()
       WHERE id = ${campaignId} AND user_id = ${userId}
       RETURNING *
@@ -38,10 +42,9 @@ export async function PATCH(
   }
 }
 
-// Corrected DELETE function signature
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteContext, // Use the defined interface here
 ) {
   try {
     const { userId } = await auth()
@@ -56,7 +59,7 @@ export async function DELETE(
     await sql`DELETE FROM scraped_leads WHERE campaign_id = ${campaignId}`
 
     const [campaign] = await sql`
-      DELETE FROM scraping_campaigns 
+      DELETE FROM scraping_campaigns
       WHERE id = ${campaignId} AND user_id = ${userId}
       RETURNING *
     `
