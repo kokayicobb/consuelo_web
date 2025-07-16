@@ -98,7 +98,7 @@ import ChatBot from "../components/chatbot";
 import AutomationsPage from "../tabs/apps/automations";
 import AppsPage from "../tabs/apps";
 import LeadGenerationSearch from "../tabs/apps/app-views/google-maps";
-import PhoneCallComponent from "../tabs/on-call-coaching";
+import PhoneCallComponent from "../../on-call-coaching";
 import FormSelector from "../tabs/apps/app-views/social-search/form-selector";
 import ApolloSearchComponent from "../tabs/apps/app-views/apollo-search-component";
 import { Drawer } from "vaul";

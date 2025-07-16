@@ -149,9 +149,15 @@ export async function updateClient(clientId: string, updates: Partial<DatabaseCl
 }
 
 // Create a new client
+// Update your createClient function:
 export async function createClient(clientData: Omit<DatabaseClient, "Client ID">, supabaseClient: any) {
   try {
-    const { data, error } = await supabaseClient.from("clients").insert([clientData]).select().single()
+    // Remove the columns parameter - just use insert with select
+    const { data, error } = await supabaseClient
+      .from("clients")
+      .insert([clientData])
+      .select() // This is all you need
+      .single()
 
     if (error) {
       console.error("Error creating client:", error)
