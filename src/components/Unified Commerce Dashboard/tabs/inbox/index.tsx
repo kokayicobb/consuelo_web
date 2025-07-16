@@ -479,7 +479,7 @@ export default function UnifiedInbox() {
   };
 
   return (
-    <div className="flex h-screen flex-col bg-gray-50">
+    <div className="flex h-screen flex-col bg-white">
       {/* Header */}
       <div className="border-b bg-white">
         <div className="px-6 py-4">

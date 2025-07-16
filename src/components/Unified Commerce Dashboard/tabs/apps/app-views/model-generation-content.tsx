@@ -68,7 +68,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Checkbox } from "../Playground/components/ui/checkbox"
+import { Checkbox } from "../../../../Playground/components/ui/checkbox"
+import TryOnStudioContent from "@/components/Dashboard/try-on-studio-content"
 
 interface GeneratedModel {
   id: string
@@ -1405,6 +1406,10 @@ export default function ModelGenerationContent() {
             <Wand2 className="h-4 w-4" />
             Generate
           </TabsTrigger>
+           <TabsTrigger value="model-swap" className="gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Model Swap
+          </TabsTrigger>
           <TabsTrigger value="history" className="gap-2">
             <History className="h-4 w-4" />
             History ({generatedModels.length})
@@ -1419,6 +1424,10 @@ export default function ModelGenerationContent() {
           <TabsContent value="generate" className="h-full m-0">
             {renderGenerateTab()}
           </TabsContent>
+          
+           <TabsContent value="model-swap" className="h-full m-0 overflow-y-auto">
+          <TryOnStudioContent />
+        </TabsContent>
           
           <TabsContent value="history" className="h-full m-0 overflow-y-auto">
             {renderHistoryTab()}
