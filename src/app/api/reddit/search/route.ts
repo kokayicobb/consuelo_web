@@ -48,17 +48,28 @@ export async function POST(request: NextRequest) {
             
             // Extract posts from the body field
             if (data.body && Array.isArray(data.body)) {
-              console.log(`Found ${data.body.length} posts in r/${subreddit}`);
-              allPosts.push(...data.body);
+              // FILTER POSTS TO ONLY INCLUDE THE TARGET SUBREDDIT
+              const filteredPosts = data.body.filter(post => {
+                const postSubreddit = post.subreddit || post.subreddit_name_prefixed || '';
+                const cleanPostSubreddit = postSubreddit.replace(/^r\//, '').toLowerCase();
+                const targetSubreddit = subreddit.toLowerCase();
+                
+                const matches = cleanPostSubreddit === targetSubreddit;
+                if (!matches) {
+                  console.log(`Filtering out post from r/${cleanPostSubreddit} (expected r/${targetSubreddit})`);
+                }
+                return matches;
+              });
+              
+              console.log(`Found ${data.body.length} total posts, ${filteredPosts.length} from correct subreddit r/${subreddit}`);
+              allPosts.push(...filteredPosts);
               
               // Log sample post to understand structure
-              if (data.body.length > 0) {
-                console.log('Sample post structure:', Object.keys(data.body[0]));
-                console.log('Sample post:', JSON.stringify(data.body[0]).substring(0, 500));
+              if (filteredPosts.length > 0) {
+                console.log('Sample filtered post subreddit:', filteredPosts[0].subreddit);
               }
             } else {
               console.log(`No posts found in body for r/${subreddit}`);
-              console.log('Full response:', JSON.stringify(data).substring(0, 500));
             }
           } else {
             console.error(`Error searching r/${subreddit}: ${response.status}`);
@@ -75,7 +86,7 @@ export async function POST(request: NextRequest) {
         }
       }
     } else {
-      // Sitewide search
+      // Sitewide search - also add keyword filtering here
       try {
         const url = `https://reddit3.p.rapidapi.com/v1/reddit/search?` + 
           `search=${encodeURIComponent(searchQuery)}` +
@@ -97,8 +108,14 @@ export async function POST(request: NextRequest) {
           const data = await response.json();
           
           if (data.body && Array.isArray(data.body)) {
-            console.log(`Found ${data.body.length} posts from sitewide search`);
-            allPosts.push(...data.body);
+            // ADD KEYWORD FILTERING FOR SITEWIDE SEARCH
+            const keywordFilteredPosts = data.body.filter(post => {
+              const text = `${post.title || ''} ${post.selftext || ''}`.toLowerCase();
+              return keywords.some(keyword => text.includes(keyword.toLowerCase()));
+            });
+            
+            console.log(`Found ${data.body.length} sitewide posts, ${keywordFilteredPosts.length} matching keywords`);
+            allPosts.push(...keywordFilteredPosts);
           }
         } else {
           console.error(`Sitewide search error: ${response.status}`);
@@ -117,10 +134,18 @@ export async function POST(request: NextRequest) {
     }
     const uniquePosts = Array.from(uniquePostsMap.values());
 
-    console.log(`Total unique posts: ${uniquePosts.length}`);
+    console.log(`Total unique posts after filtering: ${uniquePosts.length}`);
 
-    // Transform posts to our format
-    const transformedPosts = uniquePosts.map(post => {
+    // ADD ADDITIONAL KEYWORD FILTERING FOR DOUBLE-CHECK
+    const keywordFilteredPosts = uniquePosts.filter(post => {
+      const text = `${post.title || ''} ${post.selftext || ''}`.toLowerCase();
+      return keywords.some(keyword => text.includes(keyword.toLowerCase()));
+    });
+
+    console.log(`Posts after keyword filtering: ${keywordFilteredPosts.length}`);
+
+    // Transform posts to our format (rest of your existing code...)
+    const transformedPosts = keywordFilteredPosts.map(post => {
       // Parse timestamp - Reddit uses seconds since epoch
       let timestamp;
       if (post.created_utc) {
@@ -211,7 +236,7 @@ export async function POST(request: NextRequest) {
 
     // Log first post for debugging
     if (paginatedPosts.length > 0) {
-      console.log('First transformed post:', JSON.stringify(paginatedPosts[0], null, 2));
+      console.log('First transformed post subreddit:', paginatedPosts[0].subreddit.name);
     }
 
     return NextResponse.json({
@@ -229,6 +254,7 @@ export async function POST(request: NextRequest) {
         time_filter,
         total_fetched: allPosts.length,
         total_unique: uniquePosts.length,
+        total_after_filtering: transformedPosts.length,
         errors: errors.length > 0 ? errors : undefined,
       },
     });
