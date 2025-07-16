@@ -4,16 +4,9 @@ import { neon } from "@neondatabase/serverless"
 
 const sql = neon(process.env.DATABASE_URL!)
 
-// Define an interface for the route context to explicitly type the params
-interface RouteContext {
-  params: {
-    id: string
-  }
-}
-
 export async function PATCH(
   request: NextRequest,
-  { params }: RouteContext, // Use the defined interface here
+  { params }: { params: { id: string } }
 ) {
   try {
     const { userId } = await auth()
@@ -22,7 +15,7 @@ export async function PATCH(
     }
 
     const data = await request.json()
-    const campaignId = params.id // The 'id' comes from 'params'
+    const campaignId = params.id
 
     const [campaign] = await sql`
       UPDATE scraping_campaigns
@@ -44,7 +37,7 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: RouteContext, // Use the defined interface here
+  { params }: { params: { id: string } }
 ) {
   try {
     const { userId } = await auth()
@@ -52,7 +45,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const campaignId = params.id // The 'id' comes from 'params'
+    const campaignId = params.id
 
     // Delete related jobs and leads first
     await sql`DELETE FROM scraping_jobs WHERE campaign_id = ${campaignId}`
