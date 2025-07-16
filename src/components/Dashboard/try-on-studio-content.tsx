@@ -86,60 +86,74 @@ export default function TryOnStudioContent() {
     }
     return categoryMap[uiCategory] || "tops"
   }
-
+const imageUrlToBase64 = async (url: string): Promise<string> => {
+  const response = await fetch(url);
+  const blob = await response.blob();
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+};
   const handleTryOn = async () => {
-    if (!modelImage || !garmentImage) return
+    if (!modelImage || !garmentImage) return;
 
-    setShowBottomSection(false)
-    setIsLoading(true)
-    setResultImage(null)
+    setShowBottomSection(false);
+    setIsLoading(true);
+    setResultImage(null);
 
     try {
-      const modelBase64 = modelImage
-      const garmentBase64 = garmentImage
+        let modelBase64 = modelImage;
+        // Check if the modelImage is a URL and needs to be converted
+        if (modelImage.startsWith('/') || modelImage.startsWith('http')) {
+            modelBase64 = await imageUrlToBase64(modelImage);
+        }
 
-      console.log("Category being sent:", mapCategory(category))
-      console.log("Sending direct request to FASHN API")
+        const garmentBase64 = garmentImage; // Assuming garment is already base64
 
-      const payload = {
-        model_image: modelBase64,
-        garment_image: garmentBase64,
-        category: mapCategory(category),
-        mode: quality,
-        num_samples: samples,
-      }
+        console.log("Category being sent:", mapCategory(category));
+        console.log("Sending direct request to FASHN API");
 
-      const response = await fetch("https://api.fashn.ai/v1/run", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer fa-u5Z4R9wIqa6R-kfW6TOb7KXllTSG1PB278ZiB",
-        },
-        body: JSON.stringify(payload),
-      })
+        const payload = {
+            model_image: modelBase64,
+            garment_image: garmentBase64,
+            category: mapCategory(category),
+            mode: quality,
+            num_samples: samples,
+        };
 
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error("FASHN API error response:", errorText)
-        throw new Error(`API error: ${response.status} - ${errorText}`)
-      }
+        const response = await fetch("https://api.fashn.ai/v1/run", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: "Bearer fa-u5Z4R9wIqa6R-kfW6TOb7KXllTSG1PB278ZiB",
+            },
+            body: JSON.stringify(payload),
+        });
 
-      const data = await response.json()
-      console.log("FASHN API response:", data)
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("FASHN API error response:", errorText);
+            throw new Error(`API error: ${response.status} - ${errorText}`);
+        }
 
-      const predictionId = data.id
-      if (!predictionId) {
-        throw new Error("No prediction ID returned from API")
-      }
+        const data = await response.json();
+        console.log("FASHN API response:", data);
 
-      console.log("Received prediction ID:", predictionId)
-      await pollForResultsDirect(predictionId)
+        const predictionId = data.id;
+        if (!predictionId) {
+            throw new Error("No prediction ID returned from API");
+        }
+
+        console.log("Received prediction ID:", predictionId);
+        await pollForResultsDirect(predictionId);
     } catch (error) {
-      console.error("Error during try-on process:", error)
-      setIsLoading(false)
-      setShowBottomSection(true)
+        console.error("Error during try-on process:", error);
+        setIsLoading(false);
+        setShowBottomSection(true);
     }
-  }
+};
 
   const pollForResultsDirect = async (predictionId: string) => {
     const maxAttempts = 60

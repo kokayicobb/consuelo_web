@@ -18,6 +18,7 @@ import {
 } from '@heroicons/react/24/outline'
 import FacebookGroupsSearch from "./facebook-group-search";
 import RedditSearch from "./reddit";
+import LeadScraperDashboard from "../scraper/lead-scraper-dashboard";
 
 
 const FormSelector = ({ onClose, isFullScreen, setIsFullScreen }) => {
@@ -185,7 +186,7 @@ const FormSelector = ({ onClose, isFullScreen, setIsFullScreen }) => {
             {/* Main content */}
             <div>
               {selectedForm === "facebook-group" && <FacebookGroupsSearch />}
-              {selectedForm === "social" && <RedditSearch />}
+              {selectedForm === "social" && <LeadScraperDashboard />}
             </div>
           </div>
         )}
