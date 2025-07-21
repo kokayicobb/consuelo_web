@@ -10,9 +10,12 @@ const supabase = createClient(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Await the params since it's now a Promise
+    const { id } = await params;
+    
     const { userId } = await auth();
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -29,11 +32,11 @@ export async function POST(
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Get campaign and verify ownership
+    // Get campaign and verify ownership - use the awaited id
     const { data: campaign, error: campaignError } = await supabase
       .from('scraping_campaigns')
       .select('*, platform_configurations(*)')
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('user_id', user.id)
       .single();
 
