@@ -17,7 +17,13 @@ export interface User {
   created_at: string;
   updated_at: string;
 }
-
+ export interface TargetCriteria {
+  job_titles?: string[]
+  industries?: string[]
+  company_sizes?: string[]
+  locations?: string[]
+  negative_keywords?: string[]
+}
 export interface ScrapingCampaign {
   id: string
   user_id: string
