@@ -200,6 +200,7 @@ export interface CreateCampaignRequest {
     industries?: string[];
     company_sizes?: string[];
     locations?: string[];
+    negative_keywords?: string[];  // Added this missing property
   };
   frequency: CampaignFrequency;
   schedule?: {
@@ -207,4 +208,6 @@ export interface CreateCampaignRequest {
     timezone?: string;
     days_of_week?: number[];
   };
+  filters?: any;  // Added this missing property
+  leadScoringRules?: any;  // Added this missing property
 }
