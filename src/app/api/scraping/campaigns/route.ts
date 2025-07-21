@@ -1,103 +1,180 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { auth } from "@clerk/nextjs/server"
-import { neon } from "@neondatabase/serverless"
-import type { CreateCampaignRequest } from "@/types/lead-scraper"
+// src/app/api/scraping/campaigns/route.ts
 
-const sql = neon(process.env.DATABASE_URL!)
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
+import { createClient } from '@supabase/supabase-js';
+import type { ScrapingCampaign, CreateCampaignRequest } from '@/types/lead-scraper';
 
-export async function GET() {
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+
+// The GET function remains the same.
+export async function GET(request: NextRequest) {
   try {
-    const { userId } = await auth()
+    const { userId } = await auth();
     if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get user's internal ID
-    const [user] = await sql`
-      SELECT id FROM users WHERE clerk_id = ${userId}
-    `
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('id')
+      .eq('clerk_id', userId)
+      .single();
 
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 })
+    if (userError || !user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const campaigns = await sql`
-      SELECT 
-        sc.*,
-        cs.total_leads,
-        cs.qualified_leads,
-        cs.enriched_leads,
-        cs.last_run_at as stats_last_run
-      FROM scraping_campaigns sc
-      LEFT JOIN campaign_statistics cs ON sc.id = cs.id
-      WHERE sc.user_id = ${user.id}
-      ORDER BY sc.created_at DESC
-    `
+    const searchParams = request.nextUrl.searchParams;
+    const status = searchParams.get('status');
+    const limit = parseInt(searchParams.get('limit') || '50');
+    const offset = parseInt(searchParams.get('offset') || '0');
 
-    return NextResponse.json({ campaigns })
+    let query = supabase
+      .from('scraping_campaigns')
+      .select(`
+        *,
+        platform_configurations (*)
+      `)
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (status) {
+      query = query.eq('status', status);
+    }
+
+    const { data: campaigns, error } = await query;
+
+    if (error) {
+      console.error('Error fetching campaigns:', error);
+      return NextResponse.json({ error: 'Failed to fetch campaigns' }, { status: 500 });
+    }
+
+    return NextResponse.json({ campaigns: campaigns || [] });
   } catch (error) {
-    console.error("Error fetching campaigns:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    console.error('Unexpected error in GET:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
+
+// The POST function is updated with detailed logging.
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = await auth()
+    const { userId } = await auth();
     if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get user's internal ID
-    const [user] = await sql`
-      SELECT id FROM users WHERE clerk_id = ${userId}
-    `
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('id')
+      .eq('clerk_id', userId)
+      .single();
 
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 })
+    if (userError || !user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const data: CreateCampaignRequest = await request.json()
+    const body: CreateCampaignRequest = await request.json();
 
-    // Create the campaign with the correct column names from your schema
-    const [campaign] = await sql`
-      INSERT INTO scraping_campaigns (
-        user_id, name, description, platform, frequency, config, filters, 
-        total_leads, status, created_at, updated_at
-      ) VALUES (
-        ${user.id}, 
-        ${data.name}, 
-        ${data.description || null}, 
-        ${data.platforms[0] || "website"}, 
-        ${data.frequency}, 
-        ${JSON.stringify({
-          platforms: data.platforms,
-          keywords: data.keywords,
-          negative_keywords: data.negative_keywords,
-          target_job_titles: data.target_job_titles,
-          target_industries: data.target_industries,
-          target_company_sizes: data.target_company_sizes,
-          target_locations: data.target_locations,
-          schedule_config: data.schedule_config,
-          lead_scoring_rules: data.lead_scoring_rules,
-        })}, 
-        ${JSON.stringify(data.filters || {})}, 
-        0,
-        'draft',
-        NOW(),
-        NOW()
-      ) RETURNING *
-    `
+    // --- LOGGING STEP 1: Log the exact data being used for the insert ---
+    console.log("Attempting to create campaign with body:", JSON.stringify(body, null, 2));
 
-    return NextResponse.json({ campaign })
-  } catch (error) {
-    console.error("Error creating campaign:", error)
-    return NextResponse.json(
-      {
-        error: "Internal server error",
-        details: error.message,
-      },
-      { status: 500 },
-    )
+    if (!body.name || !body.platforms || body.platforms.length === 0) {
+      return NextResponse.json(
+        { error: 'Name and at least one platform are required' },
+        { status: 400 }
+      );
+    }
+
+    const campaignToInsert = {
+      user_id: user.id,
+      name: body.name,
+      description: body.description,
+      platforms: body.platforms,
+      keywords: body.keywords,
+      negative_keywords: body.targetCriteria?.negative_keywords,
+      target_job_titles: body.targetCriteria?.job_titles,
+      target_industries: body.targetCriteria?.industries,
+      target_company_sizes: body.targetCriteria?.company_sizes,
+      target_locations: body.targetCriteria?.locations,
+      frequency: body.frequency,
+      schedule_config: body.schedule,
+      filters: body.filters,
+      lead_scoring_rules: body.leadScoringRules,
+      status: 'active'
+    };
+
+    // --- LOGGING STEP 2: Log the object that will be inserted into Supabase ---
+    console.log("Inserting the following object into 'scraping_campaigns':", JSON.stringify(campaignToInsert, null, 2));
+
+
+    const { data: campaign, error: campaignError } = await supabase
+      .from('scraping_campaigns')
+      .insert(campaignToInsert)
+      .select()
+      .single();
+
+    if (campaignError) {
+      // --- LOGGING STEP 3: THIS IS THE MOST IMPORTANT LOG ---
+      // It will print the detailed error from Supabase to your server console.
+      console.error('💥 SUPABASE ERROR while creating campaign:', JSON.stringify(campaignError, null, 2));
+      
+      // Send a more descriptive error back to the client
+      return NextResponse.json({
+        error: 'Failed to create campaign in database.',
+        details: campaignError.message, // Send the actual database message
+        code: campaignError.code, // Send the error code (e.g., '23505' for unique constraint)
+      }, { status: 500 });
+    }
+
+    if (body.platformConfigs && campaign) {
+      const platformConfigs = Object.entries(body.platformConfigs).map(([platform, config]) => ({
+        campaign_id: campaign.id,
+        platform,
+        config,
+        is_active: true
+      }));
+
+      const { error: configError } = await supabase
+        .from('platform_configurations')
+        .insert(platformConfigs);
+
+      if (configError) {
+        console.error('Error creating platform configs:', JSON.stringify(configError, null, 2));
+      }
+    }
+    
+    if (body.frequency === 'once' && campaign) {
+      const { error: jobError } = await supabase
+        .from('scraping_jobs')
+        .insert({
+          campaign_id: campaign.id,
+          job_type: 'manual',
+          status: 'pending',
+          platforms_to_scrape: body.platforms
+        });
+
+      if (jobError) {
+        console.error('Error creating initial job:', JSON.stringify(jobError, null, 2));
+      }
+    }
+
+    return NextResponse.json({
+      campaign,
+      message: 'Campaign created successfully'
+    });
+  } catch (error: any) {
+    // --- LOGGING STEP 4: Catch any other unexpected errors ---
+    console.error('💥 UNEXPECTED ERROR in POST route:', error);
+    return NextResponse.json({
+        error: 'An internal server error occurred.',
+        details: error.message
+    }, { status: 500 });
   }
 }

@@ -1,187 +1,275 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
-import { neon } from "@neondatabase/serverless";
-import { ScrapedLead, EnrichmentData } from "@/types/lead-scraper";
+// src/app/api/scraping/leads/enrich/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
+import { createClient } from '@supabase/supabase-js';
 
-const sql = neon(process.env.DATABASE_URL!);
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = await auth();
+     const { userId } = await auth();
     if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Get user from database
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('id')
+      .eq('clerk_id', userId)
+      .single();
+
+    if (userError || !user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     const { lead_ids } = await request.json();
 
     if (!lead_ids || !Array.isArray(lead_ids) || lead_ids.length === 0) {
-      return NextResponse.json({ error: "Invalid or empty lead_ids" }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Lead IDs array is required' },
+        { status: 400 }
+      );
     }
 
-    // Get user's internal ID
-    const [user] = await sql`
-      SELECT id FROM users WHERE clerk_id = ${userId}
-    `;
+    // Get leads to enrich (verify ownership)
+    const { data: leads, error: leadsError } = await supabase
+      .from('scraped_leads')
+      .select(`
+        *,
+        campaign:scraping_campaigns!inner(user_id)
+      `)
+      .in('id', lead_ids)
+      .eq('campaign.user_id', user.id);
 
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    if (leadsError || !leads || leads.length === 0) {
+      return NextResponse.json({ error: 'No valid leads found' }, { status: 404 });
     }
 
-    // *** FIX IS HERE ***
-    // We use a type assertion "as ScrapedLead[]" to tell TypeScript to trust the result of our query.
-    // I also corrected the JOIN condition in the SQL.
-    const leads = (await sql`
-      SELECT sl.* FROM scraped_leads sl
-      JOIN scraping_campaigns sc ON sl.campaign_id = sc.id
-      WHERE sl.id = ANY(${lead_ids}) AND sc.user_id = ${user.id}
-    `) as ScrapedLead[];
+    const enrichmentResults = [];
+    const errors = [];
 
-    if (leads.length === 0) {
-      return NextResponse.json({ error: "No valid leads found for this user" }, { status: 404 });
-    }
-
-    let enrichedCount = 0;
-
+    // Process each lead
     for (const lead of leads) {
       try {
-        const apolloData = await enrichWithApollo(lead);
-
-        if (apolloData) {
-          // Insert enrichment data
-          await sql`
-            INSERT INTO enrichment_data (
-              lead_id, provider, work_email, personal_email, mobile_phone, office_phone,
-              company_name, company_domain, company_size_range, company_revenue_range,
-              company_industry, company_description, company_founded_year, company_employee_count,
-              seniority_level, department, skills, education, work_history,
-              social_profiles, technologies_used, raw_data, enriched_at
-            ) VALUES (
-              ${lead.id}, 'apollo', ${apolloData.work_email}, ${apolloData.personal_email},
-              ${apolloData.mobile_phone}, ${apolloData.office_phone},
-              ${apolloData.company_name}, ${apolloData.company_domain},
-              ${apolloData.company_size_range}, ${apolloData.company_revenue_range},
-              ${apolloData.company_industry}, ${apolloData.company_description},
-              ${apolloData.company_founded_year}, ${apolloData.company_employee_count},
-              ${apolloData.seniority_level}, ${apolloData.department},
-              ${apolloData.skills ? JSON.stringify(apolloData.skills) : null},
-              ${apolloData.education ? JSON.stringify(apolloData.education) : '[]'},
-              ${apolloData.work_history ? JSON.stringify(apolloData.work_history) : '[]'},
-              ${apolloData.social_profiles ? JSON.stringify(apolloData.social_profiles) : '{}'},
-              ${apolloData.technologies_used ? JSON.stringify(apolloData.technologies_used) : null},
-              ${apolloData.raw_data ? JSON.stringify(apolloData.raw_data) : '{}'},
-              NOW()
-            )
-          `;
-
-          // Update lead enrichment status
-          await sql`
-            UPDATE scraped_leads
-            SET
-              enrichment_status = 'enriched',
-              enriched_at = NOW(),
-              email = COALESCE(email, ${apolloData.work_email || apolloData.personal_email}),
-              phone = COALESCE(phone, ${apolloData.mobile_phone || apolloData.office_phone}),
-              company = COALESCE(company, ${apolloData.company_name}),
-              updated_at = NOW()
-            WHERE id = ${lead.id}
-          `;
-
-          enrichedCount++;
-        } else {
-          // Mark as no data found
-          await sql`
-            UPDATE scraped_leads
-            SET enrichment_status = 'no_data', updated_at = NOW()
-            WHERE id = ${lead.id}
-          `;
+        // Skip if already enriched
+        if (lead.enrichment_status === 'enriched') {
+          continue;
         }
-      } catch (enrichError) {
-        console.error(`Error enriching lead ${lead.id}:`, enrichError);
-        // Mark as failed enrichment
-        await sql`
-          UPDATE scraped_leads
-          SET enrichment_status = 'failed', updated_at = NOW()
-          WHERE id = ${lead.id}
-        `;
+
+        // Build Apollo search query
+        const apolloSearchData: any = {
+          page: 1,
+          per_page: 1,
+          reveal_personal_emails: true,
+          reveal_phone_number: true
+        };
+
+        // Add search criteria based on available data
+        if (lead.full_name) {
+          apolloSearchData.person_names = [lead.full_name];
+        } else if (lead.first_name && lead.last_name) {
+          apolloSearchData.first_name = lead.first_name;
+          apolloSearchData.last_name = lead.last_name;
+        }
+
+        if (lead.company) {
+          apolloSearchData.organization_names = [lead.company];
+        }
+
+        if (lead.title) {
+          apolloSearchData.person_titles = [lead.title];
+        }
+
+        if (lead.linkedin_url) {
+          apolloSearchData.linkedin_urls = [lead.linkedin_url];
+        }
+
+        // Call Apollo API through our existing endpoint
+        const apolloResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/apollo/search`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.INTERNAL_API_KEY}`
+          },
+          body: JSON.stringify(apolloSearchData)
+        });
+
+        if (!apolloResponse.ok) {
+          throw new Error('Apollo search failed');
+        }
+
+        const apolloData = await apolloResponse.json();
+
+        if (apolloData.people && apolloData.people.length > 0) {
+          const person = apolloData.people[0];
+
+          // Prepare enrichment data
+          const enrichmentData = {
+            lead_id: lead.id,
+            provider: 'apollo',
+            work_email: person.email || null,
+            personal_email: person.personal_email || null,
+            mobile_phone: person.phone || null,
+            office_phone: person.office_phone || null,
+            company_name: person.organization?.name || lead.company,
+            company_domain: person.organization?.domain || null,
+            company_size_range: person.organization?.estimated_num_employees || null,
+            company_revenue_range: person.organization?.annual_revenue || null,
+            company_industry: person.organization?.industry || null,
+            company_description: person.organization?.description || null,
+            company_founded_year: person.organization?.founded_year || null,
+            company_employee_count: person.organization?.num_employees || null,
+            seniority_level: person.seniority || null,
+            department: person.departments?.join(', ') || null,
+            skills: person.skills || [],
+            technologies_used: person.organization?.technologies || [],
+            raw_data: person,
+            enriched_at: new Date().toISOString()
+          };
+
+          // Insert enrichment data
+          const { error: enrichError } = await supabase
+            .from('enrichment_data')
+            .insert(enrichmentData);
+
+          if (enrichError) {
+            console.error('Error inserting enrichment data:', enrichError);
+            errors.push({ lead_id: lead.id, error: 'Failed to save enrichment data' });
+          } else {
+            // Update lead with enriched data
+            const updateData: any = {
+              enrichment_status: 'enriched',
+              enriched_at: new Date().toISOString()
+            };
+
+            // Update contact info if found
+            if (person.email && !lead.email) {
+              updateData.email = person.email;
+            }
+            if (person.phone && !lead.phone) {
+              updateData.phone = person.phone;
+            }
+            if (person.linkedin_url && !lead.linkedin_url) {
+              updateData.linkedin_url = person.linkedin_url;
+            }
+            if (person.title && !lead.title) {
+              updateData.title = person.title;
+            }
+            if (person.organization?.name && !lead.company) {
+              updateData.company = person.organization.name;
+            }
+
+            // Recalculate lead score with enriched data
+            updateData.lead_score = calculateEnrichedLeadScore(lead, person);
+
+            const { error: updateError } = await supabase
+              .from('scraped_leads')
+              .update(updateData)
+              .eq('id', lead.id);
+
+            if (updateError) {
+              console.error('Error updating lead:', updateError);
+              errors.push({ lead_id: lead.id, error: 'Failed to update lead' });
+            } else {
+              enrichmentResults.push({
+                lead_id: lead.id,
+                status: 'enriched',
+                email_found: !!person.email,
+                phone_found: !!person.phone
+              });
+            }
+          }
+        } else {
+          // No match found
+          await supabase
+            .from('scraped_leads')
+            .update({
+              enrichment_status: 'no_data',
+              enriched_at: new Date().toISOString()
+            })
+            .eq('id', lead.id);
+
+          enrichmentResults.push({
+            lead_id: lead.id,
+            status: 'no_data'
+          });
+        }
+      } catch (error) {
+        console.error(`Error enriching lead ${lead.id}:`, error);
+        errors.push({
+          lead_id: lead.id,
+          error: error.message || 'Unknown error'
+        });
+
+        // Mark as failed
+        await supabase
+          .from('scraped_leads')
+          .update({
+            enrichment_status: 'failed'
+          })
+          .eq('id', lead.id);
       }
+    }
+
+    // Deduct credits from user account
+    const enrichedCount = enrichmentResults.filter(r => r.status === 'enriched').length;
+    if (enrichedCount > 0) {
+      await supabase
+        .from('users')
+        .update({
+          credits_remaining: `credits_remaining - ${enrichedCount}`
+        })
+        .eq('id', user.id);
     }
 
     return NextResponse.json({
       success: true,
-      message: `Enriched ${enrichedCount} out of ${lead_ids.length} leads`,
-      enriched_count: enrichedCount,
-      total_requested: lead_ids.length,
+      enriched: enrichmentResults,
+      errors: errors.length > 0 ? errors : undefined,
+      credits_used: enrichedCount
     });
   } catch (error) {
-    console.error("Error enriching leads:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    console.error('Lead enrichment error:', error);
+    return NextResponse.json(
+      { error: 'Failed to enrich leads', details: error.message },
+      { status: 500 }
+    );
   }
 }
 
-/**
- * Enriches a lead using the Apollo API.
- * @param lead The lead to enrich.
- * @returns A promise that resolves to an object with some or all properties of EnrichmentData, or null if no data is found.
- */
-async function enrichWithApollo(lead: ScrapedLead): Promise<Partial<EnrichmentData> | null> {
-  try {
-    const apolloResponse = await fetch(`${process.env.NEXTAUTH_URL}/api/apollo/search`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        jobTitle: lead.title,
-        location: lead.location,
-        industry: lead.industry,
-        companySize: lead.company_size,
-        fullName: lead.full_name,
-        companyName: lead.company,
-      }),
-    });
+function calculateEnrichedLeadScore(lead: any, apolloData: any): number {
+  let score = lead.lead_score || 0.5;
 
-    if (!apolloResponse.ok) {
-      const errorBody = await apolloResponse.text();
-      throw new Error(`Apollo API error: ${apolloResponse.status} - ${errorBody}`);
-    }
-
-    const apolloData = await apolloResponse.json();
-
-    if (apolloData.people && apolloData.people.length > 0) {
-      const bestMatch =
-        apolloData.people.find(
-          (person: any) =>
-            (lead.full_name && person.name?.toLowerCase().includes(lead.full_name.toLowerCase())) ||
-            (lead.company && person.organization?.name?.toLowerCase().includes(lead.company.toLowerCase()))
-        ) || apolloData.people[0];
-
-      return {
-        work_email: bestMatch.email || null,
-        personal_email: null,
-        mobile_phone: bestMatch.phone || null,
-        office_phone: null,
-        company_name: bestMatch.organization?.name || null,
-        company_domain: bestMatch.organization?.website_url || null,
-        company_size_range: bestMatch.organization?.company_size_range || null,
-        company_revenue_range: bestMatch.organization?.annual_revenue_range || null,
-        company_industry: bestMatch.organization?.industry || null,
-        company_description: bestMatch.organization?.short_description || null,
-        company_founded_year: bestMatch.organization?.founded_year || null,
-        company_employee_count: bestMatch.organization?.estimated_num_employees || null,
-        seniority_level: bestMatch.seniority || null,
-        department: bestMatch.department || null,
-        skills: bestMatch.skills || null,
-        education: bestMatch.education || [],
-        work_history: bestMatch.employment_history || [],
-        social_profiles: {
-          linkedin: bestMatch.linkedin_url,
-        },
-        technologies_used: bestMatch.organization?.technologies || null,
-        raw_data: bestMatch,
-      };
-    }
-
-    return null;
-  } catch (error) {
-    console.error("Apollo enrichment error:", error);
-    return null;
+  // Boost score for having email
+  if (apolloData.email && !lead.email) {
+    score += 0.15;
   }
+
+  // Boost score for having phone
+  if (apolloData.phone && !lead.phone) {
+    score += 0.15;
+  }
+
+  // Boost score for seniority
+  const seniorityBoost = {
+    'c_suite': 0.2,
+    'vp': 0.15,
+    'director': 0.1,
+    'manager': 0.05
+  };
+  if (apolloData.seniority && seniorityBoost[apolloData.seniority]) {
+    score += seniorityBoost[apolloData.seniority];
+  }
+
+  // Boost for company size (larger companies = higher budget potential)
+  if (apolloData.organization?.num_employees) {
+    if (apolloData.organization.num_employees > 1000) score += 0.1;
+    else if (apolloData.organization.num_employees > 100) score += 0.05;
+  }
+
+  return Math.min(score, 1.0);
 }

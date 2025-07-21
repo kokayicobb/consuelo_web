@@ -186,7 +186,9 @@ const FormSelector = ({ onClose, isFullScreen, setIsFullScreen }) => {
             {/* Main content */}
             <div>
               {selectedForm === "facebook-group" && <FacebookGroupsSearch />}
-              {selectedForm === "social" && <LeadScraperDashboard />}
+              {selectedForm === "social" && <LeadScraperDashboard onClose={function (): void {
+                  throw new Error("Function not implemented.");
+                } } />}
             </div>
           </div>
         )}
