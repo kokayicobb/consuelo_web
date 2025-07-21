@@ -137,6 +137,10 @@ export interface EnrichmentData {
 }
 
 export interface CreateCampaignRequest {
+  targetCriteria: any
+  schedule: any
+  leadScoringRules: any
+  platformConfigs: any
   name: string
   description?: string
   platforms: PlatformType[]
