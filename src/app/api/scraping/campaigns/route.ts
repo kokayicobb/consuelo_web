@@ -61,8 +61,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-
-// The POST function is updated with detailed logging.
+// The POST function is updated with proper type handling
 export async function POST(request: NextRequest) {
   try {
     const { userId } = await auth();
@@ -98,21 +97,20 @@ export async function POST(request: NextRequest) {
       description: body.description,
       platforms: body.platforms,
       keywords: body.keywords,
-      negative_keywords: body.targetCriteria?.negative_keywords,
+      // negative_keywords: body.targetCriteria?.negative_keywords,
       target_job_titles: body.targetCriteria?.job_titles,
       target_industries: body.targetCriteria?.industries,
       target_company_sizes: body.targetCriteria?.company_sizes,
       target_locations: body.targetCriteria?.locations,
       frequency: body.frequency,
       schedule_config: body.schedule,
-      filters: body.filters,
-      lead_scoring_rules: body.leadScoringRules,
-      status: 'active'
+      // filters: body.filters,
+      // lead_scoring_rules: body.leadScoringRules,
+      status: 'active' as const
     };
 
     // --- LOGGING STEP 2: Log the object that will be inserted into Supabase ---
     console.log("Inserting the following object into 'scraping_campaigns':", JSON.stringify(campaignToInsert, null, 2));
-
 
     const { data: campaign, error: campaignError } = await supabase
       .from('scraping_campaigns')
@@ -122,17 +120,16 @@ export async function POST(request: NextRequest) {
 
     if (campaignError) {
       // --- LOGGING STEP 3: THIS IS THE MOST IMPORTANT LOG ---
-      // It will print the detailed error from Supabase to your server console.
       console.error('💥 SUPABASE ERROR while creating campaign:', JSON.stringify(campaignError, null, 2));
       
-      // Send a more descriptive error back to the client
       return NextResponse.json({
         error: 'Failed to create campaign in database.',
-        details: campaignError.message, // Send the actual database message
-        code: campaignError.code, // Send the error code (e.g., '23505' for unique constraint)
+        details: campaignError.message,
+        code: campaignError.code,
       }, { status: 500 });
     }
 
+    // Handle platform configurations if provided
     if (body.platformConfigs && campaign) {
       const platformConfigs = Object.entries(body.platformConfigs).map(([platform, config]) => ({
         campaign_id: campaign.id,
@@ -150,13 +147,14 @@ export async function POST(request: NextRequest) {
       }
     }
     
+    // Create initial job for 'once' frequency
     if (body.frequency === 'once' && campaign) {
       const { error: jobError } = await supabase
         .from('scraping_jobs')
         .insert({
           campaign_id: campaign.id,
-          job_type: 'manual',
-          status: 'pending',
+          job_type: 'manual' as const,
+          status: 'pending' as const,
           platforms_to_scrape: body.platforms
         });
 
