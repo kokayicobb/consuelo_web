@@ -13,13 +13,27 @@ const retryRequest = async <T>(fn: () => Promise<T>, retries: number, delay: num
 };
 
 export const initiateTryOn = async (body: any) => {
+  // Transform the body to the new v1.6 format if needed
+  let requestBody;
+  
+  // Check if the body is already in the new format
+  if (body.model_name && body.inputs) {
+    requestBody = body;
+  } else {
+    // Transform old format to new format
+    requestBody = {
+      model_name: "tryon-v1.6", // Update to v1.6
+      inputs: body
+    };
+  }
+
   const response = await fetch('https://api.fashn.ai/v1/run', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${process.env.FASHN_API_KEY}`,
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify(requestBody),
   });
 
   if (!response.ok) {

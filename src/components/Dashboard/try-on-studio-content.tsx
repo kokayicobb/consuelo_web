@@ -578,7 +578,7 @@ const imageUrlToBase64 = async (url: string): Promise<string> => {
               whileTap={!(!modelImage || !garmentImage || isLoading) ? { scale: 0.95 } : {}}
             >
               <Play className="h-5 w-5" />
-              Run (~14s)
+              Run (~7s)
             </motion.button>
           </div>
 
@@ -598,7 +598,7 @@ const imageUrlToBase64 = async (url: string): Promise<string> => {
                 ></div>
               </div>
               <p className="text-lg text-slate-600">Generating your virtual try-on...</p>
-              <p className="text-sm text-slate-500 mt-1">This usually takes 10-15 seconds</p>
+              <p className="text-sm text-slate-500 mt-1">This usually takes 7-10 seconds</p>
             </motion.div>
           )}
 
