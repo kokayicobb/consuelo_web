@@ -43,16 +43,18 @@ export function CreateCampaignDialog({ open, onOpenChange, onSubmit }: CreateCam
     description: "",
     platforms: [],
     keywords: [],
-    negative_keywords: [],
-    target_job_titles: [],
-    target_industries: [],
-    target_company_sizes: [],
-    target_locations: [],
+    targetCriteria: {
+      // negative_keywords: [],
+      job_titles: [],
+      industries: [],
+      company_sizes: [],
+      locations: [],
+    },
     frequency: "once",
-    schedule_config: {},
-    filters: {},
-    lead_scoring_rules: {},
-    platform_configs: [],
+    schedule: {},
+    // filters: {},
+    // leadScoringRules: {},
+    platformConfigs: {},
   })
 
   const [keywordInput, setKeywordInput] = useState("")
@@ -65,14 +67,14 @@ export function CreateCampaignDialog({ open, onOpenChange, onSubmit }: CreateCam
     e.preventDefault()
 
     // Create platform configs for selected platforms
-    const platform_configs = formData.platforms.map((platform) => ({
-      platform,
-      config: getPlatformDefaultConfig(platform),
-    }))
+    const platformConfigs: Record<string, any> = {}
+    formData.platforms.forEach((platform) => {
+      platformConfigs[platform] = getPlatformDefaultConfig(platform)
+    })
 
     onSubmit({
       ...formData,
-      platform_configs,
+      platformConfigs,
     })
   }
 
@@ -91,44 +93,67 @@ export function CreateCampaignDialog({ open, onOpenChange, onSubmit }: CreateCam
     }
   }
 
-  const addKeyword = (
-    type: "keywords" | "negative_keywords" | "target_job_titles" | "target_industries" | "target_locations",
+  const addKeyword = (type: "keywords") => {
+    if (keywordInput.trim()) {
+      setFormData((prev) => ({
+        ...prev,
+        keywords: [...(prev.keywords || []), keywordInput.trim()],
+      }))
+      setKeywordInput("")
+    }
+  }
+
+  const addTargetCriteria = (
+    type: "negative_keywords" | "job_titles" | "industries" | "company_sizes" | "locations"
   ) => {
     const inputMap = {
-      keywords: keywordInput,
       negative_keywords: negativeKeywordInput,
-      target_job_titles: jobTitleInput,
-      target_industries: industryInput,
-      target_locations: locationInput,
+      job_titles: jobTitleInput,
+      industries: industryInput,
+      company_sizes: "", // You might want to add this input
+      locations: locationInput,
     }
 
     const setterMap = {
-      keywords: setKeywordInput,
       negative_keywords: setNegativeKeywordInput,
-      target_job_titles: setJobTitleInput,
-      target_industries: setIndustryInput,
-      target_locations: setLocationInput,
+      job_titles: setJobTitleInput,
+      industries: setIndustryInput,
+      company_sizes: () => {}, // Add setter if needed
+      locations: setLocationInput,
     }
 
     const input = inputMap[type]
     const setter = setterMap[type]
 
-    if (input.trim()) {
+    if (input && input.trim()) {
       setFormData((prev) => ({
         ...prev,
-        [type]: [...(prev[type] || []), input.trim()],
+        targetCriteria: {
+          ...prev.targetCriteria,
+          [type]: [...(prev.targetCriteria?.[type] || []), input.trim()],
+        },
       }))
       setter("")
     }
   }
 
-  const removeItem = (
-    type: "keywords" | "negative_keywords" | "target_job_titles" | "target_industries" | "target_locations",
-    index: number,
+  const removeKeyword = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      keywords: prev.keywords?.filter((_, i) => i !== index) || [],
+    }))
+  }
+
+  const removeTargetCriteria = (
+    type: "negative_keywords" | "job_titles" | "industries" | "company_sizes" | "locations",
+    index: number
   ) => {
     setFormData((prev) => ({
       ...prev,
-      [type]: prev[type]?.filter((_, i) => i !== index) || [],
+      targetCriteria: {
+        ...prev.targetCriteria,
+        [type]: prev.targetCriteria?.[type]?.filter((_, i) => i !== index) || [],
+      },
     }))
   }
 
@@ -247,7 +272,7 @@ export function CreateCampaignDialog({ open, onOpenChange, onSubmit }: CreateCam
               {formData.keywords?.map((keyword, index) => (
                 <Badge key={index} variant="secondary" className="flex items-center gap-1">
                   {keyword}
-                  <X className="h-3 w-3 cursor-pointer" onClick={() => removeItem("keywords", index)} />
+                  <X className="h-3 w-3 cursor-pointer" onClick={() => removeKeyword(index)} />
                 </Badge>
               ))}
             </div>
@@ -261,20 +286,20 @@ export function CreateCampaignDialog({ open, onOpenChange, onSubmit }: CreateCam
                 value={negativeKeywordInput}
                 onChange={(e) => setNegativeKeywordInput(e.target.value)}
                 placeholder="Add negative keyword..."
-                onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addKeyword("negative_keywords"))}
+                onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addTargetCriteria("negative_keywords"))}
               />
-              <Button type="button" onClick={() => addKeyword("negative_keywords")}>
+              <Button type="button" onClick={() => addTargetCriteria("negative_keywords")}>
                 Add
               </Button>
             </div>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {formData.negative_keywords?.map((keyword, index) => (
+            {/* <div className="flex flex-wrap gap-2 mt-2">
+              {formData.targetCriteria?.negative_keywords?.map((keyword, index) => (
                 <Badge key={index} variant="destructive" className="flex items-center gap-1">
                   {keyword}
-                  <X className="h-3 w-3 cursor-pointer" onClick={() => removeItem("negative_keywords", index)} />
+                  <X className="h-3 w-3 cursor-pointer" onClick={() => removeTargetCriteria("negative_keywords", index)} />
                 </Badge>
               ))}
-            </div>
+            </div> */}
           </div>
 
           {/* Target Criteria */}
@@ -286,17 +311,17 @@ export function CreateCampaignDialog({ open, onOpenChange, onSubmit }: CreateCam
                   value={jobTitleInput}
                   onChange={(e) => setJobTitleInput(e.target.value)}
                   placeholder="e.g., CEO, Founder"
-                  onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addKeyword("target_job_titles"))}
+                  onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addTargetCriteria("job_titles"))}
                 />
-                <Button type="button" onClick={() => addKeyword("target_job_titles")}>
+                <Button type="button" onClick={() => addTargetCriteria("job_titles")}>
                   Add
                 </Button>
               </div>
               <div className="flex flex-wrap gap-2 mt-2">
-                {formData.target_job_titles?.map((title, index) => (
+                {formData.targetCriteria?.job_titles?.map((title, index) => (
                   <Badge key={index} variant="outline" className="flex items-center gap-1">
                     {title}
-                    <X className="h-3 w-3 cursor-pointer" onClick={() => removeItem("target_job_titles", index)} />
+                    <X className="h-3 w-3 cursor-pointer" onClick={() => removeTargetCriteria("job_titles", index)} />
                   </Badge>
                 ))}
               </div>
@@ -309,17 +334,17 @@ export function CreateCampaignDialog({ open, onOpenChange, onSubmit }: CreateCam
                   value={industryInput}
                   onChange={(e) => setIndustryInput(e.target.value)}
                   placeholder="e.g., Technology, SaaS"
-                  onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addKeyword("target_industries"))}
+                  onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addTargetCriteria("industries"))}
                 />
-                <Button type="button" onClick={() => addKeyword("target_industries")}>
+                <Button type="button" onClick={() => addTargetCriteria("industries")}>
                   Add
                 </Button>
               </div>
               <div className="flex flex-wrap gap-2 mt-2">
-                {formData.target_industries?.map((industry, index) => (
+                {formData.targetCriteria?.industries?.map((industry, index) => (
                   <Badge key={index} variant="outline" className="flex items-center gap-1">
                     {industry}
-                    <X className="h-3 w-3 cursor-pointer" onClick={() => removeItem("target_industries", index)} />
+                    <X className="h-3 w-3 cursor-pointer" onClick={() => removeTargetCriteria("industries", index)} />
                   </Badge>
                 ))}
               </div>
@@ -333,17 +358,17 @@ export function CreateCampaignDialog({ open, onOpenChange, onSubmit }: CreateCam
                 value={locationInput}
                 onChange={(e) => setLocationInput(e.target.value)}
                 placeholder="e.g., San Francisco, New York"
-                onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addKeyword("target_locations"))}
+                onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addTargetCriteria("locations"))}
               />
-              <Button type="button" onClick={() => addKeyword("target_locations")}>
+              <Button type="button" onClick={() => addTargetCriteria("locations")}>
                 Add
               </Button>
             </div>
             <div className="flex flex-wrap gap-2 mt-2">
-              {formData.target_locations?.map((location, index) => (
+              {formData.targetCriteria?.locations?.map((location, index) => (
                 <Badge key={index} variant="outline" className="flex items-center gap-1">
                   {location}
-                  <X className="h-3 w-3 cursor-pointer" onClick={() => removeItem("target_locations", index)} />
+                  <X className="h-3 w-3 cursor-pointer" onClick={() => removeTargetCriteria("locations", index)} />
                 </Badge>
               ))}
             </div>

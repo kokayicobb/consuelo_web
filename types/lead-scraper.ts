@@ -17,29 +17,32 @@ export interface User {
   created_at: string;
   updated_at: string;
 }
-
+ export interface TargetCriteria {
+  job_titles?: string[]
+  industries?: string[]
+  company_sizes?: string[]
+  locations?: string[]
+  negative_keywords?: string[]
+}
 export interface ScrapingCampaign {
-  id: string;
-  user_id: string;
-  name: string;
-  description?: string;
-  platforms: PlatformType[];
-  keywords?: string[];
-  negative_keywords?: string[];
-  target_job_titles?: string[];
-  target_industries?: string[];
-  target_company_sizes?: string[];
-  target_locations?: string[];
-  frequency: CampaignFrequency;
-  schedule_config?: any;
-  filters?: any;
-  lead_scoring_rules?: any;
-  status: CampaignStatus;
-  last_run_at?: string;
-  next_run_at?: string;
-  total_leads_found: number;
-  created_at: string;
-  updated_at: string;
+  id: string
+  user_id: string
+  name: string
+  description?: string
+  platforms: string[]
+  keywords?: string[]
+  negative_keywords?: string[]
+  target_job_titles?: string[]
+  target_industries?: string[]
+  target_company_sizes?: string[]
+  target_locations?: string[]
+  frequency: "once" | "daily" | "weekly" | "monthly"
+  schedule_config?: any
+  filters?: any
+  lead_scoring_rules?: any
+  status: "active" | "paused" | "completed" | "failed"
+  created_at: string
+  updated_at: string
 }
 
 export interface PlatformConfiguration {
@@ -189,22 +192,22 @@ export interface FirecrawlExtractOptions {
   onlyMainContent?: boolean;
 }
 
+// Fixed CreateCampaignRequest interface
 export interface CreateCampaignRequest {
-  name: string;
-  description?: string;
-  platforms: PlatformType[];
-  platformConfigs: Partial<Record<PlatformType, any>>;
-  keywords?: string[];
+  name: string
+  description?: string
+  platforms: string[]
+  keywords?: string[]
   targetCriteria?: {
-    job_titles?: string[];
-    industries?: string[];
-    company_sizes?: string[];
-    locations?: string[];
-  };
-  frequency: CampaignFrequency;
-  schedule?: {
-    time?: string;
-    timezone?: string;
-    days_of_week?: number[];
-  };
+    job_titles?: string[]
+    industries?: string[]
+    company_sizes?: string[]
+    locations?: string[]
+    negative_keywords?: string[]
+  }
+  frequency: "once" | "daily" | "weekly" | "monthly"
+  schedule?: any
+  filters?: any
+  leadScoringRules?: any
+  platformConfigs?: { [platform: string]: any }
 }
