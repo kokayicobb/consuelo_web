@@ -13,8 +13,8 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Await the params since it's now a Promise
     const { id } = await params;
+    console.log("🚀 Running campaign:", id);
     
     const { userId } = await auth();
     if (!userId) {
@@ -32,7 +32,7 @@ export async function POST(
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Get campaign and verify ownership - use the awaited id
+    // Get campaign and verify ownership
     const { data: campaign, error: campaignError } = await supabase
       .from('scraping_campaigns')
       .select('*, platform_configurations(*)')
@@ -43,6 +43,8 @@ export async function POST(
     if (campaignError || !campaign) {
       return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
     }
+
+    console.log("✅ Campaign found:", campaign.name);
 
     // Create scraping job
     const { data: job, error: jobError } = await supabase
@@ -57,29 +59,72 @@ export async function POST(
       .single();
 
     if (jobError) {
-      console.error('Error creating job:', jobError);
+      console.error('❌ Error creating job:', jobError);
       return NextResponse.json({ error: 'Failed to create job' }, { status: 500 });
     }
 
-    // Trigger the scraping process asynchronously
-    // In production, this would be handled by a job queue (e.g., BullMQ, Inngest, etc.)
-    fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/scraping/process-job`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.INTERNAL_API_KEY}`
-      },
-      body: JSON.stringify({ jobId: job.id })
-    }).catch(error => {
-      console.error('Failed to trigger job processing:', error);
-    });
+    console.log("✅ Job created:", job.id);
+
+    // Trigger the scraping process - with better error handling
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const processUrl = `${baseUrl}/api/scraping/process-job`;
+    
+    console.log("🔄 Triggering job processing at:", processUrl);
+
+    // Use a more robust fetch with timeout and error handling
+    const triggerJobProcessing = async () => {
+      try {
+        const response = await fetch(processUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ jobId: job.id }),
+          // Add timeout
+          signal: AbortSignal.timeout(30000) // 30 second timeout
+        });
+
+        console.log("🔄 Process-job response status:", response.status);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("❌ Process-job failed:", errorText);
+          
+          // Update job status to failed
+          await supabase
+            .from('scraping_jobs')
+            .update({
+              status: 'failed',
+              error_message: `Failed to trigger processing: ${response.status} ${errorText}`
+            })
+            .eq('id', job.id);
+        } else {
+          const result = await response.json();
+          console.log("✅ Process-job triggered successfully:", result);
+        }
+      } catch (error) {
+        console.error('❌ Failed to trigger job processing:', error);
+        
+        // Update job status to failed
+        await supabase
+          .from('scraping_jobs')
+          .update({
+            status: 'failed',
+            error_message: `Failed to trigger processing: ${error.message}`
+          })
+          .eq('id', job.id);
+      }
+    };
+
+    // Don't await this - let it run in the background
+    triggerJobProcessing();
 
     return NextResponse.json({
       job,
       message: 'Campaign run started successfully'
     });
   } catch (error) {
-    console.error('Unexpected error:', error);
+    console.error('💥 Unexpected error in campaign run:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
