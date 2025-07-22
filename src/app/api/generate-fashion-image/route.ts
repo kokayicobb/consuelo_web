@@ -18,7 +18,7 @@ function buildMarketingPrompt(options) {
   } = options;
   
   // Base prompt for social media marketing
-  let prompt = "High-quality social media marketing photography, viral content style, ";
+ let prompt = "Film photography, analog aesthetic, natural candid moment, real person, ";
   
   // Add platform-specific optimization
   if (selectedPlatforms && selectedPlatforms.length > 0) {
@@ -56,14 +56,22 @@ function buildMarketingPrompt(options) {
         break;
     }
   }
+  // Add film/analog style for natural look
+  prompt += "shot on film camera, kodak portra, natural grain, authentic lighting, ";
+  prompt += "candid photography style, real skin texture, natural imperfections, ";
   
   // Model specifications for marketing
-  if (modelOptions) {
+  // Model specifications for marketing
+if (modelOptions) {
+  // Only add basic model info if there's no detailed custom prompt
+  if (!customPrompt || customPrompt.trim() === "") {
     prompt += `${modelOptions.gender} model`;
     
     if (modelOptions.age) {
       prompt += ` age ${modelOptions.age}`;
     }
+    
+    prompt += ", full body shot, head to toe composition, complete figure visible, ";
     
     if (modelOptions.ethnicity && modelOptions.ethnicity !== "diverse") {
       prompt += `, ${modelOptions.ethnicity} ethnicity`;
@@ -81,6 +89,7 @@ function buildMarketingPrompt(options) {
     
     prompt += ", ";
   }
+}
   
   // Clothing with marketing focus
   if (clothingOptions && clothingOptions.type) {
@@ -162,28 +171,27 @@ function buildMarketingPrompt(options) {
     prompt += `${brandGuidelines}, `;
   }
   
-  // Custom prompt additions
-  if (customPrompt && customPrompt.trim() !== "") {
-    prompt += `${customPrompt}, `;
-  }
+  // Custom prompt takes priority - add early and clean
+if (customPrompt && customPrompt.trim() !== "") {
+  // Clean the custom prompt and prioritize it
+  const cleanCustomPrompt = customPrompt.replace(/"/g, '').trim();
+  prompt = `${cleanCustomPrompt}, ${prompt}`;
+}
   
   // Technical quality for marketing
-  prompt += "professional photography, perfect lighting, sharp focus, ";
-  prompt += "high resolution for all screen sizes, mobile-optimized composition, ";
-  prompt += "commercially viable, brand-safe content, inclusive representation";
-  
+  if (!customPrompt || customPrompt.trim() === "") {
+  prompt += "professional photography, natural lighting, sharp focus";
+}
   return prompt;
 }
 
 // Build negative prompt for marketing content
 function buildMarketingNegativePrompt() {
-  return "low quality, amateur photography, poor lighting, blurry, pixelated, " +
-    "unprofessional appearance, messy background, distracting elements, " +
-    "outdated style, unflattering angles, poor composition, " +
-    "inappropriate content, offensive imagery, brand-unsafe elements, " +
-    "distorted proportions, unrealistic body standards, " +
-    "low engagement potential, dated aesthetics, poor color grading, " +
-    "stock photo feel, generic composition, forgettable imagery";
+  return "artificial looking, over-processed, digital painting, 3d render, cgi, " +
+    "plastic skin, perfect skin, too smooth, airbrushed, fake looking, " +
+    "overly saturated, HDR effect, digital art style, cartoon, anime, " +
+    "cropped body, close-up only, headshot, partial figure, cut off limbs, " +
+    "studio lighting, ring light, harsh shadows, over-lit";
 }
 
 export async function POST(request) {
@@ -244,7 +252,7 @@ export async function POST(request) {
     formData.append('negative_prompt', negativePrompt);
     formData.append('aspect_ratio', aspectRatio);
     formData.append('output_format', 'webp');
-    formData.append('style_preset', 'photographic');
+    formData.append('style_preset', 'analog-film');
     
     // Add empty blob (required by some implementations)
     const emptyBlob = new Blob([''], { type: 'text/plain' });
@@ -253,7 +261,7 @@ export async function POST(request) {
     // Generate the initial image
     console.log("Calling Stability API for marketing content generation...");
     
-    const generationResponse = await fetch('https://api.stability.ai/v2beta/stable-image/generate/ultra', {
+   const generationResponse = await fetch('https://api.stability.ai/v2beta/stable-image/generate/ultra', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${process.env.STABILITY_API_KEY}`,

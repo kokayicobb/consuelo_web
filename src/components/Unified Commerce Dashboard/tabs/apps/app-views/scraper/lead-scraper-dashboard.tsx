@@ -219,66 +219,136 @@ export default function LeadScraperDashboard({ onClose }: LeadScraperDashboardPr
   // In your lead-scraper-dashboard.tsx file
 
 const handleCreateCampaign = async (campaignData: CreateCampaignRequest) => {
-  // Log the data being sent to the API
-  console.log("Attempting to create campaign with the following data:", JSON.stringify(campaignData, null, 2));
+  console.log("🚀 Starting campaign creation...");
+  console.log("📍 Current URL:", window.location.href);
+  console.log("📍 Origin:", window.location.origin);
+  
+  const apiPath = "/api/scraping/campaigns";
+  const fullUrl = `${window.location.origin}${apiPath}`;
+  
+  console.log("🎯 Calling API:", fullUrl);
+  console.log("📋 Sending data:", JSON.stringify(campaignData, null, 2));
 
   try {
-    const response = await fetch("/api/scraping/campaigns", {
+    // First test if the endpoint exists with a simple GET
+    console.log("🔍 Testing GET endpoint first...");
+    const testResponse = await fetch(apiPath, { 
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      }
+    });
+    console.log("🔍 GET test status:", testResponse.status);
+    console.log("🔍 GET test headers:", Object.fromEntries(testResponse.headers.entries()));
+    
+    if (testResponse.status === 404) {
+      console.error("❌ API endpoint not found! Route doesn't exist.");
+      toast.error("API endpoint not found. Check your route files.");
+      return;
+    }
+
+    // Now try the actual POST
+    console.log("📡 Making POST request...");
+    const response = await fetch(apiPath, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      },
       body: JSON.stringify(campaignData)
     });
 
-    // Get the JSON body from the response, regardless of status code
-    const result = await response.json();
+    console.log("📡 POST Response status:", response.status);
+    console.log("📡 POST Response headers:", Object.fromEntries(response.headers.entries()));
+    
+    const contentType = response.headers.get("content-type");
+    console.log("📡 Content-Type:", contentType);
+    
+    // Get the raw response text first
+    const responseText = await response.text();
+    console.log("📡 Raw response (first 1000 chars):", responseText.substring(0, 1000));
+    
+    // Check if it's HTML (404 page)
+    if (responseText.startsWith('<!DOCTYPE')) {
+      console.error("❌ Received HTML instead of JSON - this is a 404 page!");
+      console.error("❌ Full HTML response:", responseText);
+      toast.error("API route not found. This shouldn't happen since GET worked.");
+      return;
+    }
+    
+    // Try to parse as JSON
+    let result;
+    try {
+      result = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error("❌ Failed to parse response as JSON:", parseError);
+      console.error("❌ Response text:", responseText);
+      toast.error("Invalid response from server");
+      return;
+    }
 
-    // If the response is not OK (e.g., status 400 or 500), handle the error
     if (!response.ok) {
-      // The backend sends a JSON object with { error, details }. We use that here.
       console.error("❌ API returned an error:", result);
-
-      // Create a more informative error message to be thrown
       const errorMessage = result.details || result.error || "Failed to create campaign";
-      
-      // Throw the error to be caught by the catch block
       throw new Error(errorMessage);
     }
     
-    // This part runs only on a successful (2xx) response
-    console.log("✅ Campaign created successfully. Server response:", result);
+    console.log("✅ Campaign created successfully:", result);
     toast.success("Campaign created successfully");
     setShowCreateCampaign(false);
     fetchCampaigns();
     
-    // Optionally run the campaign immediately
     if (campaignData.frequency === 'once' && result.campaign) {
       runCampaign(result.campaign.id);
     }
 
   } catch (error: any) {
-    // The catch block now receives the detailed error message
-    console.error("💥 Final error caught in function:", error.message);
-    
-    // Show the detailed error message in the toast notification
+    console.error("💥 Final error caught:", error);
+    console.error("💥 Error stack:", error.stack);
     toast.error(`Error: ${error.message}`);
   }
 };
 
   const runCampaign = async (campaignId: string) => {
-    try {
-      const response = await fetch(`/api/scraping/campaigns/${campaignId}/run`, {
-        method: "POST"
-      });
+  console.log("🎯 Running campaign:", campaignId);
+  
+  try {
+    const response = await fetch(`/api/scraping/campaigns/${campaignId}/run`, {
+      method: "POST"
+    });
 
-      if (!response.ok) throw new Error("Failed to run campaign");
-      
-      toast.success("Campaign started successfully");
-      fetchJobs();
-    } catch (error) {
-      console.error("Error running campaign:", error);
-      toast.error("Failed to run campaign");
+    console.log("🎯 Run campaign response status:", response.status);
+    console.log("🎯 Run campaign response headers:", Object.fromEntries(response.headers.entries()));
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("❌ Run campaign failed:", errorText);
+      throw new Error("Failed to run campaign");
     }
-  };
+    
+    const result = await response.json();
+    console.log("✅ Campaign run result:", result);
+    
+    toast.success("Campaign started successfully");
+    fetchJobs(); // Make sure this function exists and works
+    
+    // Let's also check the job status after a few seconds
+    setTimeout(async () => {
+      console.log("🔍 Checking job status after 5 seconds...");
+      try {
+        const jobsResponse = await fetch("/api/scraping/jobs");
+        const jobsData = await jobsResponse.json();
+        console.log("📋 Current jobs:", jobsData);
+      } catch (error) {
+        console.error("❌ Error checking jobs:", error);
+      }
+    }, 5000);
+    
+  } catch (error) {
+    console.error("❌ Error running campaign:", error);
+    toast.error("Failed to run campaign");
+  }
+};
 
   const pauseCampaign = async (campaignId: string) => {
     try {
