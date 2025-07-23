@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import {
+  Phone,
   Cloud,
   Star,
   MoreHorizontal,
@@ -267,10 +268,10 @@ const businessFunctions: BusinessFunction[] = [
     expanded: true,
     apps: [
       {
-        id: "ai-chatbot",
-        name: "AI Chatbot",
+        id: "on-call-coaching",
+        name: "On Call Coaching",
         description: "Customer service and guidance",
-        icon: <Bot className="h-5 w-5" />,
+        icon: <Mic className="h-5 w-5" />,
         color: "bg-slate-300",
       },
       {
@@ -377,7 +378,7 @@ export default function AppsPage() {
       );
     }
 
-    if (selectedApp.id === "ai-chatbot") {
+    if (selectedApp.id === "on-call-coaching") {
       return <PhoneCallComponent />;
     }
     

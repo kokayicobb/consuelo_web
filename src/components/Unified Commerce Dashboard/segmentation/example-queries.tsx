@@ -63,9 +63,9 @@ export default function ExampleQueries({ categorizedQueries, onSelectQuery }: Ex
                 onClick={() => setActiveCategoryName(category.name)}
                 className={`
                   flex items-center justify-center px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium rounded-lg transition-all duration-150 ease-in-out
-                  border focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-sky-400
+                  border focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-purple-400
                   ${activeCategoryName === category.name
-                    ? 'bg-sky-600 text-white border-sky-600 shadow-sm'
+                    ? 'bg-purple-400 text-white border-purple-400 shadow-sm'
                     : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100 hover:border-gray-400'
                   }
                 `}
@@ -86,11 +86,11 @@ export default function ExampleQueries({ categorizedQueries, onSelectQuery }: Ex
               onClick={() => onSelectQuery(queryItem.text)}
               className="
                 flex flex-col justify-between w-full text-left p-3 sm:p-4 bg-white border border-gray-200 rounded-lg 
-                hover:shadow-md hover:border-sky-400 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-sky-500
+                hover:shadow-md hover:border-purple-400 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-purple-500
                 transition-all duration-150 ease-in-out h-full min-h-[80px] sm:min-h-[100px] group
               "
             >
-              <p className="text-sm text-gray-700 group-hover:text-sky-700">
+              <p className="text-sm text-gray-700 group-hover:text-purple-700">
                 {queryItem.text}
               </p>
               {/* You can add a subtle "Try it →" or similar at the bottom if desired */}

@@ -86,7 +86,7 @@ import {
 
 import AIInsightsContent from "../tabs/ai-insights";
 import ChannelsContent from "../tabs/channels-content";
-import ChatContent from "../tabs/chat";
+import ChatContent from "../tabs/chat/index-old";
 import CustomersContent from "../tabs/accounts";
 
 import InventoryContent from "../tabs/inventory-content";
@@ -103,6 +103,7 @@ import FormSelector from "../tabs/apps/app-views/social-search/form-selector";
 import ApolloSearchComponent from "../tabs/apps/app-views/apollo-search-component";
 import { Drawer } from "vaul";
 import UnifiedInbox from "../tabs/inbox";
+import { ConversationalInterface } from "../tabs/chat";
 
 // Chat Interface Component for use with ExpandableChat
 // NOTE: This component is currently not used in MainLayout but is kept for reference.
@@ -207,7 +208,9 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
   const renderContent = () => {
     switch (activeTab) {
       case "home":
-        return <ChatContent />;
+        return <ConversationalInterface onBackToDashboard={function (): void {
+          throw new Error("Function not implemented.");
+        } } />;
       case "dashboard":
         return <HomeContent />;
       case "inbox":
