@@ -264,7 +264,7 @@ const businessFunctions: BusinessFunction[] = [
     id: "customer-retention",
     name: "Customer Retention",
     icon: <Repeat className="h-4 w-4" />,
-    expanded: false,
+    expanded: true,
     apps: [
       {
         id: "ai-chatbot",
@@ -293,7 +293,7 @@ const businessFunctions: BusinessFunction[] = [
     id: "marketing-content",
     name: "Marketing & Content",
     icon: <Megaphone className="h-4 w-4" />,
-    expanded: false,
+    expanded: true,
     apps: [
       {
         id: "social-poster",
