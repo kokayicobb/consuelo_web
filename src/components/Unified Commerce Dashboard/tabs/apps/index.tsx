@@ -76,6 +76,7 @@ import PhoneCallComponent from "../../../on-call-coaching";
 import EmailComposer from "../inbox/email/email-composer";
 import FacebookGroupsSearch from "./app-views/social-search/facebook-group-search";
 import FormSelector from "./app-views/social-search/form-selector";
+import RequestAppModal from "../../components/request-app-modal";
 
 // Dynamically import to avoid SSR issues with Google Maps
 const LeadGenerationSearch = dynamic(() => import("./app-views/google-maps"), {
@@ -332,7 +333,7 @@ export default function AppsPage() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedApp, setSelectedApp] = useState<AppCard | null>(null);
   const [isFullScreen, setIsFullScreen] = useState(false);
-
+const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   const toggleSection = (id: string) => {
     setFunctions((prev) =>
       prev.map((func) =>
@@ -424,10 +425,14 @@ export default function AppsPage() {
     {/* Button group */}
     <div className="flex items-center gap-2">
       
-      <Button className="flex items-center">
-        <Plus className="mr-1.5 h-4 w-4" />
-        Request App
-      </Button>
+     <Button 
+              className="flex items-center" 
+              onClick={() => setIsRequestModalOpen(true)}
+            >
+              <Plus className="mr-1.5 h-4 w-4" />
+              Request App
+            </Button>
+
     </div>
   </div>
 
@@ -612,12 +617,18 @@ export default function AppsPage() {
 
                   {/* Dynamic Content */}
                   {renderDrawerContent()}
+                  
                 </div>
               </div>
             </div>
           </Drawer.Content>
         </Drawer.Portal>
       </Drawer.Root>
+      <RequestAppModal 
+        isOpen={isRequestModalOpen}
+        onClose={() => setIsRequestModalOpen(false)}
+      />
     </div>
+   
   );
 }
