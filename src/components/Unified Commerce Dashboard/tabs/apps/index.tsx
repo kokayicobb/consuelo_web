@@ -76,6 +76,7 @@ import PhoneCallComponent from "../../../on-call-coaching";
 import EmailComposer from "../inbox/email/email-composer";
 import FacebookGroupsSearch from "./app-views/social-search/facebook-group-search";
 import FormSelector from "./app-views/social-search/form-selector";
+import RequestAppModal from "../../components/request-app-modal";
 
 // Dynamically import to avoid SSR issues with Google Maps
 const LeadGenerationSearch = dynamic(() => import("./app-views/google-maps"), {
@@ -332,7 +333,7 @@ export default function AppsPage() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedApp, setSelectedApp] = useState<AppCard | null>(null);
   const [isFullScreen, setIsFullScreen] = useState(false);
-
+const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   const toggleSection = (id: string) => {
     setFunctions((prev) =>
       prev.map((func) =>
@@ -415,28 +416,31 @@ export default function AppsPage() {
   return (
     <div className="min-h-screen space-y-6 bg-white p-8">
       {/* Page header */}
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-            Apps
-          </h1>
-          <p className="mt-1 text-gray-500">
-            Manage your business automation applications
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost">
-            <Download className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost">
-            <RefreshCw className="h-4 w-4" />
-          </Button>
-          <Button>
-            <Plus className="mr-1 h-4 w-4" />
-            Add App
-          </Button>
-        </div>
-      </div>
+<div className="mb-8">
+  {/* Top row for title and buttons */}
+  <div className="flex flex-wrap items-center justify-between gap-4">
+    <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+      Apps
+    </h1>
+    {/* Button group */}
+    <div className="flex items-center gap-2">
+      
+     <Button 
+              className="flex items-center" 
+              onClick={() => setIsRequestModalOpen(true)}
+            >
+              <Plus className="mr-1.5 h-4 w-4" />
+              Request App
+            </Button>
+
+    </div>
+  </div>
+
+  {/* Description, always on its own line */}
+  <p className="mt-2 text-gray-500">
+    Manage your business automation applications
+  </p>
+</div>
 
       {/* Business Functions */}
       <div className="space-y-6">
@@ -465,7 +469,7 @@ export default function AppsPage() {
             {func.expanded && (
               <div className="pl-0">
                 {func.apps.length > 0 ? (
-                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4">
+                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-4 xl:grid-cols-4">
                     {func.apps.map((app) => (
                       <div
                         key={app.id}
@@ -613,12 +617,18 @@ export default function AppsPage() {
 
                   {/* Dynamic Content */}
                   {renderDrawerContent()}
+                  
                 </div>
               </div>
             </div>
           </Drawer.Content>
         </Drawer.Portal>
       </Drawer.Root>
+      <RequestAppModal 
+        isOpen={isRequestModalOpen}
+        onClose={() => setIsRequestModalOpen(false)}
+      />
     </div>
+   
   );
 }
