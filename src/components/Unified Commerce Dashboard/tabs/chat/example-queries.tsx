@@ -109,10 +109,10 @@ export default function ExampleQueries({
                   onClick={() => setActiveCategoryName(category.name)}
                   className={`
                     flex items-center justify-center rounded-lg border px-3 py-1.5 text-xs font-medium transition-all duration-150 ease-in-out
-                    focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-1 sm:px-4 sm:py-2 sm:text-sm
+                    focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-1 sm:px-4 sm:py-2 sm:text-sm
                     ${
                       activeCategoryName === category.name
-                        ? "border-sky-600 bg-sky-600 text-white shadow-md" // Active: blue border, blue background
+                        ? "border-purple-400 bg-purple-400 text-white shadow-md" // Active: blue border, blue background
                         : "border-gray-300 bg-white text-gray-700 hover:border-gray-400 hover:bg-gray-50" // Inactive: gray styles
                     }
                   `}
@@ -131,8 +131,8 @@ export default function ExampleQueries({
             <button
               onClick={onSeeAll}
               className="
-                text-sm font-medium text-sky-600 underline-offset-2 hover:text-sky-700 hover:underline
-                focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-1
+                text-sm font-medium text-purple-600 underline-offset-2 hover:text-purple-700 hover:underline
+                focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-1
               " // Blue link, blue focus
             >
               See all examples
@@ -150,7 +150,7 @@ export default function ExampleQueries({
               className="
                 group flex h-full min-h-[100px] w-full flex-col justify-start rounded-lg border border-gray-200 bg-white 
                 p-4 text-left align-top transition-all duration-150 ease-in-out 
-                hover:border-sky-500 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-1 
+                hover:border-purple-500 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-1 
                 sm:min-h-[120px] sm:p-5
               " // Blue border on hover/focus, subtle shadow increase
             >
@@ -159,7 +159,7 @@ export default function ExampleQueries({
               </p>
               {/* You could add a subtle arrow or "Try it" text here that appears on hover if desired */}
               {/* Example:
-              <span className="mt-auto self-end text-xs text-sky-500 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+              <span className="mt-auto self-end text-xs text-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
                 Try it →
               </span>
               */}
