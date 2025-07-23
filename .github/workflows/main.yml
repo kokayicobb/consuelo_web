@@ -1,0 +1,22 @@
+# .github/workflows/main.yml
+name: Warming Agent
+
+on:
+  schedule:
+    # This runs at 13:00, 16:00, and 20:00 UTC
+    # which is 9am, 12pm, and 4pm EDT
+    - cron: '0 13 * * *'
+    - cron: '0 16 * * *'
+    - cron: '0 20 * * *'
+  workflow_dispatch: # Allows you to run it manually from the Actions tab
+
+jobs:
+  trigger-function:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Supabase Edge Function
+        run: |
+          curl -i -X POST "${{ secrets.SUPABASE_FUNCTION_URL }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{}'

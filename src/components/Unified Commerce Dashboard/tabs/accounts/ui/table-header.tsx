@@ -127,19 +127,33 @@ export default function DataHeader({
   availableBookingMethods,
   availableReferralTypes,
 }: DataHeaderProps) {
-  const [searchDialogOpen, setSearchDialogOpen] = useState(false)
+  // --- MODIFICATION: State for inline search (Existing) ---
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const searchInputRef = useRef<HTMLInputElement>(null)
+
   const [showSecondaryRow, setShowSecondaryRow] = useState(false)
   const [activePanel, setActivePanel] = useState<"sort" | "filter" | "rule" | null>(null)
   const [newFilterField, setNewFilterField] = useState("")
   const [newFilterOperator, setNewFilterOperator] = useState("")
   const [newFilterValue, setNewFilterValue] = useState<string | number | Date>("")
-  const [activeTab, setActiveTab] = useState<"leads" | "clients">("clients")
   const [currentUser, setCurrentUser] = useState("Current User") // This should come from auth
+
+  // --- MODIFICATION START: Use a more flexible state for the active segment tab ---
+  const [activeSegment, setActiveSegment] = useState<string>("All")
+  // --- MODIFICATION END ---
   
   // Refs for dropdown positioning
   const sortDropdownRef = useRef<HTMLDivElement>(null)
   const filterDropdownRef = useRef<HTMLDivElement>(null)
   const ruleDropdownRef = useRef<HTMLDivElement>(null)
+  
+  // --- MODIFICATION: Effect to auto-focus search input (Existing) ---
+  useEffect(() => {
+    if (isSearchOpen) {
+      searchInputRef.current?.focus()
+    }
+  }, [isSearchOpen])
+
 
   // Database field definitions
   const sortableFields = [
@@ -228,25 +242,34 @@ export default function DataHeader({
     }
   }
 
-  // Memoize the filter update function to prevent useEffect dependency issues
-  const updateTabFilter = useCallback(() => {
-    const tabFilter: FilterRule = {
-      id: "tab-filter",
-      field: "segment",
-      operator: activeTab === "leads" ? "contains" : "not_contains",
-      value: ["lead", "prospect", "potential"],
-      label: activeTab === "leads" ? "Leads" : "Clients"
-    }
-    
-    // Update filters based on tab
-    const otherFilters = activeFilters.filter(f => f.id !== "tab-filter")
-    onFiltersChange([...otherFilters, tabFilter])
-  }, [activeTab, activeFilters, onFiltersChange])
+  // --- MODIFICATION START: This useEffect connects the segment tabs to the main filter logic ---
+  useEffect(() => {
+    // This hook runs when the activeSegment (from the tabs) changes.
+    // It manages a special filter rule for the segment.
 
-  // Apply tab-based filtering
-  useCallback(() => {
-    updateTabFilter()
-  }, [updateTabFilter])
+    // First, remove any existing segment filter from the previous state.
+    // We identify our special filter by its unique ID.
+    const otherFilters = activeFilters.filter(f => f.id !== "segment-tab-filter");
+
+    if (activeSegment && activeSegment !== "All") {
+      // If a specific segment is selected, add a new filter rule for it.
+      const newSegmentFilter: FilterRule = {
+        id: "segment-tab-filter", // A unique ID to identify this filter
+        field: "segment",
+        operator: "equals",
+        value: activeSegment,
+        label: `Segment: ${activeSegment}`, // This label is for internal display/debugging
+      };
+      // Call the parent with the existing filters PLUS our new segment filter.
+      onFiltersChange([...otherFilters, newSegmentFilter]);
+    } else {
+      // If "All" is selected, just ensure the segment filter is removed.
+      // We call the parent with only the other filters.
+      onFiltersChange(otherFilters);
+    }
+  }, [activeSegment, onFiltersChange]);
+  // --- MODIFICATION END ---
+
 
   const handleSortClick = () => {
     if (activePanel === "sort") {
@@ -495,35 +518,46 @@ export default function DataHeader({
           >
             <Zap className="h-4 w-4" />
           </Button>
-
-          {/* Search dialog */}
-          <Dialog open={searchDialogOpen} onOpenChange={setSearchDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full p-0 text-gray-500 hover:bg-gray-100">
-                <Search className="h-4 w-4" />
+          
+          {/* --- MODIFICATION: Inline Search (Existing) --- */}
+          {isSearchOpen ? (
+            <div className="relative flex w-48 items-center">
+              <Search className="pointer-events-none absolute left-3 h-4 w-4 text-gray-400" />
+              <Input
+                ref={searchInputRef}
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={(e) => onSearchChange(e.target.value)}
+                className="h-8 w-full rounded-md border-gray-300 bg-gray-50 pl-9 pr-8"
+                onBlur={() => {
+                  if (!searchTerm) {
+                    setIsSearchOpen(false)
+                  }
+                }}
+              />
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute right-1 h-6 w-6 rounded-full p-0 text-gray-400 hover:bg-gray-200"
+                onClick={() => {
+                  setIsSearchOpen(false)
+                  onSearchChange("") 
+                }}
+                aria-label="Close search"
+              >
+                <X className="h-4 w-4" />
               </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Search accounts</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <Input
-                  placeholder="Search by name, email, phone, or staff..."
-                  value={searchTerm}
-                  onChange={(e) => onSearchChange(e.target.value)}
-                  className="w-full"
-                  autoFocus
-                />
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => setSearchDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button onClick={() => setSearchDialogOpen(false)}>Search</Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
+            </div>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsSearchOpen(true)}
+              className="h-8 w-8 rounded-full p-0 text-gray-500 hover:bg-gray-100"
+            >
+              <Search className="h-4 w-4" />
+            </Button>
+          )}
 
           {/* Settings dropdown */}
           <DropdownMenu>
@@ -697,7 +731,7 @@ export default function DataHeader({
           <Button
             onClick={onAddAccount}
             size="sm"
-            className="h-8 bg-blue-600 px-3 text-xs font-medium text-white hover:bg-blue-700 rounded-md"
+            className="h-8 bg-blue-600 px-3 text-xs font-medium text-white hover:bg-blue-700 hover:text-white rounded-md"
           >
             <Plus className="mr-1 h-3 w-3" />
             New
@@ -705,35 +739,47 @@ export default function DataHeader({
         </div>
       </div>
 
-      {/* Tab row */}
-      <div className="px-6 pb-3">
-        <div className="flex items-center gap-2">
+     {/* --- MODIFICATION: This section is already correct in your code --- */}
+     <div className="px-6 pb-3">
+      <div
+        className="overflow-x-auto 
+          [&::-webkit-scrollbar]:h-1.5
+          [&::-webkit-scrollbar-track]:bg-transparent
+          [&::-webkit-scrollbar-thumb]:bg-gray-300
+          hover:[&::-webkit-scrollbar-thumb]:bg-gray-400
+          [&::-webkit-scrollbar-thumb]:rounded-full"
+      >
+        <div className="flex items-center gap-2 whitespace-nowrap">
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setActiveTab("clients")}
+            onClick={() => setActiveSegment("All")}
             className={`h-7 rounded-full px-4 text-sm font-medium ${
-              activeTab === "clients" 
-                ? "bg-gray-100 text-gray-700" 
+              activeSegment === "All"
+                ? "bg-gray-100 text-gray-700"
                 : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
             }`}
           >
-            Clients
+            All
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setActiveTab("leads")}
-            className={`h-7 rounded-full px-4 text-sm font-medium ${
-              activeTab === "leads" 
-                ? "bg-gray-100 text-gray-700" 
-                : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
-            }`}
-          >
-            Leads
-          </Button>
+          {availableSegments.filter(s => s).map((segment) => (
+            <Button
+              key={segment}
+              variant="ghost"
+              size="sm"
+              onClick={() => setActiveSegment(segment)}
+              className={`h-7 rounded-full px-4 text-sm font-medium capitalize ${
+                activeSegment === segment
+                  ? "bg-gray-100 text-gray-700"
+                  : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+              }`}
+            >
+              {segment.replace(/_/g, " ")}
+            </Button>
+          ))}
         </div>
       </div>
+    </div>
 
       {/* Secondary controls row */}
       {showSecondaryRow && (
@@ -767,8 +813,8 @@ export default function DataHeader({
               </Button>
             )}
 
-            {/* Dynamic filters */}
-            {activeFilters.filter(f => f.id !== "tab-filter").map((filter) => (
+            {/* --- MODIFICATION START: Hiding the segment filter chip from the UI --- */}
+            {activeFilters.filter(f => f.id !== "segment-tab-filter").map((filter) => (
               <Button
                 key={filter.id}
                 variant="ghost"
@@ -798,7 +844,8 @@ export default function DataHeader({
             </Button>
 
             {/* Add filter button */}
-            {activeFilters.filter(f => f.id !== "tab-filter").length < 5 && (
+            {activeFilters.filter(f => f.id !== "segment-tab-filter").length < 5 && (
+            // --- MODIFICATION END ---
               <Button
                 variant="ghost"
                 size="sm"

@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     // Build search payload with more results
     const apolloPayload: any = {
       page: 1,
-      per_page: 100, // ← Increased from 25 to 100 (max allowed)
+      per_page: 25, // ← Increased from 25 to 100 (max allowed)
       reveal_personal_emails: true,
       reveal_phone_number: true,
     };

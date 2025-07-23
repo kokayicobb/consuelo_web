@@ -198,7 +198,7 @@ export async function generateQuery(input: string) {
         ORDER BY cl."Log Date" DESC
       ) as log_data
     ) as "contact_logs"
-  FROM "otf-clients" c
+  FROM "clients" c
   JOIN "otf-schedule" s ON s."Client ID" = c."Client ID"
   WHERE s.Status = 'Late Cancel' 
     AND s.Date >= CURRENT_DATE - INTERVAL '${days} days'
@@ -231,7 +231,7 @@ export async function generateQuery(input: string) {
         ORDER BY cl."Log Date" DESC
       ) as log_data
     ) as "contact_logs"
-  FROM "otf-clients" c
+  FROM "clients" c
   LEFT JOIN "otf-schedule" s ON c."Client ID" = s."Client ID"
   WHERE s."Client ID" IS NULL 
     AND c."Expiration Date" > CURRENT_DATE
@@ -289,7 +289,7 @@ export async function generateQuery(input: string) {
         ORDER BY cl."Log Date" DESC
       ) as log_data
     ) as "contact_logs"
-  FROM "otf-clients" c
+  FROM "clients" c
   WHERE c."Last Visit" < CURRENT_DATE - INTERVAL '${days} days'
     AND c."Expiration Date" > CURRENT_DATE
   ORDER BY c."Last Visit" ASC;`
@@ -327,7 +327,7 @@ export async function generateQuery(input: string) {
         ORDER BY cl."Log Date" DESC
       ) as log_data
     ) as "contact_logs"
-  FROM "otf-clients" c
+  FROM "clients" c
   WHERE c."Expiration Date" BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '${days} days'
   ORDER BY c."Expiration Date" ASC;`
     } else if (
@@ -363,7 +363,7 @@ export async function generateQuery(input: string) {
         ORDER BY cl."Log Date" DESC
       ) as log_data
     ) as "contact_logs"
-  FROM "otf-clients" c
+  FROM "clients" c
   LEFT JOIN (
     SELECT "Client", MAX("Log Date") AS "Log Date"
     FROM "otf-contact-logs"
@@ -397,7 +397,7 @@ export async function generateQuery(input: string) {
         ORDER BY cl."Log Date" DESC
       ) as log_data
     ) as "contact_logs"
-  FROM "otf-clients" c
+  FROM "clients" c
   ORDER BY c."Last Visit" DESC
   LIMIT 50;`
     }
@@ -747,7 +747,7 @@ Your task is to generate a compelling and effective ${scriptType} script.`;
     // If issues arise with script formatting due to SQL-specific cleaning in safeStreamText,
     // a simpler text extraction method from the stream might be needed.
     const script = await safeStreamText({
-      model: groq("llama3-8b-8192"), // Or your preferred model, e.g., "deepseek-r1-distill-llama-70b"
+      model: groq("deepseek-r1-distill-llama-70b"), // Or your preferred model, e.g., "deepseek-r1-distill-llama-70b"
       system: `You are an expert sales scriptwriter for ${businessName}. Your goal is to produce high-quality, ready-to-use scripts.`,
       prompt: promptContent,
       maxTokens: 700, // Increased for potentially longer scripts
@@ -803,7 +803,7 @@ Example of desired output format:
   try {
     // Use safeStreamGenericText
     const aiResponse = await safeStreamText({
-      model: groq("llama3-8b-8192"), // Or another capable model
+      model: groq("deepseek-r1-distill-llama-70b"), // Or another capable model
       // REMOVED response_format: { type: "json_object" } - Let the prompt guide it
       system: "You are an expert sales coach. Your task is to identify the 3-5 most crucial talking points from a sales script. Output ONLY a JSON array of strings as requested.",
       prompt: promptContent,
@@ -922,11 +922,6 @@ Example of desired output format:
   }
 }
 
-
-
-
-
-
 // Define the suggestion type
 interface ScriptSuggestion {
   original?: string;
@@ -984,7 +979,7 @@ Important: Output only the JSON array with no other text, explanation, or format
 
   try {
     const aiResponse = await streamText({
-      model: groq("llama3-8b-8192"),
+      model: groq("deepseek-r1-distill-llama-70b"),
       system: "You are an expert sales coach specializing in creating effective client communication. You provide concise, actionable suggestions to improve sales scripts.",
       prompt: promptContent,
       maxTokens: 800,
@@ -1051,11 +1046,6 @@ Important: Output only the JSON array with no other text, explanation, or format
     ];
   }
 }
-// In your actions.ts file
-
-
-
-// Interface for posts from Reddit API
 // Interface for posts from Reddit API
 interface RedditPostData {
   id: string;
@@ -1547,7 +1537,7 @@ export async function processRedditDataForLeads(
   debugLog(context, "Active subreddits", { activeSubreddits });
 
   // Step 1: Scrape Reddit posts
-  const scrapedPosts = await scrapeSubredditsWithFetch(activeSubreddits, keywords, 100, 'month');
+  const scrapedPosts = await scrapeSubredditsWithFetch(activeSubreddits, keywords, 50, 'month');
   console.log("==== SCRAPING DEBUG INFO ====");
 console.log("scrapeSubredditsWithFetch result:", {
   length: scrapedPosts.length,

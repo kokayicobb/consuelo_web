@@ -1,6 +1,7 @@
 "use client";
 // File: pages/index.js
-import React, { useEffect } from "react";
+import React from "react"; 
+import { useEffect } from "react";
 import { DollarSign, ShoppingBag, Calculator, BarChart3 } from "lucide-react";
 import CustomerSegmentsChart from "@/components/Unified Commerce Dashboard/ui/charts/customer-segment-chart";
 import ProductsChart from "@/components/Unified Commerce Dashboard/ui/charts/products-chart";

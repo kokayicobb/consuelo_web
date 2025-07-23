@@ -1,4 +1,4 @@
-// Customer interface for the application
+// src/lib/supabase/customer.ts
 export interface Customer {
   id: string
   name: string
@@ -29,6 +29,11 @@ export interface Customer {
   recent_deal_value?: number
   product_interests?: string[]
   last_review_date?: string | null
+  current_cadence_name: string | null;
+  last_contact_date: string | null;
+  next_contact_date: string | null;
+  total_messages_count: number | null;
+
 }
 
 // Optional: Export a type for creating new customers (without auto-generated fields)

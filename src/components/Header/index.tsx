@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils";
 import { Menu, Search } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { usePathname } from "next/navigation";
+import { SignInButton, SignedIn, SignedOut } from "@clerk/nextjs";
+import { User } from "@clerk/nextjs/server";
 
 export function Header() {
   const [isScrolled, setIsScrolled] = React.useState(false);
@@ -14,7 +16,7 @@ export function Header() {
 
   // Check if we're in a dashboard or app route
   const isAppRoute =
-    pathname?.startsWith("/app") || pathname?.startsWith("/dashboard");
+    pathname?.startsWith("/app") || pathname?.startsWith("/dashboard") || pathname?.startsWith("/sign-in");
 
   // All hooks must be called at the top level, before any conditional logic
   React.useEffect(() => {
@@ -132,21 +134,27 @@ export function Header() {
           {/* Right side items - only visible on desktop */}
           <div className="hidden items-center space-x-4 md:flex">
             <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-full bg-transparent text-foreground hover:bg-secondary/50"
+              variant="default"
+             
             >
               <Search className="h-5 w-5" />
               <span className="sr-only">Search</span>
             </Button>
-            <Link href="/login">
-              <Button
-                variant="ghost"
-                className="rounded-full bg-secondary/50 px-4 py-2 text-foreground hover:bg-secondary/80"
-              >
-                Log in
-              </Button>
-            </Link>
+            <SignedOut>
+  <SignInButton mode="modal">
+    <Button variant="default">
+      Sign In
+    </Button>
+  </SignInButton>
+</SignedOut>
+
+<SignedIn>
+  <Link href="/app">
+    <Button variant="default">
+      Go to App
+    </Button>
+  </Link>
+</SignedIn>
           </div>
         </div>
       </header>

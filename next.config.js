@@ -1,6 +1,52 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-   transpilePackages: ['@radix-ui/react-dropdown-menu'],
+  transpilePackages: ['@radix-ui/react-dropdown-menu'],
+  experimental: {
+    serverComponentsExternalPackages: ['@workos-inc/authkit-nextjs'],
+  },
+  webpack: (config, { isServer }) => {
+    // Add ESM resolution fix for server-side
+    if (isServer) {
+      config.resolve.extensionAlias = {
+        '.js': ['.js', '.ts', '.tsx'],
+      };
+      
+      // Add alias for next/cache module resolution
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        'next/cache$': 'next/dist/server/lib/incremental-cache/index.js',
+      };
+    }
+    
+    // Keep your existing client-side fallbacks
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        crypto: false,
+        stream: false,
+        url: false,
+        zlib: false,
+        http: false,
+        https: false,
+        assert: false,
+        os: false,
+        path: false,
+      };
+    }
+    
+    // Add rule to handle .mjs files properly
+    config.module.rules.push({
+      test: /\.m?js$/,
+      resolve: {
+        fullySpecified: false,
+      },
+    });
+    
+    return config;
+  },
   images: {
     remotePatterns: [
       {
@@ -11,8 +57,10 @@ const nextConfig = {
       },
     ],
   },
+  
   // Disable trailing slash redirects
   trailingSlash: false,
+  
   // Add CORS headers
   async headers() {
     return [

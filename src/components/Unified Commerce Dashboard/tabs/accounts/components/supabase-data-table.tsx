@@ -69,29 +69,32 @@ import DraggableTableHeader from "../ui/draggable-table-header";
 import InlineEditCell from "../ui/inline-edit-cell";
 import DetailedSidePanel from "../ui/side-panel-account";
 import DataHeader from "../ui/table-header";
+import { useSession } from "@clerk/nextjs";
+import { createClerkSupabaseClient } from "@/lib/supabase/client";
+import DynamicFormSidePanel from "../ui/add-client-side-panel";
 
 interface SortRule {
-  id: string
-  field: string
-  direction: "asc" | "desc"
-  label: string
+  id: string;
+  field: string;
+  direction: "asc" | "desc";
+  label: string;
 }
 
 interface FilterRule {
-  id: string
-  field: string
-  operator: string
-  value: string | number | Date | string[]
-  label: string
+  id: string;
+  field: string;
+  operator: string;
+  value: string | number | Date | string[];
+  label: string;
 }
 
 interface PermanentRule {
-  id: string
-  field: string
-  operator: string
-  value: string | number | Date
-  label: string
-  type: "filter" | "sort"
+  id: string;
+  field: string;
+  operator: string;
+  value: string | number | Date;
+  label: string;
+  type: "filter" | "sort";
 }
 interface ProductionCustomerTableProps {
   onViewProfile?: (customerId: string) => void;
@@ -105,9 +108,10 @@ export default function SupabaseCustomerTable({
   onViewDetails,
 }: ProductionCustomerTableProps) {
   const { clients, loading, error, refreshClients } = useClients();
+  const { session } = useSession();
   const {
     visibleColumns,
-   
+
     reorderColumns,
     toggleColumnVisibility,
     saveConfiguration,
@@ -128,7 +132,13 @@ export default function SupabaseCustomerTable({
   const [showColumnSettings, setShowColumnSettings] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
-
+  const CADENCE_OPTIONS = [
+    "LeadEngagement",
+    "NewClientOnboarding",
+    "RenewalPush",
+    "StandardNurture",
+    "ReEngagement",
+  ]
   // Get unique pricing options for filter
   const pricingOptions = useMemo(() => {
     const options = new Set(
@@ -136,15 +146,75 @@ export default function SupabaseCustomerTable({
     );
     return Array.from(options).sort();
   }, [clients]);
-  const [activeFilters, setActiveFilters] = useState<FilterRule[]>([])
-  const availableStaff = ["John Doe", "Jane Smith", "Mike Johnson", "Sarah Wilson", "Me"]
-  const availablePricingOptions = ["Premium", "Standard", "Basic", "Enterprise"]
-  const availableSegments = ["High Net Worth", "Corporate", "Retail", "Institutional"]
-  const availableVisitTypes = ["In-Person", "Virtual", "Phone", "Email"]
-  const availableBookingMethods = ["Online", "Phone", "Walk-in", "Referral"]
-  const availableReferralTypes = ["Client Referral", "Partner", "Marketing", "Cold Outreach"]
-  const [activeSorts, setActiveSorts] = useState<SortRule[]>([])
-  const [permanentRules, setPermanentRules] = useState<PermanentRule[]>([])
+  const [activeFilters, setActiveFilters] = useState<FilterRule[]>([]);
+  const availableStaff = [
+    "John Doe",
+    "Jane Smith",
+    "Mike Johnson",
+    "Sarah Wilson",
+    "Me",
+  ];
+  const availablePricingOptions = [
+    "Premium",
+    "Standard",
+    "Basic",
+    "Enterprise",
+  ];
+  const availableSegments = useMemo(() => {
+    // Use a Set to automatically handle uniqueness.
+    const segmentSet = new Set<string>();
+
+    clients.forEach((client) => {
+      // The segment column can be null, so we check if it's a valid, non-empty string.
+      if (client.segment && typeof client.segment === "string") {
+        segmentSet.add(client.segment);
+      }
+    });
+
+    // Convert the Set back to an array and sort it for a consistent UI.
+    return Array.from(segmentSet).sort();
+  }, [clients]); // This dependency array ensures the code only runs when 'clients' data changes.
+  const availableVisitTypes = ["In-Person", "Virtual", "Phone", "Email"];
+  const availableBookingMethods = ["Online", "Phone", "Walk-in", "Referral"];
+  const availableReferralTypes = [
+    "Client Referral",
+    "Partner",
+    "Marketing",
+    "Cold Outreach",
+  ];
+  const [activeSorts, setActiveSorts] = useState<SortRule[]>([]);
+  const formatCadenceName = (name: string | null | undefined): string => {
+    if (!name) {
+      return "None";
+    }
+    // Add a space before each capital letter, then trim and capitalize the first letter.
+    const formatted = name.replace(/([A-Z])/g, " $1").trim();
+    return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+  };
+  const formatDisplayDate = (dateString: string | null | undefined): string => {
+    // If the date is null, empty, or not provided, return a placeholder
+    if (!dateString) {
+      return "—";
+    }
+  
+    try {
+      const date = new Date(dateString);
+      // Check if the date is valid after parsing
+      if (isNaN(date.getTime())) {
+        return "—"; // Return placeholder for invalid dates
+      }
+      // Format the date to a readable format like "Jul 20, 2025"
+      return date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+    } catch (error) {
+      // If any other error occurs during date parsing, return placeholder
+      return "—";
+    }
+  };
+  const [permanentRules, setPermanentRules] = useState<PermanentRule[]>([]);
   // Filter and sort customers
   const filteredAndSortedCustomers = useMemo(() => {
     const filtered = clients.filter((customer) => {
@@ -233,12 +303,16 @@ export default function SupabaseCustomerTable({
     value: any,
   ) => {
     try {
+      // Get authenticated client
+      const token = await session?.getToken();
+      const supabaseClient = createClerkSupabaseClient(token);
+
       const fieldMapping: Record<string, string> = {
         // Basic client information
         name: "Client",
         email: "email",
         phone: "phone",
-        
+
         // Financial service fields
         pricingOption: "Pricing Option",
         visits: "# Visits",
@@ -249,7 +323,7 @@ export default function SupabaseCustomerTable({
         visitType: "Visit Type",
         bookingMethod: "Booking Method",
         referralType: "Referral Type",
-        
+
         // Additional CRM/Banking fields
         title: "title",
         company: "company",
@@ -266,13 +340,13 @@ export default function SupabaseCustomerTable({
         lastReviewDate: "last_review_date",
         createdAt: "created_at",
         updatedAt: "updated_at",
-        clientId: "Client ID"
+        clientId: "Client ID",
       };
 
       const dbField = fieldMapping[field] || field;
       const updates = { [dbField]: value };
 
-      await updateClient(customerId, updates);
+      await updateClient(customerId, updates, supabaseClient);
       await refreshClients(); // Refresh the data
     } catch (error) {
       console.error("Failed to update client:", error);
@@ -284,16 +358,16 @@ export default function SupabaseCustomerTable({
     setDraggedIndex(index);
   };
   const handleResize = (index: number, width: number) => {
-    const updatedColumns = visibleColumns.map((col, i) => 
-      i === index ? { ...col, width } : col
+    const updatedColumns = visibleColumns.map((col, i) =>
+      i === index ? { ...col, width } : col,
     );
-    
+
     // Update the full columns array with new widths
-    const newColumns = columns.map(col => {
-      const updated = updatedColumns.find(c => c.id === col.id);
+    const newColumns = columns.map((col) => {
+      const updated = updatedColumns.find((c) => c.id === col.id);
       return updated ? { ...col, width: updated.width } : col;
     });
-    
+
     updateColumns(newColumns);
   };
   const handleDragOver = (e: React.DragEvent, index: number) => {
@@ -315,7 +389,8 @@ export default function SupabaseCustomerTable({
     setCurrentPage(1);
   };
 
-  const hasActiveFilters = searchTerm || pricingFilter !== "all" || statusFilter !== "all"
+  const hasActiveFilters =
+    searchTerm || pricingFilter !== "all" || statusFilter !== "all";
 
   const handleExportData = () => {
     exportClientsToCSV(filteredAndSortedCustomers);
@@ -336,6 +411,35 @@ export default function SupabaseCustomerTable({
 
   const handleSaveCustomer = async (customerData: CreateCustomerInput) => {
     try {
+      // Get authenticated client
+      const token = await session?.getToken();
+      const supabaseClient = createClerkSupabaseClient(token);
+
+      // Helper function to clean date values
+      const cleanDateValue = (value: any) => {
+        if (!value || value === "") return null;
+        return value;
+      };
+
+      // Helper function to clean all values
+      const cleanValue = (value: any, fieldName: string) => {
+        // List of date fields in your database
+        const dateFields = [
+          "Last Visit",
+          "Expiration Date",
+          "last_review_date",
+        ];
+
+        if (dateFields.includes(fieldName)) {
+          return cleanDateValue(value);
+        }
+
+        // For other fields, convert empty strings to null
+        if (value === "") return null;
+
+        return value;
+      };
+
       if (editingCustomer) {
         // Update existing customer
         const updates = {
@@ -344,111 +448,173 @@ export default function SupabaseCustomerTable({
           phone: customerData.phone,
           "Pricing Option": customerData.pricingOption,
           "# Visits": customerData.visits,
-          "Last Visit": customerData.lastVisit,
+          "Last Visit": cleanDateValue(customerData.lastVisit),
           Staff: customerData.staff,
-          "Expiration Date": customerData.expirationDate,
+          "Expiration Date": cleanDateValue(customerData.expirationDate),
           "Cross Regional Visit": customerData.crossRegionalVisit,
           "Visit Type": customerData.visitType,
           "Booking Method": customerData.bookingMethod,
           "Referral Type": customerData.referralType,
+          // Add additional fields if they exist
+          title: customerData.title,
+          company: customerData.company,
+          address: customerData.address,
+          linkedin: customerData.linkedin,
+          priority: customerData.priority,
+          segment: customerData.segment,
+          relationship_manager: customerData.relationship_manager,
+          notes: customerData.notes,
+          total_assets_under_management:
+            customerData.total_assets_under_management,
+          recent_deal_value: customerData.recent_deal_value,
+          product_interests: customerData.product_interests,
+          last_review_date: cleanDateValue(customerData.last_review_date),
         };
-        await updateClient(editingCustomer.id, updates);
+
+        // Remove any undefined values
+        const cleanedUpdates = Object.entries(updates).reduce(
+          (acc, [key, value]) => {
+            if (value !== undefined) {
+              acc[key] = cleanValue(value, key);
+            }
+            return acc;
+          },
+          {} as any,
+        );
+
+        await updateClient(editingCustomer.id, cleanedUpdates, supabaseClient);
       } else {
-        // Create new customer - format data according to DatabaseClient interface
-        const newClientData = {
-          Client: customerData.name,
-          email: customerData.email,
-          phone: customerData.phone,
-          "Last Visit": customerData.lastVisit,
-          "# Visits": customerData.visits,
-          "Pricing Option": customerData.pricingOption,
-          "Expiration Date": customerData.expirationDate,
-          Staff: customerData.staff,
-          "Cross Regional Visit": customerData.crossRegionalVisit,
-          "Visit Type": customerData.visitType,
-          "Booking Method": customerData.bookingMethod,
-          "Referral Type": customerData.referralType,
-        };
-        await createClient(newClientData);
+        // Create new customer - DON'T include user_id, the trigger will add it automatically
+       // In your handleSaveCustomer function, make sure you're NOT including user_id:
+const newClientData = {
+  Client: customerData.name,
+  email: customerData.email || null,
+  phone: customerData.phone || null,
+  "Last Visit": cleanDateValue(customerData.lastVisit),
+  "# Visits": customerData.visits || 0,
+  "Pricing Option": customerData.pricingOption || null,
+  "Expiration Date": cleanDateValue(customerData.expirationDate),
+  Staff: customerData.staff || null,
+  "Cross Regional Visit": customerData.crossRegionalVisit || null,
+  "Visit Type": customerData.visitType || null,
+  "Booking Method": customerData.bookingMethod || null,
+  "Referral Type": customerData.referralType || null,
+  title: customerData.title || null,
+  company: customerData.company || null,
+  address: customerData.address || null,
+  linkedin: customerData.linkedin || null,
+  priority: customerData.priority || null,
+  segment: customerData.segment || null,
+  relationship_manager: customerData.relationship_manager || null,
+  notes: customerData.notes || null,
+  total_assets_under_management: customerData.total_assets_under_management || null,
+  recent_deal_value: customerData.recent_deal_value || null,
+  product_interests: customerData.product_interests || null,
+  last_review_date: cleanDateValue(customerData.last_review_date),
+  current_cadence_name: customerData.current_cadence_name || customerData.current_cadence_name || null,
+  next_contact_date: cleanDateValue(customerData.next_contact_date || customerData.next_contact_date),
+  // DO NOT include user_id here - let the trigger handle it
+};
+
+        // Remove any undefined values and ensure empty strings become null
+      // In handleSaveCustomer, make sure to filter out undefined values:
+const cleanedData = Object.entries(newClientData).reduce(
+  (acc, [key, value]) => {
+    // Only include defined values
+    if (value !== undefined) {
+      acc[key] = value === "" ? null : value; // Convert empty strings to null
+    }
+    return acc;
+  },
+  {} as any,
+);
+
+console.log('Final cleaned data being sent to createClient:', cleanedData);
+await createClient(cleanedData, supabaseClient);
+
+        await createClient(cleanedData, supabaseClient);
       }
+
       await refreshClients();
       setIsFormOpen(false);
       setEditingCustomer(null);
     } catch (error) {
       console.error("Failed to save customer:", error);
+      // You might want to show a toast notification here
       throw error;
     }
   };
-  
 
-  const getFieldType = (field: string) => {
-    const typeMap: Record<string, string> = {
-      email: "email",
-      phone: "phone",
-      title: "title",
-      visits: "number",
-      lastVisit: "date",
-      expirationDate: "date",
-      lastReviewDate: "date",
-      totalAssetsUnderManagement: "number",
-      recentDealValue: "number",
-      priority: "select",
-      status: "select",
-      segment: "select",
-      pricingOption: "select",
-      crossRegionalVisit: "select",
-      visitType: "select",
-      bookingMethod: "select",
-      referralType: "select",
-    };
-    return typeMap[field] || "text";
+ // In SupabaseCustomerTable, update the getFieldType function:
+const getFieldType = (field: string) => {
+  const typeMap: Record<string, string> = {
+    email: "email",
+    phone: "phone",
+    title: "title",
+    visits: "number",
+    lastVisit: "date",
+    expirationDate: "date",
+    lastReviewDate: "date",
+    totalAssetsUnderManagement: "number",
+    recentDealValue: "number",
+    priority: "select",
+    status: "select",
+    segment: "select",
+    pricingOption: "select",
+    crossRegionalVisit: "select",
+    visitType: "select",
+    bookingMethod: "select",
+    referralType: "select",
+    // Add these lines:
+    currentCadenceName: "select",
+    current_cadence_name: "select",
   };
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
-
-
+  return typeMap[field] || "text";
+};
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const handleToggleColumnVisibility = (id: string) => {
     // Your column visibility logic here
-    setHasUnsavedChanges(true)
-  }
+    setHasUnsavedChanges(true);
+  };
 
   const handleSaveConfiguration = () => {
     // Your save logic here
-    setHasUnsavedChanges(false)
-  }
+    setHasUnsavedChanges(false);
+  };
 
   const handleResetConfiguration = () => {
     // Your reset logic here
-    setHasUnsavedChanges(false)
-  }
-
-  
-
+    setHasUnsavedChanges(false);
+  };
 
   const handleShowActiveOnly = () => {
-    setStatusFilter("active")
-  }
-
+    setStatusFilter("active");
+  };
+  const dateColumnIds = ['next_contact_date', 'last_contact_date', 'expirationDate', 'lastVisit', 'lastReviewDate'];
   const handleAddAccount = () => {
-    // Your add account logic here
-    console.log("Add account clicked")
-  }
-
+    setEditingCustomer(null); // Clear any existing customer data
+    setIsFormOpen(true); // Open the form in create mode
+  };
 
   const getFieldOptions = (field: string) => {
-    const optionsMap: Record<string, string[]> = {
-      
-    };
-    
+    const optionsMap: Record<string, string[]> = {};
+
     if (field === "relationshipManager") {
       // You can populate this with actual staff members from your database
-      return ["Alice Cooper", "Bob Martinez", "Carol Johnson", "Dan Williams", "Eva Rodriguez", "Frank Chen"];
+      return [
+        "Alice Cooper",
+        "Bob Martinez",
+        "Carol Johnson",
+        "Dan Williams",
+        "Eva Rodriguez",
+        "Frank Chen",
+      ];
     }
-    
+
     return optionsMap[field] || [];
   };
 
- 
   if (error) {
     return (
       <Card className="w-full">
@@ -470,41 +636,37 @@ export default function SupabaseCustomerTable({
       </Card>
     );
   }
-  
+
   return (
     <div className="w-full space-y-4">
       <Card className="w-full">
-        
-      <DataHeader
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        activeFilters={activeFilters}
-        onFiltersChange={setActiveFilters}
-        activeSorts={activeSorts}
-        onSortsChange={setActiveSorts}
-        permanentRules={permanentRules}
-        onPermanentRulesChange={setPermanentRules}
-        columns={columns}
-        onToggleColumnVisibility={handleToggleColumnVisibility}
-        hasUnsavedChanges={hasUnsavedChanges}
-        onSaveConfiguration={handleSaveConfiguration}
-        onResetConfiguration={handleResetConfiguration}
-        selectedCount={selectedCustomers.length}
-        onClearSelection={() => setSelectedCustomers([])}
-        onAddAccount={handleAddAccount}
-        onShowActiveOnly={handleShowActiveOnly}
-        availableStaff={availableStaff}
-        availablePricingOptions={availablePricingOptions}
-        availableSegments={availableSegments}
-        availableVisitTypes={availableVisitTypes}
-        availableBookingMethods={availableBookingMethods}
-        availableReferralTypes={availableReferralTypes}
-      />
+        <DataHeader
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          activeFilters={activeFilters}
+          onFiltersChange={setActiveFilters}
+          activeSorts={activeSorts}
+          onSortsChange={setActiveSorts}
+          permanentRules={permanentRules}
+          onPermanentRulesChange={setPermanentRules}
+          columns={columns}
+          onToggleColumnVisibility={handleToggleColumnVisibility}
+          hasUnsavedChanges={hasUnsavedChanges}
+          onSaveConfiguration={handleSaveConfiguration}
+          onResetConfiguration={handleResetConfiguration}
+          selectedCount={selectedCustomers.length}
+          onClearSelection={() => setSelectedCustomers([])}
+          onAddAccount={handleAddAccount}
+          onShowActiveOnly={handleShowActiveOnly}
+          availableStaff={availableStaff}
+          availablePricingOptions={availablePricingOptions}
+          availableSegments={availableSegments}
+          availableVisitTypes={availableVisitTypes}
+          availableBookingMethods={availableBookingMethods}
+          availableReferralTypes={availableReferralTypes}
+        />
 
         <CardContent>
-         
-
-         
           {/* Table */}
           <div className="w-full overflow-hidden">
             <Table>
@@ -575,13 +737,28 @@ export default function SupabaseCustomerTable({
                         />
                       </TableCell>
                       {visibleColumns.map((column) => (
-  <TableCell 
-    key={column.id} 
-    className={`${column.key === "visits" ? "text-right" : ""} ${column.key === "phone" ? "whitespace-nowrap" : ""}`}
-    style={{ width: column.width || 'auto', minWidth: column.width || 'auto' }}
-  >
-                          {column.key === "name" ? (
-                            <div className="flex items-center gap-3">
+                        
+                        <TableCell
+                          key={column.id}
+                          className={`${column.key === "visits" ? "text-right" : ""} ${column.key === "phone" ? "whitespace-nowrap" : ""}`}
+                          style={{
+                            width: column.width || "auto",
+                            minWidth: column.width || "auto",
+                          }}
+                        > {/* --- MODIFICATION STARTS HERE --- */}
+{dateColumnIds.includes(column.id) ? (
+        // If it's a date column, use our new formatter
+        <span>{formatDisplayDate(customer[column.id as keyof Customer] as string)}</span>
+
+      ) : column.id === "currentCadenceName" ? (
+                          // If the column is for the cadence, render our formatted badge
+                          <Badge variant="purple">
+                            {formatCadenceName(customer.current_cadence_name)}
+                          </Badge>
+
+                        ) : column.id === "name" ? (
+                          // Your existing complex logic for the "name" column
+                          <div className="flex items-center gap-3">
                               <Avatar className="h-10 w-10">
                                 <AvatarImage
                                   src="/placeholder.svg"
@@ -598,11 +775,11 @@ export default function SupabaseCustomerTable({
                               <div>
                                 <InlineEditCell
                                   customer={customer}
-        field={column.key}
-        value={customer[column.key as keyof Customer]}
-        onSave={handleInlineEdit}
-        type={getFieldType(column.key) as any}
-        options={getFieldOptions(column.key)}
+                                  field={column.key}
+                                  value={customer[column.key as keyof Customer]}
+                                  onSave={handleInlineEdit}
+                                  type={getFieldType(column.key) as any}
+                                  options={getFieldOptions(column.key)}
                                 />
                                 {customer.email && (
                                   <div className="flex items-center gap-1 text-sm text-gray-500">
@@ -611,17 +788,13 @@ export default function SupabaseCustomerTable({
                                   </div>
                                 )}
                                 {customer.phone && (
-
-                                   
                                   <div className="flex items-center gap-1 text-xs text-gray-400">
                                     <Phone className="h-3 w-3" />
-                                    {customer.phone }
+                                    {customer.phone}
                                   </div>
                                 )}
                               </div>
                             </div>
-
-                            
                           ) : (
                             <InlineEditCell
                               customer={customer}
@@ -810,30 +983,41 @@ export default function SupabaseCustomerTable({
         </CardFooter>
       </Card>
 
-      <DynamicCustomerForm
-        fields={columns
-          .filter((col) => col.visible)
-          .map((col) => ({
-            id: col.id,
-            name: col.key,
-            label: col.label,
-            type: getFieldType(col.key) as any,
-            required: col.key === "name",
-            sortable: true,
-            filterable: true,
-            visible: true,
-            order: col.order,
-            options: getFieldOptions(col.key),
-          }))}
-        customer={editingCustomer}
-        isOpen={isFormOpen}
-        onClose={() => {
-          setIsFormOpen(false);
-          setEditingCustomer(null);
-        }}
-        onSave={handleSaveCustomer}
-        title={editingCustomer ? "Edit Customer" : "Add Customer"}
-      />
+      <DynamicFormSidePanel
+  fields={columns
+    .filter((col) => col.visible)
+    .map((col) => ({
+      id: col.id,
+      name: col.key,
+      label: col.label,
+      type: getFieldType(col.key) as any,
+      required: col.key === "name",
+      sortable: true,
+      filterable: true,
+      visible: true,
+      order: col.order,
+      options: col.key === 'currentCadenceName' ? CADENCE_OPTIONS :
+               col.key === 'priority' ? ['Low', 'Medium', 'High'] :
+               col.key === 'status' ? ['Active', 'Inactive', 'Pending'] :
+               col.key === 'staff' ? availableStaff :
+               col.key === 'pricingOption' ? availablePricingOptions :
+               col.key === 'segment' ? availableSegments :
+               col.key === 'visitType' ? availableVisitTypes :
+               col.key === 'bookingMethod' ? availableBookingMethods :
+               col.key === 'referralType' ? availableReferralTypes :
+               getFieldOptions(col.key),
+    }))}
+  customer={editingCustomer}
+  isOpen={isFormOpen}
+  onClose={() => {
+    setIsFormOpen(false);
+    setEditingCustomer(null);
+  }}
+  onSave={handleSaveCustomer}
+  title={editingCustomer ? "Edit Customer" : "Add Customer"}
+  isFullScreen={false}
+  onToggleFullScreen={() => {}} // You can add state for fullscreen if needed
+/>
       <DetailedSidePanel
         isOpen={isSidePanelOpen}
         onClose={() => setIsSidePanelOpen(false)}

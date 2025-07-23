@@ -18,7 +18,6 @@ export interface DatabaseClient {
   "Referral Type": string | null
   created_at?: string | null
   updated_at?: string | null
-  // Make these optional with ?
   title?: string | null
   company?: string | null
   address?: string | null
@@ -32,14 +31,26 @@ export interface DatabaseClient {
   recent_deal_value?: number | null
   product_interests?: string[] | null
   last_review_date?: string | null
+  
+  // --- ADDED THESE FIELDS ---
+  current_cadence_name?: string | null
+  last_contact_date?: string | null
+  next_contact_date?: string | null
+  total_messages_count?: number | null
 }
 
 
 // Transform database row to our Customer interface
 export function transformDatabaseClient(dbClient: DatabaseClient): Customer {
-  const today = new Date()
-  const expirationDate = dbClient["Expiration Date"] ? new Date(dbClient["Expiration Date"]) : null
-  const isActive = !expirationDate || expirationDate > today
+  // Use the status from the database if it exists, otherwise fall back to expiration date logic
+  const getStatus = () => {
+    if (dbClient.status) {
+      return dbClient.status
+    }
+    const today = new Date()
+    const expirationDate = dbClient["Expiration Date"] ? new Date(dbClient["Expiration Date"]) : null
+    return !expirationDate || expirationDate > today ? "active" : "inactive"
+  }
 
   return {
     id: dbClient["Client ID"],
@@ -55,8 +66,8 @@ export function transformDatabaseClient(dbClient: DatabaseClient): Customer {
     visitType: dbClient["Visit Type"],
     bookingMethod: dbClient["Booking Method"],
     referralType: dbClient["Referral Type"],
-    status: isActive ? "active" : "inactive",
-    avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(dbClient["Client"] || "Unknown")}&background=random`, // Generate avatar from name
+    status: getStatus(), // Use the new logic
+    avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(dbClient["Client"] || "Unknown")}&background=random`,
     title: dbClient.title,
     company: dbClient.company,
     address: dbClient.address,
@@ -69,6 +80,12 @@ export function transformDatabaseClient(dbClient: DatabaseClient): Customer {
     recent_deal_value: dbClient.recent_deal_value,
     product_interests: dbClient.product_interests,
     last_review_date: dbClient.last_review_date,
+
+    // --- MAPPED THE NEW FIELDS HERE ---
+    current_cadence_name: dbClient.current_cadence_name || null,
+    last_contact_date: dbClient.last_contact_date || null,
+    next_contact_date: dbClient.next_contact_date || null,
+    total_messages_count: dbClient.total_messages_count || 0,
   }
 }
 
@@ -76,7 +93,7 @@ export function transformDatabaseClient(dbClient: DatabaseClient): Customer {
 export async function fetchClients() {
   try {
     const { data, error } = await supabase
-      .from("clients") // Changed from "otf-clients" to "clients"
+      .from("clients")
       .select("*")
       .order("Last Visit", { ascending: false, nullsFirst: false })
 
@@ -110,9 +127,9 @@ export async function fetchClientById(clientId: string) {
 }
 
 // Update a client
-export async function updateClient(clientId: string, updates: Partial<DatabaseClient>) {
+export async function updateClient(clientId: string, updates: Partial<DatabaseClient>, supabaseClient: any) {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from("clients")
       .update(updates)
       .eq("Client ID", clientId)
@@ -132,9 +149,15 @@ export async function updateClient(clientId: string, updates: Partial<DatabaseCl
 }
 
 // Create a new client
-export async function createClient(clientData: Omit<DatabaseClient, "Client ID">) {
+// Update your createClient function:
+export async function createClient(clientData: Omit<DatabaseClient, "Client ID">, supabaseClient: any) {
   try {
-    const { data, error } = await supabase.from("clients").insert([clientData]).select().single()
+    // Remove the columns parameter - just use insert with select
+    const { data, error } = await supabaseClient
+      .from("clients")
+      .insert([clientData])
+      .select() // This is all you need
+      .single()
 
     if (error) {
       console.error("Error creating client:", error)
@@ -149,9 +172,9 @@ export async function createClient(clientData: Omit<DatabaseClient, "Client ID">
 }
 
 // Delete a client
-export async function deleteClient(clientId: string) {
+export async function deleteClient(clientId: string, supabaseClient: any) {
   try {
-    const { error } = await supabase.from("clients").delete().eq("Client ID", clientId)
+    const { error } = await supabaseClient.from("clients").delete().eq("Client ID", clientId)
 
     if (error) {
       console.error("Error deleting client:", error)
@@ -166,9 +189,9 @@ export async function deleteClient(clientId: string) {
 }
 
 // Search clients
-export async function searchClients(searchTerm: string) {
+export async function searchClients(searchTerm: string, supabaseClient: any) {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from("clients")
       .select("*")
       .or(`Client.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%`)
@@ -189,20 +212,11 @@ export async function searchClients(searchTerm: string) {
 // Export clients data as CSV
 export function exportClientsToCSV(clients: Customer[]) {
   const headers = [
-    "Client ID",
-    "Name",
-    "Email",
-    "Phone",
-    "Last Visit",
-    "Total Visits",
-    "Pricing Option",
-    "Expiration Date",
-    "Staff",
-    "Status",
-    "Visit Type",
-    "Booking Method",
-    "Referral Type",
-  ]
+    "Client ID", "Name", "Email", "Phone", "Status",
+    "Current Cadence", "Last Contact", "Next Contact", "Messages Sent", "Expiration Date",
+    "Last Visit", "Total Visits", "Pricing Option", "Staff", "Visit Type",
+    "Booking Method", "Referral Type",
+  ];
 
   const csvContent = [
     headers.join(","),
@@ -212,26 +226,30 @@ export function exportClientsToCSV(clients: Customer[]) {
         `"${client.name}"`,
         client.email || "",
         client.phone || "",
+        client.status,
+        client.current_cadence_name || "",
+        client.last_contact_date || "",
+        client.next_contact_date || "",
+        client.total_messages_count || 0,
+        client.expirationDate || "",
         client.lastVisit || "",
         client.visits,
         client.pricingOption || "",
-        client.expirationDate || "",
         client.staff || "",
-        client.status,
         client.visitType || "",
         client.bookingMethod || "",
         client.referralType || "",
       ].join(","),
     ),
-  ].join("\n")
+  ].join("\n");
 
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-  const link = document.createElement("a")
-  const url = URL.createObjectURL(blob)
-  link.setAttribute("href", url)
-  link.setAttribute("download", `clients-export-${new Date().toISOString().split("T")[0]}.csv`)
-  link.style.visibility = "hidden"
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+  const url = URL.createObjectURL(blob);
+  link.setAttribute("href", url);
+  link.setAttribute("download", `clients-export-${new Date().toISOString().split("T")[0]}.csv`);
+  link.style.visibility = "hidden";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }

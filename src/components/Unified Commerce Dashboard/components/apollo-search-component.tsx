@@ -310,7 +310,7 @@ const ApolloSearchComponent = () => {
       <div className="border-b border-gray-200 pb-4">
         <div className="mb-4 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Apollo Search</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Leads Search</h1>
             <p className="mt-1 text-gray-600">
               Find and connect with business professionals
             </p>
