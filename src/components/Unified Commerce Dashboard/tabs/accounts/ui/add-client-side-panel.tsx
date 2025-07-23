@@ -434,7 +434,8 @@ useEffect(() => {
       open={isOpen}
       onOpenChange={onClose}
       direction="right"
-      modal={false} // This allows background interaction
+     modal={true} // ← Change to true (or remove since true is default)
+  dismissible={true}
     >
       <Drawer.Portal>
         <Drawer.Content

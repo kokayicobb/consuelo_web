@@ -333,7 +333,7 @@ export default function AppsPage() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedApp, setSelectedApp] = useState<AppCard | null>(null);
   const [isFullScreen, setIsFullScreen] = useState(false);
-const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   const toggleSection = (id: string) => {
     setFunctions((prev) =>
       prev.map((func) =>
@@ -347,34 +347,27 @@ const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
     setIsDrawerOpen(true);
   };
 
-  // In your apps.tsx file, update the renderDrawerContent function:
-
-  const renderDrawerContent = () => {
+  // =================================================================
+  // --- CHANGE START: Converted the function into a stable component ---
+  // =================================================================
+  // By defining this as a component (PascalCase), React will preserve its state
+  // (like the cursor position in EmailComposer) between re-renders.
+  const DrawerContent = () => {
     if (!selectedApp) return null;
 
-    // Special handling for Apollo/ZoomInfo Scraper
     if (selectedApp.id === "apollo-scraper") {
       return <ApolloSearchComponent />;
     }
 
-    // Add handling for Google Maps Scraper
     if (selectedApp.id === "maps-scraper") {
-      // Import at the top of the file:
-      // import LeadGenerationSearch from "./app-views/LeadGenerationSearch"
       return <LeadGenerationSearch />;
     }
-    // Add handling for Google Maps Scraper
-    if (selectedApp.id === "content-creator") {
-      // Import at the top of the file:
-      // import LeadGenerationSearch from "./app-views/LeadGenerationSearch"
-      return <ModelGenerationContent />;
 
-      //
+    if (selectedApp.id === "content-creator") {
+      return <ModelGenerationContent />;
     }
-    // Add handling for Google Maps Scraper
+
     if (selectedApp.id === "social-monitor") {
-      // Import at the top of the file:
-      // import LeadGenerationSearch from "./app-views/LeadGenerationSearch"
       return (
         <FormSelector
           onClose={() => setIsDrawerOpen(false)}
@@ -383,19 +376,16 @@ const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
         />
       );
     }
-    // Add handling for Google Maps Scraper
+
     if (selectedApp.id === "ai-chatbot") {
-      // Import at the top of the file:
-      // import LeadGenerationSearch from "./app-views/LeadGenerationSearch"
       return <PhoneCallComponent />;
     }
-    // Add handling for Google Maps Scraper
+    
+    // The EmailComposer is now returned by a stable component, fixing the issue.
     if (selectedApp.id === "warm-email") {
-      // Import at the top of the file:
-      // import LeadGenerationSearch from "./app-views/LeadGenerationSearch"
       return <EmailComposer />;
     }
-    //<EmailComposer />
+    
     // Default content for other apps
     return (
       <div className="space-y-4">
@@ -412,35 +402,39 @@ const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
       </div>
     );
   };
+  // ===============================================================
+  // --- CHANGE END ---
+  // ===============================================================
+
 
   return (
     <div className="min-h-screen space-y-6 bg-white p-8">
       {/* Page header */}
-<div className="mb-8">
-  {/* Top row for title and buttons */}
-  <div className="flex flex-wrap items-center justify-between gap-4">
-    <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-      Apps
-    </h1>
-    {/* Button group */}
-    <div className="flex items-center gap-2">
-      
-     <Button 
-              className="flex items-center" 
-              onClick={() => setIsRequestModalOpen(true)}
-            >
-              <Plus className="mr-1.5 h-4 w-4" />
-              Request App
-            </Button>
+      <div className="mb-8">
+        {/* Top row for title and buttons */}
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+            Apps
+          </h1>
+          {/* Button group */}
+          <div className="flex items-center gap-2">
+            
+          <Button 
+                    className="flex items-center" 
+                    onClick={() => setIsRequestModalOpen(true)}
+                  >
+                    <Plus className="mr-1.5 h-4 w-4" />
+                    Request App
+                  </Button>
 
-    </div>
-  </div>
+          </div>
+        </div>
 
-  {/* Description, always on its own line */}
-  <p className="mt-2 text-gray-500">
-    Manage your business automation applications
-  </p>
-</div>
+        {/* Description, always on its own line */}
+        <p className="mt-2 text-gray-500">
+          Manage your business automation applications
+        </p>
+      </div>
 
       {/* Business Functions */}
       <div className="space-y-6">
@@ -524,7 +518,8 @@ const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
         open={isDrawerOpen}
         onOpenChange={setIsDrawerOpen}
         direction="right"
-        modal={false}
+       modal={true} // ← Change to true (or remove since true is default)
+  dismissible={true}
       >
         <Drawer.Portal>
           <Drawer.Content
@@ -616,7 +611,13 @@ const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
                   )}
 
                   {/* Dynamic Content */}
-                  {renderDrawerContent()}
+                  {/* =============================================================== */}
+                  {/* --- CHANGE START: Called as a component instead of a function --- */}
+                  {/* =============================================================== */}
+                  <DrawerContent />
+                  {/* =============================================================== */}
+                  {/* --- CHANGE END --- */}
+                  {/* =============================================================== */}
                   
                 </div>
               </div>

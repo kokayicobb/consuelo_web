@@ -7,6 +7,28 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 
+// --- FIX START: Debounce Hook ---
+// We create this reusable hook to delay an action until the user stops typing.
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    // Set a timeout to update the debounced value after the specified delay
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    // This is the cleanup function. It runs if the value changes before the
+    // timeout is complete, effectively resetting the timer.
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]); // Only re-run if value or delay changes
+
+  return debouncedValue;
+}
+// --- FIX END: Debounce Hook ---
+
 interface EmailComposerProps {
   initialTo?: string | string[];
   initialSubject?: string;
@@ -62,7 +84,15 @@ export default function EmailComposer({
   const [showPersonalization, setShowPersonalization] = useState(false);
   const [isDraft, setIsDraft] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const editorRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // --- FIX START: Apply the debounce hook ---
+  // We create debounced versions of the state that changes frequently.
+  // These values will only update 500ms after the user stops typing.
+  const debouncedSubject = useDebounce(subject, 500);
+  const debouncedBody = useDebounce(body, 500);
+  const debouncedTo = useDebounce(to, 500);
+  // --- FIX END: Apply the debounce hook ---
 
   // Mock templates - replace with API call
   const templates: EmailTemplate[] = [
@@ -82,81 +112,49 @@ export default function EmailComposer({
     }
   ];
 
+  // --- FIX START: Use debounced values for the effect ---
+  // This useEffect now runs only when the debounced values change,
+  // NOT on every single keystroke.
   useEffect(() => {
-    // Run deliverability checks
+    const runDeliverabilityChecks = () => {
+      const checks: Record<string, DeliverabilityCheck> = {};
+
+      if (debouncedSubject.length > 60) {
+        checks.subjectLength = { passed: false, message: 'Subject line is too long (>60 characters)', severity: 'warning' };
+      } else {
+        checks.subjectLength = { passed: true, message: 'Subject length is optimal', severity: 'info' };
+      }
+
+      const spamWords = ['free', 'guarantee', 'click here', 'buy now', 'limited time'];
+      const foundSpamWords = spamWords.filter(word => 
+        debouncedBody.toLowerCase().includes(word) || debouncedSubject.toLowerCase().includes(word)
+      );
+      if (foundSpamWords.length > 0) {
+        checks.spamWords = { passed: false, message: `Contains spam trigger words: ${foundSpamWords.join(', ')}`, severity: 'warning' };
+      } else {
+        checks.spamWords = { passed: true, message: 'No spam trigger words detected', severity: 'info' };
+      }
+
+      const hasPersonalization = debouncedBody.includes('{{') || debouncedSubject.includes('{{');
+      if (!hasPersonalization && debouncedTo.length > 1) {
+        checks.personalization = { passed: false, message: 'Consider adding personalization for bulk emails', severity: 'warning' };
+      } else {
+        checks.personalization = { passed: true, message: 'Email includes personalization', severity: 'info' };
+      }
+      
+      if (!debouncedBody.includes('unsubscribe') && debouncedTo.length > 10) {
+        checks.unsubscribe = { passed: false, message: 'Missing unsubscribe link for bulk email', severity: 'error' };
+      } else {
+        checks.unsubscribe = { passed: true, message: 'Unsubscribe option included', severity: 'info' };
+      }
+
+      setDeliverabilityChecks(checks);
+    };
+
     runDeliverabilityChecks();
-  }, [subject, body, to]);
+  }, [debouncedSubject, debouncedBody, debouncedTo]); // Dependency array now uses the debounced values
+  // --- FIX END: Use debounced values for the effect ---
 
-  const runDeliverabilityChecks = () => {
-    const checks: Record<string, DeliverabilityCheck> = {};
-
-    // Check subject length
-    if (subject.length > 60) {
-      checks.subjectLength = {
-        passed: false,
-        message: 'Subject line is too long (>60 characters)',
-        severity: 'warning'
-      };
-    } else {
-      checks.subjectLength = {
-        passed: true,
-        message: 'Subject length is optimal',
-        severity: 'info'
-      };
-    }
-
-    // Check for spam words
-    const spamWords = ['free', 'guarantee', 'click here', 'buy now', 'limited time'];
-    const foundSpamWords = spamWords.filter(word => 
-      body.toLowerCase().includes(word) || subject.toLowerCase().includes(word)
-    );
-    if (foundSpamWords.length > 0) {
-      checks.spamWords = {
-        passed: false,
-        message: `Contains spam trigger words: ${foundSpamWords.join(', ')}`,
-        severity: 'warning'
-      };
-    } else {
-      checks.spamWords = {
-        passed: true,
-        message: 'No spam trigger words detected',
-        severity: 'info'
-      };
-    }
-
-    // Check for personalization
-    const hasPersonalization = body.includes('{{') || subject.includes('{{');
-    if (!hasPersonalization && to.length > 1) {
-      checks.personalization = {
-        passed: false,
-        message: 'Consider adding personalization for bulk emails',
-        severity: 'warning'
-      };
-    } else {
-      checks.personalization = {
-        passed: true,
-        message: 'Email includes personalization',
-        severity: 'info'
-      };
-    }
-
-    // Check for unsubscribe link
-    if (!body.includes('unsubscribe') && to.length > 10) {
-      checks.unsubscribe = {
-        passed: false,
-        message: 'Missing unsubscribe link for bulk email',
-        severity: 'error'
-      };
-    } else {
-      checks.unsubscribe = {
-        passed: true,
-        message: 'Unsubscribe option included',
-        severity: 'info'
-      };
-    }
-
-    setDeliverabilityChecks(checks);
-  };
 
   const handleAddEmail = (input: string, setter: (emails: string[]) => void, current: string[]) => {
     const emails = input.split(/[,\s]+/).filter(email => email.trim());
@@ -179,15 +177,17 @@ export default function EmailComposer({
   };
 
   const insertAtCursor = (text: string) => {
-    const selection = window.getSelection();
-    if (selection && selection.rangeCount > 0 && editorRef.current?.contains(selection.anchorNode)) {
-      const range = selection.getRangeAt(0);
-      range.deleteContents();
-      range.insertNode(document.createTextNode(text));
-      range.collapse(false);
-      selection.removeAllRanges();
-      selection.addRange(range);
-      setBody(editorRef.current?.innerText || '');
+    if (textareaRef.current) {
+      const textarea = textareaRef.current;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const newText = body.substring(0, start) + text + body.substring(end);
+      setBody(newText);
+      
+      setTimeout(() => {
+        textarea.setSelectionRange(start + text.length, start + text.length);
+        textarea.focus();
+      }, 0);
     } else {
       setBody(body + text);
     }
@@ -198,8 +198,10 @@ export default function EmailComposer({
     setBody(template.body);
     setPersonalizationTokens(template.variables);
     setSelectedTemplate(template.id);
-    setShowTemplates(false);
+    setActivePanel(null);
   };
+
+  const [activePanel, setActivePanel] = useState<'templates' | 'personalization' | 'deliverability' | null>(null);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -228,11 +230,7 @@ export default function EmailComposer({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          to,
-          cc,
-          bcc,
-          subject,
-          text: body,
+          to, cc, bcc, subject, text: body,
           html: `<p>${body.replace(/\n/g, '<br>')}</p>`,
           replyTo: replyTo?.from_address,
           campaignId: campaign?.id,
@@ -240,10 +238,7 @@ export default function EmailComposer({
         })
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to send email');
-      }
-
+      if (!response.ok) throw new Error('Failed to send email');
       onSuccess?.();
     } catch (error) {
       console.error('Error sending email:', error);
@@ -255,13 +250,13 @@ export default function EmailComposer({
 
   const handleSaveDraft = async () => {
     setIsDraft(true);
-    // Save draft logic here
     setTimeout(() => setIsDraft(false), 2000);
   };
 
   const failedChecks = Object.values(deliverabilityChecks).filter(check => !check.passed).length;
 
   return (
+    // The rest of your JSX remains unchanged...
     <div className="flex flex-col h-full bg-white rounded-lg shadow-lg">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b">
@@ -279,21 +274,21 @@ export default function EmailComposer({
       {/* Toolbar */}
       <div className="flex items-center gap-2 px-6 py-3 border-b bg-gray-50">
         <button
-          onClick={() => setShowTemplates(!showTemplates)}
+          onClick={() => setActivePanel(activePanel === 'templates' ? null : 'templates')}
           className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
         >
           <FileText className="w-4 h-4 mr-2" />
           Templates
         </button>
         <button
-          onClick={() => setShowPersonalization(!showPersonalization)}
+          onClick={() => setActivePanel(activePanel === 'personalization' ? null : 'personalization')}
           className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
         >
           <Variable className="w-4 h-4 mr-2" />
           Personalize
         </button>
         <button
-          onClick={() => setShowDeliverability(!showDeliverability)}
+          onClick={() => setActivePanel(activePanel === 'deliverability' ? null : 'deliverability')}
           className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
         >
           <Zap className="w-4 h-4 mr-2" />
@@ -335,7 +330,7 @@ export default function EmailComposer({
       </div>
 
       {/* Templates Dropdown */}
-      {showTemplates && (
+      {activePanel === 'templates' && (
         <div className="absolute top-24 left-6 z-50 w-80 bg-white rounded-lg shadow-lg border border-gray-200">
           <div className="p-4">
             <h3 className="text-sm font-medium text-gray-900 mb-3">Email Templates</h3>
@@ -356,8 +351,8 @@ export default function EmailComposer({
       )}
 
       {/* Personalization Panel */}
-      {showPersonalization && (
-        <div className="absolute top-24 left-40 z-50 w-64 bg-white rounded-lg shadow-lg border border-gray-200">
+      {activePanel === 'personalization' && (
+        <div className="absolute top-24 left-6 z-50 w-64 bg-white rounded-lg shadow-lg border border-gray-200">
           <div className="p-4">
             <h3 className="text-sm font-medium text-gray-900 mb-3">Insert Variable</h3>
             <div className="space-y-2">
@@ -378,8 +373,8 @@ export default function EmailComposer({
       )}
 
       {/* Deliverability Panel */}
-      {showDeliverability && (
-        <div className="absolute top-24 right-6 z-50 w-80 bg-white rounded-lg shadow-lg border border-gray-200">
+      {activePanel === 'deliverability' && (
+        <div className="absolute top-24 left-6 z-50 w-80 bg-white rounded-lg shadow-lg border border-gray-200">
           <div className="p-4">
             <h3 className="text-sm font-medium text-gray-900 mb-3">Deliverability Insights</h3>
             <div className="space-y-2">
@@ -593,12 +588,12 @@ export default function EmailComposer({
           </div>
 
           {/* Body */}
-          <div
-            ref={editorRef}
-            contentEditable
-            onInput={(e) => setBody(e.currentTarget.innerText)}
-            className="min-h-[300px] p-4 border border-t-0 border-gray-300 rounded-b-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-            dangerouslySetInnerHTML={{ __html: body.replace(/\n/g, '<br>') }}
+          <textarea
+            ref={textareaRef}
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            className="min-h-[300px] p-4 border border-t-0 border-gray-300 rounded-b-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-vertical w-full"
+            placeholder="Write your message..."
           />
 
           {/* Attachments */}
