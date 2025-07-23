@@ -72,6 +72,7 @@ import DataHeader from "../ui/table-header";
 import { useSession } from "@clerk/nextjs";
 import { createClerkSupabaseClient } from "@/lib/supabase/client";
 import DynamicFormSidePanel from "../ui/add-client-side-panel";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface SortRule {
   id: string;
@@ -409,141 +410,139 @@ export default function SupabaseCustomerTable({
     }
   };
 
-  const handleSaveCustomer = async (customerData: CreateCustomerInput) => {
-    try {
-      // Get authenticated client
-      const token = await session?.getToken();
-      const supabaseClient = createClerkSupabaseClient(token);
+ const handleSaveCustomer = async (customerData: CreateCustomerInput) => {
+  try {
+    // Get authenticated client
+    const token = await session?.getToken();
+    const supabaseClient = createClerkSupabaseClient(token);
 
-      // Helper function to clean date values
-      const cleanDateValue = (value: any) => {
-        if (!value || value === "") return null;
-        return value;
-      };
+    // Helper function to clean date values
+    const cleanDateValue = (value: any) => {
+      if (!value || value === "") return null;
+      return value;
+    };
 
-      // Helper function to clean all values
-      const cleanValue = (value: any, fieldName: string) => {
-        // List of date fields in your database
-        const dateFields = [
-          "Last Visit",
-          "Expiration Date",
-          "last_review_date",
-        ];
+    // Helper function to clean all values
+    const cleanValue = (value: any, fieldName: string) => {
+      // List of date fields in your database
+      const dateFields = [
+        "Last Visit",
+        "Expiration Date",
+        "last_review_date",
+      ];
 
-        if (dateFields.includes(fieldName)) {
-          return cleanDateValue(value);
-        }
-
-        // For other fields, convert empty strings to null
-        if (value === "") return null;
-
-        return value;
-      };
-
-      if (editingCustomer) {
-        // Update existing customer
-        const updates = {
-          Client: customerData.name,
-          email: customerData.email,
-          phone: customerData.phone,
-          "Pricing Option": customerData.pricingOption,
-          "# Visits": customerData.visits,
-          "Last Visit": cleanDateValue(customerData.lastVisit),
-          Staff: customerData.staff,
-          "Expiration Date": cleanDateValue(customerData.expirationDate),
-          "Cross Regional Visit": customerData.crossRegionalVisit,
-          "Visit Type": customerData.visitType,
-          "Booking Method": customerData.bookingMethod,
-          "Referral Type": customerData.referralType,
-          // Add additional fields if they exist
-          title: customerData.title,
-          company: customerData.company,
-          address: customerData.address,
-          linkedin: customerData.linkedin,
-          priority: customerData.priority,
-          segment: customerData.segment,
-          relationship_manager: customerData.relationship_manager,
-          notes: customerData.notes,
-          total_assets_under_management:
-            customerData.total_assets_under_management,
-          recent_deal_value: customerData.recent_deal_value,
-          product_interests: customerData.product_interests,
-          last_review_date: cleanDateValue(customerData.last_review_date),
-        };
-
-        // Remove any undefined values
-        const cleanedUpdates = Object.entries(updates).reduce(
-          (acc, [key, value]) => {
-            if (value !== undefined) {
-              acc[key] = cleanValue(value, key);
-            }
-            return acc;
-          },
-          {} as any,
-        );
-
-        await updateClient(editingCustomer.id, cleanedUpdates, supabaseClient);
-      } else {
-        // Create new customer - DON'T include user_id, the trigger will add it automatically
-       // In your handleSaveCustomer function, make sure you're NOT including user_id:
-const newClientData = {
-  Client: customerData.name,
-  email: customerData.email || null,
-  phone: customerData.phone || null,
-  "Last Visit": cleanDateValue(customerData.lastVisit),
-  "# Visits": customerData.visits || 0,
-  "Pricing Option": customerData.pricingOption || null,
-  "Expiration Date": cleanDateValue(customerData.expirationDate),
-  Staff: customerData.staff || null,
-  "Cross Regional Visit": customerData.crossRegionalVisit || null,
-  "Visit Type": customerData.visitType || null,
-  "Booking Method": customerData.bookingMethod || null,
-  "Referral Type": customerData.referralType || null,
-  title: customerData.title || null,
-  company: customerData.company || null,
-  address: customerData.address || null,
-  linkedin: customerData.linkedin || null,
-  priority: customerData.priority || null,
-  segment: customerData.segment || null,
-  relationship_manager: customerData.relationship_manager || null,
-  notes: customerData.notes || null,
-  total_assets_under_management: customerData.total_assets_under_management || null,
-  recent_deal_value: customerData.recent_deal_value || null,
-  product_interests: customerData.product_interests || null,
-  last_review_date: cleanDateValue(customerData.last_review_date),
-  current_cadence_name: customerData.current_cadence_name || customerData.current_cadence_name || null,
-  next_contact_date: cleanDateValue(customerData.next_contact_date || customerData.next_contact_date),
-  // DO NOT include user_id here - let the trigger handle it
-};
-
-        // Remove any undefined values and ensure empty strings become null
-      // In handleSaveCustomer, make sure to filter out undefined values:
-const cleanedData = Object.entries(newClientData).reduce(
-  (acc, [key, value]) => {
-    // Only include defined values
-    if (value !== undefined) {
-      acc[key] = value === "" ? null : value; // Convert empty strings to null
-    }
-    return acc;
-  },
-  {} as any,
-);
-
-console.log('Final cleaned data being sent to createClient:', cleanedData);
-await createClient(cleanedData, supabaseClient);
-
-        await createClient(cleanedData, supabaseClient);
+      if (dateFields.includes(fieldName)) {
+        return cleanDateValue(value);
       }
 
-      await refreshClients();
-      setIsFormOpen(false);
-      setEditingCustomer(null);
-    } catch (error) {
-      console.error("Failed to save customer:", error);
-      // You might want to show a toast notification here
-      throw error;
+      // For other fields, convert empty strings to null
+      if (value === "") return null;
+
+      return value;
+    };
+
+    if (editingCustomer) {
+      // Update existing customer
+      const updates = {
+        Client: customerData.name,
+        email: customerData.email,
+        phone: customerData.phone,
+        "Pricing Option": customerData.pricingOption,
+        "# Visits": customerData.visits,
+        "Last Visit": cleanDateValue(customerData.lastVisit),
+        Staff: customerData.staff,
+        "Expiration Date": cleanDateValue(customerData.expirationDate),
+        "Cross Regional Visit": customerData.crossRegionalVisit,
+        "Visit Type": customerData.visitType,
+        "Booking Method": customerData.bookingMethod,
+        "Referral Type": customerData.referralType,
+        // Add additional fields if they exist
+        title: customerData.title,
+        company: customerData.company,
+        address: customerData.address,
+        linkedin: customerData.linkedin,
+        priority: customerData.priority,
+        segment: customerData.segment,
+        relationship_manager: customerData.relationship_manager,
+        notes: customerData.notes,
+        total_assets_under_management:
+          customerData.total_assets_under_management,
+        recent_deal_value: customerData.recent_deal_value,
+        product_interests: customerData.product_interests,
+        last_review_date: cleanDateValue(customerData.last_review_date),
+      };
+
+      // Remove any undefined values
+      const cleanedUpdates = Object.entries(updates).reduce(
+        (acc, [key, value]) => {
+          if (value !== undefined) {
+            acc[key] = cleanValue(value, key);
+          }
+          return acc;
+        },
+        {} as any,
+      );
+
+      await updateClient(editingCustomer.id, cleanedUpdates, supabaseClient);
+    } else {
+      // Create new customer - DON'T include user_id, the trigger will add it automatically
+      const newClientData = {
+        Client: customerData.name,
+        email: customerData.email || null,
+        phone: customerData.phone || null,
+        "Last Visit": cleanDateValue(customerData.lastVisit),
+        "# Visits": customerData.visits || 0,
+        "Pricing Option": customerData.pricingOption || null,
+        "Expiration Date": cleanDateValue(customerData.expirationDate),
+        Staff: customerData.staff || null,
+        "Cross Regional Visit": customerData.crossRegionalVisit || null,
+        "Visit Type": customerData.visitType || null,
+        "Booking Method": customerData.bookingMethod || null,
+        "Referral Type": customerData.referralType || null,
+        title: customerData.title || null,
+        company: customerData.company || null,
+        address: customerData.address || null,
+        linkedin: customerData.linkedin || null,
+        priority: customerData.priority || null,
+        segment: customerData.segment || null,
+        relationship_manager: customerData.relationship_manager || null,
+        notes: customerData.notes || null,
+        total_assets_under_management: customerData.total_assets_under_management || null,
+        recent_deal_value: customerData.recent_deal_value || null,
+        product_interests: customerData.product_interests || null,
+        last_review_date: cleanDateValue(customerData.last_review_date),
+        current_cadence_name: customerData.current_cadence_name || customerData.current_cadence_name || null,
+        next_contact_date: cleanDateValue(customerData.next_contact_date || customerData.next_contact_date),
+        // DO NOT include user_id here - let the trigger handle it
+      };
+
+      // Remove any undefined values and ensure empty strings become null
+      const cleanedData = Object.entries(newClientData).reduce(
+        (acc, [key, value]) => {
+          // Only include defined values
+          if (value !== undefined) {
+            acc[key] = value === "" ? null : value; // Convert empty strings to null
+          }
+          return acc;
+        },
+        {} as any,
+      );
+
+      console.log('Final cleaned data being sent to createClient:', cleanedData);
+      
+      // FIXED: Remove the duplicate createClient call
+      await createClient(cleanedData, supabaseClient);
     }
-  };
+
+    await refreshClients();
+    setIsFormOpen(false);
+    setEditingCustomer(null);
+  } catch (error) {
+    console.error("Failed to save customer:", error);
+    // You might want to show a toast notification here
+    throw error;
+  }
+};
 
  // In SupabaseCustomerTable, update the getFieldType function:
 const getFieldType = (field: string) => {
@@ -703,18 +702,57 @@ const getFieldType = (field: string) => {
               </TableHeader>
               <TableBody>
                 {loading ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={visibleColumns.length + 2}
-                      className="py-12 text-center"
-                    >
-                      <div className="flex items-center justify-center">
-                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                        Loading accounts...
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ) : (
+  // Create skeleton rows
+  Array.from({ length: pageSize }, (_, index) => (
+    <TableRow key={`skeleton-${index}`}>
+      {/* Checkbox column skeleton */}
+      <TableCell>
+        <Skeleton className="h-4 w-4" />
+      </TableCell>
+      
+      {/* Dynamic column skeletons based on your visible columns */}
+      {visibleColumns.map((column) => (
+        <TableCell key={`skeleton-${column.id}-${index}`}>
+          {column.id === "name" ? (
+            // Special skeleton for name column with avatar
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-10 w-10 rounded-full" />
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-3 w-20" />
+              </div>
+            </div>
+          ) : column.id === "currentCadenceName" ? (
+            // Badge-style skeleton
+            <Skeleton className="h-6 w-20 rounded-full" />
+          ) : column.key === "visits" ? (
+            // Number column skeleton (right-aligned)
+            <div className="text-right">
+              <Skeleton className="h-4 w-8 ml-auto" />
+            </div>
+          ) : dateColumnIds.includes(column.id) ? (
+            // Date column skeleton
+            <Skeleton className="h-4 w-16" />
+          ) : (
+            // Default text skeleton with varying widths for realism
+            <Skeleton 
+              className={`h-4 ${
+                index % 3 === 0 ? 'w-24' : 
+                index % 3 === 1 ? 'w-32' : 'w-20'
+              }`} 
+            />
+          )}
+        </TableCell>
+      ))}
+      
+      {/* Actions column skeleton */}
+      <TableCell className="text-right">
+        <Skeleton className="h-8 w-8 ml-auto" />
+      </TableCell>
+    </TableRow>
+  ))
+) : (
                   paginatedCustomers.map((customer) => (
                     <TableRow
                       key={customer.id}

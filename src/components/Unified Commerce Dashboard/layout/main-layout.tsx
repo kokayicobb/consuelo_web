@@ -829,7 +829,8 @@ const MainLayout = ({ children, title, hideSidebar = false }) => {
           open={isDrawerOpen}
           onOpenChange={setIsDrawerOpen}
           direction="right"
-          modal={false}
+         modal={true} // ← Change to true (or remove since true is default)
+  dismissible={true}
         >
           <Drawer.Portal>
             <Drawer.Content
