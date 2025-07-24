@@ -7,9 +7,11 @@ const PROJECT_ID = process.env.NEXT_PUBLIC_POSTHOG_PROJECT_ID;
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  console.log('Fetching snapshots for recording:', params.id);
+  // Await the params since they're now a Promise in newer Next.js versions
+  const resolvedParams = await params;
+  console.log('Fetching snapshots for recording:', resolvedParams.id);
   
   if (!POSTHOG_API_KEY) {
     console.error('POSTHOG_PERSONAL_API_KEY not set');
@@ -28,7 +30,7 @@ export async function GET(
   }
 
   try {
-    const recordingId = params.id;
+    const recordingId = resolvedParams.id;
     
     // Method 1: Try the direct snapshots endpoint
     console.log('Trying direct snapshots endpoint...');
@@ -102,8 +104,8 @@ export async function GET(
   } catch (error) {
     console.error('Error in snapshots endpoint:', error);
     return NextResponse.json(
-      { 
-        error: 'Internal server error', 
+      {
+        error: 'Internal server error',
         details: error instanceof Error ? error.message : 'Unknown error',
         hint: 'Check server logs for more details'
       },

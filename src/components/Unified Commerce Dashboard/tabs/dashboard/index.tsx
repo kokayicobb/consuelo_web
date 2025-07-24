@@ -46,8 +46,8 @@ import SalesPerformanceCard from "./components/chart";
 import { TopPerformingCohortCard } from "./components/top-cohorts";
 import LeadChannelPerformance from "./components/lead-performace";
 import FollowUpsTracker from "./components/follow-ups";
-import SessionReplayViewer from "../../components/SessionReplayViewer";
-import WebAnalyticsViewer from "../../components/WebAnalyticsViewer";
+import SessionReplayViewer from "../../components/posthog/SessionReplayViewer";
+import WebAnalyticsViewer from "../../components/posthog/WebAnalyticsViewer";
 
 const salesData = {
   week: [

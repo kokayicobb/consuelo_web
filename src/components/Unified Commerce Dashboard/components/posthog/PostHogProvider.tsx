@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { posthog } from "../lib/posthog";
+import { posthog } from "../../lib/posthog";
 
 interface ConsentBannerProps {
   onAccept: () => void;
