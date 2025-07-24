@@ -260,7 +260,7 @@ const HomeContent: React.FC = () => {
       new_range: value,
     });
   };
-const apiKey = process.env.NEXT_PUBLIC_POSTHOG_PERSONAL_ACCESS_TOKEN!;
+const projectApiKey = process.env.NEXT_PUBLIC_POSTHOG_KEY!;
   const handleGenerateReport = () => {
     posthog.capture("generate_report_clicked", {
       time_range: timeRange,
@@ -383,7 +383,7 @@ const apiKey = process.env.NEXT_PUBLIC_POSTHOG_PERSONAL_ACCESS_TOKEN!;
       {/* Bottom Sections - 1 column */}
       <div className="grid grid-cols-1 gap-6">
         <WebAnalyticsViewer />
-       <PostHogUsers apiKey={apiKey} />
+        <PostHogUsers projectApiKey={"phx_7exFgDliuUVLDyUnNVL0VPYrtB8htI1nGvlfDV8CrtrZbRy"} />
       </div>
 
       {/* Main Dashboard Content */}
