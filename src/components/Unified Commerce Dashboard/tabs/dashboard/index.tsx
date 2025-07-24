@@ -46,8 +46,9 @@ import SalesPerformanceCard from "./components/chart";
 import { TopPerformingCohortCard } from "./components/top-cohorts";
 import LeadChannelPerformance from "./components/lead-performace";
 import FollowUpsTracker from "./components/follow-ups";
-import SessionReplayViewer from "../../components/SessionReplayViewer";
-import WebAnalyticsViewer from "../../components/WebAnalyticsViewer";
+import SessionReplayViewer from "../../components/posthog/SessionReplayViewer";
+import WebAnalyticsViewer from "../../components/posthog/WebAnalyticsViewer";
+import PostHogUsers from "../../components/posthog/posthog-users";
 
 const salesData = {
   week: [
@@ -259,7 +260,7 @@ const HomeContent: React.FC = () => {
       new_range: value,
     });
   };
-
+const projectApiKey = process.env.NEXT_PUBLIC_POSTHOG_KEY!;
   const handleGenerateReport = () => {
     posthog.capture("generate_report_clicked", {
       time_range: timeRange,
@@ -338,7 +339,7 @@ const HomeContent: React.FC = () => {
         </div>
       </div>
 
-      {/* Overview Stats */}
+      {/* Overview Stats
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {overviewStats.map((stat, index) => (
           <Card
@@ -377,11 +378,12 @@ const HomeContent: React.FC = () => {
             </CardContent>
           </Card>
         ))}
-      </div>
+      </div> */}
 
       {/* Bottom Sections - 1 column */}
       <div className="grid grid-cols-1 gap-6">
         <WebAnalyticsViewer />
+        <PostHogUsers projectApiKey={"phx_7exFgDliuUVLDyUnNVL0VPYrtB8htI1nGvlfDV8CrtrZbRy"} />
       </div>
 
       {/* Main Dashboard Content */}

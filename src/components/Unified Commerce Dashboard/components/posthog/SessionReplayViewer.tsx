@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -23,6 +21,7 @@ import {
   ExternalLink,
   Search,
   AlertTriangle,
+  Download,
   Maximize2,
   Settings,
 } from "lucide-react";
@@ -49,40 +48,64 @@ interface SessionRecording {
   };
 }
 
-// Working Embedded Player Component
-const WorkingEmbeddedPlayer = ({ recordingId }: { recordingId: string }) => {
+// PostHog Player Component
+const PostHogPlayer = ({ recordingId }: { recordingId: string }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
+  const [snapshots, setSnapshots] = useState<any>(null);
 
-  // Reset states when recording changes
   useEffect(() => {
     if (recordingId) {
-      setIsLoading(true);
-      setHasError(false);
-      setRetryCount(0);
+      fetchRecordingData(recordingId);
     }
   }, [recordingId]);
 
-  const handleIframeLoad = () => {
-    setIsLoading(false);
-    setHasError(false);
-  };
-
-  const handleIframeError = () => {
-    setIsLoading(false);
-    setHasError(true);
-  };
-
-  const retryEmbed = () => {
-    setRetryCount((prev) => prev + 1);
+  const fetchRecordingData = async (id: string) => {
     setIsLoading(true);
     setHasError(false);
+    
+    try {
+      // Fetch recording snapshots from your API
+      const response = await fetch(`/api/posthog/recordings/${id}/snapshots`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch recording data');
+      }
+      
+      const data = await response.json();
+      setSnapshots(data);
+      setIsLoading(false);
+      
+      // Initialize rrweb player here if you have the snapshots
+      // You would need to install rrweb-player: npm install rrweb-player
+      // import rrwebPlayer from 'rrweb-player';
+      // new rrwebPlayer({ target: document.getElementById('player'), data: snapshots });
+      
+    } catch (error) {
+      console.error('Error fetching recording:', error);
+      setHasError(true);
+      setIsLoading(false);
+    }
   };
 
   const openInPostHog = () => {
     const posthogUrl = `${process.env.NEXT_PUBLIC_POSTHOG_HOST}/project/${process.env.NEXT_PUBLIC_POSTHOG_PROJECT_ID}/replay/${recordingId}`;
     window.open(posthogUrl, "_blank");
+  };
+
+  const downloadRecording = async () => {
+    try {
+      const response = await fetch(`/api/posthog/recordings/${recordingId}/export`);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `recording-${recordingId}.json`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading recording:', error);
+    }
   };
 
   if (!recordingId) {
@@ -103,18 +126,6 @@ const WorkingEmbeddedPlayer = ({ recordingId }: { recordingId: string }) => {
     );
   }
 
-  // Different embed URLs to try
-  const embedUrls = [
-    // Try PostHog sharing URL (most likely to work)
-    `${process.env.NEXT_PUBLIC_POSTHOG_HOST}/shared/recordings/${recordingId}`,
-    // Try direct embed URL
-    `${process.env.NEXT_PUBLIC_POSTHOG_HOST}/embedded/replay/${recordingId}`,
-    // Try with project ID
-    `${process.env.NEXT_PUBLIC_POSTHOG_HOST}/project/${process.env.NEXT_PUBLIC_POSTHOG_PROJECT_ID}/replay/${recordingId}?embedded=true`,
-  ];
-
-  const currentEmbedUrl = embedUrls[retryCount % embedUrls.length];
-
   return (
     <div className="flex flex-1 flex-col bg-white">
       {/* Player Header */}
@@ -129,12 +140,13 @@ const WorkingEmbeddedPlayer = ({ recordingId }: { recordingId: string }) => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={retryEmbed}
+            onClick={() => fetchRecordingData(recordingId)}
             disabled={isLoading}
           >
-            <RefreshCw
-              className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
-            />
+            <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+          </Button>
+          <Button variant="ghost" size="sm" onClick={downloadRecording}>
+            <Download className="h-4 w-4" />
           </Button>
           <Button variant="ghost" size="sm" onClick={openInPostHog}>
             <ExternalLink className="h-4 w-4" />
@@ -149,9 +161,6 @@ const WorkingEmbeddedPlayer = ({ recordingId }: { recordingId: string }) => {
             <div className="text-center">
               <RefreshCw className="mx-auto mb-3 h-8 w-8 animate-spin text-blue-500" />
               <p className="mb-2 text-gray-600">Loading session replay...</p>
-              <p className="text-xs text-gray-500">
-                Attempt {retryCount + 1} of {embedUrls.length}
-              </p>
             </div>
           </div>
         )}
@@ -163,11 +172,10 @@ const WorkingEmbeddedPlayer = ({ recordingId }: { recordingId: string }) => {
                 <AlertTriangle className="h-8 w-8 text-yellow-600" />
               </div>
               <h3 className="mb-2 text-lg font-medium text-gray-900">
-                Embedding Restricted
+                Unable to Load Recording
               </h3>
               <p className="mb-4 text-sm text-gray-600">
-                This recording cannot be embedded due to security settings. You
-                can still watch it in PostHog.
+                This recording cannot be loaded directly. You can watch it in PostHog or download the data.
               </p>
               <div className="space-y-2">
                 <Button
@@ -177,42 +185,53 @@ const WorkingEmbeddedPlayer = ({ recordingId }: { recordingId: string }) => {
                   <ExternalLink className="mr-2 h-4 w-4" />
                   Watch in PostHog
                 </Button>
-                {retryCount < embedUrls.length - 1 && (
-                  <Button
-                    variant="outline"
-                    onClick={retryEmbed}
-                    className="w-full"
-                  >
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    Try Different Method
-                  </Button>
-                )}
+                <Button
+                  variant="outline"
+                  onClick={downloadRecording}
+                  className="w-full"
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Download Recording Data
+                </Button>
               </div>
             </div>
           </div>
         )}
 
-        {/* The actual iframe */}
-        <iframe
-          key={`${recordingId}-${retryCount}`}
-          src={currentEmbedUrl}
-          className="h-full w-full border-0"
-          onLoad={handleIframeLoad}
-          onError={handleIframeError}
-          sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-presentation"
-          allow="fullscreen; autoplay; encrypted-media"
-          referrerPolicy="strict-origin-when-cross-origin"
-          style={{
-            minHeight: "500px",
-            background: "white",
-          }}
-        />
+        {/* Player Container */}
+        {!isLoading && !hasError && (
+          <div id="player" className="h-full w-full">
+            {/* rrweb player will be mounted here */}
+            <div className="flex h-full items-center justify-center bg-gray-50">
+              <div className="text-center">
+                <div className="mb-4 text-6xl">🎬</div>
+                <h3 className="mb-2 text-lg font-medium text-gray-700">
+                  Player Implementation Required
+                </h3>
+                <p className="mb-4 text-sm text-gray-600">
+                  To display recordings directly, you need to:
+                </p>
+                <ol className="text-left text-sm text-gray-600 space-y-2 max-w-md mx-auto">
+                  <li>1. Install rrweb-player: <code className="bg-gray-100 px-1 py-0.5 rounded">npm install rrweb-player</code></li>
+                  <li>2. Import and initialize the player with snapshot data</li>
+                  <li>3. Or use PostHog's official React SDK for easier integration</li>
+                </ol>
+                <div className="mt-6">
+                  <Button onClick={openInPostHog} className="bg-blue-600 hover:bg-blue-700">
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    Watch in PostHog Instead
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
-// Session List Item Component (unchanged)
+// Session List Item Component (unchanged from your original)
 const SessionListItem = ({
   recording,
   isSelected,
@@ -309,9 +328,7 @@ export default function SessionReplayViewer() {
   const [isOpen, setIsOpen] = useState(false);
   const [recordings, setRecordings] = useState<SessionRecording[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedRecordingId, setSelectedRecordingId] = useState<string | null>(
-    null,
-  );
+  const [selectedRecordingId, setSelectedRecordingId] = useState<string | null>(null);
   const [filters, setFilters] = useState({
     date_from: "",
     date_to: "",
@@ -456,8 +473,8 @@ export default function SessionReplayViewer() {
             </div>
           </div>
 
-          {/* Right Side - Working Embedded Player */}
-          <WorkingEmbeddedPlayer recordingId={selectedRecordingId || ""} />
+          {/* Right Side - PostHog Player */}
+          <PostHogPlayer recordingId={selectedRecordingId || ""} />
         </div>
       </DialogContent>
     </Dialog>

@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 import {
   TrendingUp,
   TrendingDown,
@@ -183,15 +185,106 @@ export default function WebAnalyticsCard() {
   if (loading) {
     return (
       <Card className="border-slate-200 bg-white shadow-none">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-base font-medium">Web Analytics</CardTitle>
-          <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+          <div>
+            <Skeleton className="h-5 w-32 mb-2" />
+            <Skeleton className="h-4 w-48" />
+          </div>
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-5 w-16" />
+            <Skeleton className="h-8 w-8 rounded" />
+          </div>
         </CardHeader>
-        <CardContent>
-          <div className="flex h-40 items-center justify-center">
-            <div className="text-center">
-              <BarChart3 className="mx-auto mb-2 h-8 w-8 text-gray-400" />
-              <p className="text-sm text-gray-600">Loading analytics...</p>
+
+        <CardContent className="space-y-6">
+          {/* Key Metrics Row Skeleton */}
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-4 w-4 rounded" />
+                  <Skeleton className="h-4 w-20" />
+                </div>
+                <Skeleton className="h-6 w-16" />
+              </div>
+            ))}
+          </div>
+
+          {/* Traffic Chart Skeleton */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Skeleton className="h-4 w-40" />
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-1">
+                  <Skeleton className="h-2 w-2 rounded-full" />
+                  <Skeleton className="h-3 w-16" />
+                </div>
+                <div className="flex items-center gap-1">
+                  <Skeleton className="h-2 w-2 rounded-full" />
+                  <Skeleton className="h-3 w-12" />
+                </div>
+              </div>
+            </div>
+            <Skeleton className="h-32 w-full rounded-lg" />
+          </div>
+
+          {/* Top Pages and Device Types Skeleton */}
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            {/* Top Pages Skeleton */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-4 w-4" />
+                <Skeleton className="h-4 w-20" />
+              </div>
+              <div className="space-y-3">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="flex items-center justify-between">
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <Skeleton className="h-4 w-full max-w-[200px]" />
+                      <Skeleton className="h-3 w-16" />
+                    </div>
+                    <Skeleton className="h-5 w-10 ml-2 rounded-full" />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Device Types Skeleton */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-4 w-4" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+              <div className="space-y-3">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Skeleton className="h-4 w-4" />
+                      <Skeleton className="h-4 w-16" />
+                    </div>
+                    <Skeleton className="h-5 w-10 rounded-full" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Traffic Sources Skeleton */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-4 w-4" />
+              <Skeleton className="h-4 w-28" />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="flex items-center justify-between rounded border p-2">
+                  <div className="space-y-1">
+                    <Skeleton className="h-4 w-20" />
+                    <Skeleton className="h-3 w-16" />
+                  </div>
+                  <Skeleton className="h-5 w-10 rounded-full" />
+                </div>
+              ))}
             </div>
           </div>
         </CardContent>
