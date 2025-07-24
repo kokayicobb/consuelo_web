@@ -338,7 +338,7 @@ const HomeContent: React.FC = () => {
         </div>
       </div>
 
-      {/* Overview Stats */}
+      {/* Overview Stats
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {overviewStats.map((stat, index) => (
           <Card
@@ -377,7 +377,7 @@ const HomeContent: React.FC = () => {
             </CardContent>
           </Card>
         ))}
-      </div>
+      </div> */}
 
       {/* Bottom Sections - 1 column */}
       <div className="grid grid-cols-1 gap-6">
