@@ -34,10 +34,10 @@ import {
   PenTool,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import type { Flow } from "../../../lib/automations/types";
-import AutomationEditor from "./automation-editor";
-import InspirationSection from "./home-sections/inspiration-section";
-import ApolloSearchComponent from "../app-views/apollo-search-component";
+import { Flow } from "../../lib/automations";
+import AutomationEditor from "../apps/automations/automation-editor";
+import ApolloSearchComponent from "../apps/app-views/apollo-search-component";
+import InspirationSection from "../apps/automations/home-sections/inspiration-section";
 
 // Template interface for CRM-focused templates
 interface Template {

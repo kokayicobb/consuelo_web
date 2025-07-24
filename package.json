@@ -80,7 +80,7 @@
     "node-fetch": "^3.3.2",
     "nodemailer": "^6.9.12",
     "openai": "^4.87.3",
-    "posthog-js": "^1.255.1",
+    "posthog-js": "^1.257.1",
     "posthog-node": "^5.1.1",
     "prettier": "^3.1.0",
     "prettier-plugin-tailwindcss": "^0.5.7",
