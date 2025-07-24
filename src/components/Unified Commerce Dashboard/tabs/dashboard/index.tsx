@@ -48,6 +48,7 @@ import LeadChannelPerformance from "./components/lead-performace";
 import FollowUpsTracker from "./components/follow-ups";
 import SessionReplayViewer from "../../components/posthog/SessionReplayViewer";
 import WebAnalyticsViewer from "../../components/posthog/WebAnalyticsViewer";
+import PostHogUsers from "../../components/posthog/posthog-users";
 
 const salesData = {
   week: [
@@ -259,7 +260,7 @@ const HomeContent: React.FC = () => {
       new_range: value,
     });
   };
-
+const apiKey = process.env.NEXT_PUBLIC_POSTHOG_PERSONAL_ACCESS_TOKEN!;
   const handleGenerateReport = () => {
     posthog.capture("generate_report_clicked", {
       time_range: timeRange,
@@ -382,6 +383,7 @@ const HomeContent: React.FC = () => {
       {/* Bottom Sections - 1 column */}
       <div className="grid grid-cols-1 gap-6">
         <WebAnalyticsViewer />
+       <PostHogUsers apiKey={apiKey} />
       </div>
 
       {/* Main Dashboard Content */}

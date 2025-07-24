@@ -4,12 +4,15 @@ import { NextRequest, NextResponse } from 'next/server';
 const POSTHOG_API_KEY = process.env.POSTHOG_PERSONAL_API_KEY;
 const POSTHOG_HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST;
 const PROJECT_ID = process.env.NEXT_PUBLIC_POSTHOG_PROJECT_ID;
+
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const recordingId = params.id;
+    // Await the params since they're now a Promise
+    const resolvedParams = await params;
+    const recordingId = resolvedParams.id;
     
     // Enable sharing for this recording
     const shareUrl = `${POSTHOG_HOST}/api/projects/${PROJECT_ID}/session_recordings/${recordingId}/sharing/`;
