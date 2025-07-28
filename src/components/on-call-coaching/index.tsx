@@ -32,6 +32,9 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
   setError('');
   setLoading(true);
 
+  const apiUrl = `${API_BASE_URL}/make_call`;
+  console.log("Attempting to call API at:", apiUrl); // <-- Add this line
+
   try {
     const response = await fetch(`${API_BASE_URL}/make_call`, {
       method: 'POST',
