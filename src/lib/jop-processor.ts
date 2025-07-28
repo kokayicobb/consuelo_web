@@ -1,42 +1,11 @@
-import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { searchReddit, scrapeRedditPost, crawlWebsite, scrapeContactPage, defaultRateLimiter } from "@/lib/firecrawl"
-import { debugAuth, validateInternalApiKey } from "@/lib/debug-auth"
-
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
-export async function POST(request: NextRequest) {
+export async function processJob(jobId: string) {
   try {
-    console.log("🔄 Processing job request received")
-    debugAuth()
-
-    // Check authentication
-    const authHeader = request.headers.get("Authorization")
-    const providedKey = authHeader?.replace("Bearer ", "")
-
-    console.log("🔑 Auth header:", authHeader ? "Present" : "Missing")
-    console.log("🔑 Extracted key:", providedKey ? `${providedKey.substring(0, 10)}...` : "None")
-
-    if (!validateInternalApiKey(providedKey)) {
-      console.error("❌ Invalid or missing API key")
-      return NextResponse.json(
-        {
-          error: "Unauthorized",
-          debug: {
-            authHeaderPresent: !!authHeader,
-            keyProvided: !!providedKey,
-            expectedKeyExists: !!process.env.INTERNAL_API_KEY,
-          },
-        },
-        { status: 401 },
-      )
-    }
-
-    console.log("✅ Authentication successful")
-
-    const { jobId } = await request.json()
-    console.log("📋 Processing job ID:", jobId)
+    console.log("🔄 Processing job directly:", jobId)
 
     // Get job details
     const { data: job, error } = await supabase
@@ -53,7 +22,7 @@ export async function POST(request: NextRequest) {
 
     if (error || !job) {
       console.error("❌ Job not found:", error)
-      return NextResponse.json({ error: "Job not found" }, { status: 404 })
+      throw new Error("Job not found")
     }
 
     console.log("✅ Job found:", job.id)
@@ -92,13 +61,11 @@ export async function POST(request: NextRequest) {
 
         if (platform === "reddit") {
           const redditResults = await processRedditScraping(job.scraping_campaigns, platformConfig, job.id)
-
           totalLeadsFound += redditResults.leadsFound
           totalPagesScraped += redditResults.pagesScraped
           totalErrors += redditResults.errors
         } else if (platform === "website") {
           const websiteResults = await processWebsiteScraping(job.scraping_campaigns, platformConfig, job.id)
-
           totalLeadsFound += websiteResults.leadsFound
           totalPagesScraped += websiteResults.pagesScraped
           totalErrors += websiteResults.errors
@@ -121,13 +88,13 @@ export async function POST(request: NextRequest) {
 
       console.log(`✅ Job completed successfully with ${totalLeadsFound} leads found`)
 
-      return NextResponse.json({
+      return {
         success: true,
         message: "Job processed successfully",
         leads_found: totalLeadsFound,
         pages_scraped: totalPagesScraped,
         errors: totalErrors,
-      })
+      }
     } catch (processingError) {
       console.error("💥 Error during scraping:", processingError)
 
@@ -146,18 +113,11 @@ export async function POST(request: NextRequest) {
         })
         .eq("id", jobId)
 
-      return NextResponse.json(
-        {
-          error: "Job processing failed",
-          details: processingError instanceof Error ? processingError.message : "Unknown error",
-          leads_found: totalLeadsFound,
-        },
-        { status: 500 },
-      )
+      throw processingError
     }
   } catch (error) {
-    console.error("💥 Error:", error)
-    return NextResponse.json({ error: "Internal error" }, { status: 500 })
+    console.error("💥 Job processing error:", error)
+    throw error
   }
 }
 
@@ -191,7 +151,6 @@ async function processRedditScraping(campaign: any, platformConfig: any, jobId: 
 
         // Process each post URL found
         for (const postUrl of searchResult.postUrls.slice(0, 5)) {
-          // Limit to 5 posts per subreddit
           try {
             await defaultRateLimiter.waitIfNeeded()
             console.log(`📄 Scraping Reddit post: ${postUrl}`)

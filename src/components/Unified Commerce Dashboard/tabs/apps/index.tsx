@@ -41,6 +41,7 @@ import {
   Maximize2,
   Minimize2,
   MessageCircle,
+  Webhook,
 } from "lucide-react";
 import { Drawer } from "vaul";
 import {
@@ -78,6 +79,7 @@ import EmailComposer from "../inbox/email/email-composer";
 import FacebookGroupsSearch from "./app-views/social-search/facebook-group-search";
 import FormSelector from "./app-views/social-search/form-selector";
 import RequestAppModal from "../../components/request-app-modal";
+import LeadScraperDashboard from "./app-views/scraper/lead-scraper-dashboard";
 
 // Dynamically import to avoid SSR issues with Google Maps
 const LeadGenerationSearch = dynamic(() => import("./app-views/google-maps"), {
@@ -239,6 +241,13 @@ const businessFunctions: BusinessFunction[] = [
         color: "bg-slate-300",
       },
       {
+        id: "web-scraper",
+        name: "Web Scraper",
+        description: "Scrape any website",
+        icon: <Webhook className="h-5 w-5" />,
+        color: "bg-slate-300",
+      },
+      {
         id: "maps-scraper",
         name: "Google Maps Scraper",
         description: "Local business data extraction",
@@ -359,6 +368,11 @@ export default function AppsPage() {
     if (selectedApp.id === "apollo-scraper") {
       return <ApolloSearchComponent />;
     }
+    if (selectedApp.id === "web-scraper") {
+      return <LeadScraperDashboard onClose={function (): void {
+        throw new Error("Function not implemented.");
+      } }  />;
+    }
 
     if (selectedApp.id === "maps-scraper") {
       return <LeadGenerationSearch />;
@@ -377,7 +391,7 @@ export default function AppsPage() {
         />
       );
     }
-
+   
     if (selectedApp.id === "on-call-coaching") {
       return <PhoneCallComponent />;
     }
