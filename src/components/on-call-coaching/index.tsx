@@ -13,8 +13,8 @@ const PhoneCallComponent = () => {
   const intervalRef = useRef(null);
 
   // Flask API base URL - change this for production
-  const API_BASE_URL =
-    "https://shiny-journey-4px597q46ph5794-5001.app.github.dev";
+  // Flask API base URL - change this for production
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
   const toE164 = (phoneNumber) => {
     // Remove all non-digits
     const cleaned = phoneNumber.replace(/\D/g, "");
