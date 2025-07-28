@@ -2036,7 +2036,9 @@ export default function DetailedSidePanel({
       open={isOpen}
       onOpenChange={onClose}
       direction="right"
-      modal={false} // This allows interaction with background elements
+     modal={true} // ← Change to true (or remove since true is default)
+  dismissible={true}
+  
     >
       <Drawer.Portal>
         <Drawer.Content

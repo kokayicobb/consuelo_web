@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import {
+  Phone,
   Cloud,
   Star,
   MoreHorizontal,
@@ -40,6 +41,7 @@ import {
   Maximize2,
   Minimize2,
   MessageCircle,
+  Webhook,
 } from "lucide-react";
 import { Drawer } from "vaul";
 import {
@@ -76,6 +78,8 @@ import PhoneCallComponent from "../../../on-call-coaching";
 import EmailComposer from "../inbox/email/email-composer";
 import FacebookGroupsSearch from "./app-views/social-search/facebook-group-search";
 import FormSelector from "./app-views/social-search/form-selector";
+import RequestAppModal from "../../components/request-app-modal";
+import LeadScraperDashboard from "./app-views/scraper/lead-scraper-dashboard";
 
 // Dynamically import to avoid SSR issues with Google Maps
 const LeadGenerationSearch = dynamic(() => import("./app-views/google-maps"), {
@@ -237,6 +241,13 @@ const businessFunctions: BusinessFunction[] = [
         color: "bg-slate-300",
       },
       {
+        id: "web-scraper",
+        name: "Web Scraper",
+        description: "Scrape any website",
+        icon: <Webhook className="h-5 w-5" />,
+        color: "bg-slate-300",
+      },
+      {
         id: "maps-scraper",
         name: "Google Maps Scraper",
         description: "Local business data extraction",
@@ -263,13 +274,13 @@ const businessFunctions: BusinessFunction[] = [
     id: "customer-retention",
     name: "Customer Retention",
     icon: <Repeat className="h-4 w-4" />,
-    expanded: false,
+    expanded: true,
     apps: [
       {
-        id: "ai-chatbot",
-        name: "AI Chatbot",
+        id: "on-call-coaching",
+        name: "On Call Coaching",
         description: "Customer service and guidance",
-        icon: <Bot className="h-5 w-5" />,
+        icon: <Mic className="h-5 w-5" />,
         color: "bg-slate-300",
       },
       {
@@ -292,7 +303,7 @@ const businessFunctions: BusinessFunction[] = [
     id: "marketing-content",
     name: "Marketing & Content",
     icon: <Megaphone className="h-4 w-4" />,
-    expanded: false,
+    expanded: true,
     apps: [
       {
         id: "social-poster",
@@ -332,7 +343,7 @@ export default function AppsPage() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedApp, setSelectedApp] = useState<AppCard | null>(null);
   const [isFullScreen, setIsFullScreen] = useState(false);
-
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   const toggleSection = (id: string) => {
     setFunctions((prev) =>
       prev.map((func) =>
@@ -346,34 +357,32 @@ export default function AppsPage() {
     setIsDrawerOpen(true);
   };
 
-  // In your apps.tsx file, update the renderDrawerContent function:
-
-  const renderDrawerContent = () => {
+  // =================================================================
+  // --- CHANGE START: Converted the function into a stable component ---
+  // =================================================================
+  // By defining this as a component (PascalCase), React will preserve its state
+  // (like the cursor position in EmailComposer) between re-renders.
+  const DrawerContent = () => {
     if (!selectedApp) return null;
 
-    // Special handling for Apollo/ZoomInfo Scraper
     if (selectedApp.id === "apollo-scraper") {
       return <ApolloSearchComponent />;
     }
+    if (selectedApp.id === "web-scraper") {
+      return <LeadScraperDashboard onClose={function (): void {
+        throw new Error("Function not implemented.");
+      } }  />;
+    }
 
-    // Add handling for Google Maps Scraper
     if (selectedApp.id === "maps-scraper") {
-      // Import at the top of the file:
-      // import LeadGenerationSearch from "./app-views/LeadGenerationSearch"
       return <LeadGenerationSearch />;
     }
-    // Add handling for Google Maps Scraper
-    if (selectedApp.id === "content-creator") {
-      // Import at the top of the file:
-      // import LeadGenerationSearch from "./app-views/LeadGenerationSearch"
-      return <ModelGenerationContent />;
 
-      //
+    if (selectedApp.id === "content-creator") {
+      return <ModelGenerationContent />;
     }
-    // Add handling for Google Maps Scraper
+
     if (selectedApp.id === "social-monitor") {
-      // Import at the top of the file:
-      // import LeadGenerationSearch from "./app-views/LeadGenerationSearch"
       return (
         <FormSelector
           onClose={() => setIsDrawerOpen(false)}
@@ -382,19 +391,16 @@ export default function AppsPage() {
         />
       );
     }
-    // Add handling for Google Maps Scraper
-    if (selectedApp.id === "ai-chatbot") {
-      // Import at the top of the file:
-      // import LeadGenerationSearch from "./app-views/LeadGenerationSearch"
+   
+    if (selectedApp.id === "on-call-coaching") {
       return <PhoneCallComponent />;
     }
-    // Add handling for Google Maps Scraper
+    
+    // The EmailComposer is now returned by a stable component, fixing the issue.
     if (selectedApp.id === "warm-email") {
-      // Import at the top of the file:
-      // import LeadGenerationSearch from "./app-views/LeadGenerationSearch"
       return <EmailComposer />;
     }
-    //<EmailComposer />
+    
     // Default content for other apps
     return (
       <div className="space-y-4">
@@ -411,31 +417,38 @@ export default function AppsPage() {
       </div>
     );
   };
+  // ===============================================================
+  // --- CHANGE END ---
+  // ===============================================================
+
 
   return (
     <div className="min-h-screen space-y-6 bg-white p-8">
       {/* Page header */}
-      <div className="mb-8 flex items-center justify-between">
-        <div>
+      <div className="mb-8">
+        {/* Top row for title and buttons */}
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <h1 className="text-3xl font-bold tracking-tight text-gray-900">
             Apps
           </h1>
-          <p className="mt-1 text-gray-500">
-            Manage your business automation applications
-          </p>
+          {/* Button group */}
+          <div className="flex items-center gap-2">
+            
+          <Button 
+                    className="flex items-center" 
+                    onClick={() => setIsRequestModalOpen(true)}
+                  >
+                    <Plus className="mr-1.5 h-4 w-4" />
+                    Request App
+                  </Button>
+
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost">
-            <Download className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost">
-            <RefreshCw className="h-4 w-4" />
-          </Button>
-          <Button>
-            <Plus className="mr-1 h-4 w-4" />
-            Add App
-          </Button>
-        </div>
+
+        {/* Description, always on its own line */}
+        <p className="mt-2 text-gray-500">
+          Manage your business automation applications
+        </p>
       </div>
 
       {/* Business Functions */}
@@ -465,7 +478,7 @@ export default function AppsPage() {
             {func.expanded && (
               <div className="pl-0">
                 {func.apps.length > 0 ? (
-                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4">
+                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-4 xl:grid-cols-4">
                     {func.apps.map((app) => (
                       <div
                         key={app.id}
@@ -520,7 +533,8 @@ export default function AppsPage() {
         open={isDrawerOpen}
         onOpenChange={setIsDrawerOpen}
         direction="right"
-        modal={false}
+       modal={true} // ← Change to true (or remove since true is default)
+  dismissible={true}
       >
         <Drawer.Portal>
           <Drawer.Content
@@ -612,13 +626,25 @@ export default function AppsPage() {
                   )}
 
                   {/* Dynamic Content */}
-                  {renderDrawerContent()}
+                  {/* =============================================================== */}
+                  {/* --- CHANGE START: Called as a component instead of a function --- */}
+                  {/* =============================================================== */}
+                  <DrawerContent />
+                  {/* =============================================================== */}
+                  {/* --- CHANGE END --- */}
+                  {/* =============================================================== */}
+                  
                 </div>
               </div>
             </div>
           </Drawer.Content>
         </Drawer.Portal>
       </Drawer.Root>
+      <RequestAppModal 
+        isOpen={isRequestModalOpen}
+        onClose={() => setIsRequestModalOpen(false)}
+      />
     </div>
+   
   );
 }

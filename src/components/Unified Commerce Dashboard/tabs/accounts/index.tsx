@@ -448,7 +448,7 @@ const CustomersContent: React.FC = () => {
             Understand your clients and build stronger relationships
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        {/* <div className="flex items-center gap-2">
           <Button>
             <Download className="h-4 w-4" />
           </Button>
@@ -461,7 +461,7 @@ const CustomersContent: React.FC = () => {
               Add Accounts
             </Button>
           )}
-        </div>
+        </div> */}
       </div>
 
       {/* Customer Metrics */}

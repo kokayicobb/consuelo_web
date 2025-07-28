@@ -1,7 +1,8 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { posthog } from "../../lib/posthog";
 import {
   ArrowRight,
   ArrowUp,
@@ -45,6 +46,9 @@ import SalesPerformanceCard from "./components/chart";
 import { TopPerformingCohortCard } from "./components/top-cohorts";
 import LeadChannelPerformance from "./components/lead-performace";
 import FollowUpsTracker from "./components/follow-ups";
+import SessionReplayViewer from "../../components/posthog/SessionReplayViewer";
+import WebAnalyticsViewer from "../../components/posthog/WebAnalyticsViewer";
+import PostHogUsers from "../../components/posthog/posthog-users";
 
 const salesData = {
   week: [
@@ -74,6 +78,7 @@ const salesData = {
     { name: "Q4", revenue: 352000, profit: 184000 },
   ],
 };
+
 // Mock data for dashboard stats
 const overviewStats = [
   {
@@ -95,10 +100,8 @@ const overviewStats = [
     value: "2,845",
     change: 4.3,
     trend: "up",
-
     icon: <Handshake className="h-4 w-4" />,
   },
-
   {
     title: "Conversion Rate",
     value: "3.9%",
@@ -107,6 +110,7 @@ const overviewStats = [
     icon: <BarChart3 className="h-4 w-4" />,
   },
 ];
+
 // Mock data for recent orders
 const recentOrders = [
   {
@@ -241,24 +245,59 @@ const targetMetrics = [
 const HomeContent: React.FC = () => {
   const [timeRange, setTimeRange] = useState("month");
 
+  // Track page view and interactions with PostHog
+  useEffect(() => {
+    posthog.capture("dashboard_viewed", {
+      page: "home_dashboard",
+      time_range: timeRange,
+    });
+  }, [timeRange]);
+
+  const handleTimeRangeChange = (value: string) => {
+    setTimeRange(value);
+    posthog.capture("time_range_changed", {
+      previous_range: timeRange,
+      new_range: value,
+    });
+  };
+const projectApiKey = process.env.NEXT_PUBLIC_POSTHOG_KEY!;
+  const handleGenerateReport = () => {
+    posthog.capture("generate_report_clicked", {
+      time_range: timeRange,
+    });
+  };
+
+  const handleRefresh = () => {
+    posthog.capture("dashboard_refresh_clicked", {
+      time_range: timeRange,
+    });
+  };
+
+  const handleDownload = () => {
+    posthog.capture("dashboard_download_clicked", {
+      time_range: timeRange,
+    });
+  };
+
   return (
     <div className="space-y-6 bg-white">
       {/* Page header with date selector */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate
-          -800">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-800">
             Dashboard
           </h1>
-          <p className="text-slate
-          -600">
+          <p className="text-slate-600">
             Welcome back. Here's an overview of your store's performance.
           </p>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex items-center rounded-md border px-3 py-2">
             <Calendar className="mr-2 h-4 w-4 opacity-50" />
-            <Select defaultValue={timeRange} onValueChange={setTimeRange}>
+            <Select
+              defaultValue={timeRange}
+              onValueChange={handleTimeRangeChange}
+            >
               <SelectTrigger className="h-auto w-[120px] border-0 p-0 shadow-none focus:ring-0">
                 <SelectValue placeholder="Select Range" />
               </SelectTrigger>
@@ -273,31 +312,46 @@ const HomeContent: React.FC = () => {
           <Button
             variant="outline"
             size="icon"
-            className="bg-transparent shadow-none hover:bg-slate
-            -100"
+            className="bg-transparent shadow-none hover:bg-slate-100"
+            onClick={handleRefresh}
           >
             <RefreshCw className="h-4 w-4 text-black" />
           </Button>
+
           <Button
             variant="outline"
             size="icon"
-            className="bg-transparent shadow-none hover:bg-slate
-            -100"
+            className="bg-transparent shadow-none hover:bg-slate-100"
+            onClick={handleDownload}
           >
             <Download className="h-4 w-4 text-black" />
           </Button>
-          <Button className="bg-transparent text-black shadow-none hover:bg-slate
-          -100">
+
+          {/* Session Replay Viewer - This goes in the red circle area */}
+          <SessionReplayViewer />
+
+          <Button
+            className="bg-transparent text-black shadow-none hover:bg-slate-100"
+            onClick={handleGenerateReport}
+          >
             Generate Report
           </Button>
         </div>
       </div>
 
-      {/* Overview Stats */}
+      {/* Overview Stats
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {overviewStats.map((stat, index) => (
-          <Card className="border-slate
-          -200 bg-white shadow-none" key={index}>
+          <Card
+            className="cursor-pointer border-slate-200 bg-white shadow-none transition-shadow hover:shadow-sm"
+            key={index}
+            onClick={() =>
+              posthog.capture("stat_card_clicked", {
+                stat_title: stat.title,
+                stat_value: stat.value,
+              })
+            }
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
                 {stat.title}
@@ -324,10 +378,16 @@ const HomeContent: React.FC = () => {
             </CardContent>
           </Card>
         ))}
+      </div> */}
+
+      {/* Bottom Sections - 1 column */}
+      <div className="grid grid-cols-1 gap-6">
+        <WebAnalyticsViewer />
+        <PostHogUsers projectApiKey={"phx_7exFgDliuUVLDyUnNVL0VPYrtB8htI1nGvlfDV8CrtrZbRy"} />
       </div>
 
       {/* Main Dashboard Content */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 shadow-none">
+      <div className="grid grid-cols-1 gap-6 shadow-none lg:grid-cols-3">
         {/* Left Side - Performance Charts and Recent Orders */}
         <div className="flex flex-col gap-6 lg:col-span-2">
           {/* Performance Charts */}
