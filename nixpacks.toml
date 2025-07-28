@@ -1,0 +1,10 @@
+[phases.setup]
+nixPkgs = ["python311", "gcc"]
+
+[phases.install]
+cmds = [
+    "cd src/components/on-call-coaching && pip install -r requirements.txt"
+]
+
+[start]
+cmd = "cd src/components/on-call-coaching && python script.py"
