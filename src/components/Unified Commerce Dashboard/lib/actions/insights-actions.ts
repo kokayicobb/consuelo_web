@@ -297,7 +297,7 @@ function parseAIResponse(fullResponse: string): { content: string; artifacts: an
 
 export async function sendChatMessageInsights(
   messages: ChatMessage[],
-  model = "deepseek-r1-distill-llama-70b",
+  model = "moonshotai/kimi-k2-instruct", // kimi-k2-1t 128k
   maxTokens = 2048,
   onStream?: (chunk: string) => void,
   onReasoningStream?: (reasoning: string) => void,

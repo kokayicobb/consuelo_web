@@ -1169,6 +1169,33 @@ function CreateCampaignDialog({
               </div>
             )}
 
+            {campaignData.platforms?.includes('website') && (
+              <div>
+                <Label>Company Websites</Label>
+                <Textarea
+                  placeholder="Enter website URLs, one per line:&#10;https://company1.com&#10;https://company2.com&#10;https://company3.com"
+                  rows={4}
+                  onChange={(e) => {
+                    setCampaignData({
+                      ...campaignData,
+                      platformConfigs: {
+                        ...campaignData.platformConfigs,
+                        website: { 
+                          website_urls: e.target.value
+                            .split('\n')
+                            .map(url => url.trim())
+                            .filter(url => url.length > 0)
+                        }
+                      }
+                    });
+                  }}
+                />
+                <p className="text-xs text-gray-600 mt-1">
+                  Add company websites to scrape for contact information from team/about pages
+                </p>
+              </div>
+            )}
+
             {campaignData.platforms?.includes('linkedin') && (
               <div>
                 <Label>LinkedIn Search URL</Label>

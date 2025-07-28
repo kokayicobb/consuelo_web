@@ -1,306 +1,376 @@
-// src/app/api/scraping/process-job/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-const supabase = createClient(
-process.env.NEXT_PUBLIC_SUPABASE_URL!,
-process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { type NextRequest, NextResponse } from "next/server"
+import { createClient } from "@supabase/supabase-js"
+import { searchReddit, scrapeRedditPost, crawlWebsite, scrapeContactPage, defaultRateLimiter } from "@/lib/firecrawl"
+import { debugAuth, validateInternalApiKey } from "@/lib/debug-auth"
+
+
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+
 export async function POST(request: NextRequest) {
-try {
-console.log("🔄 Processing job request received");
-const { jobId } = await request.json();
-
-if (!jobId) {
-  console.error("❌ No job ID provided");
-  return NextResponse.json({ error: 'Job ID is required' }, { status: 400 });
-}
-
-console.log("📋 Processing job ID:", jobId);
-
-// Get job details with campaign and platform configurations
-const { data: job, error: jobError } = await supabase
-  .from('scraping_jobs')
-  .select(`
-    *,
-    scraping_campaigns (
-      *,
-      platform_configurations (*)
-    )
-  `)
-  .eq('id', jobId)
-  .single();
-
-if (jobError || !job) {
-  console.error("❌ Job not found:", jobError);
-  return NextResponse.json({ error: 'Job not found' }, { status: 404 });
-}
-
-console.log("✅ Job found:", job.id, "Campaign:", job.scraping_campaigns.name);
-console.log("🌐 Platforms to scrape:", job.platforms_to_scrape);
-
-// Update job status to running
-await supabase
-  .from('scraping_jobs')
-  .update({ 
-    status: 'running',
-    started_at: new Date().toISOString()
-  })
-  .eq('id', jobId);
-
-console.log("🚀 Job status updated to running");
-
-// Process each platform
-const platformResults = [];
-let totalLeads = 0;
-let totalPages = 0;
-let totalErrors = 0;
-
-for (const platform of job.platforms_to_scrape) {
-  console.log(`🌐 Starting ${platform} scraping...`);
-  
   try {
-    // Get platform-specific configuration
-    const platformConfig = job.scraping_campaigns.platform_configurations
-      .find((config: any) => config.platform === platform);
+    console.log("🔄 Processing job request received")
+    debugAuth()
 
-    console.log(`⚙️ ${platform} config:`, platformConfig?.config);
+    // Check authentication
+    const authHeader = request.headers.get("Authorization")
+    const providedKey = authHeader?.replace("Bearer ", "")
 
-    let platformResult = null;
+    console.log("🔑 Auth header:", authHeader ? "Present" : "Missing")
+    console.log("🔑 Extracted key:", providedKey ? `${providedKey.substring(0, 10)}...` : "None")
 
-    switch (platform) {
-      case 'reddit':
-        platformResult = await processRedditScraping(jobId, platformConfig);
-        break;
-      case 'linkedin':
-        platformResult = await processLinkedInScraping(jobId, platformConfig);
-        break;
-      case 'website':
-        platformResult = await processWebsiteScraping(jobId, platformConfig);
-        break;
-      default:
-        console.log(`⚠️ Platform ${platform} not implemented yet`);
-        platformResults.push({
-          platform,
-          success: false,
-          error: 'Platform not implemented',
-          leads_found: 0
-        });
-        continue;
+    if (!validateInternalApiKey(providedKey)) {
+      console.error("❌ Invalid or missing API key")
+      return NextResponse.json(
+        {
+          error: "Unauthorized",
+          debug: {
+            authHeaderPresent: !!authHeader,
+            keyProvided: !!providedKey,
+            expectedKeyExists: !!process.env.INTERNAL_API_KEY,
+          },
+        },
+        { status: 401 },
+      )
     }
 
-    if (platformResult) {
-      console.log(`✅ ${platform} completed:`, platformResult);
-      platformResults.push({
-        platform,
-        success: platformResult.success,
-        leads_found: platformResult.leads_found || 0,
-        error: platformResult.error
-      });
+    console.log("✅ Authentication successful")
 
-      if (platformResult.success) {
-        totalLeads += platformResult.leads_found || 0;
-        totalPages += 1;
-      } else {
-        totalErrors += 1;
+    const { jobId } = await request.json()
+    console.log("📋 Processing job ID:", jobId)
+
+    // Get job details
+    const { data: job, error } = await supabase
+      .from("scraping_jobs")
+      .select(`
+        *,
+        scraping_campaigns (
+          *,
+          platform_configurations (*)
+        )
+      `)
+      .eq("id", jobId)
+      .single()
+
+    if (error || !job) {
+      console.error("❌ Job not found:", error)
+      return NextResponse.json({ error: "Job not found" }, { status: 404 })
+    }
+
+    console.log("✅ Job found:", job.id)
+    console.log("📋 Campaign:", job.scraping_campaigns?.name)
+    console.log("📋 Platforms:", job.platforms_to_scrape)
+
+    // Update job status to running
+    await supabase
+      .from("scraping_jobs")
+      .update({
+        status: "running",
+        started_at: new Date().toISOString(),
+      })
+      .eq("id", jobId)
+
+    console.log("🚀 Job marked as running")
+
+    let totalLeadsFound = 0
+    let totalPagesScraped = 0
+    let totalErrors = 0
+
+    try {
+      // Process each platform
+      for (const platform of job.platforms_to_scrape) {
+        console.log(`🎯 Processing platform: ${platform}`)
+
+        // Get platform configuration
+        const platformConfig = job.scraping_campaigns.platform_configurations.find(
+          (config: any) => config.platform === platform,
+        )
+
+        if (!platformConfig) {
+          console.log(`⚠️ No configuration found for platform: ${platform}`)
+          continue
+        }
+
+        if (platform === "reddit") {
+          const redditResults = await processRedditScraping(job.scraping_campaigns, platformConfig, job.id)
+
+          totalLeadsFound += redditResults.leadsFound
+          totalPagesScraped += redditResults.pagesScraped
+          totalErrors += redditResults.errors
+        } else if (platform === "website") {
+          const websiteResults = await processWebsiteScraping(job.scraping_campaigns, platformConfig, job.id)
+
+          totalLeadsFound += websiteResults.leadsFound
+          totalPagesScraped += websiteResults.pagesScraped
+          totalErrors += websiteResults.errors
+        }
+      }
+
+      // Update job as completed
+      await supabase
+        .from("scraping_jobs")
+        .update({
+          status: "completed",
+          completed_at: new Date().toISOString(),
+          stats: {
+            leads_found: totalLeadsFound,
+            pages_scraped: totalPagesScraped,
+            errors: totalErrors,
+          },
+        })
+        .eq("id", jobId)
+
+      console.log(`✅ Job completed successfully with ${totalLeadsFound} leads found`)
+
+      return NextResponse.json({
+        success: true,
+        message: "Job processed successfully",
+        leads_found: totalLeadsFound,
+        pages_scraped: totalPagesScraped,
+        errors: totalErrors,
+      })
+    } catch (processingError) {
+      console.error("💥 Error during scraping:", processingError)
+
+      // Update job as failed
+      await supabase
+        .from("scraping_jobs")
+        .update({
+          status: "failed",
+          completed_at: new Date().toISOString(),
+          error_message: processingError instanceof Error ? processingError.message : "Unknown error",
+          stats: {
+            leads_found: totalLeadsFound,
+            pages_scraped: totalPagesScraped,
+            errors: totalErrors + 1,
+          },
+        })
+        .eq("id", jobId)
+
+      return NextResponse.json(
+        {
+          error: "Job processing failed",
+          details: processingError instanceof Error ? processingError.message : "Unknown error",
+          leads_found: totalLeadsFound,
+        },
+        { status: 500 },
+      )
+    }
+  } catch (error) {
+    console.error("💥 Error:", error)
+    return NextResponse.json({ error: "Internal error" }, { status: 500 })
+  }
+}
+
+async function processRedditScraping(campaign: any, platformConfig: any, jobId: string) {
+  let leadsFound = 0
+  let pagesScraped = 0
+  let errors = 0
+
+  try {
+    const { config } = platformConfig
+    const subreddits = config.subreddits || []
+    const keywords = campaign.keywords || []
+
+    console.log(`🔍 Reddit scraping: ${subreddits.length} subreddits, ${keywords.length} keywords`)
+
+    for (const subreddit of subreddits) {
+      try {
+        await defaultRateLimiter.waitIfNeeded()
+        console.log(`🎯 Searching subreddit: r/${subreddit}`)
+
+        // Search Reddit for posts
+        const searchResult = await searchReddit(subreddit, keywords, 10)
+
+        if (!searchResult.success) {
+          console.error(`❌ Reddit search failed for r/${subreddit}:`, searchResult.error)
+          errors++
+          continue
+        }
+
+        pagesScraped++
+
+        // Process each post URL found
+        for (const postUrl of searchResult.postUrls.slice(0, 5)) {
+          // Limit to 5 posts per subreddit
+          try {
+            await defaultRateLimiter.waitIfNeeded()
+            console.log(`📄 Scraping Reddit post: ${postUrl}`)
+
+            const postResult = await scrapeRedditPost(postUrl)
+
+            if (!postResult.success || !postResult.data) {
+              console.error(`❌ Failed to scrape post: ${postUrl}`)
+              errors++
+              continue
+            }
+
+            pagesScraped++
+
+            // Check if this represents a business need
+            if (postResult.data.needs_analysis?.is_business_need) {
+              // Create lead record
+              const lead = {
+                source_url: postUrl,
+                reddit_username: postResult.data.author,
+                full_name: postResult.data.author,
+                source_content: postResult.data.content,
+                scraped_data: postResult.data,
+                lead_score: calculateRedditLeadScore(postResult.data),
+                platform: "reddit",
+              }
+
+              // Insert lead
+              const { error: insertError } = await supabase.from("scraped_leads").insert({
+                campaign_id: campaign.id,
+                job_id: jobId,
+                ...lead,
+                status: "new",
+                is_duplicate: false,
+                enrichment_status: "pending",
+              })
+
+              if (insertError) {
+                console.error("❌ Error inserting Reddit lead:", insertError)
+                errors++
+              } else {
+                leadsFound++
+                console.log(`✅ Reddit lead created from r/${subreddit}`)
+              }
+            }
+          } catch (postError) {
+            console.error(`❌ Error processing post ${postUrl}:`, postError)
+            errors++
+          }
+        }
+      } catch (subredditError) {
+        console.error(`❌ Error processing subreddit r/${subreddit}:`, subredditError)
+        errors++
       }
     }
-
-  } catch (platformError) {
-    console.error(`❌ Error processing ${platform}:`, platformError);
-    platformResults.push({
-      platform,
-      success: false,
-      error: platformError instanceof Error ? platformError.message : 'Unknown error',
-      leads_found: 0
-    });
-    totalErrors += 1;
+  } catch (error) {
+    console.error("❌ Reddit scraping error:", error)
+    errors++
   }
+
+  return { leadsFound, pagesScraped, errors }
 }
 
-// Determine final job status
-const jobStatus = totalErrors > 0 && totalLeads === 0 ? 'failed' : 'completed';
-const completedAt = new Date().toISOString();
+async function processWebsiteScraping(campaign: any, platformConfig: any, jobId: string) {
+  let leadsFound = 0
+  let pagesScraped = 0
+  let errors = 0
 
-console.log("📊 Final results:", {
-  status: jobStatus,
-  totalLeads,
-  totalPages,
-  totalErrors,
-  platformResults
-});
+  try {
+    const { config } = platformConfig
+    const websites = config.website_urls || []
 
-// Update job with completion status
-await supabase
-  .from('scraping_jobs')
-  .update({
-    status: jobStatus,
-    completed_at: completedAt,
-    stats: {
-      leads_found: totalLeads,
-      pages_scraped: totalPages,
-      errors: totalErrors,
-      platform_results: platformResults
-    },
-    error_message: totalErrors > 0 ? `${totalErrors} platform(s) failed` : null
-  })
-  .eq('id', jobId);
+    console.log(`🌐 Website scraping: ${websites.length} websites`)
 
-// Update campaign stats
-const { data: currentCampaign } = await supabase
-  .from('scraping_campaigns')
-  .select('total_leads_found')
-  .eq('id', job.campaign_id)
-  .single();
+    for (const websiteUrl of websites) {
+      try {
+        await defaultRateLimiter.waitIfNeeded()
+        console.log(`🎯 Crawling website: ${websiteUrl}`)
 
-await supabase
-  .from('scraping_campaigns')
-  .update({
-    total_leads_found: (currentCampaign?.total_leads_found || 0) + totalLeads,
-    last_run_at: completedAt
-  })
-  .eq('id', job.campaign_id);
+        // Crawl website
+        const crawlResult = await crawlWebsite(websiteUrl, {
+          limit: 10,
+          includes: ["**/team*", "**/about*", "**/contact*", "**/people*"],
+          excludes: ["**/blog*", "**/news*", "**/career*"],
+        })
 
-// Log the activity
-await supabase
-  .from('scraping_logs')
-  .insert({
-    job_id: jobId,
-    campaign_id: job.campaign_id,
-    platform: 'orchestrator',
-    log_level: jobStatus === 'failed' ? 'error' : 'info',
-    message: `Job ${jobStatus} with ${totalLeads} leads found`,
-    details: {
-      platforms_processed: job.platforms_to_scrape,
-      platform_results: platformResults,
-      total_leads: totalLeads,
-      total_errors: totalErrors
+        if (!crawlResult.success || !crawlResult.data) {
+          console.error(`❌ Website crawl failed for ${websiteUrl}:`, crawlResult.error)
+          errors++
+          continue
+        }
+
+        pagesScraped += crawlResult.data.data?.length || 0
+
+        // Process each crawled page
+        for (const page of crawlResult.data.data || []) {
+          try {
+            await defaultRateLimiter.waitIfNeeded()
+
+            // Try to extract contact information
+            const contactResult = await scrapeContactPage(page.url)
+
+            if (contactResult.success && contactResult.data && Array.isArray(contactResult.data)) {
+              for (const contact of contactResult.data) {
+                if (contact.email || contact.name) {
+                  // Create lead record
+                  const lead = {
+                    source_url: page.url,
+                    email: contact.email,
+                    full_name: contact.name,
+                    title: contact.title,
+                    company: contact.company,
+                    linkedin_url: contact.linkedin_url,
+                    location: contact.location,
+                    source_content: page.markdown?.substring(0, 1000),
+                    scraped_data: contact,
+                    lead_score: calculateWebsiteLeadScore(contact),
+                    platform: "website",
+                  }
+
+                  // Insert lead
+                  const { error: insertError } = await supabase.from("scraped_leads").insert({
+                    campaign_id: campaign.id,
+                    job_id: jobId,
+                    ...lead,
+                    status: "new",
+                    is_duplicate: false,
+                    enrichment_status: "pending",
+                  })
+
+                  if (insertError) {
+                    console.error("❌ Error inserting website lead:", insertError)
+                    errors++
+                  } else {
+                    leadsFound++
+                    console.log(`✅ Website lead created from ${websiteUrl}`)
+                  }
+                }
+              }
+            }
+          } catch (pageError) {
+            console.error(`❌ Error processing page ${page.url}:`, pageError)
+            errors++
+          }
+        }
+      } catch (websiteError) {
+        console.error(`❌ Error processing website ${websiteUrl}:`, websiteError)
+        errors++
+      }
     }
-  });
-
-console.log(`🎉 Job ${jobId} ${jobStatus}! Total leads: ${totalLeads}`);
-
-return NextResponse.json({
-  success: true,
-  job_status: jobStatus,
-  stats: {
-    leads_found: totalLeads,
-    pages_scraped: totalPages,
-    errors: totalErrors
-  },
-  platform_results: platformResults
-});
-} catch (error) {
-console.error("💥 Error processing job:", error);
-// Try to update job status to failed if we have a jobId
-try {
-  const body = await request.json();
-  if (body.jobId) {
-    await supabase
-      .from('scraping_jobs')
-      .update({
-        status: 'failed',
-        completed_at: new Date().toISOString(),
-        error_message: error instanceof Error ? error.message : 'Unknown error processing job'
-      })
-      .eq('id', body.jobId);
+  } catch (error) {
+    console.error("❌ Website scraping error:", error)
+    errors++
   }
-} catch (updateError) {
-  console.error("Failed to update job status:", updateError);
+
+  return { leadsFound, pagesScraped, errors }
 }
 
-return NextResponse.json({ 
-  error: 'Internal server error', 
-  details: error instanceof Error ? error.message : 'Unknown error'
-}, { status: 500 });
-}
-}
-// Platform processing functions
-async function processRedditScraping(jobId: string, platformConfig: any) {
-console.log("🔍 Calling Reddit scraping API...");
-try {
-const config = {
-subreddits: platformConfig?.config?.subreddits || ['startups'],
-keywords: platformConfig?.config?.keywords || [],
-max_results: platformConfig?.config?.max_results || 50,
-include_comments: platformConfig?.config?.include_comments || false
-};
-const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/scraping/platforms/reddit`, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify({ 
-    jobId, 
-    config 
-  })
-});
+function calculateRedditLeadScore(data: any): number {
+  let score = 0.3 // Base score
 
-const result = await response.json();
+  if (data.needs_analysis?.urgency_level === "high") score += 0.3
+  else if (data.needs_analysis?.urgency_level === "medium") score += 0.2
 
-if (!response.ok) {
-  throw new Error(result.error || 'Reddit scraping failed');
+  if (data.needs_analysis?.budget_mentioned) score += 0.2
+  if (data.needs_analysis?.contact_info_available) score += 0.2
+  if (data.upvotes && data.upvotes > 10) score += 0.1
+  if (data.comments_count && data.comments_count > 5) score += 0.1
+
+  return Math.min(score, 1.0)
 }
 
-return result;
-} catch (error) {
-console.error("❌ Reddit scraping failed:", error);
-return {
-success: false,
-error: error instanceof Error ? error.message : 'Reddit scraping failed',
-leads_found: 0
-};
-}
-}
-async function processLinkedInScraping(jobId: string, platformConfig: any) {
-console.log("🔗 Calling LinkedIn scraping API...");
-try {
-const config = {
-company_urls: platformConfig?.config?.company_urls || [],
-search_keywords: platformConfig?.config?.search_keywords || [],
-target_titles: platformConfig?.config?.target_titles || [],
-target_industries: platformConfig?.config?.target_industries || [],
-max_results: platformConfig?.config?.max_results || 50
-};
-const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/scraping/platforms/linkedin`, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify({ 
-    jobId, 
-    config 
-  })
-});
+function calculateWebsiteLeadScore(contact: any): number {
+  let score = 0.4 // Base score for website contacts
 
-const result = await response.json();
+  if (contact.email) score += 0.3
+  if (contact.title) score += 0.1
+  if (contact.linkedin_url) score += 0.1
+  if (contact.company) score += 0.1
 
-if (!response.ok) {
-  throw new Error(result.error || 'LinkedIn scraping failed');
-}
-
-return result;
-} catch (error) {
-console.error("❌ LinkedIn scraping failed:", error);
-return {
-success: false,
-error: error instanceof Error ? error.message : 'LinkedIn scraping failed',
-leads_found: 0
-};
-}
-}
-async function processWebsiteScraping(jobId: string, platformConfig: any) {
-console.log("🌐 Website scraping not yet implemented");
-return {
-success: false,
-error: 'Website scraping not implemented',
-leads_found: 0
-};
-}
-// Health check endpoint
-export async function GET() {
-return NextResponse.json({
-status: 'healthy',
-service: 'job-processor',
-timestamp: new Date().toISOString()
-});
+  return Math.min(score, 1.0)
 }

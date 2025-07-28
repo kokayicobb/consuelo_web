@@ -672,7 +672,7 @@ export function ConversationalInterface({ onBackToDashboard }: ConversationalInt
                           <button
                             onClick={handleSendMessage}
                             disabled={isLoading || !input.trim()}
-                            className="rounded-full bg-emerald-600 p-1.5 text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
+                            className="rounded-full bg-purple-600 p-1.5 text-white transition-colors hover:bg-purple-700 disabled:opacity-50"
                           >
                             <svg
                               width="18"
@@ -687,7 +687,7 @@ export function ConversationalInterface({ onBackToDashboard }: ConversationalInt
                                 strokeWidth="2"
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
-                                transform="rotate(180 12 12)"
+                               
                               />
                             </svg>
                           </button>
@@ -848,7 +848,7 @@ export function ConversationalInterface({ onBackToDashboard }: ConversationalInt
                       <button
                         onClick={handleSendMessage}
                         disabled={isLoading || !input.trim()}
-                        className="rounded-full bg-emerald-600 p-1.5 text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
+                        className="rounded-full bg-purple-600 p-1.5 text-white transition-colors hover:bg-purple-700 disabled:opacity-50"
                       >
                         <Send className="h-4 w-4" />
                       </button>

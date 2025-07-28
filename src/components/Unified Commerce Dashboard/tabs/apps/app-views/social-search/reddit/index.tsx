@@ -90,6 +90,42 @@ interface ApiResponse {
 }
 
 const RedditSearch = () => {
+  const handleSaveWorkflow = async () => {
+    const workflowName = prompt("Please enter a name for this workflow:", "My Reddit Lead Search");
+  
+    if (!workflowName || workflowName.trim() === "") {
+      alert("Workflow name cannot be empty.");
+      return;
+    }
+  
+    const workflowData = {
+      workflow_name: workflowName,
+      subreddits: subreddits,
+      keywords: keywords,
+      sort_type: sortType,
+      time_filter: timeFilter,
+      is_active: true
+    };
+  
+    try {
+      const response = await fetch('/api/reddit/save-workflow/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(workflowData),
+      });
+  
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || "Failed to save workflow.");
+      }
+  
+      alert(`Workflow "${workflowName}" saved successfully!`);
+  
+    } catch (error: any) {
+      console.error("Error saving workflow:", error);
+      alert(`Error: ${error.message}`);
+    }
+  };
   // Form state with examples
   const [subreddits, setSubreddits] = useState<string[]>([
     "startups",
@@ -521,7 +557,32 @@ IMPORTANT: Write in plain text only. Do not use any markdown formatting like ast
                   Add Subreddit
                 </Button>
               </div>
+              <div className="flex items-center gap-4 pt-2">
+  <Button
+    onClick={handleSearch}
+    disabled={isLoading}
+    variant="default"
+    className="flex-grow"
+  >
+    {isLoading ? (
+      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+    ) : (
+      <Search className="mr-2 h-4 w-4" />
+    )}
+    Search Reddit
+  </Button>
 
+  {/* --- NEW: SAVE WORKFLOW BUTTON --- */}
+  <Button
+    onClick={handleSaveWorkflow}
+    variant="outline"
+    className="border-slate-300"
+    title="Save the current search criteria as an automated workflow"
+  >
+    <Plus className="mr-2 h-4 w-4" />
+    Save Workflow
+  </Button>
+</div>
               <div className="flex gap-2">
                 <Input
                   placeholder="Enter subreddit name (e.g., entrepreneur)"

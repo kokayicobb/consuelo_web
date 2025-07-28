@@ -33,13 +33,21 @@ export default function SegmentationForm({
   );
   const [isFocused, setIsFocused] = useState(false);
 
-  const placeholders = [
-    "What would you like to know about Orange Theory leads?",
-    "Show me clients who haven't attended a class in 30 days...",
-    "Identify members at high risk of churning...",
-    "List new leads from 'Website Trial Form'...",
-    "Which coach has the highest attendance rate this month?",
-  ];
+ const placeholders = [ 
+  "Identify leads at high risk of going cold...",
+  
+  "Show me prospects who haven't been contacted in 30 days...",
+  "Find leads that match our ideal customer profile...",
+
+  "Which sales rep has the highest conversion rate this month?",
+  "Show me deals closing this quarter...",
+  "Find prospects in the technology industry...",
+  "Which marketing campaigns generated the most qualified leads?",
+  "Show me customers ready for upselling opportunities...",
+  // "Analyze my team's performance against quarterly targets...",
+ 
+  // "Show me the average deal size by industry...",
+];
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -163,7 +171,7 @@ export default function SegmentationForm({
               disabled={isLoading}
               className="
                       rounded-full p-1.5 text-gray-500 transition-colors hover:bg-gray-100
-                      hover:text-gray-700 focus:outline-none focus:ring-1 focus:ring-sky-500 disabled:opacity-50
+                      hover:text-gray-700 focus:outline-none focus:ring-1 focus:ring-purple-500 disabled:opacity-50
                   "
               aria-label="Attach File"
             >
@@ -175,7 +183,7 @@ export default function SegmentationForm({
               disabled={isLoading}
               className="
                       rounded-full p-1.5 text-gray-500 transition-colors hover:bg-gray-100
-                      hover:text-gray-700 focus:outline-none focus:ring-1 focus:ring-sky-500 disabled:opacity-50
+                      hover:text-gray-700 focus:outline-none focus:ring-1 focus:ring-purple-500 disabled:opacity-50
                   "
               aria-label="Voice Input"
             >
@@ -187,7 +195,7 @@ export default function SegmentationForm({
               disabled={isLoading}
               className="
                       rounded-full p-1.5 text-gray-500 transition-colors hover:bg-gray-100
-                      hover:text-gray-700 focus:outline-none focus:ring-1 focus:ring-sky-500 disabled:opacity-50
+                      hover:text-gray-700 focus:outline-none focus:ring-1 focus:ring-purple-500 disabled:opacity-50
                   "
               aria-label="Select Source"
             >
@@ -197,9 +205,9 @@ export default function SegmentationForm({
               type="submit"
               disabled={isLoading || !inputValue.trim()}
               className="
-   rounded-lg bg-sky-500 p-2 text-white transition-colors hover:bg-sky-600 focus:outline-none
+   rounded-lg bg-purple-500 p-2 text-white transition-colors hover:bg-purple-600 focus:outline-none
     focus:ring-2
-    focus:ring-sky-500
+    focus:ring-purple-500
     focus:ring-offset-1
     disabled:cursor-not-allowed
     disabled:opacity-60
@@ -245,27 +253,27 @@ export default function SegmentationForm({
               className="
                   flex items-center rounded-lg border border-gray-300 bg-white
                   px-3 py-1.5
-                  text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-sky-500
+                  text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500
                   disabled:cursor-not-allowed disabled:opacity-60
                 "
             >
               <MagnifyingGlassIcon className="mr-1.5 h-4 w-4" />
               Search
             </button>
-            <button
+            {/* <button
               type="button"
               onClick={handleResearchPrefix}
               disabled={isLoading}
               className="
-                  flex items-center rounded-lg border border-sky-500 bg-sky-500
+                  flex items-center rounded-lg border border-purple-500 bg-purple-500
                   px-3 py-1.5
-                  text-sm font-medium text-white transition-colors hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-sky-500
+                  text-sm font-medium text-white transition-colors hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500
                   disabled:cursor-not-allowed disabled:opacity-60
                 "
             >
               <SparklesIcon className="mr-1.5 h-4 w-4" />
               Lead Generator
-            </button>
+            </button> */}
           </div>
         </div>
       </form>

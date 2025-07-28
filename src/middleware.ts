@@ -6,6 +6,7 @@ const isPublicRoute = createRouteMatcher([
   '/',
   '/platform',
   'integrations',
+  "/api/scraping/process-job", 
 ])
 
 export default clerkMiddleware(async (auth, req) => {
