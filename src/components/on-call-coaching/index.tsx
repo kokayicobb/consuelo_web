@@ -14,7 +14,27 @@ const PhoneCallComponent = () => {
 
   // Flask API base URL - change this for production
   // Flask API base URL - change this for production
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://shiny-journey-4px597q46ph5794-5001.app.github.dev';
+const getApiUrl = () => {
+  // 1. Environment variable (highest priority)
+  if (process.env.REACT_APP_API_BASE_URL) {
+    return process.env.REACT_APP_API_BASE_URL;
+  }
+  
+  // 2. Development (localhost)
+  if (window.location.hostname === 'localhost') {
+    return 'http://localhost:5001';
+  }
+  
+  // 3. GitHub Codespaces
+  if (window.location.hostname.includes('github.dev')) {
+    return 'https://shiny-journey-4px597q46ph5794-5001.app.github.dev';
+  }
+  
+  // 4. Production (default)
+  return 'https://consuelooncallcoaching-production.up.railway.app';
+};
+
+const API_BASE_URL = getApiUrl();
   const toE164 = (phoneNumber) => {
     // Remove all non-digits
     const cleaned = phoneNumber.replace(/\D/g, "");
