@@ -3,7 +3,10 @@ import { type NextRequest, NextResponse } from "next/server"
 export async function POST(request: NextRequest) {
   const body = await request.json()
   const { subreddits, keywords, sort_type, time_filter, page = 1, per_page = 10 } = body
-
+const TIMEOUT_MS = 25000 // 25 seconds - adjust based on your platform limits
+const timeoutPromise = new Promise((_, reject) => 
+  setTimeout(() => reject(new Error('Request timeout')), TIMEOUT_MS)
+)
   console.log("🚀 Reddit API Route - Received request:", { subreddits, keywords, sort_type, time_filter, page })
 
   if (!process.env.RAPIDAPI_KEY) {
@@ -14,6 +17,9 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+  const result = await Promise.race([
+    timeoutPromise,
+    (async () => {
     const allPosts: any[] = []
     const errors: any[] = []
     const apiLogs: any[] = []
@@ -163,7 +169,7 @@ export async function POST(request: NextRequest) {
           }
 
           // Rate limiting between attempts
-          await new Promise((resolve) => setTimeout(resolve, 1500))
+          await new Promise((resolve) => setTimeout(resolve, 500))
         }
 
         if (!foundPosts) {
@@ -172,7 +178,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Longer delay between subreddits
-        await new Promise((resolve) => setTimeout(resolve, 2000))
+        await new Promise((resolve) => setTimeout(resolve, 1000))
       }
     } else {
       // Sitewide search with enhanced logging
@@ -307,34 +313,24 @@ export async function POST(request: NextRequest) {
       console.log(`   Author: u/${paginatedPosts[0].author.name}`)
     }
 
-    return NextResponse.json({
-      posts: paginatedPosts,
-      pagination: {
-        page,
-        per_page,
-        total_entries: transformedPosts.length,
-        total_pages: Math.ceil(transformedPosts.length / per_page),
-      },
-      meta: {
-        subreddits_searched: subreddits || [],
-        keywords_used: keywords,
-        sort_type,
-        time_filter,
-        total_fetched: allPosts.length,
-        total_unique: uniquePosts.length,
-        total_after_filtering: transformedPosts.length,
-        errors: errors.length > 0 ? errors : undefined,
-        api_logs: apiLogs, // Include detailed API logs
-      },
-    })
-  } catch (error) {
-    console.error("💥 Reddit API error:", error)
+  })()
+  ])
+  
+  return result
+} catch (error) {
+  if (error.message === 'Request timeout') {
     return NextResponse.json(
-      {
-        error: "Failed to fetch Reddit posts. Please try again later.",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 },
+      { error: "Request timed out. Try reducing the number of subreddits or keywords." },
+      { status: 504 }
     )
   }
+  console.error("💥 Reddit API error:", error)
+  return NextResponse.json(
+    {
+      error: "Failed to fetch Reddit posts. Please try again later.",
+      details: error instanceof Error ? error.message : "Unknown error",
+    },
+    { status: 500 },
+  )
+}
 }
