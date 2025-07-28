@@ -13,6 +13,8 @@
     "@ai-sdk/groq": "^1.2.8",
     "@ai-sdk/react": "^1.2.11",
     "@auth/prisma-adapter": "^1.5.0",
+    "@browserbasehq/sdk": "^2.6.0",
+    "@browserbasehq/stagehand": "^2.4.1",
     "@clerk/nextjs": "^6.23.2",
     "@heroicons/react": "^2.2.0",
     "@mediapipe/tasks-vision": "^0.10.21",
@@ -67,6 +69,7 @@
     "cmdk": "^1.0.4",
     "crypto": "^1.0.1",
     "date-fns": "^3.6.0",
+    "dotenv": "^17.2.1",
     "embla-carousel-react": "^8.5.1",
     "framer-motion": "^11.18.2",
     "gray-matter": "^4.0.3",
@@ -80,6 +83,7 @@
     "node-fetch": "^3.3.2",
     "nodemailer": "^6.9.12",
     "openai": "^4.87.3",
+    "playwright-core": "^1.54.1",
     "posthog-js": "^1.257.1",
     "posthog-node": "^5.1.1",
     "prettier": "^3.1.0",
@@ -113,7 +117,7 @@
     "three": "^0.171.0",
     "twilio": "^5.7.2",
     "vaul": "^1.1.2",
-    "zod": "^3.22.4"
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
