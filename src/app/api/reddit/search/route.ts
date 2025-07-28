@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-
+export const runtime = 'edge';
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const body = await request.json();
   const {
