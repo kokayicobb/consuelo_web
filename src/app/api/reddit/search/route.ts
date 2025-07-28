@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest): Promise<NextResponse> {
   const body = await request.json();
   const {
     subreddits,
@@ -11,9 +11,7 @@ export async function POST(request: NextRequest) {
     per_page = 10,
   } = body;
   const TIMEOUT_MS = 25000; // 25 seconds - adjust based on your platform limits
-  const timeoutPromise = new Promise((_, reject) =>
-    setTimeout(() => reject(new Error("Request timeout")), TIMEOUT_MS),
-  );
+  
   console.log("🚀 Reddit API Route - Received request:", {
     subreddits,
     keywords,
@@ -32,6 +30,12 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    // Create a promise that rejects after timeout
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("Request timeout")), TIMEOUT_MS),
+    );
+
+    // Execute the main logic with proper typing
     const result = await Promise.race([
       timeoutPromise,
       (async (): Promise<NextResponse> => {
@@ -148,7 +152,7 @@ export async function POST(request: NextRequest) {
                         );
                       }
 
-                      const filteredPosts = data.body.filter((post) => {
+                      const filteredPosts = data.body.filter((post: any) => {
                         const postSubreddit =
                           post.subreddit || post.subreddit_name_prefixed || "";
                         const cleanPostSubreddit = postSubreddit
@@ -183,7 +187,7 @@ export async function POST(request: NextRequest) {
                       console.log(`❌ No 'body' array found in response`);
                       console.log(`🔍 Available fields:`, Object.keys(data));
                     }
-                  } catch (jsonError) {
+                  } catch (jsonError: any) {
                     console.log(`❌ JSON parsing failed:`, jsonError.message);
                     console.log(
                       `🔍 Response appears to be HTML or other format`,
@@ -214,7 +218,7 @@ export async function POST(request: NextRequest) {
                 }
 
                 apiLogs.push(logEntry);
-              } catch (fetchError) {
+              } catch (fetchError: any) {
                 console.log(`💥 Fetch error:`, fetchError.message);
                 errors.push({
                   subreddit,
@@ -269,10 +273,10 @@ export async function POST(request: NextRequest) {
                 if (data.body && Array.isArray(data.body)) {
                   console.log(`🌍 Sitewide found: ${data.body.length} posts`);
 
-                  const keywordFilteredPosts = data.body.filter((post) => {
+                  const keywordFilteredPosts = data.body.filter((post: any) => {
                     const text =
                       `${post.title || ""} ${post.selftext || ""}`.toLowerCase();
-                    return keywords.some((keyword) =>
+                    return keywords.some((keyword: string) =>
                       text.includes(keyword.toLowerCase()),
                     );
                   });
@@ -282,7 +286,7 @@ export async function POST(request: NextRequest) {
                   );
                   allPosts.push(...keywordFilteredPosts);
                 }
-              } catch (jsonError) {
+              } catch (jsonError: any) {
                 console.log(
                   `❌ Sitewide JSON parsing failed:`,
                   jsonError.message,
@@ -311,7 +315,7 @@ export async function POST(request: NextRequest) {
         const keywordFilteredPosts = uniquePosts.filter((post) => {
           const text =
             `${post.title || ""} ${post.selftext || ""}`.toLowerCase();
-          const hasKeywords = keywords.some((keyword) =>
+          const hasKeywords = keywords.some((keyword: string) =>
             text.includes(keyword.toLowerCase()),
           );
 
@@ -438,7 +442,7 @@ export async function POST(request: NextRequest) {
     ]);
 
     return result;
-  } catch (error) {
+  } catch (error: any) {
     if (error.message === "Request timeout") {
       return NextResponse.json(
         {
