@@ -269,7 +269,8 @@ export async function POST(request: NextRequest) {
         browserbaseSessionCreateParams: {
           browserSettings: {
             recordSession: true, // Enable session recording
-          }
+          },
+           projectId: process.env.BROWSERBASE_PROJECT_ID!,
         }
       });
 
