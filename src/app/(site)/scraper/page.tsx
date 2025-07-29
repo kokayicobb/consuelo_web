@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import Loader from '@/components/Common/Loader';
+import LiveBrowserPlayer from '@/components/LiveBrowserPlayer';
 
 // Enhanced universal lead interface
 interface Lead {
@@ -170,92 +171,147 @@ export default function ScraperPage() {
       );
     }
 
-    // Standard lead card
+    // Enhanced lead card with robust design
     const leadData = lead as Lead;
     return (
-      <Card key={index} className="overflow-hidden hover:shadow-lg transition-shadow">
-        <CardHeader className="pb-2">
-          <div className="flex items-start gap-3">
-            {leadData.image && (
-              <img
-                src={leadData.image}
-                alt={leadData.name}
-                className="w-12 h-12 rounded-full object-cover flex-shrink-0"
-              />
-            )}
+      <Card key={index} className="overflow-hidden hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-gradient-to-br from-white to-gray-50">
+        <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50">
+          <div className="flex items-start gap-4">
+            <div className="relative">
+              {leadData.image ? (
+                <img
+                  src={leadData.image}
+                  alt={leadData.name}
+                  className="w-16 h-16 rounded-full object-cover flex-shrink-0 border-3 border-white shadow-md"
+                />
+              ) : (
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-xl shadow-md">
+                  {leadData.name.charAt(0).toUpperCase()}
+                </div>
+              )}
+              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white"></div>
+            </div>
+            
             <div className="flex-1">
-              <CardTitle className="text-lg">{leadData.name}</CardTitle>
+              <CardTitle className="text-xl font-bold text-gray-800">{leadData.name}</CardTitle>
               {leadData.title && (
-                <CardDescription>{leadData.title}</CardDescription>
+                <CardDescription className="text-gray-600 font-medium mt-1">
+                  {leadData.title}
+                </CardDescription>
+              )}
+              {leadData.company && (
+                <Badge variant="secondary" className="mt-2 bg-blue-100 text-blue-800">
+                  {leadData.company}
+                </Badge>
+              )}
+            </div>
+            
+            <div className="flex flex-col items-end gap-2">
+              <Badge variant={getLeadScoreBadgeVariant(leadData.lead_score)} className="text-xs font-bold">
+                {leadData.lead_score}% Match
+              </Badge>
+              {leadData.location && (
+                <span className="text-xs text-gray-500 max-w-24 text-right">📍 {leadData.location}</span>
               )}
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            {leadData.company && <p className="text-sm"><strong>Company:</strong> {leadData.company}</p>}
+        
+        <CardContent className="pt-4 space-y-4">
+          {/* Contact Information */}
+          <div className="grid grid-cols-1 gap-3">
             {leadData.email && (
-              <p className="text-sm">
-                <strong>Email:</strong> 
-                <a href={`mailto:${leadData.email}`} className="text-blue-600 hover:underline ml-1">
+              <div className="flex items-center gap-2 p-2 bg-green-50 rounded-lg">
+                <span className="text-green-600">✉️</span>
+                <a href={`mailto:${leadData.email}`} className="text-green-700 hover:underline font-medium text-sm flex-1">
                   {leadData.email}
                 </a>
-              </p>
-            )}
-            {leadData.phone && (
-              <p className="text-sm">
-                <strong>Phone:</strong> 
-                <a href={`tel:${leadData.phone}`} className="text-blue-600 hover:underline ml-1">
-                  {leadData.phone}
-                </a>
-              </p>
-            )}
-            {leadData.location && <p className="text-sm"><strong>Location:</strong> {leadData.location}</p>}
-            {leadData.website && (
-              <p className="text-sm">
-                <strong>Website:</strong> 
-                <a href={leadData.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline ml-1">
-                  {leadData.website}
-                </a>
-              </p>
-            )}
-            {leadData.description && (
-              <p className="text-sm text-gray-600 mt-2">{leadData.description}</p>
-            )}
-            {leadData.additional_info && (
-              <p className="text-sm text-gray-500 mt-1"><strong>Additional:</strong> {leadData.additional_info}</p>
-            )}
-            {leadData.social_media && (
-              <div className="flex gap-2 mt-2">
-                {leadData.social_media.linkedin && (
-                  <a href={leadData.social_media.linkedin} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-xs">
-                    LinkedIn
-                  </a>
-                )}
-                {leadData.social_media.twitter && (
-                  <a href={leadData.social_media.twitter} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline text-xs">
-                    Twitter
-                  </a>
-                )}
-                {leadData.social_media.facebook && (
-                  <a href={leadData.social_media.facebook} target="_blank" rel="noopener noreferrer" className="text-blue-700 hover:underline text-xs">
-                    Facebook
-                  </a>
-                )}
-                {leadData.social_media.instagram && (
-                  <a href={leadData.social_media.instagram} target="_blank" rel="noopener noreferrer" className="text-pink-600 hover:underline text-xs">
-                    Instagram
-                  </a>
-                )}
               </div>
             )}
-            <div className="flex items-center justify-between mt-4">
-              <Badge variant={getLeadScoreBadgeVariant(leadData.lead_score)}>
-                Score: {leadData.lead_score}
-              </Badge>
-              <a href={leadData.source_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-sm">
-                Source
-              </a>
+            
+            {leadData.phone && (
+              <div className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg">
+                <span className="text-blue-600">📞</span>
+                <a href={`tel:${leadData.phone}`} className="text-blue-700 hover:underline font-medium text-sm flex-1">
+                  {leadData.phone}
+                </a>
+              </div>
+            )}
+            
+            {leadData.website && (
+              <div className="flex items-center gap-2 p-2 bg-purple-50 rounded-lg">
+                <span className="text-purple-600">🌐</span>
+                <a href={leadData.website} target="_blank" rel="noopener noreferrer" className="text-purple-700 hover:underline font-medium text-sm flex-1 truncate">
+                  {leadData.website}
+                </a>
+              </div>
+            )}
+          </div>
+
+          {/* Description */}
+          {leadData.description && (
+            <div className="p-3 bg-gray-50 rounded-lg">
+              <p className="text-sm text-gray-700 leading-relaxed">{leadData.description}</p>
+            </div>
+          )}
+
+          {/* Additional Info */}
+          {leadData.additional_info && (
+            <div className="p-3 bg-yellow-50 rounded-lg border-l-4 border-yellow-400">
+              <p className="text-sm text-yellow-800">
+                <span className="font-semibold">💡 Additional Info:</span> {leadData.additional_info}
+              </p>
+            </div>
+          )}
+
+          {/* Social Media */}
+          {leadData.social_media && Object.values(leadData.social_media).some(url => url) && (
+            <div className="flex flex-wrap gap-2">
+              <span className="text-xs font-semibold text-gray-600 mr-2">Social:</span>
+              {leadData.social_media.linkedin && (
+                <a href={leadData.social_media.linkedin} target="_blank" rel="noopener noreferrer" 
+                   className="inline-flex items-center px-2 py-1 bg-blue-600 text-white text-xs rounded-full hover:bg-blue-700 transition-colors">
+                  💼 LinkedIn
+                </a>
+              )}
+              {leadData.social_media.twitter && (
+                <a href={leadData.social_media.twitter} target="_blank" rel="noopener noreferrer" 
+                   className="inline-flex items-center px-2 py-1 bg-sky-500 text-white text-xs rounded-full hover:bg-sky-600 transition-colors">
+                  🐦 Twitter
+                </a>
+              )}
+              {leadData.social_media.facebook && (
+                <a href={leadData.social_media.facebook} target="_blank" rel="noopener noreferrer" 
+                   className="inline-flex items-center px-2 py-1 bg-blue-700 text-white text-xs rounded-full hover:bg-blue-800 transition-colors">
+                  📘 Facebook
+                </a>
+              )}
+              {leadData.social_media.instagram && (
+                <a href={leadData.social_media.instagram} target="_blank" rel="noopener noreferrer" 
+                   className="inline-flex items-center px-2 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs rounded-full hover:from-purple-600 hover:to-pink-600 transition-colors">
+                  📸 Instagram
+                </a>
+              )}
+            </div>
+          )}
+
+          {/* Footer */}
+          <div className="flex items-center justify-between pt-3 border-t border-gray-200">
+            <a href={leadData.source_url} target="_blank" rel="noopener noreferrer" 
+               className="text-xs text-gray-500 hover:text-blue-600 transition-colors">
+              🔗 View Source
+            </a>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-400">Quality Score</span>
+              <div className="w-16 h-2 bg-gray-200 rounded-full">
+                <div 
+                  className={`h-full rounded-full transition-all duration-500 ${
+                    leadData.lead_score >= 70 ? 'bg-green-500' :
+                    leadData.lead_score >= 50 ? 'bg-yellow-500' : 'bg-red-500'
+                  }`}
+                  style={{ width: `${leadData.lead_score}%` }}
+                ></div>
+              </div>
             </div>
           </div>
         </CardContent>
@@ -332,24 +388,12 @@ export default function ScraperPage() {
         )}
 
         {liveViewUrl && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-lg font-semibold text-blue-800">Live Browser View</h3>
-              {sessionId && (
-                <Badge variant="outline">Session: {sessionId.slice(0, 8)}...</Badge>
-              )}
-            </div>
-            <p className="text-blue-600 text-sm mb-3">
-              Watch the AI scrape in real-time! Click the link below to see the browser in action.
-            </p>
-            <a 
-              href={liveViewUrl} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              🔴 View Live Browser Session
-            </a>
+          <div className="mb-6">
+            <LiveBrowserPlayer 
+              liveViewUrl={liveViewUrl}
+              sessionId={sessionId || undefined}
+              onClose={() => setLiveViewUrl(null)}
+            />
           </div>
         )}
       </div>

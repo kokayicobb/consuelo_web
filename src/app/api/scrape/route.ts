@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Stagehand } from "@browserbasehq/stagehand";
+import { Browserbase } from '@browserbasehq/sdk';
 import { z } from "zod";
 import FirecrawlApp from '@mendable/firecrawl-js';
 
@@ -61,17 +62,31 @@ function getExtractionInstruction(industry: string, url: string): string {
   // Check URL patterns first for auto-detection
   if (domain.includes('shopify') || domain.includes('woocommerce') || 
       domain.includes('store') || domain.includes('shop') || industry === 'ecommerce') {
-    return `Extract ecommerce business leads from this page. For each business found, provide:
-    - name: Store or business name
-    - email: Contact email if available
-    - phone: Phone number if available
-    - title: Owner, manager, or contact person title
-    - company: Company or store name
-    - location: Address or location
-    - website: Website URL
-    - description: Brief description of business, products, or services
+    return `Extract comprehensive ecommerce business leads from this page. For each business found, provide:
+    - name: Store name, brand name, or business owner name
+    - email: Primary contact email, sales email, or support email
+    - phone: Business phone number with area code
+    - title: Owner, CEO, manager, marketing director, or decision maker title
+    - company: Full company or store name
+    - location: Complete business address, city, state, country
+    - website: Main website URL, store URL, or ecommerce platform link
+    - description: Detailed description of business model, products, services, target market, and unique selling propositions (2-3 sentences)
+    - image: Business logo, storefront photo, or owner profile picture URL
+    - social_media: Object with linkedin, twitter, facebook, instagram business accounts
+    - additional_info: Comprehensive business details including:
+      * Years in business or founded date
+      * Number of employees or company size
+      * Revenue range or business scale
+      * Product categories and inventory size
+      * Ecommerce platform used (Shopify, WooCommerce, etc.)
+      * Target customer demographics
+      * Geographic markets served
+      * Fulfillment and shipping capabilities
+      * Payment methods accepted
+      * Awards, certifications, or recognition
+      * Growth stage (startup, established, enterprise)
     
-    Focus on actionable contact information for B2B outreach.`;
+    Focus on decision-makers, business owners, and key contacts for B2B partnerships and services.`;
   }
   
   if (domain.includes('gym') || domain.includes('fitness') || domain.includes('crossfit') ||
@@ -104,21 +119,44 @@ function getExtractionInstruction(industry: string, url: string): string {
     Focus on licensed professionals and decision-makers.`;
   }
   
-  // Default general business extraction with enhanced data collection
+  // Enhanced comprehensive business extraction
   return `Extract comprehensive business contact leads from this page. For each person or business found, provide:
-  - name: Person name or business name
-  - email: Contact email if available
-  - phone: Phone number if available
-  - title: Job title or role
+  - name: Full person name or business name
+  - email: Contact email address if available
+  - phone: Phone number with area code if available
+  - title: Job title, role, or position
   - company: Company or organization name
-  - location: Address or location
+  - location: Full address, city, state, or service area
   - website: Website or profile URL
-  - description: Brief description of role, business, or services
-  - image: Profile photo or company logo URL if available
-  - social_media: Object with linkedin, twitter, facebook, instagram URLs if found
-  - additional_info: Any other relevant details like certifications, specialties, etc.
+  - description: Detailed description of role, business, services, or specialties (2-3 sentences)
+  - image: High-resolution profile photo or company logo URL if available
+  - social_media: Object containing:
+    * linkedin: LinkedIn profile or company page URL
+    * twitter: Twitter/X profile URL
+    * facebook: Facebook profile or business page URL
+    * instagram: Instagram profile URL
+  - additional_info: Comprehensive details including:
+    * Years of experience
+    * Certifications or licenses
+    * Specialties or focus areas
+    * Company size or revenue
+    * Industry or sector
+    * Education background
+    * Awards or achievements
+    * Service areas or markets served
+    * Any other relevant professional details
   
-  Focus on decision-makers and actionable contact information for B2B outreach. Look for profile images, social media links, and comprehensive contact details.`;
+  Extract ALL available information thoroughly. Look for:
+  - Complete contact details (multiple emails/phones if available)
+  - Professional headshots and company logos
+  - Social media profiles and business pages
+  - Detailed bios and company descriptions
+  - Credentials, certifications, and achievements
+  - Service offerings and specializations
+  - Company information (size, revenue, founded date)
+  - Geographic coverage and service areas
+  
+  Focus on decision-makers, owners, executives, and key contacts with comprehensive B2B outreach data.`;
 }
 
 // Fallback extraction using Firecrawl
@@ -244,17 +282,33 @@ export async function POST(request: NextRequest) {
       await Promise.race([initPromise, timeoutPromise]);
       const page = stagehand.page;
       
-      // Get Live View URL for browser recording visibility
+      // Get Live View URL using proper Browserbase SDK
       let liveViewUrl = null;
+      let debuggerUrl = null;
       try {
         const sessionId = stagehand.browserbaseSessionID;
         if (sessionId) {
-          // Note: In production, you'd use the Browserbase SDK to get the live view URL
-          // For now, we'll construct it based on the session ID
-          liveViewUrl = `https://www.browserbase.com/sessions/${sessionId}`;
+          console.log('Getting live view URL for session:', sessionId);
+          
+          // Initialize Browserbase SDK
+          const bb = new Browserbase({
+            apiKey: process.env.BROWSERBASE_API_KEY!,
+          });
+          
+          // Get the proper debugger URL that doesn't require login
+          const debugInfo = await bb.sessions.debug(sessionId);
+          debuggerUrl = debugInfo.debuggerFullscreenUrl;
+          liveViewUrl = debuggerUrl;
+          
+          console.log('Live view URL obtained:', liveViewUrl);
         }
       } catch (liveViewError) {
         console.warn('Could not get live view URL:', liveViewError);
+        // Fallback to session URL if SDK fails
+        const sessionId = stagehand.browserbaseSessionID;
+        if (sessionId) {
+          liveViewUrl = `https://www.browserbase.com/sessions/${sessionId}`;
+        }
       }
 
       const navPromise = page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 20000 });
