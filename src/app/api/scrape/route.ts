@@ -21,7 +21,7 @@ const SimpleLeadSchema = z.object({
   }))
 });
 
-// Simplified lead schema to avoid parsing issues
+// Enhanced lead schema with more data fields
 const UniversalLeadSchema = z.object({
   leads: z.array(z.object({
     name: z.string(),
@@ -31,7 +31,15 @@ const UniversalLeadSchema = z.object({
     company: z.string().optional(),
     location: z.string().optional(),
     website: z.string().optional(),
-    description: z.string().optional()
+    description: z.string().optional(),
+    image: z.string().optional(),
+    social_media: z.object({
+      linkedin: z.string().optional(),
+      twitter: z.string().optional(),
+      facebook: z.string().optional(),
+      instagram: z.string().optional()
+    }).optional(),
+    additional_info: z.string().optional()
   }))
 });
 
@@ -96,8 +104,8 @@ function getExtractionInstruction(industry: string, url: string): string {
     Focus on licensed professionals and decision-makers.`;
   }
   
-  // Default general business extraction
-  return `Extract business contact leads from this page. For each person or business found, provide:
+  // Default general business extraction with enhanced data collection
+  return `Extract comprehensive business contact leads from this page. For each person or business found, provide:
   - name: Person name or business name
   - email: Contact email if available
   - phone: Phone number if available
@@ -106,8 +114,11 @@ function getExtractionInstruction(industry: string, url: string): string {
   - location: Address or location
   - website: Website or profile URL
   - description: Brief description of role, business, or services
+  - image: Profile photo or company logo URL if available
+  - social_media: Object with linkedin, twitter, facebook, instagram URLs if found
+  - additional_info: Any other relevant details like certifications, specialties, etc.
   
-  Focus on decision-makers and actionable contact information for B2B outreach.`;
+  Focus on decision-makers and actionable contact information for B2B outreach. Look for profile images, social media links, and comprehensive contact details.`;
 }
 
 // Fallback extraction using Firecrawl
@@ -134,7 +145,7 @@ async function fallbackScraping(url: string, industry: string) {
       }
     });
 
-    if (scrapeResult?.extract?.leads) {
+    if (scrapeResult && 'extract' in scrapeResult && scrapeResult.extract?.leads) {
       return {
         success: true,
         data: scrapeResult.extract.leads.map((lead: any) => ({
@@ -212,11 +223,16 @@ export async function POST(request: NextRequest) {
       
       stagehand = new Stagehand({
         env: "BROWSERBASE",
-        verbose: 0,
+        verbose: 1, // Increase verbosity for better debugging
         modelName: "groq/llama-3.1-8b-instant", // Using faster model for better reliability
         modelClientOptions: {
           apiKey: process.env.GROQ_API_KEY,
         },
+        browserbaseSessionCreateParams: {
+          browserSettings: {
+            recordSession: true, // Enable session recording
+          }
+        }
       });
 
       // Shorter timeouts for quicker fallback
@@ -227,6 +243,19 @@ export async function POST(request: NextRequest) {
       
       await Promise.race([initPromise, timeoutPromise]);
       const page = stagehand.page;
+      
+      // Get Live View URL for browser recording visibility
+      let liveViewUrl = null;
+      try {
+        const sessionId = stagehand.browserbaseSessionID;
+        if (sessionId) {
+          // Note: In production, you'd use the Browserbase SDK to get the live view URL
+          // For now, we'll construct it based on the session ID
+          liveViewUrl = `https://www.browserbase.com/sessions/${sessionId}`;
+        }
+      } catch (liveViewError) {
+        console.warn('Could not get live view URL:', liveViewError);
+      }
 
       const navPromise = page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 20000 });
       const navTimeoutPromise = new Promise((_, reject) => 
@@ -267,7 +296,9 @@ export async function POST(request: NextRequest) {
           data: processedData,
           count: processedData.length,
           type: industry || 'general',
-          source_url: targetUrl
+          source_url: targetUrl,
+          live_view_url: liveViewUrl,
+          session_id: stagehand.browserbaseSessionID
         });
       } else {
         throw new Error('No results from Stagehand');

@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import Loader from '@/components/Common/Loader';
 
-// Simplified universal lead interface
+// Enhanced universal lead interface
 interface Lead {
   name: string;
   email?: string;
@@ -19,6 +19,14 @@ interface Lead {
   location?: string;
   website?: string;
   description?: string;
+  image?: string;
+  social_media?: {
+    linkedin?: string;
+    twitter?: string;
+    facebook?: string;
+    instagram?: string;
+  };
+  additional_info?: string;
   lead_score: number;
   source_url: string;
 }
@@ -39,6 +47,8 @@ interface ScrapeResponse {
   count: number;
   type: string;
   source_url: string;
+  live_view_url?: string;
+  session_id?: string;
   error?: string;
 }
 
@@ -50,6 +60,8 @@ export default function ScraperPage() {
   const [scrapeType, setScrapeType] = useState<string>('');
   const [url, setUrl] = useState<string>('');
   const [industry, setIndustry] = useState<string>('general');
+  const [liveViewUrl, setLiveViewUrl] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
 
   const handleScrape = async () => {
     if (!url.trim()) {
@@ -97,6 +109,8 @@ export default function ScraperPage() {
         setLeads(result.data || []);
         setScrapeType(result.type || 'unknown');
         setLastScrapeTime(new Date());
+        setLiveViewUrl(result.live_view_url || null);
+        setSessionId(result.session_id || null);
       } else {
         setError(result.error || 'Failed to scrape data');
       }
@@ -161,10 +175,21 @@ export default function ScraperPage() {
     return (
       <Card key={index} className="overflow-hidden hover:shadow-lg transition-shadow">
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg">{leadData.name}</CardTitle>
-          {leadData.title && (
-            <CardDescription>{leadData.title}</CardDescription>
-          )}
+          <div className="flex items-start gap-3">
+            {leadData.image && (
+              <img
+                src={leadData.image}
+                alt={leadData.name}
+                className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+              />
+            )}
+            <div className="flex-1">
+              <CardTitle className="text-lg">{leadData.name}</CardTitle>
+              {leadData.title && (
+                <CardDescription>{leadData.title}</CardDescription>
+              )}
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
@@ -196,6 +221,33 @@ export default function ScraperPage() {
             )}
             {leadData.description && (
               <p className="text-sm text-gray-600 mt-2">{leadData.description}</p>
+            )}
+            {leadData.additional_info && (
+              <p className="text-sm text-gray-500 mt-1"><strong>Additional:</strong> {leadData.additional_info}</p>
+            )}
+            {leadData.social_media && (
+              <div className="flex gap-2 mt-2">
+                {leadData.social_media.linkedin && (
+                  <a href={leadData.social_media.linkedin} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-xs">
+                    LinkedIn
+                  </a>
+                )}
+                {leadData.social_media.twitter && (
+                  <a href={leadData.social_media.twitter} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline text-xs">
+                    Twitter
+                  </a>
+                )}
+                {leadData.social_media.facebook && (
+                  <a href={leadData.social_media.facebook} target="_blank" rel="noopener noreferrer" className="text-blue-700 hover:underline text-xs">
+                    Facebook
+                  </a>
+                )}
+                {leadData.social_media.instagram && (
+                  <a href={leadData.social_media.instagram} target="_blank" rel="noopener noreferrer" className="text-pink-600 hover:underline text-xs">
+                    Instagram
+                  </a>
+                )}
+              </div>
             )}
             <div className="flex items-center justify-between mt-4">
               <Badge variant={getLeadScoreBadgeVariant(leadData.lead_score)}>
@@ -276,6 +328,28 @@ export default function ScraperPage() {
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
             <p className="text-red-800 font-medium">Error:</p>
             <p className="text-red-600">{error}</p>
+          </div>
+        )}
+
+        {liveViewUrl && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-lg font-semibold text-blue-800">Live Browser View</h3>
+              {sessionId && (
+                <Badge variant="outline">Session: {sessionId.slice(0, 8)}...</Badge>
+              )}
+            </div>
+            <p className="text-blue-600 text-sm mb-3">
+              Watch the AI scrape in real-time! Click the link below to see the browser in action.
+            </p>
+            <a 
+              href={liveViewUrl} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              🔴 View Live Browser Session
+            </a>
           </div>
         )}
       </div>
