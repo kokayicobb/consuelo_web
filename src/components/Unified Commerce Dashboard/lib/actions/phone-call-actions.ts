@@ -29,9 +29,6 @@ interface TalkingPoints {
   context?: string
 }
 
-// Store active calls in memory (in production, use Redis or similar)
-const activeCalls = new Map<string, CallData>()
-
 /**
  * Initiates a conference call between sales agent and customer
  * Calls the sales agent first, then connects to customer
@@ -68,7 +65,7 @@ export async function initiateCall(
     const conferenceRoom = `sales-call-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 
     // Create TwiML for the conference
-    const conferenceUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/conference-twiml?room=${conferenceRoom}`
+    const conferenceUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/conference-twiml?room=${conferenceRoom}&customerNumber=${encodeURIComponent(clientNumber)}`
 
     // First, call the sales agent
     const agentCall = await twilioClient.calls.create({
@@ -76,55 +73,25 @@ export async function initiateCall(
       to: agentNumber,
       url: conferenceUrl,
       statusCallback: `${process.env.NEXT_PUBLIC_APP_URL}/api/call-status`,
-      statusCallbackEvent: ['initiated', 'answered', 'completed'],
+      statusCallbackEvent: ['initiated', 'ringing', 'answered', 'completed'],
       machineDetection: 'DetectMessageEnd',
       machineDetectionTimeout: 30
     })
 
-    // Store call data
-    const callData: CallData = {
-      salesAgentNumber: agentNumber,
-      customerNumber: clientNumber,
-      callSid: agentCall.sid,
-      transcript: []
-    }
-    activeCalls.set(agentCall.sid, callData)
-
-    // Wait a moment for agent to answer, then call customer
-    setTimeout(async () => {
-      try {
-        const customerCall = await twilioClient.calls.create({
-          from: process.env.TWILIO_PHONE_NUMBER!,
-          to: clientNumber,
-          url: conferenceUrl,
-          statusCallback: `${process.env.NEXT_PUBLIC_APP_URL}/api/call-status`,
-          statusCallbackEvent: ['initiated', 'answered', 'completed']
-        })
-
-        // Update call data with customer call SID
-        callData.conferenceSid = conferenceRoom
-        activeCalls.set(customerCall.sid, callData)
-
-        // Log to database
-        const authForToken = await auth()
-        const token = await authForToken.getToken()
-        const supabase = createClerkSupabaseClient(token)
-        
-        await supabase.from('call_logs').insert({
-          user_id: userId,
-          agent_number: agentNumber,
-          customer_number: clientNumber,
-          agent_call_sid: agentCall.sid,
-          customer_call_sid: customerCall.sid,
-          conference_room: conferenceRoom,
-          status: 'initiated',
-          created_at: new Date().toISOString()
-        })
-
-      } catch (error) {
-        console.error('Error calling customer:', error)
-      }
-    }, 3000) // Wait 3 seconds for agent to pick up
+    // Log to database
+    const authForToken = await auth()
+    const token = await authForToken.getToken()
+    const supabase = createClerkSupabaseClient(token)
+    
+    await supabase.from('call_logs').insert({
+      user_id: userId,
+      agent_number: agentNumber,
+      customer_number: clientNumber,
+      agent_call_sid: agentCall.sid,
+      conference_room: conferenceRoom,
+      status: 'initiated',
+      created_at: new Date().toISOString()
+    })
 
     return {
       success: true,
@@ -153,15 +120,23 @@ export async function endCall(callSid: string) {
       return { success: false, error: "Unauthorized" }
     }
 
-    // Get all participants in the conference
-    const callData = activeCalls.get(callSid)
-    if (!callData || !callData.conferenceSid) {
+    const authForToken = await auth()
+    const token = await authForToken.getToken()
+    const supabase = createClerkSupabaseClient(token)
+
+    const { data: callData, error } = await supabase
+      .from('call_logs')
+      .select('conference_room')
+      .eq('agent_call_sid', callSid)
+      .single()
+
+    if (error || !callData) {
       return { success: false, error: "Call not found" }
     }
 
     // Get conference participants
     const conferences = await twilioClient.conferences.list({
-      friendlyName: callData.conferenceSid,
+      friendlyName: callData.conference_room,
       status: 'in-progress',
       limit: 1
     })
@@ -178,10 +153,6 @@ export async function endCall(callSid: string) {
     }
 
     // Update database
-    const authForToken = await auth()
-    const token = await authForToken.getToken()
-    const supabase = createClerkSupabaseClient(token)
-    
     await supabase
       .from('call_logs')
       .update({
@@ -189,9 +160,6 @@ export async function endCall(callSid: string) {
         ended_at: new Date().toISOString()
       })
       .eq('agent_call_sid', callSid)
-
-    // Clean up active calls
-    activeCalls.delete(callSid)
 
     return { success: true }
 
@@ -219,28 +187,22 @@ export async function generateTalkingPoints(
       return { success: false, error: "Unauthorized" }
     }
 
-    const callData = activeCalls.get(callSid)
-    if (!callData) {
+    const authForToken = await auth()
+    const token = await authForToken.getToken()
+    const supabase = createClerkSupabaseClient(token)
+
+    const { data: callData, error } = await supabase
+      .from('call_logs')
+      .select('transcript')
+      .eq('agent_call_sid', callSid)
+      .single()
+
+    if (error || !callData) {
       return { success: false, error: "Call not found" }
     }
 
     // Create prompt for Groq
-    const prompt = `You are an AI sales coach providing real-time guidance to a sales agent during a live call with a customer.
-
-${conversationContext ? `Current conversation context: ${conversationContext}` : 'The call has just started.'}
-
-${callData.transcript && callData.transcript.length > 0 ? `Recent conversation:
-${callData.transcript.slice(-5).join('\n')}` : ''}
-
-Provide 3-5 concise, actionable talking points for the sales agent to:
-1. Build rapport and trust
-2. Identify customer needs
-3. Present value effectively
-4. Handle objections if any
-5. Move towards a positive outcome
-
-Keep each point brief (1-2 sentences) and immediately actionable.
-Also provide a brief reasoning (1-2 sentences) explaining your strategy.`
+    const prompt = `You are an AI sales coach providing real-time guidance to a sales agent during a live call with a customer.\n\n${conversationContext ? `Current conversation context: ${conversationContext}` : 'The call has just started.'}\n\n${callData.transcript && callData.transcript.length > 0 ? `Recent conversation:\n${(callData.transcript as string[]).slice(-5).join('\n')}` : ''}\n\nProvide 3-5 concise, actionable talking points for the sales agent to:\n1. Build rapport and trust\n2. Identify customer needs\n3. Present value effectively\n4. Handle objections if any\n5. Move towards a positive outcome\n\nKeep each point brief (1-2 sentences) and immediately actionable.\nAlso provide a brief reasoning (1-2 sentences) explaining your strategy.`
 
     // Use the AI SDK's generateText function with Groq
     const { text } = await generateText({
@@ -290,10 +252,6 @@ Also provide a brief reasoning (1-2 sentences) explaining your strategy.`
     }
 
     // Store in database for analytics
-    const authForToken = await auth()
-    const token = await authForToken.getToken()
-    const supabase = createClerkSupabaseClient(token)
-    
     await supabase.from('call_talking_points').insert({
       call_sid: callSid,
       user_id: userId,
@@ -389,25 +347,39 @@ export async function updateCallTranscript(
   speaker: 'agent' | 'customer'
 ) {
   try {
-    const callData = activeCalls.get(callSid)
-    if (!callData) {
+    const authForToken = await auth()
+    const token = await authForToken.getToken()
+    const supabase = createClerkSupabaseClient(token)
+
+    const { data: callData, error } = await supabase
+      .from('call_logs')
+      .select('transcript')
+      .eq('agent_call_sid', callSid)
+      .single()
+
+    if (error || !callData) {
       return { success: false, error: "Call not found" }
     }
 
     // Add to transcript
     const transcriptLine = `${speaker.toUpperCase()}: ${transcript}`
-    callData.transcript = callData.transcript || []
-    callData.transcript.push(transcriptLine)
+    const newTranscript = callData.transcript || []
+    newTranscript.push(transcriptLine)
 
     // Keep only last 20 lines
-    if (callData.transcript.length > 20) {
-      callData.transcript = callData.transcript.slice(-20)
+    if (newTranscript.length > 20) {
+      newTranscript.slice(-20)
     }
 
+    await supabase
+      .from('call_logs')
+      .update({ transcript: newTranscript })
+      .eq('agent_call_sid', callSid)
+
     // Generate new talking points periodically
-    if (callData.transcript.length % 5 === 0) {
+    if (newTranscript.length % 5 === 0) {
       // Every 5 new transcript lines
-      const context = callData.transcript.slice(-10).join('\n')
+      const context = newTranscript.slice(-10).join('\n')
       await generateTalkingPoints(callSid, context)
     }
 
