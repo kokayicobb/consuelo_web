@@ -48,8 +48,8 @@ export function Header() {
     { name: "Integrations", href: "/integrations" },
     { name: "Pricing", href: "/pricing" },
     { name: "How It Works", href: "/platform" },
-    { name: "Shopify", href: "/integrations" },
-    { name: "Klayvio", href: "/integrations" },
+    { name: "SaleForce", href: "/integrations" },
+    { name: "Hubspot", href: "/integrations" },
   ];
 
   return (
@@ -92,7 +92,7 @@ export function Header() {
                   <span className="sr-only">Toggle menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[240px] p-0">
+              <SheetContent side="right" className="w-[240px] p-0">
                 <div className="flex h-full flex-col">
                   <div className="border-b p-4">
                     <Link href="/" className="flex items-center">
