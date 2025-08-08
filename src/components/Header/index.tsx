@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { Menu, Search } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { usePathname } from "next/navigation";
-import { SignInButton, SignedIn, SignedOut } from "@clerk/nextjs";
+import { SignInButton, SignUpButton, SignedIn, SignedOut } from "@clerk/nextjs";
 import { User } from "@clerk/nextjs/server";
 
 export function Header() {
@@ -43,13 +43,13 @@ export function Header() {
   }
 
   const navItems = [
-    { name: "Agents", href: "/platform" },
-    { name: "Platform", href: "/platform" },
-    { name: "Integrations", href: "/integrations" },
+    { name: "Employees", href: "/platform" },
+    // { name: "Platform", href: "/platform" },
+    { name: "Connections", href: "/integrations" },
     { name: "Pricing", href: "/pricing" },
     { name: "How It Works", href: "/platform" },
-    { name: "Shopify", href: "/integrations" },
-    { name: "Klayvio", href: "/integrations" },
+    { name: "SaleForce", href: "/integrations" },
+    { name: "Hubspot", href: "/integrations" },
   ];
 
   return (
@@ -92,7 +92,7 @@ export function Header() {
                   <span className="sr-only">Toggle menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[240px] p-0">
+              <SheetContent side="right" className="w-[240px] p-0">
                 <div className="flex h-full flex-col">
                   <div className="border-b p-4">
                     <Link href="/" className="flex items-center">
@@ -110,12 +110,27 @@ export function Header() {
                       </Link>
                     ))}
                     <div className="mt-6 border-t pt-6">
-                      <Link
-                        href="/login"
-                        className="block py-3 text-sm transition-colors hover:text-primary"
-                      >
-                        Log in
-                      </Link>
+                      {/* Mobile auth buttons */}
+                      <SignedOut>
+                        <SignInButton mode="modal">
+                          <button className="block w-full py-3 text-left text-sm transition-colors hover:text-primary">
+                            Sign In
+                          </button>
+                        </SignInButton>
+                        <SignUpButton mode="modal">
+                          <button className="block w-full py-3 text-left text-sm transition-colors hover:text-primary">
+                            Sign Up
+                          </button>
+                        </SignUpButton>
+                      </SignedOut>
+                      <SignedIn>
+                        <Link
+                          href="/app"
+                          className="block py-3 text-sm transition-colors hover:text-primary"
+                        >
+                          Go to App
+                        </Link>
+                      </SignedIn>
                       <Button
                         variant="outline"
                         size="sm"
@@ -133,28 +148,31 @@ export function Header() {
 
           {/* Right side items - only visible on desktop */}
           <div className="hidden items-center space-x-4 md:flex">
-            <Button
-              variant="default"
-             
-            >
+            <Button variant="default">
               <Search className="h-5 w-5" />
               <span className="sr-only">Search</span>
             </Button>
+            
             <SignedOut>
-  <SignInButton mode="modal">
-    <Button variant="default">
-      Sign In
-    </Button>
-  </SignInButton>
-</SignedOut>
+              <SignInButton mode="modal">
+                <Button variant="default">
+                  Sign In
+                </Button>
+              </SignInButton>
+              <SignUpButton mode="modal">
+                <Button variant="default">
+                  Sign Up
+                </Button>
+              </SignUpButton>
+            </SignedOut>
 
-<SignedIn>
-  <Link href="/app">
-    <Button variant="default">
-      Go to App
-    </Button>
-  </Link>
-</SignedIn>
+            <SignedIn>
+              <Link href="/app">
+                <Button variant="default">
+                  Go to App
+                </Button>
+              </Link>
+            </SignedIn>
           </div>
         </div>
       </header>
