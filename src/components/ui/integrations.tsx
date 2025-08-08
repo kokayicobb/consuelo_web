@@ -93,7 +93,7 @@ const IntegrationCard = ({
   title,
   description,
   children,
-  link = "https://github.com/meschacirung/cnblocks",
+  link = "",
 }: {
   title: string;
   description: string;
