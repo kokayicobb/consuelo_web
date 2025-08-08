@@ -2,7 +2,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import twilio from 'twilio'
 
-export const runtime = 'edge'
 
 export async function POST(request: NextRequest) {
   const { searchParams } = new URL(request.url)
