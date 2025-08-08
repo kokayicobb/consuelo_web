@@ -3,6 +3,9 @@
   "version": "2.0.0",
   "proxy": "https://34a0-2600-4041-4558-5000-1832-db31-138e-76fe.ngrok-free.app",
   "private": true,
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
