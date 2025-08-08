@@ -22,7 +22,7 @@ const getApiUrl = () => {
   
   // 2. Development (localhost)
   if (window.location.hostname === 'localhost') {
-    return 'http://localhost:3001/api';
+    return 'http://localhost:5001/api';
   }
   
   // 3. GitHub Codespaces
