@@ -1,27 +1,38 @@
-// src/app/api/conference-twiml/route.ts (MODIFIED for the client)
+// src/app/api/conference-twiml/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import twilio from 'twilio'
 
+export const runtime = 'edge'
+
 export async function POST(request: NextRequest) {
+  const { searchParams } = new URL(request.url)
+  const room = searchParams.get('room')
+  const customerNumber = searchParams.get('customerNumber')
+
+  if (!room) {
+    return new NextResponse('Missing room parameter', { status: 400 })
+  }
+
   const twiml = new twilio.twiml.VoiceResponse()
-  
-  const searchParams = request.nextUrl.searchParams
-  const room = searchParams.get('room') || 'default-room'
-  
-  // No need to say "Connecting you..." to the client, they are just answering a call.
-  // A simple beep or silence is often best.
-  
+  twiml.say('Connecting you to the customer. Please wait.')
+
   const dial = twiml.dial()
-  dial.conference({
-    startConferenceOnEnter: true,
-    // Set to FALSE for the client. You don't want the conference to end if they hang up.
-    endConferenceOnExit: false, 
-    // You can add status callbacks here too if you want
-  }, room)
+  dial.conference(
+    {
+      statusCallback: `${process.env.NEXT_PUBLIC_APP_URL}/api/call-status`,
+      statusCallbackEvent: ['start', 'end', 'join', 'leave', 'mute', 'hold'],
+    },
+    room
+  )
+
+  if (customerNumber) {
+    // If the agent has answered, bridge the customer
+    const customerDial = twiml.dial({ callerId: process.env.TWILIO_PHONE_NUMBER! })
+    customerDial.number(customerNumber)
+    twiml.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/api/conference-twiml?room=${room}`)
+  }
 
   return new NextResponse(twiml.toString(), {
-    headers: {
-      'Content-Type': 'text/xml'
-    }
+    headers: { 'Content-Type': 'text/xml' },
   })
 }

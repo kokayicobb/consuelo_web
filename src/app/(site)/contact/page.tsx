@@ -5,7 +5,7 @@ import { Metadata } from "next";
 export const metadata: Metadata = {
   title:
     "Contact Page | Consuelo - AI-Powered Fit Technology",
-  description: "This is contact page description",
+  description: "This is contact page description", // null
 };
 
 const ContactPage = () => {
