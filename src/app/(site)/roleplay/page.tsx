@@ -1,14 +1,6 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-
-// Extend the Window interface for speech recognition
-declare global {
-  interface Window {
-    SpeechRecognition: any;
-    webkitSpeechRecognition: any;
-  }
-}
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -54,20 +46,21 @@ export default function RoleplayPage() {
   
   // Voice selection state
   const [availableVoices, setAvailableVoices] = useState<Voice[]>([]);
-  const [selectedVoiceId, setSelectedVoiceId] = useState('uYXf8XasLslADfZ2MB4u'); // Default Hope voice
+  const [selectedVoiceId, setSelectedVoiceId] = useState('uYXf8XasLslADfZ2MB4u');
   const [isLoadingVoices, setIsLoadingVoices] = useState(false);
   
   // Voice-specific state
-  const [isListening, setIsListening] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [currentTranscript, setCurrentTranscript] = useState('');
-  const [audioLevel, setAudioLevel] = useState(0);
   const [isCallActive, setIsCallActive] = useState(false);
-  const [callStatus, setCallStatus] = useState<'idle' | 'connecting' | 'active' | 'speaking' | 'listening'>('idle');
+  const [callStatus, setCallStatus] = useState<'idle' | 'connecting' | 'active' | 'user_turn' | 'ai_turn'>('idle');
+  const [isPushToTalkPressed, setIsPushToTalkPressed] = useState(false);
   
   // Refs for audio functionality
-  const recognitionRef = useRef<any>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -75,13 +68,14 @@ export default function RoleplayPage() {
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isProcessingRef = useRef(false);
   const isCallActiveRef = useRef(false);
+  const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Audio level monitoring for visual feedback
   useEffect(() => {
     let animationFrame: number;
     
     const updateAudioLevel = () => {
-      if (analyserRef.current && isListening) {
+      if (analyserRef.current && isRecording) {
         const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
         analyserRef.current.getByteFrequencyData(dataArray);
         const average = dataArray.reduce((sum, value) => sum + value, 0) / dataArray.length;
@@ -90,7 +84,7 @@ export default function RoleplayPage() {
       animationFrame = requestAnimationFrame(updateAudioLevel);
     };
     
-    if (isListening) {
+    if (isRecording) {
       updateAudioLevel();
     }
     
@@ -99,7 +93,7 @@ export default function RoleplayPage() {
         cancelAnimationFrame(animationFrame);
       }
     };
-  }, [isListening]);
+  }, [isRecording]);
 
   // Keep ref in sync with state
   useEffect(() => {
@@ -146,12 +140,18 @@ export default function RoleplayPage() {
     
     try {
       // Request microphone permissions
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        } 
+      });
       streamRef.current = stream;
       setupAudioAnalyser(stream);
       
-      // Initialize speech recognition
-      await initializeContinuousListening();
+      // Initialize media recorder for chunked recording
+      initializeMediaRecorder(stream);
       
       setIsSessionActive(true);
       setIsCallActive(true);
@@ -185,139 +185,122 @@ export default function RoleplayPage() {
     }
   };
 
-  const initializeContinuousListening = async () => {
-    return new Promise<void>((resolve, reject) => {
-      try {
-        console.log('🎤 Initializing speech recognition...');
-        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-          console.error('🎤 Speech recognition not supported in this browser');
-          reject(new Error('Speech recognition not supported'));
-          return;
-        }
-
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        console.log('🎤 Creating SpeechRecognition instance...');
-        recognitionRef.current = new SpeechRecognition();
-        console.log('🎤 SpeechRecognition instance created:', !!recognitionRef.current);
-        
-        // Configure for continuous conversation
-        recognitionRef.current.continuous = true;
-        recognitionRef.current.interimResults = true;
-        recognitionRef.current.lang = 'en-US';
-        recognitionRef.current.maxAlternatives = 1;
-        
-        let finalTranscript = '';
-        let interimTranscript = '';
-        
-        recognitionRef.current.onstart = () => {
-          console.log('🎤 Speech recognition started!');
-          setIsListening(true);
-          setCallStatus('listening');
-        };
-        
-        recognitionRef.current.onresult = (event: any) => {
-          interimTranscript = '';
-          
-          for (let i = event.resultIndex; i < event.results.length; i++) {
-            const transcript = event.results[i][0].transcript;
-            
-            if (event.results[i].isFinal) {
-              finalTranscript += transcript;
-              console.log('Final transcript:', transcript);
-            } else {
-              interimTranscript += transcript;
-              console.log('Interim transcript:', transcript);
-            }
-          }
-          
-          setCurrentTranscript(interimTranscript || finalTranscript);
-          
-          // Process final result
-          if (finalTranscript.trim() && !isProcessingRef.current) {
-            console.log('Processing speech:', finalTranscript.trim());
-            handleUserSpeech(finalTranscript.trim());
-            finalTranscript = '';
-          }
-        };
-        
-        recognitionRef.current.onerror = (event: any) => {
-          console.error('Speech recognition error:', event.error);
-          
-          // Handle different types of errors
-          if (event.error === 'network') {
-            toast.error('Network error - restarting voice recognition...');
-            setTimeout(() => {
-              if (isCallActiveRef.current) {
-                startListening();
-              }
-            }, 1000);
-          } else if (event.error === 'not-allowed') {
-            toast.error('Microphone access denied. Please allow microphone access and try again.');
-            setCallStatus('idle');
-            setIsCallActive(false);
-          } else if (event.error === 'no-speech') {
-            console.log('No speech detected, continuing...');
-            // Don't restart immediately for no-speech, let onend handle it
-          } else if (event.error === 'audio-capture') {
-            toast.error('Audio capture error. Check your microphone.');
-          } else {
-            console.log('Other speech error, attempting restart:', event.error);
-            setTimeout(() => {
-              if (isCallActiveRef.current && !isProcessingRef.current) {
-                startListening();
-              }
-            }, 500);
-          }
-        };
-        
-        recognitionRef.current.onend = () => {
-          console.log('🎤 Speech recognition ended');
-          setIsListening(false);
-          // Restart listening if call is still active and not processing
-          console.log('🎤 Debug onend: isCallActiveRef.current =', isCallActiveRef.current, 'isProcessing =', isProcessingRef.current, 'isPlaying =', isPlaying);
-          if (isCallActiveRef.current && !isProcessingRef.current && !isPlaying) {
-            console.log('🎤 Attempting to restart speech recognition from onend...');
-            setTimeout(() => {
-              startListening();
-            }, 100);
-          } else {
-            console.log('🎤 Not restarting recognition from onend - conditions not met');
-          }
-        };
-        
-        resolve();
-      } catch (error) {
-        reject(error);
-      }
-    });
-  };
-
-  const startListening = () => {
-    if (recognitionRef.current && isCallActiveRef.current && !isProcessingRef.current && !isPlaying) {
-      try {
-        console.log('Starting speech recognition...');
-        recognitionRef.current.start();
-      } catch (error) {
-        console.error('Error starting recognition:', error);
-        // If already started, this will throw an error - that's normal
-        if (error.name === 'InvalidStateError') {
-          console.log('Recognition already running');
-        }
-      }
-    } else {
-      console.log('Cannot start listening:', {
-        hasRecognition: !!recognitionRef.current,
-        isCallActiveRef: isCallActiveRef.current,
-        isProcessing: isProcessingRef.current,
-        isPlaying
+  const initializeMediaRecorder = (stream: MediaStream) => {
+    try {
+      // Use webm format which is widely supported
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') 
+        ? 'audio/webm;codecs=opus' 
+        : 'audio/webm';
+      
+      mediaRecorderRef.current = new MediaRecorder(stream, {
+        mimeType: mimeType,
+        audioBitsPerSecond: 128000
       });
+
+      mediaRecorderRef.current.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorderRef.current.onstop = async () => {
+        if (audioChunksRef.current.length > 0 && !isProcessingRef.current) {
+          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+          audioChunksRef.current = [];
+          
+          // Only process if we have substantial audio (> 100KB typically means speech)
+          if (audioBlob.size > 100000) {
+            await processAudioChunk(audioBlob);
+          }
+        }
+      };
+
+      console.log('🎤 MediaRecorder initialized with mimeType:', mimeType);
+    } catch (error) {
+      console.error('Error initializing MediaRecorder:', error);
     }
   };
 
-  const stopListening = () => {
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
-      setIsListening(false);
+  const startContinuousRecording = () => {
+    if (!isCallActiveRef.current || isProcessingRef.current || isPlaying) return;
+    
+    startRecording();
+    
+    // Record in 3-second chunks for continuous transcription
+    recordingIntervalRef.current = setInterval(() => {
+      if (isCallActiveRef.current && !isProcessingRef.current && !isPlaying) {
+        stopRecording();
+        // Small delay before starting next recording
+        setTimeout(() => {
+          if (isCallActiveRef.current && !isProcessingRef.current && !isPlaying) {
+            startRecording();
+          }
+        }, 100);
+      }
+    }, 3000);
+  };
+
+  const stopContinuousRecording = () => {
+    if (recordingIntervalRef.current) {
+      clearInterval(recordingIntervalRef.current);
+      recordingIntervalRef.current = null;
+    }
+    stopRecording();
+  };
+
+  const startRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'inactive') {
+      audioChunksRef.current = [];
+      mediaRecorderRef.current.start();
+      setIsRecording(true);
+      setCallStatus('listening');
+      console.log('🎤 Started recording');
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      console.log('🎤 Stopped recording');
+    }
+  };
+
+  const processAudioChunk = async (audioBlob: Blob) => {
+    try {
+      console.log('🎤 Processing audio chunk, size:', audioBlob.size);
+      
+      // Create FormData and append the audio file
+      const formData = new FormData();
+      formData.append('audio', audioBlob, 'audio.webm');
+      
+      // Send to Groq Whisper API
+      const response = await fetch('/api/roleplay/transcribe', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Transcription failed');
+      }
+
+      const data = await response.json();
+      
+      if (data.text && data.text.trim().length > 2) {
+        console.log('🎤 Transcribed:', data.text);
+        setCurrentTranscript(data.text);
+        
+        // Process the transcribed text
+        if (!isProcessingRef.current) {
+          await handleUserSpeech(data.text.trim());
+        }
+      }
+    } catch (error) {
+      console.error('Error processing audio chunk:', error);
+      // Continue recording even if transcription fails
+      if (isCallActiveRef.current && !isProcessingRef.current) {
+        startContinuousRecording();
+      }
     }
   };
 
@@ -325,7 +308,7 @@ export default function RoleplayPage() {
     if (transcript.length < 3 || isProcessingRef.current) return;
     
     isProcessingRef.current = true;
-    stopListening();
+    stopContinuousRecording();
     setCallStatus('speaking');
     
     const userMessage: Message = { role: 'user', text: transcript };
@@ -351,14 +334,18 @@ export default function RoleplayPage() {
     } finally {
       isProcessingRef.current = false;
       setCallStatus('active');
-      // Note: Listening will be resumed by the audio onended callback in playAIResponse
+      
+      // Resume recording after AI finishes
+      if (isCallActiveRef.current) {
+        setTimeout(() => {
+          startContinuousRecording();
+        }, 500);
+      }
     }
   };
 
   const getAIResponse = async (userText: string, conversationHistory: Message[]) => {
     console.log('🤖 Getting AI response for:', userText);
-    console.log('🤖 Conversation history length:', conversationHistory.length);
-    console.log('🤖 Scenario:', scenario);
     
     const response = await fetch('/api/roleplay/chat', {
       method: 'POST',
@@ -370,16 +357,13 @@ export default function RoleplayPage() {
       })
     });
 
-    console.log('🤖 Chat API response status:', response.status);
-
     if (!response.ok) {
       const errorText = await response.text();
       console.error('❌ Chat API failed:', response.status, errorText);
-      throw new Error(`Failed to get AI response: ${response.status} - ${errorText}`);
+      throw new Error(`Failed to get AI response: ${response.status}`);
     }
 
     const data = await response.json();
-    console.log('🤖 AI response:', data.response);
     return data.response;
   };
 
@@ -387,30 +371,118 @@ export default function RoleplayPage() {
     try {
       console.log('👋 Initiating AI greeting...');
       const greeting = await getAIResponse("", []);
-      console.log('👋 AI greeting received:', greeting);
       const aiMessage: Message = { role: 'assistant', text: greeting };
       setMessages([aiMessage]);
       
       if (!isMuted) {
-        console.log('👋 Playing AI greeting (not muted)');
         await playAIResponse(greeting);
       } else {
-        console.log('👋 Skipping AI greeting (muted)');
-        // If muted, we need to start listening immediately
+        // If muted, start recording immediately
         setTimeout(() => {
           if (isCallActiveRef.current) {
-            startListening();
+            startContinuousRecording();
           }
         }, 500);
       }
     } catch (error) {
       console.error('❌ Error with AI greeting:', error);
-      // If greeting fails, still start listening
+      // Start recording anyway
       setTimeout(() => {
         if (isCallActiveRef.current) {
-          startListening();
+          startContinuousRecording();
         }
       }, 500);
+    }
+  };
+
+  const playAIResponse = async (text: string) => {
+    try {
+      console.log('🔊 Starting TTS for text:', text);
+      setIsPlaying(true);
+      setCallStatus('speaking');
+      
+      const ttsResponse = await fetch('/api/roleplay/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          text,
+          voice_id: selectedVoiceId 
+        })
+      });
+
+      if (!ttsResponse.ok) {
+        throw new Error('Failed to generate speech');
+      }
+
+      const ttsData = await ttsResponse.json();
+      
+      if (ttsData.use_browser_tts) {
+        // Use browser's Speech Synthesis API
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+          
+          const utterance = new SpeechSynthesisUtterance(ttsData.text);
+          utterance.rate = ttsData.voice_settings.rate;
+          utterance.pitch = ttsData.voice_settings.pitch;
+          utterance.volume = ttsData.voice_settings.volume;
+          
+          utterance.onend = () => {
+            setIsPlaying(false);
+            setCallStatus('active');
+            if (isCallActiveRef.current) {
+              setTimeout(() => startContinuousRecording(), 500);
+            }
+          };
+          
+          utterance.onerror = () => {
+            setIsPlaying(false);
+            setCallStatus('active');
+            if (isCallActiveRef.current) {
+              setTimeout(() => startContinuousRecording(), 500);
+            }
+          };
+          
+          window.speechSynthesis.speak(utterance);
+        }
+      } else if (ttsData.audio_base64 && ttsData.mime_type) {
+        // Play ElevenLabs audio
+        const audioData = atob(ttsData.audio_base64);
+        const audioArray = new Uint8Array(audioData.length);
+        for (let i = 0; i < audioData.length; i++) {
+          audioArray[i] = audioData.charCodeAt(i);
+        }
+        
+        const audioBlob = new Blob([audioArray], { type: ttsData.mime_type });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        
+        currentAudioRef.current = new Audio(audioUrl);
+        currentAudioRef.current.onended = () => {
+          setIsPlaying(false);
+          setCallStatus('active');
+          URL.revokeObjectURL(audioUrl);
+          if (isCallActiveRef.current) {
+            setTimeout(() => startContinuousRecording(), 500);
+          }
+        };
+        
+        currentAudioRef.current.onerror = () => {
+          setIsPlaying(false);
+          setCallStatus('active');
+          URL.revokeObjectURL(audioUrl);
+          if (isCallActiveRef.current) {
+            setTimeout(() => startContinuousRecording(), 500);
+          }
+        };
+        
+        await currentAudioRef.current.play();
+      }
+    } catch (error) {
+      console.error('TTS error:', error);
+      setIsPlaying(false);
+      setCallStatus('active');
+      if (isCallActiveRef.current) {
+        setTimeout(() => startContinuousRecording(), 500);
+      }
     }
   };
 
@@ -418,13 +490,13 @@ export default function RoleplayPage() {
     setIsCallActive(false);
     setIsSessionActive(false);
     setCallStatus('idle');
-    setIsListening(false);
+    setIsRecording(false);
     setIsPlaying(false);
     setCurrentTranscript('');
     isProcessingRef.current = false;
     
-    // Stop all audio/recognition
-    stopListening();
+    // Stop recording
+    stopContinuousRecording();
     stopCurrentAudio();
     
     // Clean up media streams
@@ -442,240 +514,6 @@ export default function RoleplayPage() {
     toast.success('Call ended');
   };
 
-  const playAIResponse = async (text: string) => {
-    try {
-      console.log('🔊 Starting TTS for text:', text);
-      setIsPlaying(true);
-      setCallStatus('speaking');
-      
-      console.log('📡 Making TTS API request...');
-      const ttsResponse = await fetch('/api/roleplay/tts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          text,
-          voice_id: selectedVoiceId 
-        })
-      });
-
-      console.log('📡 TTS API response status:', ttsResponse.status);
-
-      if (!ttsResponse.ok) {
-        const errorText = await ttsResponse.text();
-        console.error('❌ TTS API failed:', ttsResponse.status, errorText);
-        throw new Error(`Failed to generate speech: ${ttsResponse.status} - ${errorText}`);
-      }
-
-      console.log('📦 Parsing TTS response...');
-      const ttsData = await ttsResponse.json();
-      console.log('📦 TTS response data keys:', Object.keys(ttsData));
-      console.log('📦 TTS audio_base64 length:', ttsData.audio_base64?.length);
-      console.log('📦 TTS mime_type:', ttsData.mime_type);
-      console.log('📦 TTS voice_id:', ttsData.voice_id);
-      
-      if (ttsData.use_browser_tts) {
-        console.log('🎵 Using browser Speech Synthesis API...');
-        
-        // Stop any current audio
-        if (currentAudioRef.current) {
-          currentAudioRef.current.pause();
-        }
-        
-        // Use browser's Speech Synthesis API
-        if ('speechSynthesis' in window) {
-          // Cancel any ongoing speech
-          window.speechSynthesis.cancel();
-          
-          const utterance = new SpeechSynthesisUtterance(ttsData.text);
-          utterance.rate = ttsData.voice_settings.rate;
-          utterance.pitch = ttsData.voice_settings.pitch;
-          utterance.volume = ttsData.voice_settings.volume;
-          
-          // Function to set voice (handles voice loading async behavior)
-          const setVoice = () => {
-            const voices = window.speechSynthesis.getVoices();
-            console.log('🎵 Available voices:', voices.length, voices.map(v => v.name));
-            
-            const preferredVoice = voices.find(voice => 
-              voice.name.includes('Google') || 
-              voice.name.includes('Premium') || 
-              voice.name.includes('Enhanced') ||
-              (voice.lang.startsWith('en') && voice.localService === false)
-            ) || voices.find(voice => voice.lang.startsWith('en')) || voices[0];
-            
-            if (preferredVoice) {
-              utterance.voice = preferredVoice;
-              console.log('🎵 Using voice:', preferredVoice.name);
-            } else {
-              console.log('🎵 No preferred voice found, using default');
-            }
-          };
-          
-          // Set voice immediately if voices are loaded
-          if (window.speechSynthesis.getVoices().length > 0) {
-            setVoice();
-          } else {
-            // Wait for voices to load
-            window.speechSynthesis.addEventListener('voiceschanged', setVoice, { once: true });
-          }
-          
-          utterance.onend = () => {
-            console.log('🎵 Speech synthesis ended');
-            setIsPlaying(false);
-            setCallStatus('active');
-            
-            // Resume listening after AI finishes speaking
-            setTimeout(() => {
-              if (isCallActiveRef.current && recognitionRef.current && !isProcessingRef.current) {
-                try {
-                  console.log('🎤 Force restarting speech recognition after speech synthesis...');
-                  recognitionRef.current.start();
-                } catch (error) {
-                  console.error('Error restarting recognition after speech synthesis:', error);
-                  if (error.name === 'InvalidStateError') {
-                    console.log('Recognition already running after speech synthesis');
-                  }
-                }
-              }
-            }, 500);
-          };
-          
-          utterance.onerror = (event) => {
-            console.error('🎵 Speech synthesis error:', event);
-            setIsPlaying(false);
-            setCallStatus('active');
-            
-            // Resume listening even if TTS fails
-            setTimeout(() => {
-              if (isCallActiveRef.current && recognitionRef.current && !isProcessingRef.current) {
-                try {
-                  console.log('🎤 Force restarting speech recognition after speech synthesis error...');
-                  recognitionRef.current.start();
-                } catch (error) {
-                  console.error('Error restarting recognition after speech synthesis error:', error);
-                  if (error.name === 'InvalidStateError') {
-                    console.log('Recognition already running after speech synthesis error');
-                  }
-                }
-              }
-            }, 500);
-          };
-          
-          console.log('🎵 Starting speech synthesis...');
-          window.speechSynthesis.speak(utterance);
-        } else {
-          throw new Error('Speech synthesis not supported in this browser');
-        }
-      } else if (ttsData.audio_base64 && ttsData.mime_type) {
-        console.log('🎵 Using ElevenLabs TTS audio...');
-        
-        // Stop any current audio
-        if (currentAudioRef.current) {
-          console.log('🎵 Stopping previous audio...');
-          currentAudioRef.current.pause();
-        }
-        
-        // Convert base64 audio to blob and play
-        console.log('🎵 Converting base64 to audio...');
-        const audioData = atob(ttsData.audio_base64);
-        const audioArray = new Uint8Array(audioData.length);
-        for (let i = 0; i < audioData.length; i++) {
-          audioArray[i] = audioData.charCodeAt(i);
-        }
-        
-        console.log('🎵 Creating audio blob...');
-        const audioBlob = new Blob([audioArray], { type: ttsData.mime_type });
-        const audioUrl = URL.createObjectURL(audioBlob);
-        console.log('🎵 Audio blob created, size:', audioBlob.size, 'bytes');
-        console.log('🎵 Audio URL:', audioUrl);
-        
-        console.log('🎵 Creating new audio element...');
-        currentAudioRef.current = new Audio(audioUrl);
-        currentAudioRef.current.onended = () => {
-          console.log('🎵 Audio playback ended');
-          setIsPlaying(false);
-          setCallStatus('active');
-          URL.revokeObjectURL(audioUrl);
-          
-          // Resume listening after AI finishes speaking
-          console.log('🎤 Debug: About to restart speech recognition...');
-          console.log('🎤 Debug: isCallActiveRef.current =', isCallActiveRef.current);
-          console.log('🎤 Debug: recognitionRef.current =', !!recognitionRef.current);
-          console.log('🎤 Debug: isProcessingRef.current =', isProcessingRef.current);
-          
-          setTimeout(() => {
-            console.log('🎤 Debug: Inside setTimeout callback...');
-            console.log('🎤 Debug: isCallActiveRef.current =', isCallActiveRef.current);
-            console.log('🎤 Debug: recognitionRef.current =', !!recognitionRef.current);
-            console.log('🎤 Debug: isProcessingRef.current =', isProcessingRef.current);
-            
-            if (isCallActiveRef.current && recognitionRef.current && !isProcessingRef.current) {
-              try {
-                console.log('🎤 Force restarting speech recognition after audio ended...');
-                recognitionRef.current.start();
-                console.log('🎤 Speech recognition start() called successfully');
-              } catch (error) {
-                console.error('Error restarting recognition after audio:', error);
-                if (error.name === 'InvalidStateError') {
-                  console.log('Recognition already running after audio ended');
-                }
-              }
-            } else {
-              console.log('🎤 Cannot restart recognition - conditions not met');
-            }
-          }, 500);
-        };
-        
-        currentAudioRef.current.onerror = (event) => {
-          console.error('🎵 Audio playback error:', event);
-          setIsPlaying(false);
-          setCallStatus('active');
-          URL.revokeObjectURL(audioUrl);
-          
-          // Resume listening even if audio fails
-          setTimeout(() => {
-            if (isCallActiveRef.current && recognitionRef.current && !isProcessingRef.current) {
-              try {
-                console.log('🎤 Force restarting speech recognition after audio error...');
-                recognitionRef.current.start();
-              } catch (error) {
-                console.error('Error restarting recognition after audio error:', error);
-                if (error.name === 'InvalidStateError') {
-                  console.log('Recognition already running after audio error');
-                }
-              }
-            }
-          }, 500);
-        };
-        
-        console.log('🎵 Starting audio playback...');
-        await currentAudioRef.current.play();
-        console.log('🎵 Audio playback started successfully');
-      } else {
-        throw new Error('No audio data received from TTS API');
-      }
-    } catch (error) {
-      console.error('TTS error:', error);
-      setIsPlaying(false);
-      setCallStatus('active');
-      
-      // Resume listening even if TTS fails
-      setTimeout(() => {
-        if (isCallActiveRef.current && recognitionRef.current && !isProcessingRef.current) {
-          try {
-            console.log('🎤 Force restarting speech recognition after TTS general error...');
-            recognitionRef.current.start();
-          } catch (error) {
-            console.error('Error restarting recognition after TTS general error:', error);
-            if (error.name === 'InvalidStateError') {
-              console.log('Recognition already running after TTS general error');
-            }
-          }
-        }
-      }, 500);
-    }
-  };
-
   const toggleMute = () => {
     setIsMuted(!isMuted);
     if (currentAudioRef.current) {
@@ -691,7 +529,6 @@ export default function RoleplayPage() {
     }
   };
 
-  // Text fallback for when voice isn't working
   const sendTextMessage = async () => {
     if (!currentMessage.trim() || isLoading) return;
 
@@ -766,19 +603,14 @@ export default function RoleplayPage() {
               <><Phone className="w-3 h-3 mr-1" />Live Call</>
             )}
           </Badge>
-          {isListening && (
+          {isRecording && (
             <Badge variant="destructive" className="animate-pulse">
-              <Mic className="w-3 h-3 mr-1" />Listening
+              <Mic className="w-3 h-3 mr-1" />Recording
             </Badge>
           )}
           {isPlaying && (
             <Badge variant="default" className="animate-pulse">
               <Volume2 className="w-3 h-3 mr-1" />AI Speaking
-            </Badge>
-          )}
-          {callStatus === 'speaking' && !isPlaying && (
-            <Badge variant="secondary">
-              ⏳ Processing...
             </Badge>
           )}
         </div>
@@ -813,46 +645,32 @@ export default function RoleplayPage() {
                   disabled={isSessionActive || isLoadingVoices}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder={isLoadingVoices ? "Loading voices..." : "Select a voice"}>
-                      {selectedVoiceId && (() => {
-                        const selectedVoice = availableVoices.find(v => v.voice_id === selectedVoiceId);
-                        return selectedVoice ? selectedVoice.name : "Select a voice";
-                      })()}
-                    </SelectValue>
+                    <SelectValue placeholder={isLoadingVoices ? "Loading voices..." : "Select a voice"} />
                   </SelectTrigger>
-                  <SelectContent className="max-w-sm" position="popper" sideOffset={5} align="start" style={{ transformOrigin: 'top' }}>
+                  <SelectContent>
                     {availableVoices.map((voice) => (
                       <SelectItem key={voice.voice_id} value={voice.voice_id}>
-                        <div className="flex flex-col min-w-0">
+                        <div className="flex flex-col">
                           <span className="font-medium">{voice.name}</span>
                           {voice.description && (
-                            <span className="text-xs text-muted-foreground line-clamp-2">{voice.description}</span>
-                          )}
-                          {voice.labels && (
-                            <span className="text-xs text-muted-foreground">
-                              {voice.labels.gender} • {voice.labels.age} • {voice.labels.accent}
-                            </span>
+                            <span className="text-xs text-muted-foreground">{voice.description}</span>
                           )}
                         </div>
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                {!isLoadingVoices && availableVoices.length === 0 && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Voice selection unavailable - using default voice
-                  </p>
-                )}
               </div>
+
               <div className="flex gap-2">
                 <Button 
                   onClick={startCall} 
-                  disabled={isCallActive || !scenario.trim() || callStatus === 'connecting'}
+                  disabled={isCallActive || !scenario.trim()}
                   className="flex-1"
                   size="lg"
                 >
                   <Phone className="w-4 h-4 mr-2" />
-                  {callStatus === 'connecting' ? 'Connecting...' : 'Start Live Call'}
+                  Start Live Call
                 </Button>
                 <Button 
                   onClick={endCall} 
@@ -872,10 +690,6 @@ export default function RoleplayPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Live Sales Call</CardTitle>
-                <div className="flex gap-2">
-                  <Badge variant="secondary">You: Sales Agent</Badge>
-                  <Badge variant="outline">AI: Prospect</Badge>
-                </div>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Call Visualization */}
@@ -883,57 +697,47 @@ export default function RoleplayPage() {
                   <div className="relative">
                     <div 
                       className={`w-40 h-40 mx-auto rounded-full border-4 flex items-center justify-center transition-all duration-300 ${
-                        isListening 
+                        isRecording 
                           ? 'border-green-500 bg-green-50 dark:bg-green-950' 
                           : isPlaying 
                           ? 'border-blue-500 bg-blue-50 dark:bg-blue-950'
-                          : callStatus === 'speaking'
-                          ? 'border-yellow-500 bg-yellow-50 dark:bg-yellow-950'
                           : 'border-gray-300 bg-gray-50 dark:bg-gray-800'
                       }`}
                       style={{
-                        transform: isListening ? `scale(${1 + audioLevel * 0.2})` : 'scale(1)',
+                        transform: isRecording ? `scale(${1 + audioLevel * 0.2})` : 'scale(1)',
                       }}
                     >
-                      {isListening ? (
+                      {isRecording ? (
                         <Mic className="w-16 h-16 text-green-500" />
                       ) : isPlaying ? (
                         <Volume2 className="w-16 h-16 text-blue-500 animate-pulse" />
-                      ) : callStatus === 'speaking' ? (
-                        <div className="w-16 h-16 text-yellow-500 animate-spin">⏳</div>
                       ) : (
                         <Phone className="w-16 h-16 text-gray-400" />
                       )}
                     </div>
                     
                     {/* Audio level rings */}
-                    {isListening && audioLevel > 0.1 && (
+                    {isRecording && audioLevel > 0.1 && (
                       <>
                         <div className="absolute inset-0 rounded-full border-4 border-green-500 animate-ping opacity-75"></div>
                         <div className="absolute inset-2 rounded-full border-2 border-green-400 animate-pulse opacity-50"></div>
                       </>
                     )}
-                    
-                    {isPlaying && (
-                      <div className="absolute inset-0 rounded-full border-4 border-blue-500 animate-pulse opacity-75"></div>
-                    )}
                   </div>
 
                   {/* Status Text */}
                   <div className="text-center space-y-2">
-                    {callStatus === 'listening' ? (
-                      <p className="text-green-600 font-medium text-lg">🎤 Listening to you...</p>
+                    {isRecording ? (
+                      <p className="text-green-600 font-medium text-lg">🎤 Recording your voice...</p>
                     ) : isPlaying ? (
                       <p className="text-blue-600 font-medium text-lg">🔊 AI Prospect speaking...</p>
-                    ) : callStatus === 'speaking' ? (
-                      <p className="text-yellow-600 font-medium text-lg">⏳ AI is thinking...</p>
                     ) : (
-                      <p className="text-gray-600 text-lg">📞 Call is active - speak naturally</p>
+                      <p className="text-gray-600 text-lg">📞 Call is active</p>
                     )}
                     
                     {currentTranscript && (
                       <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg">
-                        <p className="text-sm text-muted-foreground mb-1">You're saying:</p>
+                        <p className="text-sm text-muted-foreground mb-1">You said:</p>
                         <p className="text-sm font-medium italic">"{currentTranscript}"</p>
                       </div>
                     )}
@@ -946,10 +750,9 @@ export default function RoleplayPage() {
                     onClick={toggleMute}
                     variant={isMuted ? "default" : "outline"}
                     size="lg"
-                    disabled={!isCallActive}
                   >
                     {isMuted ? (
-                      <><VolumeX className="w-5 h-5 mr-2" />Unmuted</>
+                      <><VolumeX className="w-5 h-5 mr-2" />Unmute</>
                     ) : (
                       <><Volume2 className="w-5 h-5 mr-2" />Mute AI</>
                     )}
@@ -1031,17 +834,10 @@ export default function RoleplayPage() {
                             : 'border-l-blue-500 bg-blue-50 dark:bg-blue-950'
                         }`}
                       >
-                        <div className="text-xs font-medium mb-1 flex items-center gap-2">
-                          {message.role === 'user' ? (
-                            <>👤 You (Sales Agent)</>
-                          ) : (
-                            <>🤖 AI Prospect</>
-                          )}
-                          <span className="text-muted-foreground">
-                            {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </span>
+                        <div className="text-xs font-medium text-muted-foreground mb-1">
+                          {message.role === 'user' ? '👤 You' : '🤖 AI Prospect'}
                         </div>
-                        <div>{message.text}</div>
+                        <div className="text-sm">{message.text}</div>
                       </div>
                     ))}
                   </div>
@@ -1051,101 +847,168 @@ export default function RoleplayPage() {
           )}
         </div>
 
-        {/* Right Column - Feedback */}
+        {/* Right Column - Conversation History & Feedback */}
         <div className="space-y-6">
-          {feedback && (
+          {/* Conversation History (for non-call mode) */}
+          {!isCallActive && messages.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Performance Feedback</CardTitle>
+                <CardTitle>Conversation History</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="font-semibold text-sm text-blue-600 mb-2">Opening</h4>
-                    <p className="text-sm text-muted-foreground">{feedback.opening}</p>
+              <CardContent>
+                <ScrollArea className="h-80 w-full">
+                  <div className="space-y-4">
+                    {messages.map((message, index) => (
+                      <div
+                        key={index}
+                        className={`p-4 rounded-lg ${
+                          message.role === 'user'
+                            ? 'bg-green-50 dark:bg-green-950 border-l-4 border-l-green-500'
+                            : 'bg-blue-50 dark:bg-blue-950 border-l-4 border-l-blue-500'
+                        }`}
+                      >
+                        <div className="text-xs font-medium text-muted-foreground mb-2">
+                          {message.role === 'user' ? '👤 You (Salesperson)' : '🤖 AI Prospect'}
+                        </div>
+                        <div className="text-sm leading-relaxed">{message.text}</div>
+                      </div>
+                    ))}
                   </div>
-                  
-                  <Separator />
-                  
-                  <div>
-                    <h4 className="font-semibold text-sm text-green-600 mb-2">Discovery Questions</h4>
-                    <p className="text-sm text-muted-foreground">{feedback.discovery_questions}</p>
-                  </div>
-                  
-                  <Separator />
-                  
-                  <div>
-                    <h4 className="font-semibold text-sm text-orange-600 mb-2">Handling Objections</h4>
-                    <p className="text-sm text-muted-foreground">{feedback.handling_objections}</p>
-                  </div>
-                  
-                  <Separator />
-                  
-                  <div>
-                    <h4 className="font-semibold text-sm text-purple-600 mb-2">Value Proposition</h4>
-                    <p className="text-sm text-muted-foreground">{feedback.value_proposition}</p>
-                  </div>
-                  
-                  <Separator />
-                  
-                  <div>
-                    <h4 className="font-semibold text-sm text-red-600 mb-2">Closing</h4>
-                    <p className="text-sm text-muted-foreground">{feedback.closing}</p>
-                  </div>
-                  
-                  <Separator />
-                  
-                  <div>
-                    <h4 className="font-semibold text-sm text-gray-800 dark:text-gray-200 mb-2">Overall Effectiveness</h4>
-                    <p className="text-sm text-muted-foreground">{feedback.overall_effectiveness}</p>
+                </ScrollArea>
+                <Separator className="my-4" />
+                <div className="space-y-2">
+                  <Label htmlFor="message">Send a message</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="message"
+                      placeholder="Type your sales pitch or response..."
+                      value={currentMessage}
+                      onChange={(e) => setCurrentMessage(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && sendTextMessage()}
+                      disabled={isLoading}
+                    />
+                    <Button 
+                      onClick={sendTextMessage} 
+                      disabled={isLoading || !currentMessage.trim()}
+                    >
+                      {isLoading ? 'Sending...' : 'Send'}
+                    </Button>
                   </div>
                 </div>
+                <Button 
+                  onClick={getFeedback} 
+                  variant="outline" 
+                  className="w-full mt-4"
+                  disabled={isLoading || messages.length === 0}
+                >
+                  {isLoading ? 'Generating...' : 'Get Performance Feedback'}
+                </Button>
               </CardContent>
             </Card>
           )}
 
-          {/* Instructions */}
-          <Card>
-            <CardHeader>
-              <CardTitle>How to Use Live Voice Calls</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <div className="space-y-2">
-                <p><strong>1. Describe your scenario:</strong> Set up the sales situation you want to practice</p>
-                <p><strong>2. Start live call:</strong> Click "Start Live Call" and allow microphone access</p>
-                <p><strong>3. Speak naturally:</strong> Talk normally - the system listens continuously</p>
-                <p><strong>4. Have a conversation:</strong> AI responds naturally like a real prospect</p>
-                <p><strong>5. Get performance analysis:</strong> End call and get detailed feedback</p>
-              </div>
-              
-              <Separator />
-              
-              <div>
-                <h4 className="font-semibold mb-2">Live Call Features:</h4>
-                <ul className="list-disc list-inside space-y-1 text-xs">
-                  <li>✅ Continuous listening - no buttons to hold</li>
-                  <li>✅ Natural turn-taking like real calls</li>
-                  <li>✅ Real-time transcript of conversation</li>
-                  <li>✅ Mute AI if you need to think</li>
-                  <li>✅ Emergency text input if voice fails</li>
-                  <li>✅ Interruption handling (you can cut off AI)</li>
-                </ul>
-              </div>
-              
-              <Separator />
-              
-              <div>
-                <h4 className="font-semibold mb-2">Best Practices:</h4>
-                <ul className="list-disc list-inside space-y-1 text-xs">
-                  <li>Speak in a quiet environment</li>
-                  <li>Use Chrome browser for best results</li>
-                  <li>Speak clearly but naturally</li>
-                  <li>Wait for AI to finish before responding</li>
-                  <li>Use the mute button if you need silence</li>
-                </ul>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Performance Feedback */}
+          {feedback && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Performance Feedback</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  AI analysis of your sales conversation
+                </p>
+              </CardHeader>
+              <CardContent>
+                <ScrollArea className="h-96 w-full">
+                  <div className="space-y-4">
+                    <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg">
+                      <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
+                        📞 Opening & First Impression
+                      </h4>
+                      <p className="text-sm text-blue-800 dark:text-blue-200">
+                        {feedback.opening}
+                      </p>
+                    </div>
+
+                    <div className="p-4 bg-green-50 dark:bg-green-950 rounded-lg">
+                      <h4 className="font-medium text-green-900 dark:text-green-100 mb-2">
+                        🔍 Discovery & Questions
+                      </h4>
+                      <p className="text-sm text-green-800 dark:text-green-200">
+                        {feedback.discovery_questions}
+                      </p>
+                    </div>
+
+                    <div className="p-4 bg-orange-50 dark:bg-orange-950 rounded-lg">
+                      <h4 className="font-medium text-orange-900 dark:text-orange-100 mb-2">
+                        ⚡ Handling Objections
+                      </h4>
+                      <p className="text-sm text-orange-800 dark:text-orange-200">
+                        {feedback.handling_objections}
+                      </p>
+                    </div>
+
+                    <div className="p-4 bg-purple-50 dark:bg-purple-950 rounded-lg">
+                      <h4 className="font-medium text-purple-900 dark:text-purple-100 mb-2">
+                        💡 Value Proposition
+                      </h4>
+                      <p className="text-sm text-purple-800 dark:text-purple-200">
+                        {feedback.value_proposition}
+                      </p>
+                    </div>
+
+                    <div className="p-4 bg-red-50 dark:bg-red-950 rounded-lg">
+                      <h4 className="font-medium text-red-900 dark:text-red-100 mb-2">
+                        🎯 Closing Technique
+                      </h4>
+                      <p className="text-sm text-red-800 dark:text-red-200">
+                        {feedback.closing}
+                      </p>
+                    </div>
+
+                    <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                      <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
+                        📊 Overall Effectiveness
+                      </h4>
+                      <p className="text-sm text-gray-800 dark:text-gray-200">
+                        {feedback.overall_effectiveness}
+                      </p>
+                    </div>
+                  </div>
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Empty State / Instructions */}
+          {!isCallActive && messages.length === 0 && !feedback && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Welcome to Sales Training</CardTitle>
+              </CardHeader>
+              <CardContent className="text-center space-y-4">
+                <div className="text-6xl">🎯</div>
+                <div className="space-y-2">
+                  <h3 className="font-medium">Ready to practice your sales skills?</h3>
+                  <p className="text-sm text-muted-foreground">
+                    1. Set up your scenario on the left
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    2. Choose an AI voice for your prospect
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    3. Start a live voice call or type messages
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    4. Get detailed performance feedback
+                  </p>
+                </div>
+                <div className="pt-4 border-t">
+                  <p className="text-xs text-muted-foreground">
+                    💡 Tip: Use realistic scenarios like cold calls, follow-ups, or objection handling practice
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>

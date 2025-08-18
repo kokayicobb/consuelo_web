@@ -82,10 +82,18 @@ export async function POST(req: Request) {
 
     // Convert the stream to a buffer
     const chunks: Uint8Array[] = [];
-    for await (const chunk of audioStream) {
-      if (chunk instanceof Uint8Array) {
-        chunks.push(chunk);
+    const reader = audioStream.getReader();
+    
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        if (value instanceof Uint8Array) {
+          chunks.push(value);
+        }
       }
+    } finally {
+      reader.releaseLock();
     }
     
     // Combine all chunks into a single buffer

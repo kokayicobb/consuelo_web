@@ -2,7 +2,6 @@
 import { initiateCall } from '@/components/Unified Commerce Dashboard/lib/actions/phone-call-actions'
 import { NextRequest, NextResponse } from 'next/server'
 
-export const runtime = 'edge'
 export const maxDuration = 30
 
 export async function POST(request: NextRequest) {

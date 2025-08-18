@@ -1,9 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   transpilePackages: ['@radix-ui/react-dropdown-menu'],
-  experimental: {
-    serverComponentsExternalPackages: ['@workos-inc/authkit-nextjs', 'https-proxy-agent', 'gaxios', 'google-auth-library'],
-  },
+  serverExternalPackages: ['@workos-inc/authkit-nextjs', 'https-proxy-agent', 'gaxios', 'google-auth-library', 'twilio', 'jsonwebtoken'],
+  experimental: {},
   webpack: (config, { isServer }) => {
     // Add ESM resolution fix for server-side
     if (isServer) {
@@ -38,6 +37,8 @@ const nextConfig = {
         'http-proxy-agent': false,
         'gaxios': false,
         'google-auth-library': false,
+        'twilio': false,
+        'jsonwebtoken': false,
       };
     }
     
