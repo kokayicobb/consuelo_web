@@ -55,7 +55,7 @@ export default function RoleplayPage() {
   const [isMuted, setIsMuted] = useState(false);
   const [currentTranscript, setCurrentTranscript] = useState('');
   const [isCallActive, setIsCallActive] = useState(false);
-  const [callStatus, setCallStatus] = useState<'idle' | 'connecting' | 'active' | 'user_turn' | 'ai_turn'>('idle');
+  const [callStatus, setCallStatus] = useState<'idle' | 'connecting' | 'active' | 'user_turn' | 'ai_turn' | 'speaking' | 'listening'>('idle');
   const [isPushToTalkPressed, setIsPushToTalkPressed] = useState(false);
   
   // Refs for audio functionality

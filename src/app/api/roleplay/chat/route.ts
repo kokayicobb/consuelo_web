@@ -42,7 +42,9 @@ export async function POST(req: Request) {
     const messages: any[] = [];
     
     // Add system message
-    const systemMessage = `You are a prospect for a cold call. The scenario is: ${scenario}. Your goal is to act as a realistic, challenging, or open prospect based on the scenario. Do not break character. Respond concisely as a person would in a real conversation. Keep responses under 50 words.`;
+    const systemMessage = `You are a prospect for a cold call. The scenario is: ${scenario}. Your goal is to act as a realistic, challenging, or open prospect based on the scenario. Do not break character. Respond concisely as a person would in a real conversation. Keep responses under 50 words. 
+
+IMPORTANT: Only provide the exact words you would speak. Do not include any stage directions, action descriptions, or text in parentheses like "(firmly)" or "(sighs)". Just speak naturally as the character would.`;
     messages.push({
       role: 'system',
       content: systemMessage
@@ -96,8 +98,23 @@ export async function POST(req: Request) {
     }
 
     const chatCompletion = await response.json();
-    const responseText = chatCompletion.choices[0]?.message?.content;
-    console.log('🤖 Groq response:', responseText);
+    const rawResponse = chatCompletion.choices[0]?.message?.content;
+    console.log('🤖 Raw Groq response:', rawResponse);
+    
+    // Clean the response to remove stage directions and formatting
+    let responseText = rawResponse;
+    if (rawResponse) {
+      // Remove parenthetical stage directions like (firmly), (sighs), etc.
+      responseText = rawResponse.replace(/\([^)]*\)/g, '').trim();
+      
+      // Remove quotes if the entire response is wrapped in quotes
+      responseText = responseText.replace(/^["'](.*)["']$/s, '$1');
+      
+      // Clean up any double spaces
+      responseText = responseText.replace(/\s+/g, ' ').trim();
+    }
+    
+    console.log('🤖 Cleaned response:', responseText);
     
     if (!responseText || responseText.trim() === '') {
       console.error('❌ Empty response from Groq');

@@ -78,10 +78,10 @@ export async function POST(req: Request) {
       const clerkUserId = evt.data.id;
       const supabaseUserId = newUser.user.id;
       
-      const { Clerk } = require('@clerk/clerk-sdk-node');
-      const clerk = Clerk({ secretKey: process.env.CLERK_SECRET_KEY });
-
-      await clerk.users.updateUserMetadata(clerkUserId, {
+      // Use the newer @clerk/nextjs approach
+      const { clerkClient } = await import('@clerk/nextjs/server');
+      
+      await clerkClient.users.updateUserMetadata(clerkUserId, {
         publicMetadata: {
           supabase_id: supabaseUserId,
         },
