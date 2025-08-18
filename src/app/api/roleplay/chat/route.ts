@@ -1,36 +1,4 @@
-import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from '@google/generative-ai';
 import { NextRequest, NextResponse } from 'next/server';
-
-// Initialize Gemini Generative AI client
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-
-// Define generation configuration for the AI
-const generationConfig = {
-  temperature: 0.9,
-  topP: 1,
-  topK: 1,
-  maxOutputTokens: 200, // Limit response length for roleplay
-};
-
-// Define safety settings to block harmful content
-const safetySettings = [
-  {
-    category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-    threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-  },
-  {
-    category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-    threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-  },
-  {
-    category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-    threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-  },
-  {
-    category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-    threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-  },
-];
 
 // Helper for exponential backoff retry mechanism
 async function retryOperation<T>(
@@ -65,49 +33,76 @@ export async function POST(req: Request) {
     console.log('🤖 History length:', history?.length);
     console.log('🤖 Scenario:', scenario);
 
-    if (message === undefined || message === null) {
-      console.error('❌ No message provided to chat API');
-      return NextResponse.json({ error: 'No message provided' }, { status: 400 });
+    if (!process.env.GROQ_API_KEY) {
+      console.error('❌ GROQ_API_KEY not found in environment variables');
+      return NextResponse.json({ error: 'API key not configured' }, { status: 500 });
     }
 
-    console.log('🤖 Creating Gemini model...');
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-
-    // Construct the initial system instruction for the AI's persona
-    const systemInstruction = `You are a prospect for a cold call. The scenario is: ${scenario}. Your goal is to act as a realistic, challenging, or open prospect based on the scenario. Do not break character. Respond concisely as a person would in a real conversation.`;
-    console.log('🤖 System instruction:', systemInstruction);
-
-    // Format history for Gemini API: [{ role: 'user', parts: [{ text: '...' }] }, { role: 'model', parts: [{ text: '...' }] }]
-    const formattedHistory = history.map((entry: { role: string; text: string }) => ({
-      role: entry.role === 'user' ? 'user' : 'model',
-      parts: [{ text: entry.text }],
-    }));
-    console.log('🤖 Formatted history:', formattedHistory);
-
-    // Start a chat session with the full history and system instruction
-    console.log('🤖 Starting chat session...');
-    const chat = model.startChat({
-      history: formattedHistory,
-      generationConfig,
-      safetySettings,
+    // Build messages array for Groq
+    const messages: any[] = [];
+    
+    // Add system message
+    const systemMessage = `You are a prospect for a cold call. The scenario is: ${scenario}. Your goal is to act as a realistic, challenging, or open prospect based on the scenario. Do not break character. Respond concisely as a person would in a real conversation. Keep responses under 50 words.`;
+    messages.push({
+      role: 'system',
+      content: systemMessage
     });
 
-    // Send the current user message to the AI
-    const userMessage = message.trim() === "" ? "[This is the start of the conversation - please greet the sales agent as the prospect]" : message;
-    console.log('🤖 Sending message to Gemini:', userMessage);
+    // Add conversation history
+    if (history && history.length > 0) {
+      for (const entry of history) {
+        messages.push({
+          role: entry.role === 'user' ? 'user' : 'assistant',
+          content: entry.text
+        });
+      }
+    }
+
+    // Add current user message
+    const userMessage = message.trim() === "" 
+      ? "Hello, I'm calling about a business opportunity. Do you have a moment to chat?"
+      : message;
     
-    const result = await retryOperation(() => chat.sendMessage(userMessage));
-    console.log('🤖 Raw Gemini result:', JSON.stringify(result, null, 2));
-    
-    const responseText = result.response.text();
-    console.log('🤖 Gemini response text:', responseText);
-    console.log('🤖 Response length:', responseText?.length);
+    messages.push({
+      role: 'user',
+      content: userMessage
+    });
+
+    console.log('🤖 Messages for Groq:', messages);
+
+    // Call Groq API using direct fetch
+    console.log('🤖 Calling Groq API...');
+    const response = await retryOperation(async () => {
+      return await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: messages,
+          model: "qwen/qwen3-32b", // Use qwen/qwen3-32b"  for better responses
+          temperature: 0.7,
+          max_tokens: 150,
+          top_p: 0.9,
+        }),
+      });
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Groq API error:', response.status, errorText);
+      throw new Error(`Groq API error: ${response.status} - ${errorText}`);
+    }
+
+    const chatCompletion = await response.json();
+    const responseText = chatCompletion.choices[0]?.message?.content;
+    console.log('🤖 Groq response:', responseText);
     
     if (!responseText || responseText.trim() === '') {
-      console.error('❌ Empty response from Gemini');
-      console.log('🤖 Full result object:', JSON.stringify(result, null, 2));
+      console.error('❌ Empty response from Groq');
       
-      // Try to provide a fallback response
+      // Fallback response
       const fallbackResponse = "Hello, you've reached me at a bit of a busy time. What's this regarding?";
       console.log('🤖 Using fallback response:', fallbackResponse);
       return NextResponse.json({ response: fallbackResponse });
@@ -115,7 +110,10 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ response: responseText });
   } catch (error) {
-    console.error('Error in chat API:', error);
-    return NextResponse.json({ error: 'Failed to get AI response', details: error instanceof Error ? error.message : String(error) }, { status: 500 });
+    console.error('❌ Error in chat API:', error);
+    return NextResponse.json({ 
+      error: 'Failed to get AI response', 
+      details: error instanceof Error ? error.message : String(error) 
+    }, { status: 500 });
   }
 }
