@@ -418,6 +418,18 @@ export default function RoleplayPage() {
     toast.success('Call ended');
   };
 
+  const resetScenario = () => {
+    setScenario('');
+    setMessages([]);
+    setCurrentMessage('');
+    setFeedback(null);
+    setIsSessionActive(false);
+    setIsCallActive(false);
+    setCallStatus('idle');
+    setCurrentTranscript('');
+    toast.success('Scenario reset');
+  };
+
   const toggleMute = () => {
     setIsMuted(!isMuted);
     if (currentAudioRef.current) {
@@ -520,100 +532,36 @@ export default function RoleplayPage() {
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Left Column - Setup and Voice Interface */}
-        <div className="space-y-6">
-          {/* Scenario Setup */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Scenario Setup</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="scenario">Describe the sales scenario</Label>
-                <Textarea
-                  id="scenario"
-                  placeholder="e.g., Cold calling a potential client who needs CRM software. They're busy and skeptical about sales calls..."
-                  value={scenario}
-                  onChange={(e) => setScenario(e.target.value)}
-                  disabled={isSessionActive}
-                  rows={4}
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="voice">AI Prospect Voice</Label>
-                <Select 
-                  value={selectedVoiceId} 
-                  onValueChange={setSelectedVoiceId}
-                  disabled={isSessionActive || isLoadingVoices}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={isLoadingVoices ? "Loading voices..." : "Select a voice"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableVoices.map((voice) => (
-                      <SelectItem key={voice.voice_id} value={voice.voice_id}>
-                        <div className="flex flex-col">
-                          <span className="font-medium">{voice.name}</span>
-                          {voice.description && (
-                            <span className="text-xs text-muted-foreground">{voice.description}</span>
-                          )}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+      {/* During Call Layout - Side by Side */}
+      {isCallActive ? (
+        <div className="grid lg:grid-cols-2 gap-6">
+          {/* Left Column - Live Call Interface */}
+          <div className="space-y-6">
 
-              <div className="flex gap-2">
-                <Button 
-                  onClick={startCall} 
-                  disabled={isCallActive || !scenario.trim()}
-                  className="flex-1"
-                  size="lg"
-                >
-                  <Phone className="w-4 h-4 mr-2" />
-                  Start Live Call
-                </Button>
-                <Button 
-                  onClick={endCall} 
-                  variant="outline"
-                  disabled={!isCallActive}
-                  size="lg"
-                >
-                  <PhoneOff className="w-4 h-4 mr-2" />
-                  End Call
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Live Call Interface */}
-          {isCallActive && (
+            {/* Live Call Interface */}
             <Card>
               <CardHeader>
                 <CardTitle>Live Sales Call</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Push-to-Talk Interface */}
-                <div className="text-center space-y-6">
+                <div className="text-center space-y-4">
                   {/* Status Text */}
                   <div className="space-y-2">
                     {callStatus === 'user_turn' ? (
-                      <p className="text-lg font-medium text-blue-600">Your turn - Press and hold to speak</p>
+                      <p className="text-base font-medium text-blue-600">Your turn - Press and hold to speak</p>
                     ) : callStatus === 'ai_turn' ? (
-                      <p className="text-lg font-medium text-purple-600">AI is thinking...</p>
+                      <p className="text-base font-medium text-purple-600">AI is thinking...</p>
                     ) : isPlaying ? (
-                      <p className="text-lg font-medium text-green-600">🔊 AI Prospect is speaking</p>
+                      <p className="text-base font-medium text-green-600">🔊 AI Prospect is speaking</p>
                     ) : (
-                      <p className="text-lg font-medium text-gray-600">📞 Call in progress</p>
+                      <p className="text-base font-medium text-gray-600">📞 Call in progress</p>
                     )}
                     
                     {currentTranscript && (
-                      <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg max-w-md mx-auto">
-                        <p className="text-sm text-muted-foreground mb-1">You said:</p>
-                        <p className="text-sm font-medium italic">"{currentTranscript}"</p>
+                      <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg max-w-sm mx-auto">
+                        <p className="text-xs text-muted-foreground mb-1">You said:</p>
+                        <p className="text-xs font-medium italic">"{currentTranscript}"</p>
                       </div>
                     )}
                   </div>
@@ -627,7 +575,7 @@ export default function RoleplayPage() {
                       onTouchStart={handlePushToTalkStart}
                       onTouchEnd={handlePushToTalkEnd}
                       disabled={callStatus !== 'user_turn' || isPlaying}
-                      className={`w-48 h-48 rounded-full border-8 flex items-center justify-center transition-all duration-200 active:scale-95 ${
+                      className={`w-32 h-32 sm:w-40 sm:h-40 lg:w-36 lg:h-36 xl:w-48 xl:h-48 rounded-full border-8 flex items-center justify-center transition-all duration-200 active:scale-95 ${
                         isPushToTalkPressed 
                           ? 'border-green-500 bg-green-500 shadow-2xl scale-105' 
                           : callStatus === 'user_turn' 
@@ -636,18 +584,18 @@ export default function RoleplayPage() {
                       }`}
                     >
                       {isPushToTalkPressed ? (
-                        <Mic className="w-20 h-20 text-white animate-pulse" />
+                        <Mic className="w-12 h-12 sm:w-16 sm:h-16 lg:w-14 lg:h-14 xl:w-20 xl:h-20 text-white animate-pulse" />
                       ) : callStatus === 'user_turn' ? (
-                        <Mic className="w-20 h-20 text-blue-500" />
+                        <Mic className="w-12 h-12 sm:w-16 sm:h-16 lg:w-14 lg:h-14 xl:w-20 xl:h-20 text-blue-500" />
                       ) : isPlaying ? (
-                        <Volume2 className="w-20 h-20 text-gray-400 animate-pulse" />
+                        <Volume2 className="w-12 h-12 sm:w-16 sm:h-16 lg:w-14 lg:h-14 xl:w-20 xl:h-20 text-gray-400 animate-pulse" />
                       ) : (
-                        <Mic className="w-20 h-20 text-gray-400" />
+                        <Mic className="w-12 h-12 sm:w-16 sm:h-16 lg:w-14 lg:h-14 xl:w-20 xl:h-20 text-gray-400" />
                       )}
                     </button>
                   </div>
 
-                  <div className="text-sm text-muted-foreground max-w-md mx-auto">
+                  <div className="text-xs text-muted-foreground max-w-xs mx-auto">
                     {callStatus === 'user_turn' ? (
                       "Hold the button while speaking, then release when done"
                     ) : isPlaying ? (
@@ -659,16 +607,16 @@ export default function RoleplayPage() {
                 </div>
 
                 {/* Call Controls */}
-                <div className="flex justify-center gap-3">
+                <div className="flex flex-wrap justify-center gap-2">
                   <Button
                     onClick={toggleMute}
                     variant={isMuted ? "default" : "outline"}
-                    size="lg"
+                    size="sm"
                   >
                     {isMuted ? (
-                      <><VolumeX className="w-5 h-5 mr-2" />Unmute</>
+                      <><VolumeX className="w-4 h-4 mr-1" />Unmute</>
                     ) : (
-                      <><Volume2 className="w-5 h-5 mr-2" />Mute AI</>
+                      <><Volume2 className="w-4 h-4 mr-1" />Mute AI</>
                     )}
                   </Button>
 
@@ -676,9 +624,9 @@ export default function RoleplayPage() {
                     <Button
                       onClick={stopCurrentAudio}
                       variant="outline"
-                      size="lg"
+                      size="sm"
                     >
-                      <VolumeX className="w-5 h-5 mr-2" />
+                      <VolumeX className="w-4 h-4 mr-1" />
                       Stop AI
                     </Button>
                   )}
@@ -686,16 +634,16 @@ export default function RoleplayPage() {
                   <Button
                     onClick={endCall}
                     variant="destructive"
-                    size="lg"
+                    size="sm"
                   >
-                    <PhoneOff className="w-5 h-5 mr-2" />
+                    <PhoneOff className="w-4 h-4 mr-1" />
                     End Call
                   </Button>
                 </div>
 
                 {/* Text fallback */}
-                <div className="border-t pt-4">
-                  <Label htmlFor="textFallback" className="text-sm text-muted-foreground">
+                <div className="border-t pt-3">
+                  <Label htmlFor="textFallback" className="text-xs text-muted-foreground">
                     Emergency text input (if voice fails)
                   </Label>
                   <div className="flex gap-2 mt-2">
@@ -706,6 +654,7 @@ export default function RoleplayPage() {
                       onChange={(e) => setCurrentMessage(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && sendTextMessage()}
                       disabled={isLoading || !isCallActive}
+                      className="text-sm"
                     />
                     <Button 
                       onClick={sendTextMessage} 
@@ -722,209 +671,293 @@ export default function RoleplayPage() {
                   variant="outline" 
                   className="w-full"
                   disabled={isLoading || messages.length === 0}
+                  size="sm"
                 >
                   {isLoading ? 'Generating...' : 'Get Performance Feedback'}
                 </Button>
               </CardContent>
             </Card>
-          )}
+          </div>
 
-          {/* Call Transcript */}
-          {isCallActive && messages.length > 0 && (
-            <Card>
+          {/* Right Column - Live Transcript During Call */}
+          <div className="space-y-6">
+
+            {/* Live Call Transcript */}
+            <Card className="h-fit">
               <CardHeader>
                 <CardTitle>Live Call Transcript</CardTitle>
                 <Badge variant="outline">Real-time transcript</Badge>
               </CardHeader>
               <CardContent>
-                <ScrollArea className="h-64 w-full">
-                  <div className="space-y-3">
-                    {messages.map((message, index) => (
-                      <div
-                        key={index}
-                        className={`p-3 rounded-lg text-sm border-l-4 ${
-                          message.role === 'user'
-                            ? 'border-l-green-500 bg-green-50 dark:bg-green-950'
-                            : 'border-l-blue-500 bg-blue-50 dark:bg-blue-950'
-                        }`}
-                      >
-                        <div className="text-xs font-medium text-muted-foreground mb-1">
-                          {message.role === 'user' ? '👤 You' : '🤖 AI Prospect'}
-                        </div>
-                        <div className="text-sm">{message.text}</div>
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
-        {/* Right Column - Conversation History & Feedback */}
-        <div className="space-y-6">
-          {/* Conversation History (for non-call mode) */}
-          {!isCallActive && messages.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Conversation History</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-80 w-full">
-                  <div className="space-y-4">
-                    {messages.map((message, index) => (
-                      <div
-                        key={index}
-                        className={`p-4 rounded-lg ${
-                          message.role === 'user'
-                            ? 'bg-green-50 dark:bg-green-950 border-l-4 border-l-green-500'
-                            : 'bg-blue-50 dark:bg-blue-950 border-l-4 border-l-blue-500'
-                        }`}
-                      >
-                        <div className="text-xs font-medium text-muted-foreground mb-2">
-                          {message.role === 'user' ? '👤 You (Salesperson)' : '🤖 AI Prospect'}
-                        </div>
-                        <div className="text-sm leading-relaxed">{message.text}</div>
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-                <Separator className="my-4" />
-                <div className="space-y-2">
-                  <Label htmlFor="message">Send a message</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="message"
-                      placeholder="Type your sales pitch or response..."
-                      value={currentMessage}
-                      onChange={(e) => setCurrentMessage(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && sendTextMessage()}
-                      disabled={isLoading}
-                    />
-                    <Button 
-                      onClick={sendTextMessage} 
-                      disabled={isLoading || !currentMessage.trim()}
-                    >
-                      {isLoading ? 'Sending...' : 'Send'}
-                    </Button>
-                  </div>
-                </div>
-                <Button 
-                  onClick={getFeedback} 
-                  variant="outline" 
-                  className="w-full mt-4"
-                  disabled={isLoading || messages.length === 0}
-                >
-                  {isLoading ? 'Generating...' : 'Get Performance Feedback'}
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Performance Feedback */}
-          {feedback && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Performance Feedback</CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  AI analysis of your sales conversation
-                </p>
-              </CardHeader>
-              <CardContent>
                 <ScrollArea className="h-96 w-full">
-                  <div className="space-y-4">
-                    <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg">
-                      <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
-                        📞 Opening & First Impression
-                      </h4>
-                      <p className="text-sm text-blue-800 dark:text-blue-200">
-                        {feedback.opening}
-                      </p>
-                    </div>
-
-                    <div className="p-4 bg-green-50 dark:bg-green-950 rounded-lg">
-                      <h4 className="font-medium text-green-900 dark:text-green-100 mb-2">
-                        🔍 Discovery & Questions
-                      </h4>
-                      <p className="text-sm text-green-800 dark:text-green-200">
-                        {feedback.discovery_questions}
-                      </p>
-                    </div>
-
-                    <div className="p-4 bg-orange-50 dark:bg-orange-950 rounded-lg">
-                      <h4 className="font-medium text-orange-900 dark:text-orange-100 mb-2">
-                        ⚡ Handling Objections
-                      </h4>
-                      <p className="text-sm text-orange-800 dark:text-orange-200">
-                        {feedback.handling_objections}
-                      </p>
-                    </div>
-
-                    <div className="p-4 bg-purple-50 dark:bg-purple-950 rounded-lg">
-                      <h4 className="font-medium text-purple-900 dark:text-purple-100 mb-2">
-                        💡 Value Proposition
-                      </h4>
-                      <p className="text-sm text-purple-800 dark:text-purple-200">
-                        {feedback.value_proposition}
-                      </p>
-                    </div>
-
-                    <div className="p-4 bg-red-50 dark:bg-red-950 rounded-lg">
-                      <h4 className="font-medium text-red-900 dark:text-red-100 mb-2">
-                        🎯 Closing Technique
-                      </h4>
-                      <p className="text-sm text-red-800 dark:text-red-200">
-                        {feedback.closing}
-                      </p>
-                    </div>
-
-                    <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                      <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
-                        📊 Overall Effectiveness
-                      </h4>
-                      <p className="text-sm text-gray-800 dark:text-gray-200">
-                        {feedback.overall_effectiveness}
-                      </p>
-                    </div>
+                  <div className="space-y-3">
+                    {messages.length > 0 ? (
+                      messages.map((message, index) => (
+                        <div
+                          key={index}
+                          className={`p-3 rounded-lg text-sm border-l-4 ${
+                            message.role === 'user'
+                              ? 'border-l-green-500 bg-green-50 dark:bg-green-950'
+                              : 'border-l-blue-500 bg-blue-50 dark:bg-blue-950'
+                          }`}
+                        >
+                          <div className="text-xs font-medium text-muted-foreground mb-1">
+                            {message.role === 'user' ? '👤 You' : '🤖 AI Prospect'}
+                          </div>
+                          <div className="text-sm">{message.text}</div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center text-muted-foreground py-8">
+                        <p>Conversation will appear here...</p>
+                      </div>
+                    )}
                   </div>
                 </ScrollArea>
               </CardContent>
             </Card>
-          )}
-
-          {/* Empty State / Instructions */}
-          {!isCallActive && messages.length === 0 && !feedback && (
+          </div>
+        </div>
+      ) : (
+        /* Setup Layout - When Not In Call */
+        <div className="grid lg:grid-cols-2 gap-6">
+          {/* Left Column - Setup */}
+          <div className="space-y-6">
+            {/* Scenario Setup */}
             <Card>
               <CardHeader>
-                <CardTitle>Welcome to Sales Training</CardTitle>
+                <CardTitle>Scenario Setup</CardTitle>
               </CardHeader>
-              <CardContent className="text-center space-y-4">
-                <div className="text-6xl">🎯</div>
-                <div className="space-y-2">
-                  <h3 className="font-medium">Ready to practice your sales skills?</h3>
-                  <p className="text-sm text-muted-foreground">
-                    1. Set up your scenario on the left
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    2. Choose an AI voice for your prospect
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    3. Start a live voice call or type messages
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    4. Get detailed performance feedback
-                  </p>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="scenario">Describe the sales scenario</Label>
+                  <Textarea
+                    id="scenario"
+                    placeholder="e.g., Cold calling a potential client who needs CRM software. They're busy and skeptical about sales calls..."
+                    value={scenario}
+                    onChange={(e) => setScenario(e.target.value)}
+                    disabled={isSessionActive}
+                    rows={4}
+                  />
                 </div>
-                <div className="pt-4 border-t">
-                  <p className="text-xs text-muted-foreground">
-                    💡 Tip: Use realistic scenarios like cold calls, follow-ups, or objection handling practice
-                  </p>
+                
+                <div>
+                  <Label htmlFor="voice">AI Prospect Voice</Label>
+                  <Select 
+                    value={selectedVoiceId} 
+                    onValueChange={setSelectedVoiceId}
+                    disabled={isSessionActive || isLoadingVoices}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={isLoadingVoices ? "Loading voices..." : "Select a voice"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableVoices.map((voice) => (
+                        <SelectItem key={voice.voice_id} value={voice.voice_id}>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{voice.name}</span>
+                            {voice.description && (
+                              <span className="text-xs text-muted-foreground">{voice.description}</span>
+                            )}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
+
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={startCall} 
+                    disabled={isCallActive || !scenario.trim()}
+                    className="flex-1"
+                    size="lg"
+                  >
+                    <Phone className="w-4 h-4 mr-2" />
+                    Start Live Call
+                  </Button>
+                </div>
+                
+                {/* Reset Button - Only show if there's content to reset */}
+                {(messages.length > 0 || feedback || scenario.trim()) && (
+                  <Button 
+                    onClick={resetScenario}
+                    variant="outline"
+                    className="w-full"
+                    size="sm"
+                  >
+                    Reset Scenario
+                  </Button>
+                )}
               </CardContent>
             </Card>
-          )}
-        </div>
-      </div>
+          </div>
+
+          {/* Right Column - Conversation History & Feedback */}
+          <div className="space-y-6">
+            {/* Conversation History (for non-call mode) */}
+            {messages.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Conversation History</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ScrollArea className="h-80 w-full">
+                    <div className="space-y-4">
+                      {messages.map((message, index) => (
+                        <div
+                          key={index}
+                          className={`p-4 rounded-lg ${
+                            message.role === 'user'
+                              ? 'bg-green-50 dark:bg-green-950 border-l-4 border-l-green-500'
+                              : 'bg-blue-50 dark:bg-blue-950 border-l-4 border-l-blue-500'
+                          }`}
+                        >
+                          <div className="text-xs font-medium text-muted-foreground mb-2">
+                            {message.role === 'user' ? '👤 You (Salesperson)' : '🤖 AI Prospect'}
+                          </div>
+                          <div className="text-sm leading-relaxed">{message.text}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                  <Separator className="my-4" />
+                  <div className="space-y-2">
+                    <Label htmlFor="message">Send a message</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="message"
+                        placeholder="Type your sales pitch or response..."
+                        value={currentMessage}
+                        onChange={(e) => setCurrentMessage(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && sendTextMessage()}
+                        disabled={isLoading}
+                      />
+                      <Button 
+                        onClick={sendTextMessage} 
+                        disabled={isLoading || !currentMessage.trim()}
+                      >
+                        {isLoading ? 'Sending...' : 'Send'}
+                      </Button>
+                    </div>
+                  </div>
+                  <Button 
+                    onClick={getFeedback} 
+                    variant="outline" 
+                    className="w-full mt-4"
+                    disabled={isLoading || messages.length === 0}
+                  >
+                    {isLoading ? 'Generating...' : 'Get Performance Feedback'}
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Performance Feedback */}
+            {feedback && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Performance Feedback</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    AI analysis of your sales conversation
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <ScrollArea className="h-96 w-full">
+                    <div className="space-y-4">
+                        <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg">
+                          <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
+                            📞 Opening & First Impression
+                          </h4>
+                          <p className="text-sm text-blue-800 dark:text-blue-200">
+                            {feedback.opening}
+                          </p>
+                        </div>
+
+                        <div className="p-4 bg-green-50 dark:bg-green-950 rounded-lg">
+                          <h4 className="font-medium text-green-900 dark:text-green-100 mb-2">
+                            🔍 Discovery & Questions
+                          </h4>
+                          <p className="text-sm text-green-800 dark:text-green-200">
+                            {feedback.discovery_questions}
+                          </p>
+                        </div>
+
+                        <div className="p-4 bg-orange-50 dark:bg-orange-950 rounded-lg">
+                          <h4 className="font-medium text-orange-900 dark:text-orange-100 mb-2">
+                            ⚡ Handling Objections
+                          </h4>
+                          <p className="text-sm text-orange-800 dark:text-orange-200">
+                            {feedback.handling_objections}
+                          </p>
+                        </div>
+
+                        <div className="p-4 bg-purple-50 dark:bg-purple-950 rounded-lg">
+                          <h4 className="font-medium text-purple-900 dark:text-purple-100 mb-2">
+                            💡 Value Proposition
+                          </h4>
+                          <p className="text-sm text-purple-800 dark:text-purple-200">
+                            {feedback.value_proposition}
+                          </p>
+                        </div>
+
+                        <div className="p-4 bg-red-50 dark:bg-red-950 rounded-lg">
+                          <h4 className="font-medium text-red-900 dark:text-red-100 mb-2">
+                            🎯 Closing Technique
+                          </h4>
+                          <p className="text-sm text-red-800 dark:text-red-200">
+                            {feedback.closing}
+                          </p>
+                        </div>
+
+                        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                          <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
+                            📊 Overall Effectiveness
+                          </h4>
+                          <p className="text-sm text-gray-800 dark:text-gray-200">
+                            {feedback.overall_effectiveness}
+                          </p>
+                        </div>
+                      </div>
+                    </ScrollArea>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Empty State / Instructions */}
+              {messages.length === 0 && !feedback && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Welcome to Sales Training</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-center space-y-4">
+                    <div className="text-6xl">🎯</div>
+                    <div className="space-y-2">
+                      <h3 className="font-medium">Ready to practice your sales skills?</h3>
+                      <p className="text-sm text-muted-foreground">
+                        1. Set up your scenario on the left
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        2. Choose an AI voice for your prospect
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        3. Start a live voice call or type messages
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        4. Get detailed performance feedback
+                      </p>
+                    </div>
+                    <div className="pt-4 border-t">
+                      <p className="text-xs text-muted-foreground">
+                        💡 Tip: Use realistic scenarios like cold calls, follow-ups, or objection handling practice
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </div>
+        )}
     </div>
   );
 }
