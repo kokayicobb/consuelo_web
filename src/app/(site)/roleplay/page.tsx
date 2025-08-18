@@ -54,7 +54,7 @@ export default function RoleplayPage() {
   
   // Voice selection state
   const [availableVoices, setAvailableVoices] = useState<Voice[]>([]);
-  const [selectedVoiceId, setSelectedVoiceId] = useState('JBFqnCBsd6RMkjVDRZzb'); // Default Rachel voice
+  const [selectedVoiceId, setSelectedVoiceId] = useState('uYXf8XasLslADfZ2MB4u'); // Default Hope voice
   const [isLoadingVoices, setIsLoadingVoices] = useState(false);
   
   // Voice-specific state
@@ -744,15 +744,20 @@ export default function RoleplayPage() {
                   disabled={isSessionActive || isLoadingVoices}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder={isLoadingVoices ? "Loading voices..." : "Select a voice"} />
+                    <SelectValue placeholder={isLoadingVoices ? "Loading voices..." : "Select a voice"}>
+                      {selectedVoiceId && (() => {
+                        const selectedVoice = availableVoices.find(v => v.voice_id === selectedVoiceId);
+                        return selectedVoice ? selectedVoice.name : "Select a voice";
+                      })()}
+                    </SelectValue>
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="max-w-sm" position="popper" sideOffset={5} align="start" style={{ transformOrigin: 'top' }}>
                     {availableVoices.map((voice) => (
                       <SelectItem key={voice.voice_id} value={voice.voice_id}>
-                        <div className="flex flex-col">
+                        <div className="flex flex-col min-w-0">
                           <span className="font-medium">{voice.name}</span>
                           {voice.description && (
-                            <span className="text-xs text-muted-foreground">{voice.description}</span>
+                            <span className="text-xs text-muted-foreground line-clamp-2">{voice.description}</span>
                           )}
                           {voice.labels && (
                             <span className="text-xs text-muted-foreground">

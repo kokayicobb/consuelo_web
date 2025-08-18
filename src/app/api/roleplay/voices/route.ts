@@ -29,14 +29,23 @@ export async function GET() {
     });
 
     console.log('🎤 Voices fetched successfully');
+    console.log('🎤 Raw response:', JSON.stringify({
+      total: response.voices.length,
+      sample: response.voices.slice(0, 2).map(v => ({
+        id: v.voiceId,
+        name: v.name,
+        category: v.category,
+        availableForTiers: v.availableForTiers,
+        isOwner: v.isOwner
+      }))
+    }, null, 2));
     
     // Filter and format voices for the frontend
     const formattedVoices = response.voices
       .filter(voice => 
-        // Only include professional, premade, or generated voices
-        voice.category && ['professional', 'premade', 'generated'].includes(voice.category) &&
-        // Only include voices available for the user's tier
-        voice.availableForTiers && voice.availableForTiers.length > 0
+        // Include voices you own, or professional/premade/generated voices
+        voice.isOwner || 
+        (voice.category && ['professional', 'premade', 'generated', 'cloned'].includes(voice.category))
       )
       .map(voice => ({
         voice_id: voice.voiceId,
