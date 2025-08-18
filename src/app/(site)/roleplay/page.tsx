@@ -17,6 +17,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'react-hot-toast';
 import { Mic, MicOff, Volume2, VolumeX, Phone, PhoneOff } from 'lucide-react';
 
@@ -34,6 +35,15 @@ interface Feedback {
   overall_effectiveness: string;
 }
 
+interface Voice {
+  voice_id: string;
+  name: string;
+  description?: string;
+  category?: string;
+  labels?: Record<string, string>;
+  preview_url?: string;
+}
+
 export default function RoleplayPage() {
   const [scenario, setScenario] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
@@ -41,6 +51,11 @@ export default function RoleplayPage() {
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSessionActive, setIsSessionActive] = useState(false);
+  
+  // Voice selection state
+  const [availableVoices, setAvailableVoices] = useState<Voice[]>([]);
+  const [selectedVoiceId, setSelectedVoiceId] = useState('JBFqnCBsd6RMkjVDRZzb'); // Default Rachel voice
+  const [isLoadingVoices, setIsLoadingVoices] = useState(false);
   
   // Voice-specific state
   const [isListening, setIsListening] = useState(false);
@@ -90,6 +105,29 @@ export default function RoleplayPage() {
     return () => {
       endCall();
     };
+  }, []);
+
+  // Fetch available voices on component mount
+  useEffect(() => {
+    const fetchVoices = async () => {
+      setIsLoadingVoices(true);
+      try {
+        const response = await fetch('/api/roleplay/voices');
+        if (response.ok) {
+          const data = await response.json();
+          setAvailableVoices(data.voices || []);
+          console.log('🎤 Loaded', data.voices?.length, 'voices');
+        } else {
+          console.error('Failed to fetch voices:', response.status);
+        }
+      } catch (error) {
+        console.error('Error fetching voices:', error);
+      } finally {
+        setIsLoadingVoices(false);
+      }
+    };
+
+    fetchVoices();
   }, []);
 
   const startCall = async () => {
@@ -174,8 +212,10 @@ export default function RoleplayPage() {
             
             if (event.results[i].isFinal) {
               finalTranscript += transcript;
+              console.log('Final transcript:', transcript);
             } else {
               interimTranscript += transcript;
+              console.log('Interim transcript:', transcript);
             }
           }
           
@@ -183,6 +223,7 @@ export default function RoleplayPage() {
           
           // Process final result
           if (finalTranscript.trim() && !isProcessingRef.current) {
+            console.log('Processing speech:', finalTranscript.trim());
             handleUserSpeech(finalTranscript.trim());
             finalTranscript = '';
           }
@@ -190,13 +231,31 @@ export default function RoleplayPage() {
         
         recognitionRef.current.onerror = (event: any) => {
           console.error('Speech recognition error:', event.error);
+          
+          // Handle different types of errors
           if (event.error === 'network') {
-            // Restart recognition on network error
+            toast.error('Network error - restarting voice recognition...');
             setTimeout(() => {
               if (isCallActive) {
                 startListening();
               }
             }, 1000);
+          } else if (event.error === 'not-allowed') {
+            toast.error('Microphone access denied. Please allow microphone access and try again.');
+            setCallStatus('idle');
+            setIsCallActive(false);
+          } else if (event.error === 'no-speech') {
+            console.log('No speech detected, continuing...');
+            // Don't restart immediately for no-speech, let onend handle it
+          } else if (event.error === 'audio-capture') {
+            toast.error('Audio capture error. Check your microphone.');
+          } else {
+            console.log('Other speech error, attempting restart:', event.error);
+            setTimeout(() => {
+              if (isCallActive && !isProcessingRef.current) {
+                startListening();
+              }
+            }, 500);
           }
         };
         
@@ -220,10 +279,22 @@ export default function RoleplayPage() {
   const startListening = () => {
     if (recognitionRef.current && isCallActive && !isProcessingRef.current && !isPlaying) {
       try {
+        console.log('Starting speech recognition...');
         recognitionRef.current.start();
       } catch (error) {
         console.error('Error starting recognition:', error);
+        // If already started, this will throw an error - that's normal
+        if (error.name === 'InvalidStateError') {
+          console.log('Recognition already running');
+        }
       }
+    } else {
+      console.log('Cannot start listening:', {
+        hasRecognition: !!recognitionRef.current,
+        isCallActive,
+        isProcessing: isProcessingRef.current,
+        isPlaying
+      });
     }
   };
 
@@ -264,16 +335,15 @@ export default function RoleplayPage() {
     } finally {
       isProcessingRef.current = false;
       setCallStatus('active');
-      // Resume listening after a brief pause
-      setTimeout(() => {
-        if (isCallActive && !isPlaying) {
-          startListening();
-        }
-      }, 500);
+      // Note: Listening will be resumed by the audio onended callback in playAIResponse
     }
   };
 
   const getAIResponse = async (userText: string, conversationHistory: Message[]) => {
+    console.log('🤖 Getting AI response for:', userText);
+    console.log('🤖 Conversation history length:', conversationHistory.length);
+    console.log('🤖 Scenario:', scenario);
+    
     const response = await fetch('/api/roleplay/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -284,25 +354,47 @@ export default function RoleplayPage() {
       })
     });
 
+    console.log('🤖 Chat API response status:', response.status);
+
     if (!response.ok) {
-      throw new Error('Failed to get AI response');
+      const errorText = await response.text();
+      console.error('❌ Chat API failed:', response.status, errorText);
+      throw new Error(`Failed to get AI response: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
+    console.log('🤖 AI response:', data.response);
     return data.response;
   };
 
   const initiateAIGreeting = async () => {
     try {
+      console.log('👋 Initiating AI greeting...');
       const greeting = await getAIResponse("", []);
+      console.log('👋 AI greeting received:', greeting);
       const aiMessage: Message = { role: 'assistant', text: greeting };
       setMessages([aiMessage]);
       
       if (!isMuted) {
+        console.log('👋 Playing AI greeting (not muted)');
         await playAIResponse(greeting);
+      } else {
+        console.log('👋 Skipping AI greeting (muted)');
+        // If muted, we need to start listening immediately
+        setTimeout(() => {
+          if (isCallActive) {
+            startListening();
+          }
+        }, 500);
       }
     } catch (error) {
-      console.error('Error with AI greeting:', error);
+      console.error('❌ Error with AI greeting:', error);
+      // If greeting fails, still start listening
+      setTimeout(() => {
+        if (isCallActive) {
+          startListening();
+        }
+      }, 500);
     }
   };
 
@@ -336,50 +428,171 @@ export default function RoleplayPage() {
 
   const playAIResponse = async (text: string) => {
     try {
+      console.log('🔊 Starting TTS for text:', text);
       setIsPlaying(true);
       setCallStatus('speaking');
       
+      console.log('📡 Making TTS API request...');
       const ttsResponse = await fetch('/api/roleplay/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text })
+        body: JSON.stringify({ 
+          text,
+          voice_id: selectedVoiceId 
+        })
       });
 
+      console.log('📡 TTS API response status:', ttsResponse.status);
+
       if (!ttsResponse.ok) {
-        throw new Error('Failed to generate speech');
+        const errorText = await ttsResponse.text();
+        console.error('❌ TTS API failed:', ttsResponse.status, errorText);
+        throw new Error(`Failed to generate speech: ${ttsResponse.status} - ${errorText}`);
       }
 
+      console.log('📦 Parsing TTS response...');
       const ttsData = await ttsResponse.json();
+      console.log('📦 TTS response data keys:', Object.keys(ttsData));
+      console.log('📦 TTS audio_base64 length:', ttsData.audio_base64?.length);
+      console.log('📦 TTS mime_type:', ttsData.mime_type);
+      console.log('📦 TTS voice_id:', ttsData.voice_id);
       
-      // Convert base64 audio to blob and play
-      const audioData = atob(ttsData.audio_base64);
-      const audioArray = new Uint8Array(audioData.length);
-      for (let i = 0; i < audioData.length; i++) {
-        audioArray[i] = audioData.charCodeAt(i);
-      }
-      
-      const audioBlob = new Blob([audioArray], { type: ttsData.mime_type });
-      const audioUrl = URL.createObjectURL(audioBlob);
-      
-      if (currentAudioRef.current) {
-        currentAudioRef.current.pause();
-      }
-      
-      currentAudioRef.current = new Audio(audioUrl);
-      currentAudioRef.current.onended = () => {
-        setIsPlaying(false);
-        setCallStatus('active');
-        URL.revokeObjectURL(audioUrl);
+      if (ttsData.use_browser_tts) {
+        console.log('🎵 Using browser Speech Synthesis API...');
         
-        // Resume listening after AI finishes speaking
-        setTimeout(() => {
-          if (isCallActive) {
-            startListening();
+        // Stop any current audio
+        if (currentAudioRef.current) {
+          currentAudioRef.current.pause();
+        }
+        
+        // Use browser's Speech Synthesis API
+        if ('speechSynthesis' in window) {
+          // Cancel any ongoing speech
+          window.speechSynthesis.cancel();
+          
+          const utterance = new SpeechSynthesisUtterance(ttsData.text);
+          utterance.rate = ttsData.voice_settings.rate;
+          utterance.pitch = ttsData.voice_settings.pitch;
+          utterance.volume = ttsData.voice_settings.volume;
+          
+          // Function to set voice (handles voice loading async behavior)
+          const setVoice = () => {
+            const voices = window.speechSynthesis.getVoices();
+            console.log('🎵 Available voices:', voices.length, voices.map(v => v.name));
+            
+            const preferredVoice = voices.find(voice => 
+              voice.name.includes('Google') || 
+              voice.name.includes('Premium') || 
+              voice.name.includes('Enhanced') ||
+              (voice.lang.startsWith('en') && voice.localService === false)
+            ) || voices.find(voice => voice.lang.startsWith('en')) || voices[0];
+            
+            if (preferredVoice) {
+              utterance.voice = preferredVoice;
+              console.log('🎵 Using voice:', preferredVoice.name);
+            } else {
+              console.log('🎵 No preferred voice found, using default');
+            }
+          };
+          
+          // Set voice immediately if voices are loaded
+          if (window.speechSynthesis.getVoices().length > 0) {
+            setVoice();
+          } else {
+            // Wait for voices to load
+            window.speechSynthesis.addEventListener('voiceschanged', setVoice, { once: true });
           }
-        }, 500);
-      };
-      
-      await currentAudioRef.current.play();
+          
+          utterance.onend = () => {
+            console.log('🎵 Speech synthesis ended');
+            setIsPlaying(false);
+            setCallStatus('active');
+            
+            // Resume listening after AI finishes speaking
+            setTimeout(() => {
+              if (isCallActive) {
+                startListening();
+              }
+            }, 500);
+          };
+          
+          utterance.onerror = (event) => {
+            console.error('🎵 Speech synthesis error:', event);
+            setIsPlaying(false);
+            setCallStatus('active');
+            
+            // Resume listening even if TTS fails
+            setTimeout(() => {
+              if (isCallActive) {
+                startListening();
+              }
+            }, 500);
+          };
+          
+          console.log('🎵 Starting speech synthesis...');
+          window.speechSynthesis.speak(utterance);
+        } else {
+          throw new Error('Speech synthesis not supported in this browser');
+        }
+      } else if (ttsData.audio_base64 && ttsData.mime_type) {
+        console.log('🎵 Using ElevenLabs TTS audio...');
+        
+        // Stop any current audio
+        if (currentAudioRef.current) {
+          console.log('🎵 Stopping previous audio...');
+          currentAudioRef.current.pause();
+        }
+        
+        // Convert base64 audio to blob and play
+        console.log('🎵 Converting base64 to audio...');
+        const audioData = atob(ttsData.audio_base64);
+        const audioArray = new Uint8Array(audioData.length);
+        for (let i = 0; i < audioData.length; i++) {
+          audioArray[i] = audioData.charCodeAt(i);
+        }
+        
+        console.log('🎵 Creating audio blob...');
+        const audioBlob = new Blob([audioArray], { type: ttsData.mime_type });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        console.log('🎵 Audio blob created, size:', audioBlob.size, 'bytes');
+        console.log('🎵 Audio URL:', audioUrl);
+        
+        console.log('🎵 Creating new audio element...');
+        currentAudioRef.current = new Audio(audioUrl);
+        currentAudioRef.current.onended = () => {
+          console.log('🎵 Audio playback ended');
+          setIsPlaying(false);
+          setCallStatus('active');
+          URL.revokeObjectURL(audioUrl);
+          
+          // Resume listening after AI finishes speaking
+          setTimeout(() => {
+            if (isCallActive) {
+              startListening();
+            }
+          }, 500);
+        };
+        
+        currentAudioRef.current.onerror = (event) => {
+          console.error('🎵 Audio playback error:', event);
+          setIsPlaying(false);
+          setCallStatus('active');
+          URL.revokeObjectURL(audioUrl);
+          
+          // Resume listening even if audio fails
+          setTimeout(() => {
+            if (isCallActive) {
+              startListening();
+            }
+          }, 500);
+        };
+        
+        console.log('🎵 Starting audio playback...');
+        await currentAudioRef.current.play();
+        console.log('🎵 Audio playback started successfully');
+      } else {
+        throw new Error('No audio data received from TTS API');
+      }
     } catch (error) {
       console.error('TTS error:', error);
       setIsPlaying(false);
@@ -521,6 +734,41 @@ export default function RoleplayPage() {
                   disabled={isSessionActive}
                   rows={4}
                 />
+              </div>
+              
+              <div>
+                <Label htmlFor="voice">AI Prospect Voice</Label>
+                <Select 
+                  value={selectedVoiceId} 
+                  onValueChange={setSelectedVoiceId}
+                  disabled={isSessionActive || isLoadingVoices}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={isLoadingVoices ? "Loading voices..." : "Select a voice"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableVoices.map((voice) => (
+                      <SelectItem key={voice.voice_id} value={voice.voice_id}>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{voice.name}</span>
+                          {voice.description && (
+                            <span className="text-xs text-muted-foreground">{voice.description}</span>
+                          )}
+                          {voice.labels && (
+                            <span className="text-xs text-muted-foreground">
+                              {voice.labels.gender} • {voice.labels.age} • {voice.labels.accent}
+                            </span>
+                          )}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {!isLoadingVoices && availableVoices.length === 0 && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Voice selection unavailable - using default voice
+                  </p>
+                )}
               </div>
               <div className="flex gap-2">
                 <Button 
