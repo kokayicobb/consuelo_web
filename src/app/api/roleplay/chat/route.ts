@@ -71,7 +71,7 @@ export async function POST(req: Request) {
     }
 
     console.log('🤖 Creating Gemini model...');
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     // Construct the initial system instruction for the AI's persona
     const systemInstruction = `You are a prospect for a cold call. The scenario is: ${scenario}. Your goal is to act as a realistic, challenging, or open prospect based on the scenario. Do not break character. Respond concisely as a person would in a real conversation.`;
@@ -95,10 +95,8 @@ export async function POST(req: Request) {
     // Send the current user message to the AI
     const userMessage = message.trim() === "" ? "[This is the start of the conversation - please greet the sales agent as the prospect]" : message;
     console.log('🤖 Sending message to Gemini:', userMessage);
-    const fullPrompt = systemInstruction + "\n\nSales Agent: " + userMessage;
-    console.log('🤖 Full prompt:', fullPrompt);
     
-    const result = await retryOperation(() => chat.sendMessage(fullPrompt));
+    const result = await retryOperation(() => chat.sendMessage(userMessage));
     console.log('🤖 Raw Gemini result:', JSON.stringify(result, null, 2));
     
     const responseText = result.response.text();

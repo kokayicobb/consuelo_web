@@ -74,6 +74,7 @@ export default function RoleplayPage() {
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isProcessingRef = useRef(false);
+  const isCallActiveRef = useRef(false);
 
   // Audio level monitoring for visual feedback
   useEffect(() => {
@@ -99,6 +100,11 @@ export default function RoleplayPage() {
       }
     };
   }, [isListening]);
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    isCallActiveRef.current = isCallActive;
+  }, [isCallActive]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -182,13 +188,17 @@ export default function RoleplayPage() {
   const initializeContinuousListening = async () => {
     return new Promise<void>((resolve, reject) => {
       try {
+        console.log('🎤 Initializing speech recognition...');
         if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+          console.error('🎤 Speech recognition not supported in this browser');
           reject(new Error('Speech recognition not supported'));
           return;
         }
 
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        console.log('🎤 Creating SpeechRecognition instance...');
         recognitionRef.current = new SpeechRecognition();
+        console.log('🎤 SpeechRecognition instance created:', !!recognitionRef.current);
         
         // Configure for continuous conversation
         recognitionRef.current.continuous = true;
@@ -200,6 +210,7 @@ export default function RoleplayPage() {
         let interimTranscript = '';
         
         recognitionRef.current.onstart = () => {
+          console.log('🎤 Speech recognition started!');
           setIsListening(true);
           setCallStatus('listening');
         };
@@ -236,7 +247,7 @@ export default function RoleplayPage() {
           if (event.error === 'network') {
             toast.error('Network error - restarting voice recognition...');
             setTimeout(() => {
-              if (isCallActive) {
+              if (isCallActiveRef.current) {
                 startListening();
               }
             }, 1000);
@@ -252,7 +263,7 @@ export default function RoleplayPage() {
           } else {
             console.log('Other speech error, attempting restart:', event.error);
             setTimeout(() => {
-              if (isCallActive && !isProcessingRef.current) {
+              if (isCallActiveRef.current && !isProcessingRef.current) {
                 startListening();
               }
             }, 500);
@@ -260,12 +271,17 @@ export default function RoleplayPage() {
         };
         
         recognitionRef.current.onend = () => {
+          console.log('🎤 Speech recognition ended');
           setIsListening(false);
           // Restart listening if call is still active and not processing
-          if (isCallActive && !isProcessingRef.current && !isPlaying) {
+          console.log('🎤 Debug onend: isCallActiveRef.current =', isCallActiveRef.current, 'isProcessing =', isProcessingRef.current, 'isPlaying =', isPlaying);
+          if (isCallActiveRef.current && !isProcessingRef.current && !isPlaying) {
+            console.log('🎤 Attempting to restart speech recognition from onend...');
             setTimeout(() => {
               startListening();
             }, 100);
+          } else {
+            console.log('🎤 Not restarting recognition from onend - conditions not met');
           }
         };
         
@@ -277,7 +293,7 @@ export default function RoleplayPage() {
   };
 
   const startListening = () => {
-    if (recognitionRef.current && isCallActive && !isProcessingRef.current && !isPlaying) {
+    if (recognitionRef.current && isCallActiveRef.current && !isProcessingRef.current && !isPlaying) {
       try {
         console.log('Starting speech recognition...');
         recognitionRef.current.start();
@@ -291,7 +307,7 @@ export default function RoleplayPage() {
     } else {
       console.log('Cannot start listening:', {
         hasRecognition: !!recognitionRef.current,
-        isCallActive,
+        isCallActiveRef: isCallActiveRef.current,
         isProcessing: isProcessingRef.current,
         isPlaying
       });
@@ -382,7 +398,7 @@ export default function RoleplayPage() {
         console.log('👋 Skipping AI greeting (muted)');
         // If muted, we need to start listening immediately
         setTimeout(() => {
-          if (isCallActive) {
+          if (isCallActiveRef.current) {
             startListening();
           }
         }, 500);
@@ -391,7 +407,7 @@ export default function RoleplayPage() {
       console.error('❌ Error with AI greeting:', error);
       // If greeting fails, still start listening
       setTimeout(() => {
-        if (isCallActive) {
+        if (isCallActiveRef.current) {
           startListening();
         }
       }, 500);
@@ -510,8 +526,16 @@ export default function RoleplayPage() {
             
             // Resume listening after AI finishes speaking
             setTimeout(() => {
-              if (isCallActive) {
-                startListening();
+              if (isCallActiveRef.current && recognitionRef.current && !isProcessingRef.current) {
+                try {
+                  console.log('🎤 Force restarting speech recognition after speech synthesis...');
+                  recognitionRef.current.start();
+                } catch (error) {
+                  console.error('Error restarting recognition after speech synthesis:', error);
+                  if (error.name === 'InvalidStateError') {
+                    console.log('Recognition already running after speech synthesis');
+                  }
+                }
               }
             }, 500);
           };
@@ -523,8 +547,16 @@ export default function RoleplayPage() {
             
             // Resume listening even if TTS fails
             setTimeout(() => {
-              if (isCallActive) {
-                startListening();
+              if (isCallActiveRef.current && recognitionRef.current && !isProcessingRef.current) {
+                try {
+                  console.log('🎤 Force restarting speech recognition after speech synthesis error...');
+                  recognitionRef.current.start();
+                } catch (error) {
+                  console.error('Error restarting recognition after speech synthesis error:', error);
+                  if (error.name === 'InvalidStateError') {
+                    console.log('Recognition already running after speech synthesis error');
+                  }
+                }
               }
             }, 500);
           };
@@ -566,9 +598,30 @@ export default function RoleplayPage() {
           URL.revokeObjectURL(audioUrl);
           
           // Resume listening after AI finishes speaking
+          console.log('🎤 Debug: About to restart speech recognition...');
+          console.log('🎤 Debug: isCallActiveRef.current =', isCallActiveRef.current);
+          console.log('🎤 Debug: recognitionRef.current =', !!recognitionRef.current);
+          console.log('🎤 Debug: isProcessingRef.current =', isProcessingRef.current);
+          
           setTimeout(() => {
-            if (isCallActive) {
-              startListening();
+            console.log('🎤 Debug: Inside setTimeout callback...');
+            console.log('🎤 Debug: isCallActiveRef.current =', isCallActiveRef.current);
+            console.log('🎤 Debug: recognitionRef.current =', !!recognitionRef.current);
+            console.log('🎤 Debug: isProcessingRef.current =', isProcessingRef.current);
+            
+            if (isCallActiveRef.current && recognitionRef.current && !isProcessingRef.current) {
+              try {
+                console.log('🎤 Force restarting speech recognition after audio ended...');
+                recognitionRef.current.start();
+                console.log('🎤 Speech recognition start() called successfully');
+              } catch (error) {
+                console.error('Error restarting recognition after audio:', error);
+                if (error.name === 'InvalidStateError') {
+                  console.log('Recognition already running after audio ended');
+                }
+              }
+            } else {
+              console.log('🎤 Cannot restart recognition - conditions not met');
             }
           }, 500);
         };
@@ -581,8 +634,16 @@ export default function RoleplayPage() {
           
           // Resume listening even if audio fails
           setTimeout(() => {
-            if (isCallActive) {
-              startListening();
+            if (isCallActiveRef.current && recognitionRef.current && !isProcessingRef.current) {
+              try {
+                console.log('🎤 Force restarting speech recognition after audio error...');
+                recognitionRef.current.start();
+              } catch (error) {
+                console.error('Error restarting recognition after audio error:', error);
+                if (error.name === 'InvalidStateError') {
+                  console.log('Recognition already running after audio error');
+                }
+              }
             }
           }, 500);
         };
@@ -600,8 +661,16 @@ export default function RoleplayPage() {
       
       // Resume listening even if TTS fails
       setTimeout(() => {
-        if (isCallActive) {
-          startListening();
+        if (isCallActiveRef.current && recognitionRef.current && !isProcessingRef.current) {
+          try {
+            console.log('🎤 Force restarting speech recognition after TTS general error...');
+            recognitionRef.current.start();
+          } catch (error) {
+            console.error('Error restarting recognition after TTS general error:', error);
+            if (error.name === 'InvalidStateError') {
+              console.log('Recognition already running after TTS general error');
+            }
+          }
         }
       }, 500);
     }
