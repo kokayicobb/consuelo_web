@@ -61,44 +61,10 @@ export default function RoleplayPage() {
   // Refs for audio functionality
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const analyserRef = useRef<AnalyserNode | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
-  const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isProcessingRef = useRef(false);
-  const isCallActiveRef = useRef(false);
-  const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Audio level monitoring for visual feedback
-  useEffect(() => {
-    let animationFrame: number;
-    
-    const updateAudioLevel = () => {
-      if (analyserRef.current && isRecording) {
-        const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
-        analyserRef.current.getByteFrequencyData(dataArray);
-        const average = dataArray.reduce((sum, value) => sum + value, 0) / dataArray.length;
-        setAudioLevel(average / 255);
-      }
-      animationFrame = requestAnimationFrame(updateAudioLevel);
-    };
-    
-    if (isRecording) {
-      updateAudioLevel();
-    }
-    
-    return () => {
-      if (animationFrame) {
-        cancelAnimationFrame(animationFrame);
-      }
-    };
-  }, [isRecording]);
-
-  // Keep ref in sync with state
-  useEffect(() => {
-    isCallActiveRef.current = isCallActive;
-  }, [isCallActive]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -148,9 +114,8 @@ export default function RoleplayPage() {
         } 
       });
       streamRef.current = stream;
-      setupAudioAnalyser(stream);
       
-      // Initialize media recorder for chunked recording
+      // Initialize media recorder
       initializeMediaRecorder(stream);
       
       setIsSessionActive(true);
@@ -173,16 +138,18 @@ export default function RoleplayPage() {
     }
   };
 
-  const setupAudioAnalyser = (stream: MediaStream) => {
-    try {
-      audioContextRef.current = new AudioContext();
-      analyserRef.current = audioContextRef.current.createAnalyser();
-      const source = audioContextRef.current.createMediaStreamSource(stream);
-      source.connect(analyserRef.current);
-      analyserRef.current.fftSize = 256;
-    } catch (error) {
-      console.error('Error setting up audio analyser:', error);
-    }
+  const handlePushToTalkStart = () => {
+    if (!isCallActive || isPlaying || callStatus !== 'user_turn') return;
+    
+    setIsPushToTalkPressed(true);
+    startRecording();
+  };
+
+  const handlePushToTalkEnd = () => {
+    if (!isPushToTalkPressed) return;
+    
+    setIsPushToTalkPressed(false);
+    stopRecording();
   };
 
   const initializeMediaRecorder = (stream: MediaStream) => {
@@ -208,8 +175,8 @@ export default function RoleplayPage() {
           const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
           audioChunksRef.current = [];
           
-          // Only process if we have substantial audio (> 100KB typically means speech)
-          if (audioBlob.size > 100000) {
+          // Process audio if we have any content
+          if (audioBlob.size > 1000) {
             await processAudioChunk(audioBlob);
           }
         }
@@ -221,39 +188,12 @@ export default function RoleplayPage() {
     }
   };
 
-  const startContinuousRecording = () => {
-    if (!isCallActiveRef.current || isProcessingRef.current || isPlaying) return;
-    
-    startRecording();
-    
-    // Record in 3-second chunks for continuous transcription
-    recordingIntervalRef.current = setInterval(() => {
-      if (isCallActiveRef.current && !isProcessingRef.current && !isPlaying) {
-        stopRecording();
-        // Small delay before starting next recording
-        setTimeout(() => {
-          if (isCallActiveRef.current && !isProcessingRef.current && !isPlaying) {
-            startRecording();
-          }
-        }, 100);
-      }
-    }, 3000);
-  };
-
-  const stopContinuousRecording = () => {
-    if (recordingIntervalRef.current) {
-      clearInterval(recordingIntervalRef.current);
-      recordingIntervalRef.current = null;
-    }
-    stopRecording();
-  };
 
   const startRecording = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'inactive') {
       audioChunksRef.current = [];
       mediaRecorderRef.current.start();
       setIsRecording(true);
-      setCallStatus('listening');
       console.log('🎤 Started recording');
     }
   };
@@ -297,10 +237,7 @@ export default function RoleplayPage() {
       }
     } catch (error) {
       console.error('Error processing audio chunk:', error);
-      // Continue recording even if transcription fails
-      if (isCallActiveRef.current && !isProcessingRef.current) {
-        startContinuousRecording();
-      }
+      setCallStatus('user_turn');
     }
   };
 
@@ -308,8 +245,7 @@ export default function RoleplayPage() {
     if (transcript.length < 3 || isProcessingRef.current) return;
     
     isProcessingRef.current = true;
-    stopContinuousRecording();
-    setCallStatus('speaking');
+    setCallStatus('ai_turn');
     
     const userMessage: Message = { role: 'user', text: transcript };
     const updatedMessages = [...messages, userMessage];
@@ -327,20 +263,16 @@ export default function RoleplayPage() {
       // Play AI response
       if (!isMuted) {
         await playAIResponse(response);
+      } else {
+        // If muted, go back to user turn immediately
+        setCallStatus('user_turn');
       }
     } catch (error) {
       toast.error('Connection issue - please try again');
       console.error('Error handling user speech:', error);
+      setCallStatus('user_turn');
     } finally {
       isProcessingRef.current = false;
-      setCallStatus('active');
-      
-      // Resume recording after AI finishes
-      if (isCallActiveRef.current) {
-        setTimeout(() => {
-          startContinuousRecording();
-        }, 500);
-      }
     }
   };
 
@@ -377,21 +309,12 @@ export default function RoleplayPage() {
       if (!isMuted) {
         await playAIResponse(greeting);
       } else {
-        // If muted, start recording immediately
-        setTimeout(() => {
-          if (isCallActiveRef.current) {
-            startContinuousRecording();
-          }
-        }, 500);
+        // If muted, go to user turn immediately
+        setCallStatus('user_turn');
       }
     } catch (error) {
       console.error('❌ Error with AI greeting:', error);
-      // Start recording anyway
-      setTimeout(() => {
-        if (isCallActiveRef.current) {
-          startContinuousRecording();
-        }
-      }, 500);
+      setCallStatus('user_turn');
     }
   };
 
@@ -428,18 +351,12 @@ export default function RoleplayPage() {
           
           utterance.onend = () => {
             setIsPlaying(false);
-            setCallStatus('active');
-            if (isCallActiveRef.current) {
-              setTimeout(() => startContinuousRecording(), 500);
-            }
+            setCallStatus('user_turn');
           };
           
           utterance.onerror = () => {
             setIsPlaying(false);
-            setCallStatus('active');
-            if (isCallActiveRef.current) {
-              setTimeout(() => startContinuousRecording(), 500);
-            }
+            setCallStatus('user_turn');
           };
           
           window.speechSynthesis.speak(utterance);
@@ -458,20 +375,14 @@ export default function RoleplayPage() {
         currentAudioRef.current = new Audio(audioUrl);
         currentAudioRef.current.onended = () => {
           setIsPlaying(false);
-          setCallStatus('active');
+          setCallStatus('user_turn');
           URL.revokeObjectURL(audioUrl);
-          if (isCallActiveRef.current) {
-            setTimeout(() => startContinuousRecording(), 500);
-          }
         };
         
         currentAudioRef.current.onerror = () => {
           setIsPlaying(false);
-          setCallStatus('active');
+          setCallStatus('user_turn');
           URL.revokeObjectURL(audioUrl);
-          if (isCallActiveRef.current) {
-            setTimeout(() => startContinuousRecording(), 500);
-          }
         };
         
         await currentAudioRef.current.play();
@@ -479,10 +390,7 @@ export default function RoleplayPage() {
     } catch (error) {
       console.error('TTS error:', error);
       setIsPlaying(false);
-      setCallStatus('active');
-      if (isCallActiveRef.current) {
-        setTimeout(() => startContinuousRecording(), 500);
-      }
+      setCallStatus('user_turn');
     }
   };
 
@@ -495,20 +403,16 @@ export default function RoleplayPage() {
     setCurrentTranscript('');
     isProcessingRef.current = false;
     
-    // Stop recording
-    stopContinuousRecording();
+    // Stop any ongoing recording
+    if (isRecording) {
+      stopRecording();
+    }
     stopCurrentAudio();
     
     // Clean up media streams
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
-    }
-    
-    // Clean up audio context
-    if (audioContextRef.current) {
-      audioContextRef.current.close();
-      audioContextRef.current = null;
     }
     
     toast.success('Call ended');
@@ -692,54 +596,64 @@ export default function RoleplayPage() {
                 <CardTitle>Live Sales Call</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Call Visualization */}
-                <div className="text-center space-y-4">
-                  <div className="relative">
-                    <div 
-                      className={`w-40 h-40 mx-auto rounded-full border-4 flex items-center justify-center transition-all duration-300 ${
-                        isRecording 
-                          ? 'border-green-500 bg-green-50 dark:bg-green-950' 
-                          : isPlaying 
-                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-950'
-                          : 'border-gray-300 bg-gray-50 dark:bg-gray-800'
-                      }`}
-                      style={{
-                        transform: isRecording ? `scale(${1 + audioLevel * 0.2})` : 'scale(1)',
-                      }}
-                    >
-                      {isRecording ? (
-                        <Mic className="w-16 h-16 text-green-500" />
-                      ) : isPlaying ? (
-                        <Volume2 className="w-16 h-16 text-blue-500 animate-pulse" />
-                      ) : (
-                        <Phone className="w-16 h-16 text-gray-400" />
-                      )}
-                    </div>
-                    
-                    {/* Audio level rings */}
-                    {isRecording && audioLevel > 0.1 && (
-                      <>
-                        <div className="absolute inset-0 rounded-full border-4 border-green-500 animate-ping opacity-75"></div>
-                        <div className="absolute inset-2 rounded-full border-2 border-green-400 animate-pulse opacity-50"></div>
-                      </>
-                    )}
-                  </div>
-
+                {/* Push-to-Talk Interface */}
+                <div className="text-center space-y-6">
                   {/* Status Text */}
-                  <div className="text-center space-y-2">
-                    {isRecording ? (
-                      <p className="text-green-600 font-medium text-lg">🎤 Recording your voice...</p>
+                  <div className="space-y-2">
+                    {callStatus === 'user_turn' ? (
+                      <p className="text-lg font-medium text-blue-600">Your turn - Press and hold to speak</p>
+                    ) : callStatus === 'ai_turn' ? (
+                      <p className="text-lg font-medium text-purple-600">AI is thinking...</p>
                     ) : isPlaying ? (
-                      <p className="text-blue-600 font-medium text-lg">🔊 AI Prospect speaking...</p>
+                      <p className="text-lg font-medium text-green-600">🔊 AI Prospect is speaking</p>
                     ) : (
-                      <p className="text-gray-600 text-lg">📞 Call is active</p>
+                      <p className="text-lg font-medium text-gray-600">📞 Call in progress</p>
                     )}
                     
                     {currentTranscript && (
-                      <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg">
+                      <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg max-w-md mx-auto">
                         <p className="text-sm text-muted-foreground mb-1">You said:</p>
                         <p className="text-sm font-medium italic">"{currentTranscript}"</p>
                       </div>
+                    )}
+                  </div>
+
+                  {/* Large Push-to-Talk Button */}
+                  <div className="flex justify-center">
+                    <button
+                      onMouseDown={handlePushToTalkStart}
+                      onMouseUp={handlePushToTalkEnd}
+                      onMouseLeave={handlePushToTalkEnd}
+                      onTouchStart={handlePushToTalkStart}
+                      onTouchEnd={handlePushToTalkEnd}
+                      disabled={callStatus !== 'user_turn' || isPlaying}
+                      className={`w-48 h-48 rounded-full border-8 flex items-center justify-center transition-all duration-200 active:scale-95 ${
+                        isPushToTalkPressed 
+                          ? 'border-green-500 bg-green-500 shadow-2xl scale-105' 
+                          : callStatus === 'user_turn' 
+                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-950 hover:bg-blue-100 dark:hover:bg-blue-900 shadow-lg hover:scale-105'
+                          : 'border-gray-300 bg-gray-50 dark:bg-gray-800 cursor-not-allowed'
+                      }`}
+                    >
+                      {isPushToTalkPressed ? (
+                        <Mic className="w-20 h-20 text-white animate-pulse" />
+                      ) : callStatus === 'user_turn' ? (
+                        <Mic className="w-20 h-20 text-blue-500" />
+                      ) : isPlaying ? (
+                        <Volume2 className="w-20 h-20 text-gray-400 animate-pulse" />
+                      ) : (
+                        <Mic className="w-20 h-20 text-gray-400" />
+                      )}
+                    </button>
+                  </div>
+
+                  <div className="text-sm text-muted-foreground max-w-md mx-auto">
+                    {callStatus === 'user_turn' ? (
+                      "Hold the button while speaking, then release when done"
+                    ) : isPlaying ? (
+                      "Listen to the AI response"
+                    ) : (
+                      "Wait for your turn to speak"
                     )}
                   </div>
                 </div>
