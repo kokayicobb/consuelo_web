@@ -81,7 +81,7 @@ export async function POST(req: Request) {
         },
         body: JSON.stringify({
           messages: messages,
-          model: "qwen/qwen3-32b", // Use qwen/qwen3-32b"  for better responses
+          model: "llama3-70b-8192", // Use Llama 3 70B for better responses
           temperature: 0.7,
           max_tokens: 150,
           top_p: 0.9,
