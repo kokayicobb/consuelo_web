@@ -80,8 +80,9 @@ export async function POST(req: Request) {
       
       // Use the newer @clerk/nextjs approach
       const { clerkClient } = await import('@clerk/nextjs/server');
+      const clerk = await clerkClient();
       
-      await clerkClient.users.updateUserMetadata(clerkUserId, {
+      await clerk.users.updateUserMetadata(clerkUserId, {
         publicMetadata: {
           supabase_id: supabaseUserId,
         },
