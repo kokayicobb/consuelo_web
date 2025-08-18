@@ -56,24 +56,36 @@ async function retryOperation<T>(
 
 export async function POST(req: Request) {
   try {
-    const { message, history, scenario } = await req.json();
+    console.log('🤖 Chat API called');
+    const body = await req.json();
+    console.log('🤖 Chat request body:', body);
+    
+    const { message, history, scenario } = body;
+    console.log('🤖 Message:', message, 'Type:', typeof message, 'Length:', message?.length);
+    console.log('🤖 History length:', history?.length);
+    console.log('🤖 Scenario:', scenario);
 
-    if (!message) {
+    if (message === undefined || message === null) {
+      console.error('❌ No message provided to chat API');
       return NextResponse.json({ error: 'No message provided' }, { status: 400 });
     }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-preview-05-20' });
+    console.log('🤖 Creating Gemini model...');
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     // Construct the initial system instruction for the AI's persona
     const systemInstruction = `You are a prospect for a cold call. The scenario is: ${scenario}. Your goal is to act as a realistic, challenging, or open prospect based on the scenario. Do not break character. Respond concisely as a person would in a real conversation.`;
+    console.log('🤖 System instruction:', systemInstruction);
 
     // Format history for Gemini API: [{ role: 'user', parts: [{ text: '...' }] }, { role: 'model', parts: [{ text: '...' }] }]
     const formattedHistory = history.map((entry: { role: string; text: string }) => ({
       role: entry.role === 'user' ? 'user' : 'model',
       parts: [{ text: entry.text }],
     }));
+    console.log('🤖 Formatted history:', formattedHistory);
 
     // Start a chat session with the full history and system instruction
+    console.log('🤖 Starting chat session...');
     const chat = model.startChat({
       history: formattedHistory,
       generationConfig,
@@ -81,8 +93,27 @@ export async function POST(req: Request) {
     });
 
     // Send the current user message to the AI
-    const result = await retryOperation(() => chat.sendMessage(systemInstruction + "\n\nSales Agent: " + message));
+    const userMessage = message.trim() === "" ? "[This is the start of the conversation - please greet the sales agent as the prospect]" : message;
+    console.log('🤖 Sending message to Gemini:', userMessage);
+    const fullPrompt = systemInstruction + "\n\nSales Agent: " + userMessage;
+    console.log('🤖 Full prompt:', fullPrompt);
+    
+    const result = await retryOperation(() => chat.sendMessage(fullPrompt));
+    console.log('🤖 Raw Gemini result:', JSON.stringify(result, null, 2));
+    
     const responseText = result.response.text();
+    console.log('🤖 Gemini response text:', responseText);
+    console.log('🤖 Response length:', responseText?.length);
+    
+    if (!responseText || responseText.trim() === '') {
+      console.error('❌ Empty response from Gemini');
+      console.log('🤖 Full result object:', JSON.stringify(result, null, 2));
+      
+      // Try to provide a fallback response
+      const fallbackResponse = "Hello, you've reached me at a bit of a busy time. What's this regarding?";
+      console.log('🤖 Using fallback response:', fallbackResponse);
+      return NextResponse.json({ response: fallbackResponse });
+    }
 
     return NextResponse.json({ response: responseText });
   } catch (error) {
