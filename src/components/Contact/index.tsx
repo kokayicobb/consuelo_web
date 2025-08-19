@@ -35,10 +35,14 @@ export function Contact() {
   return (
     <div className="w-full bg-gradient-to-b from-background to-background/80 py-40 sm:py-48">
       {/* Header with consuelo text */}
-      <div className="fixed left-8 top-16 z-50">
-        <span className="text-2xl font-semibold">
-          consuelo
-        </span>
+      <div className="fixed top-16 z-50 w-full">
+        <div className="mx-auto max-w-2xl px-6 lg:px-8">
+          <div className="pl-6 md:pl-8">
+            <span className="text-2xl font-semibold">
+              consuelo
+            </span>
+          </div>
+        </div>
       </div>
       <div className="mx-auto max-w-2xl px-6 lg:px-8">
         <div className="mx-auto text-center mb-8">
