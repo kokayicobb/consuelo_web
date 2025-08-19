@@ -59,7 +59,7 @@ export function Contact() {
           </div>
         
           <p className="text-muted-foreground text-base mt-2">
-            Hire AI employees for your existing work applications stack, reliably and finally in one place. No code. Fully Customizable.
+            Hire AI employees for your existing work applications, reliably and finally in one place. No code. Fully Customizable.
           </p>
 
           <form className="mt-8" action={formAction}>
