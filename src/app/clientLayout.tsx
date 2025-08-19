@@ -21,7 +21,7 @@ export default function ClientLayout({
   const pathname = usePathname();
   
   // Check if we're in a dashboard or app route
-  const isAppRoute = pathname?.startsWith('/app') || pathname?.startsWith('/dashboard');
+  const isAppRoute = pathname?.startsWith('/app') || pathname?.startsWith('/dashboard') || pathname?.startsWith('/roleplay');
 
   useEffect(() => {
     // Initialize the header visibility based on scroll position
