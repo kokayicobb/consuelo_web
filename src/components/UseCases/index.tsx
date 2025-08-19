@@ -2,9 +2,42 @@
 import Image from "next/image";
 import Link from "next/link";
 import React, { useState } from "react";
+import { urlFor } from "@/sanity/lib/image";
 
-export default function UseCases() {
+interface UseCase {
+  _id: string;
+  title: string;
+  description: string;
+  category: "ecommerce" | "fitness";
+  image?: any;
+  imagePath?: string;
+  href: string;
+  altText: string;
+  order: number;
+}
+
+interface UseCasesProps {
+  useCases: UseCase[];
+}
+
+export default function UseCases({ useCases }: UseCasesProps) {
   const [activeTab, setActiveTab] = useState("ecommerce");
+  
+  // Filter and sort use cases by category
+  const ecommerceUseCases = useCases
+    .filter(useCase => useCase.category === "ecommerce")
+    .sort((a, b) => a.order - b.order);
+    
+  const fitnessUseCases = useCases
+    .filter(useCase => useCase.category === "fitness")
+    .sort((a, b) => a.order - b.order);
+
+  const getImageUrl = (useCase: UseCase) => {
+    if (useCase.image) {
+      return urlFor(useCase.image).url();
+    }
+    return useCase.imagePath || "";
+  };
 
   return (
     <div className="mx-auto max-w-7xl px-8 py-64">
@@ -42,116 +75,29 @@ export default function UseCases() {
 
       {activeTab === "ecommerce" ? (
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-          {/* E-commerce Use Case 1 */}
-          <UseCaseItem
-            href="/platform"
-            imageSrc="/StablityFlowers2.png"
-            altText="Marketing campaign orchestration"
-            title="Create Klaviyo flows using natural language"
-            description="Marketing | Revenue Lift"
-            
-          />
-
-          {/* E-commerce Use Case 2 */}
-          <UseCaseItem
-            href="/platform"
-            imageSrc="/StablityMountains1.png"
-            altText="Customer acquisition optimization"
-            title="Customer acquisition optimization"
-            description="Growth | Customer Expansion"
-          />
-          
-          {/* E-commerce Use Case 3 */}
-          <UseCaseItem
-            href="/use-cases/customer-lifetime-value-prediction"
-            imageSrc="/StablitySky1.png"
-            altText="Automatic product tagging for search"
-            title="Automatic product tagging for search"
-            description="Analytics | Strategic Planning"
-          />
-
-          {/* E-commerce Use Case 4 */}
-          <UseCaseItem
-            href="/platform"
-            imageSrc="/StablityWater1.png"
-            altText="Inventory management dashboard"
-            title="CLV-Based product bundling"
-            description="Retail | Brand Success"
-          />
-
-          {/* E-commerce Use Case 5 */}
-          <UseCaseItem
-            href="/platform"
-            imageSrc="/StablityDesert1.png"
-            altText="Pricing optimization dashboard"
-            title="Real time pricing optimization"
-            description="Strategy | Margin Improvement"
-          />
-
-          {/* E-commerce Use Case 6 */}
-          <UseCaseItem
-            href="/platform"
-            imageSrc="/StablityPicasso1.png"
-            altText="Unified performance dashboard"
-            title="Single performance dashboards"
-            description="Operations | Executive Insights"
-          />
+          {ecommerceUseCases.map((useCase) => (
+            <UseCaseItem
+              key={useCase._id}
+              href={useCase.href}
+              imageSrc={getImageUrl(useCase)}
+              altText={useCase.altText}
+              title={useCase.title}
+              description={useCase.description}
+            />
+          ))}
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-          {/* Health/Fitness Use Case 1 */}
-          <UseCaseItem
-            href="/platform"
-            imageSrc="/StablityFlowers2.png"
-            altText="Intro journey optimization"
-            title="Intro journey optimization & ranking"
-            description="Acquisition | New Member Conversion"
-          />
-
-          {/* Health/Fitness Use Case 2 */}
-          <UseCaseItem
-            href="/platform"
-            imageSrc="/StablityMountains1.png"
-            altText="Member churn prediction"
-            title="Early churn pattern detection"
-            description="Retention | Membership Longevity"
-          />
-          
-          {/* Health/Fitness Use Case 3 */}
-          <UseCaseItem
-            href="/platform"
-            imageSrc="/StablitySky1.png"
-            altText="Instructor performance analytics"
-            title="Instructor performance analytics"
-            description="Management | Team Development"
-          />
-
-          {/* Health/Fitness Use Case 4 */}
-          <UseCaseItem
-            href="/platform"
-            imageSrc="/StablityWater1.png"
-            altText="AI sales outreach"
-            title="AI-assisted sales outreach"
-            description="Sales | Membership Growth"
-          />
-
-          {/* Health/Fitness Use Case 5 */}
-          <UseCaseItem
-            href="/platform"
-            imageSrc="/StablityDesert1.png"
-            altText="Mindbody integration"
-            title="Enhanced Mindbody integration"
-            description="Technology | Operational Efficiency"
-          />
-
-          {/* Health/Fitness Use Case 6 */}
-          <UseCaseItem
-             href="/platform"
-            imageSrc="/StablityPicasso1.png"
-            altText="Class attendance prediction"
-            title="Class attendance prediction"
-            description="Planning | Resource Optimization"
-          />
+          {fitnessUseCases.map((useCase) => (
+            <UseCaseItem
+              key={useCase._id}
+              href={useCase.href}
+              imageSrc={getImageUrl(useCase)}
+              altText={useCase.altText}
+              title={useCase.title}
+              description={useCase.description}
+            />
+          ))}
         </div>
       )}
     </div>
