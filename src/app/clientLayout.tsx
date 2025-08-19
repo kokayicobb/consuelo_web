@@ -22,6 +22,9 @@ export default function ClientLayout({
   
   // Check if we're in a dashboard or app route
   const isAppRoute = pathname?.startsWith('/app') || pathname?.startsWith('/dashboard') || pathname?.startsWith('/roleplay');
+  
+  // Check if we're on a blank page (contact or roleplay)
+  const isBlankPage = pathname === '/contact' || pathname === '/roleplay';
 
   useEffect(() => {
     // Initialize the header visibility based on scroll position
@@ -43,6 +46,22 @@ export default function ClientLayout({
       clearTimeout(timer);
     };
   }, []);
+
+  // Return blank layout for contact page
+  if (isBlankPage) {
+    return (
+      <ThemeProvider
+        attribute="class"
+        enableSystem={true}
+        defaultTheme="light"
+      >
+        <ToasterContext />
+        <div className="min-h-screen">
+          {children}
+        </div>
+      </ThemeProvider>
+    );
+  }
 
   return loading ? (
     <SimpleLoader />

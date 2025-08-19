@@ -10,7 +10,7 @@ export async function POST(req: Request) {
     console.log('Attempting to send email with:', { fullName, email, phone, message });
 
     const data = await resend.emails.send({
-      from: 'Acme <onboarding@resend.dev>',  // Format changed to match docs
+      from: 'Kokayi | CEO & CTO at Consuelo <kokayi@consuelohq.com>',  // Format changed to match docs
       to: ['kokayi@consuelo.shop'],  // Changed to array format
       subject: `New Contact Form Submission from ${fullName}`,
       html: `
