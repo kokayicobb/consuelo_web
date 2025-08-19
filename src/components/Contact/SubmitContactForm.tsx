@@ -15,6 +15,7 @@ export async function submitContactForm(prevState: { message: string }, formData
   }
 
   try {
+    // Save to Supabase
     const { error } = await supabase
       .from('email_signups')
       .insert([
@@ -23,7 +24,9 @@ export async function submitContactForm(prevState: { message: string }, formData
 
     if (error) throw error
 
-    return { message: "Successfully added to waitlist!" }
+    // Email will be sent via Supabase webhook automatically
+
+    return { message: "Successfully added to waitlist! Check your email." }
   } catch (error) {
     console.error('Supabase error:', error)
     return { message: "Error submitting form. Please try again." }

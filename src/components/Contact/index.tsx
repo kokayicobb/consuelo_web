@@ -33,13 +33,16 @@ export function Contact() {
   const [state, formAction] = useFormState(submitContactForm, initialState);
 
   return (
-    <div className="w-full bg-gradient-to-b from-background to-background/80 py-24 sm:py-20">
+    <div className="w-full bg-gradient-to-b from-background to-background/80 py-40 sm:py-48">
+      {/* Header with consuelo text */}
+      <div className="fixed left-8 top-16 z-50">
+        <span className="text-2xl font-semibold">
+          consuelo
+        </span>
+      </div>
       <div className="mx-auto max-w-2xl px-6 lg:px-8">
         <div className="mx-auto text-center mb-8">
-          <div className="mb-4 inline-flex items-center rounded-full bg-accent/10 px-3 py-1 text-sm font-medium">
-            {/* <Zap className="mr-1 h-4 w-4 text-accent" /> */}
-            <span className="text-accent">Consuelo</span>
-          </div>
+         
     
           <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
             <span className="bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent">Pre Launch</span>{" "}
@@ -56,7 +59,7 @@ export function Contact() {
           </div>
         
           <p className="text-muted-foreground text-base mt-2">
-            Hire AI employees for your existing work applications stack reliably and finally in one place. No code. Fully Customizable.
+            Hire AI employees for your existing work applications stack, reliably and finally in one place. No code. Fully Customizable.
           </p>
 
           <form className="mt-8" action={formAction}>
@@ -93,6 +96,7 @@ export function Contact() {
                 placeholder="Enter your email address" 
                 type="email"
                 className="bg-background/50 text-base shadow-[0px_0px_2px_2px_var(--slate-500)]"
+                style={{ border: '2px solid rgb(203 213 225)' }}
                 disableHover={false}
                 required
               />
