@@ -4,25 +4,9 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import {
   Collapsible,
   CollapsibleContent,
@@ -37,10 +21,9 @@ import {
   VolumeX,
   Phone,
   PhoneOff,
-  Settings,
-  User,
 } from "lucide-react";
 import LiquidOrbButton from "@/components/LiquidOrbButton";
+import RoleplaySettings from "@/components/roleplay/settings";
 
 interface Message {
   role: "user" | "assistant";
@@ -109,8 +92,6 @@ export default function RoleplayPage() {
   const [isPushToTalkPressed, setIsPushToTalkPressed] = useState(false);
 
   // Modal states
-  const [isScenarioModalOpen, setIsScenarioModalOpen] = useState(false);
-  const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
   const [isTranscriptOpen, setIsTranscriptOpen] = useState(false);
 
   // Refs for audio functionality
@@ -599,108 +580,16 @@ export default function RoleplayPage() {
             )}
           </Badge>
 
-          {/* Settings Icons - Right side, inline with status */}
-          <div className="absolute right-4 flex gap-2 sm:right-6 sm:gap-3">
-            <Dialog
-              open={isScenarioModalOpen}
-              onOpenChange={setIsScenarioModalOpen}
-            >
-              <DialogTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="rounded-full bg-white/80 backdrop-blur-sm"
-                >
-                  <Settings className="h-4 w-4" />
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="mx-auto w-[95vw] max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Scenario Setup</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="scenario">
-                      Describe the sales scenario
-                    </Label>
-                    <Textarea
-                      id="scenario"
-                      placeholder="e.g., Cold calling a potential client who needs CRM software. They're busy and skeptical about sales calls..."
-                      value={scenario}
-                      onChange={(e) => setScenario(e.target.value)}
-                      rows={4}
-                      className="w-full"
-                    />
-                  </div>
-                  <Button
-                    onClick={() => setIsScenarioModalOpen(false)}
-                    className="w-full"
-                  >
-                    Save Scenario
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-
-            <Dialog open={isVoiceModalOpen} onOpenChange={setIsVoiceModalOpen}>
-              <DialogTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="rounded-full bg-white/80 backdrop-blur-sm"
-                >
-                  <User className="h-4 w-4" />
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="mx-auto w-[95vw] max-w-md">
-                <DialogHeader>
-                  <DialogTitle>AI Voice Selection</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="voice">AI Prospect Voice</Label>
-                    <Select
-                      value={selectedVoiceId}
-                      onValueChange={setSelectedVoiceId}
-                      disabled={isLoadingVoices}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue
-                          placeholder={
-                            isLoadingVoices
-                              ? "Loading voices..."
-                              : "Select a voice"
-                          }
-                        />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableVoices.map((voice) => (
-                          <SelectItem
-                            key={voice.voice_id}
-                            value={voice.voice_id}
-                          >
-                            <div className="flex flex-col text-left">
-                              <span className="font-medium">{voice.name}</span>
-                              {voice.description && (
-                                <span className="text-xs text-muted-foreground">
-                                  {voice.description}
-                                </span>
-                              )}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <Button
-                    onClick={() => setIsVoiceModalOpen(false)}
-                    className="w-full"
-                  >
-                    Save Voice
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+          {/* Settings Icon - Right side, inline with status */}
+          <div className="absolute right-4 sm:right-6">
+            <RoleplaySettings
+              scenario={scenario}
+              setScenario={setScenario}
+              availableVoices={availableVoices}
+              selectedVoiceId={selectedVoiceId}
+              setSelectedVoiceId={setSelectedVoiceId}
+              isLoadingVoices={isLoadingVoices}
+            />
           </div>
         </div>
       )}
