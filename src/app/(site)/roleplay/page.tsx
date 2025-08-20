@@ -288,18 +288,32 @@ export default function RoleplayPage() {
     isProcessingRef.current = true;
     setCallStatus("ai_turn");
 
-    const userMessage: Message = { role: "user", text: transcript };
-    const updatedMessages = [...messages, userMessage];
-    setMessages(updatedMessages);
+    console.log("🔍 DEBUG: Current messages before adding user message:", messages);
+    console.log("🔍 DEBUG: Messages length:", messages.length);
+    
     setCurrentTranscript("");
 
+    // Use the current messages state for the API call
+    setMessages(prevMessages => {
+      const userMessage: Message = { role: "user", text: transcript };
+      const updatedMessages = [...prevMessages, userMessage];
+      console.log("🔍 DEBUG: Updated messages with user message:", updatedMessages);
+      
+      // Call API with the updated messages
+      getAIResponseAndUpdateMessages(transcript, updatedMessages);
+      
+      return updatedMessages;
+    });
+  };
+
+  const getAIResponseAndUpdateMessages = async (transcript: string, currentMessages: Message[]) => {
     try {
-      // Get AI response
-      const response = await getAIResponse(transcript, updatedMessages);
+      // Get AI response with the full conversation history
+      const response = await getAIResponse(transcript, currentMessages);
 
       // Add AI message to conversation
       const aiMessage: Message = { role: "assistant", text: response };
-      setMessages([...updatedMessages, aiMessage]);
+      setMessages(prevMessages => [...prevMessages, aiMessage]);
 
       // Play AI response
       if (!isMuted) {
@@ -346,7 +360,7 @@ export default function RoleplayPage() {
   const initiateAIGreeting = async () => {
     try {
       console.log("👋 Initiating AI greeting...");
-      const greeting = await getAIResponse("", []);
+      const greeting = await getAIResponse("", messages);
       const aiMessage: Message = { role: "assistant", text: greeting };
       setMessages([aiMessage]);
 
