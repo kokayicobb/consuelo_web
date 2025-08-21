@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -93,7 +93,29 @@ export default function RoleplayPage() {
 
   // Modal states
   const [isTranscriptOpen, setIsTranscriptOpen] = useState(false);
+  const endCall = useCallback(() => {
+    setIsCallActive(false);
+    setIsSessionActive(false);
+    setCallStatus("idle");
+    setIsRecording(false);
+    setIsPlaying(false);
+    setCurrentTranscript("");
+    isProcessingRef.current = false;
 
+    // Stop any ongoing recording
+    if (isRecording) {
+      stopRecording();
+    }
+    stopCurrentAudio();
+
+    // Clean up media streams
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+
+    toast.success("Call ended");
+  }, []);
   // Refs for audio functionality
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -106,7 +128,7 @@ export default function RoleplayPage() {
     return () => {
       endCall();
     };
-  }, []);
+  }, [endCall]);
 
   // Fetch available voices on component mount
   useEffect(() => {
@@ -281,7 +303,7 @@ export default function RoleplayPage() {
       setCallStatus("user_turn");
     }
   };
-
+ 
   const handleUserSpeech = async (transcript: string) => {
     if (transcript.length < 3 || isProcessingRef.current) return;
 
@@ -293,16 +315,17 @@ export default function RoleplayPage() {
     
     setCurrentTranscript("");
 
-    // Add user message to conversation and get AI response
-    const userMessage: Message = { role: "user", text: transcript };
-    const updatedMessages = [...messages, userMessage];
-    console.log("🔍 DEBUG: Updated messages with user message:", updatedMessages);
-    
-    // Update messages immediately
-    setMessages(updatedMessages);
-    
-    // Get AI response with the updated messages
-    await getAIResponseAndUpdateMessages(transcript, updatedMessages);
+    // Use the current messages state for the API call
+    setMessages(prevMessages => {
+      const userMessage: Message = { role: "user", text: transcript };
+      const updatedMessages = [...prevMessages, userMessage];
+      console.log("🔍 DEBUG: Updated messages with user message:", updatedMessages);
+      
+      // Call API with the updated messages
+      getAIResponseAndUpdateMessages(transcript, updatedMessages);
+      
+      return updatedMessages;
+    });
   };
 
   const getAIResponseAndUpdateMessages = async (transcript: string, currentMessages: Message[]) => {
@@ -312,7 +335,7 @@ export default function RoleplayPage() {
 
       // Add AI message to conversation
       const aiMessage: Message = { role: "assistant", text: response };
-      setMessages([...currentMessages, aiMessage]);
+      setMessages(prevMessages => [...prevMessages, aiMessage]);
 
       // Play AI response
       if (!isMuted) {
@@ -408,12 +431,12 @@ export default function RoleplayPage() {
 
           utterance.onend = () => {
             setIsPlaying(false);
-            setTimeout(() => setCallStatus("user_turn"), 100);
+            setCallStatus("user_turn");
           };
 
           utterance.onerror = () => {
             setIsPlaying(false);
-            setTimeout(() => setCallStatus("user_turn"), 100);
+            setCallStatus("user_turn");
           };
 
           window.speechSynthesis.speak(utterance);
@@ -432,13 +455,13 @@ export default function RoleplayPage() {
         currentAudioRef.current = new Audio(audioUrl);
         currentAudioRef.current.onended = () => {
           setIsPlaying(false);
-          setTimeout(() => setCallStatus("user_turn"), 100);
+          setCallStatus("user_turn");
           URL.revokeObjectURL(audioUrl);
         };
 
         currentAudioRef.current.onerror = () => {
           setIsPlaying(false);
-          setTimeout(() => setCallStatus("user_turn"), 100);
+          setCallStatus("user_turn");
           URL.revokeObjectURL(audioUrl);
         };
 
@@ -447,33 +470,11 @@ export default function RoleplayPage() {
     } catch (error) {
       console.error("TTS error:", error);
       setIsPlaying(false);
-      setTimeout(() => setCallStatus("user_turn"), 100);
+      setCallStatus("user_turn");
     }
   };
 
-  const endCall = () => {
-    setIsCallActive(false);
-    setIsSessionActive(false);
-    setCallStatus("idle");
-    setIsRecording(false);
-    setIsPlaying(false);
-    setCurrentTranscript("");
-    isProcessingRef.current = false;
-
-    // Stop any ongoing recording
-    if (isRecording) {
-      stopRecording();
-    }
-    stopCurrentAudio();
-
-    // Clean up media streams
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
-    }
-
-    toast.success("Call ended");
-  };
+ 
 
   const resetScenario = () => {
     setScenario("");
@@ -503,9 +504,8 @@ export default function RoleplayPage() {
   };
 
   const sendTextMessage = async () => {
-    if (!currentMessage.trim() || isLoading || isProcessingRef.current) return;
+    if (!currentMessage.trim() || isLoading) return;
 
-    isProcessingRef.current = true;
     const userMessage: Message = { role: "user", text: currentMessage };
     const updatedMessages = [...messages, userMessage];
     setMessages(updatedMessages);
@@ -525,7 +525,6 @@ export default function RoleplayPage() {
       console.error("Error sending message:", error);
     } finally {
       setIsLoading(false);
-      isProcessingRef.current = false;
     }
   };
 
@@ -659,7 +658,7 @@ export default function RoleplayPage() {
         <div className="-mt-20 flex min-h-screen flex-col items-center justify-center px-4 sm:-mt-24 sm:px-6">
           <div className="mb-12 text-center">
             <h1 className="mb-4 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-4xl font-bold text-transparent">
-              Roleplay With Hope
+              Roleplay With Zara
             </h1>
             <p className="max-w-md text-lg text-muted-foreground">
               Sharpen your sales skills with a challenging scenario and remember to review your post-call report
@@ -670,7 +669,7 @@ export default function RoleplayPage() {
           <div className="mb-12 sm:mb-16">
             <LiquidOrbButton
               size="xl"
-              className="h-64 w-64 sm:h-64 sm:w-64"
+              className="h-48 w-48 sm:h-64 sm:w-64"
               disabled={false}
             >
               <span></span>
@@ -701,17 +700,17 @@ export default function RoleplayPage() {
         <div className="flex min-h-screen flex-col items-center justify-center px-4 py-8 sm:px-6">
           {/* Status Text */}
           <div className="mb-8 text-center">
-            {callStatus === "user_turn" && !isPlaying ? (
+            {callStatus === "user_turn" ? (
               <p className="text-lg font-medium text-blue-600 dark:text-blue-400">
                 Your turn - Press and hold to speak
               </p>
             ) : callStatus === "ai_turn" ? (
               <p className="text-lg font-medium text-purple-600 dark:text-purple-400">
-                AI is thinking...
+                Zara is thinking...
               </p>
             ) : isPlaying ? (
               <p className="text-lg font-medium text-green-600 dark:text-green-400">
-                🔊 Hope is speaking
+                🔊 Zara is speaking
               </p>
             ) : (
               <p className="text-lg font-medium text-gray-600 dark:text-gray-400">
@@ -747,8 +746,8 @@ export default function RoleplayPage() {
           </div>
 
           <div className="mb-8 max-w-xs text-center text-sm text-muted-foreground">
-            {callStatus === "user_turn" && !isPlaying
-              ? "Hold the orb while speaking, then release when done"
+            {callStatus === "user_turn"
+              ? "Hold the button while speaking, then release when done"
               : isPlaying
                 ? "Listen to the AI response"
                 : "Wait for your turn to speak"}
@@ -868,7 +867,7 @@ export default function RoleplayPage() {
                           <div className="mb-2 text-xs font-medium text-white/70">
                             {message.role === "user"
                               ? "🫅 You"
-                              : "👤 Hope"}
+                              : "🧑‍🦳 Zara"}
                           </div>
                           <div className="text-sm text-white">
                             {message.text}

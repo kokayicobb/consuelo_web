@@ -62,7 +62,7 @@ export async function POST(req: Request) {
     console.log('🔊 Calling ElevenLabs TTS API...');
     
     // Use a default professional voice if none specified
-    const selectedVoiceId = voice_id || 'uYXf8XasLslADfZ2MB4u'; // Hope - a professional female voice
+    const selectedVoiceId = voice_id || 'jqcCZkN6Knx8BJ5TBdYR'; // Zara - a professional female voice
     
     const audioStream = await retryOperation(() => 
       elevenlabs!.textToSpeech.stream(selectedVoiceId, {
