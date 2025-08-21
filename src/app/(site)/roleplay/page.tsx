@@ -22,7 +22,7 @@ import {
   Phone,
   PhoneOff,
 } from "lucide-react";
-import LiquidOrbButton from "@/components/LiquidOrbButton";
+import LiquidOrbButton from "@/components/roleplay/LiquidOrbButton";
 import RoleplaySettings from "@/components/roleplay/settings";
 
 interface Message {
@@ -409,12 +409,12 @@ export default function RoleplayPage() {
 
           utterance.onend = () => {
             setIsPlaying(false);
-            setCallStatus("user_turn");
+            setTimeout(() => setCallStatus("user_turn"), 100);
           };
 
           utterance.onerror = () => {
             setIsPlaying(false);
-            setCallStatus("user_turn");
+            setTimeout(() => setCallStatus("user_turn"), 100);
           };
 
           window.speechSynthesis.speak(utterance);
@@ -433,13 +433,13 @@ export default function RoleplayPage() {
         currentAudioRef.current = new Audio(audioUrl);
         currentAudioRef.current.onended = () => {
           setIsPlaying(false);
-          setCallStatus("user_turn");
+          setTimeout(() => setCallStatus("user_turn"), 100);
           URL.revokeObjectURL(audioUrl);
         };
 
         currentAudioRef.current.onerror = () => {
           setIsPlaying(false);
-          setCallStatus("user_turn");
+          setTimeout(() => setCallStatus("user_turn"), 100);
           URL.revokeObjectURL(audioUrl);
         };
 
@@ -448,7 +448,7 @@ export default function RoleplayPage() {
     } catch (error) {
       console.error("TTS error:", error);
       setIsPlaying(false);
-      setCallStatus("user_turn");
+      setTimeout(() => setCallStatus("user_turn"), 100);
     }
   };
 
@@ -658,10 +658,10 @@ export default function RoleplayPage() {
         <div className="-mt-20 flex min-h-screen flex-col items-center justify-center px-4 sm:-mt-24 sm:px-6">
           <div className="mb-12 text-center">
             <h1 className="mb-4 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-4xl font-bold text-transparent">
-               Sales Roleplay
+              Roleplay With Hope
             </h1>
             <p className="max-w-md text-lg text-muted-foreground">
-              Sharpen your skills with a challenging scenario and remember to review your post-call report
+              Sharpen your sales skills with a challenging scenario and remember to review your post-call report
             </p>
           </div>
 
@@ -669,7 +669,7 @@ export default function RoleplayPage() {
           <div className="mb-12 sm:mb-16">
             <LiquidOrbButton
               size="xl"
-              className="h-48 w-48 sm:h-64 sm:w-64"
+              className="h-64 w-64 sm:h-64 sm:w-64"
               disabled={false}
             >
               <span></span>
@@ -700,7 +700,7 @@ export default function RoleplayPage() {
         <div className="flex min-h-screen flex-col items-center justify-center px-4 py-8 sm:px-6">
           {/* Status Text */}
           <div className="mb-8 text-center">
-            {callStatus === "user_turn" ? (
+            {callStatus === "user_turn" && !isPlaying ? (
               <p className="text-lg font-medium text-blue-600 dark:text-blue-400">
                 Your turn - Press and hold to speak
               </p>
@@ -710,7 +710,7 @@ export default function RoleplayPage() {
               </p>
             ) : isPlaying ? (
               <p className="text-lg font-medium text-green-600 dark:text-green-400">
-                🔊 AI Prospect is speaking
+                🔊 Hope is speaking
               </p>
             ) : (
               <p className="text-lg font-medium text-gray-600 dark:text-gray-400">
@@ -741,21 +741,13 @@ export default function RoleplayPage() {
                 size="xl"
                 className="h-56 w-56 sm:h-72 sm:w-72"
             >
-              {isPushToTalkPressed ? (
-                <Mic className="h-16 w-16 animate-pulse sm:h-20 sm:w-20" />
-              ) : callStatus === "user_turn" ? (
-                <Mic className="h-16 w-16 sm:h-20 sm:w-20" />
-              ) : isPlaying ? (
-                <Volume2 className="h-16 w-16 animate-pulse sm:h-20 sm:w-20" />
-              ) : (
-                <Mic className="h-16 w-16 sm:h-20 sm:w-20" />
-              )}
+              <span></span>
             </LiquidOrbButton>
           </div>
 
           <div className="mb-8 max-w-xs text-center text-sm text-muted-foreground">
-            {callStatus === "user_turn"
-              ? "Hold the button while speaking, then release when done"
+            {callStatus === "user_turn" && !isPlaying
+              ? "Hold the orb while speaking, then release when done"
               : isPlaying
                 ? "Listen to the AI response"
                 : "Wait for your turn to speak"}
@@ -874,8 +866,8 @@ export default function RoleplayPage() {
                         >
                           <div className="mb-2 text-xs font-medium text-white/70">
                             {message.role === "user"
-                              ? "👤 You"
-                              : "🤖 AI Prospect"}
+                              ? "🫅 You"
+                              : "👤 Hope"}
                           </div>
                           <div className="text-sm text-white">
                             {message.text}
