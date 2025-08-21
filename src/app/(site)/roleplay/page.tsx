@@ -70,7 +70,7 @@ export default function RoleplayPage() {
   // Voice selection state
   const [availableVoices, setAvailableVoices] = useState<Voice[]>([]);
   const [selectedVoiceId, setSelectedVoiceId] = useState(
-    "uYXf8XasLslADfZ2MB4u",
+    "jqcCZkN6Knx8BJ5TBdYR",
   );
   const [isLoadingVoices, setIsLoadingVoices] = useState(false);
 
