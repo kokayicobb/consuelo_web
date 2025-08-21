@@ -62,7 +62,7 @@ IMPORTANT: Only provide the exact words you would speak. Do not include any stag
 
     // Add current user message
     const userMessage = message.trim() === "" 
-      ? "Hello, I'm calling about a business opportunity. Do you have a moment to chat?"
+      ? `${scenario}` // Use the scenario as the initial message
       : message;
     
     messages.push({
