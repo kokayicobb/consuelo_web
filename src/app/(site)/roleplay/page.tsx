@@ -293,17 +293,16 @@ export default function RoleplayPage() {
     
     setCurrentTranscript("");
 
-    // Use the current messages state for the API call
-    setMessages(prevMessages => {
-      const userMessage: Message = { role: "user", text: transcript };
-      const updatedMessages = [...prevMessages, userMessage];
-      console.log("🔍 DEBUG: Updated messages with user message:", updatedMessages);
-      
-      // Call API with the updated messages
-      getAIResponseAndUpdateMessages(transcript, updatedMessages);
-      
-      return updatedMessages;
-    });
+    // Add user message to conversation and get AI response
+    const userMessage: Message = { role: "user", text: transcript };
+    const updatedMessages = [...messages, userMessage];
+    console.log("🔍 DEBUG: Updated messages with user message:", updatedMessages);
+    
+    // Update messages immediately
+    setMessages(updatedMessages);
+    
+    // Get AI response with the updated messages
+    await getAIResponseAndUpdateMessages(transcript, updatedMessages);
   };
 
   const getAIResponseAndUpdateMessages = async (transcript: string, currentMessages: Message[]) => {
@@ -313,7 +312,7 @@ export default function RoleplayPage() {
 
       // Add AI message to conversation
       const aiMessage: Message = { role: "assistant", text: response };
-      setMessages(prevMessages => [...prevMessages, aiMessage]);
+      setMessages([...currentMessages, aiMessage]);
 
       // Play AI response
       if (!isMuted) {
@@ -504,8 +503,9 @@ export default function RoleplayPage() {
   };
 
   const sendTextMessage = async () => {
-    if (!currentMessage.trim() || isLoading) return;
+    if (!currentMessage.trim() || isLoading || isProcessingRef.current) return;
 
+    isProcessingRef.current = true;
     const userMessage: Message = { role: "user", text: currentMessage };
     const updatedMessages = [...messages, userMessage];
     setMessages(updatedMessages);
@@ -525,6 +525,7 @@ export default function RoleplayPage() {
       console.error("Error sending message:", error);
     } finally {
       setIsLoading(false);
+      isProcessingRef.current = false;
     }
   };
 

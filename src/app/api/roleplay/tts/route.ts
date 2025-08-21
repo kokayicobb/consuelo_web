@@ -67,7 +67,7 @@ export async function POST(req: Request) {
     const audioStream = await retryOperation(() => 
       elevenlabs!.textToSpeech.stream(selectedVoiceId, {
         text: text,
-        modelId: 'eleven_v3',
+        modelId: 'eleven_turbo_v2_5',
         outputFormat: 'mp3_44100_128',
         voiceSettings: {
           stability: 0.5,
