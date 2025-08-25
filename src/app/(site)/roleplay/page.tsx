@@ -561,10 +561,10 @@ export default function RoleplayPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-900 dark:to-purple-900">
+    <div className="h-screen bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-900 dark:to-purple-900 flex flex-col overflow-hidden">
       {/* Header with centered status */}
       {!isCallActive && (
-        <div className="relative flex items-center justify-center p-4 sm:p-6">
+        <div className="relative flex items-center justify-center p-4 sm:p-6 flex-shrink-0">
           {/* Centered Status Badge */}
           <Badge
             variant={
@@ -610,7 +610,7 @@ export default function RoleplayPage() {
 
       {/* In-call status badges */}
       {isCallActive && (
-        <div className="flex justify-center gap-2 p-4">
+        <div className="flex justify-center gap-2 p-4 flex-shrink-0">
           <Badge
             variant={
               callStatus === "active" ||
@@ -655,7 +655,7 @@ export default function RoleplayPage() {
       {/* Main Content */}
       {!isCallActive ? (
         /* Simplified Start Interface */
-        <div className="-mt-20 flex min-h-screen flex-col items-center justify-center px-4 sm:-mt-24 sm:px-6">
+        <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6">
           <div className="mb-12 text-center">
             <h1 className="mb-4 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-4xl font-bold text-transparent">
               Roleplay With Zara
@@ -697,7 +697,7 @@ export default function RoleplayPage() {
         </div>
       ) : (
         /* During Call - Unified Layout */
-        <div className="flex min-h-screen flex-col items-center justify-center px-4 py-8 sm:px-6">
+        <div className="flex-1 flex flex-col items-center justify-center px-4 py-8 sm:px-6 overflow-hidden">
           {/* Status Text */}
           <div className="mb-8 text-center">
             {callStatus === "user_turn" ? (
@@ -886,6 +886,27 @@ export default function RoleplayPage() {
           </div>
         </div>
       )}
+      
+      {/* Footer - Fixed at bottom */}
+      <footer className="py-3 px-6 flex-shrink-0">
+        <div className="flex flex-row items-center justify-center gap-2 text-xs text-slate-700">
+          <div className="flex items-center gap-1">
+            <a href="https://consuelohq.com" className="underline text-slate-800 hover:text-slate-600 transition-colors">
+              Consuelo v0.0.7
+            </a>
+            <span className="text-slate-800 hidden sm:inline">-</span>
+            <span className="text-slate-800 hidden sm:inline">The Modern Workspace for Sales</span>
+          </div>
+          <div className="h-2.5 w-px bg-slate-400"></div>
+          <a href="https://workforce.consuelohq.com/" className="underline text-slate-800 hover:text-slate-600 transition-colors">
+            Employees
+          </a>
+          <div className="h-2.5 w-px bg-slate-400"></div>
+          <a href="https://consuelohq.com/roleplay" className="underline text-slate-800 hover:text-slate-600 transition-colors">
+            Calls
+          </a>
+        </div>
+      </footer>
     </div>
   );
 }
