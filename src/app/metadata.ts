@@ -1,7 +1,7 @@
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Consuelo: The CRM You Need',
+  title: 'Consuelo: On The Job',
   description: 'The AI Native business management platform that just works.',
   metadataBase: new URL('https://www.consuelohq.com'),
   applicationName: 'Consuelo',
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: 'https://www.consuelohq.com',
     siteName: 'Consuelo',
-    title: 'Consuelo: The CRM You Need',
+    title: 'Consuelo: On The Job',
     description: 'The AI Native business management platform that just works.',
     images: [{
       url: '/images/transparent.png', // Use absolute URL
