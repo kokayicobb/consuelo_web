@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import LiquidOrbButton from "@/components/roleplay/LiquidOrbButton";
 import RoleplaySettings from "@/components/roleplay/settings";
+import CreditsDisplay from "@/components/roleplay/CreditsDisplay";
 
 interface Message {
   role: "user" | "assistant";
@@ -93,7 +94,12 @@ export default function RoleplayPage() {
 
   // Modal states
   const [isTranscriptOpen, setIsTranscriptOpen] = useState(false);
-  const endCall = useCallback(() => {
+  
+  // Usage tracking states
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [userCredits, setUserCredits] = useState(0);
+  const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
+  const endCall = useCallback(async () => {
     setIsCallActive(false);
     setIsSessionActive(false);
     setCallStatus("idle");
@@ -114,8 +120,32 @@ export default function RoleplayPage() {
       streamRef.current = null;
     }
 
-    toast.success("Call ended");
-  }, []);
+    // End usage session and deduct credits
+    if (currentSessionId) {
+      try {
+        const response = await fetch("/api/usage/end-session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionId: currentSessionId }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          toast.success(
+            `Call ended. Session: ${data.durationMinutes}min, Cost: $${data.creditsUsed.toFixed(2)}`
+          );
+          setUserCredits(data.remainingCredits);
+        }
+      } catch (error) {
+        console.error("Error ending usage session:", error);
+      }
+      
+      setCurrentSessionId(null);
+      setSessionStartTime(null);
+    } else {
+      toast.success("Call ended");
+    }
+  }, [currentSessionId, isRecording]);
   // Refs for audio functionality
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -162,6 +192,26 @@ export default function RoleplayPage() {
     setCallStatus("connecting");
 
     try {
+      // Start usage session and check credits
+      const usageResponse = await fetch("/api/usage/start-session", {
+        method: "POST",
+      });
+
+      if (!usageResponse.ok) {
+        const errorData = await usageResponse.json();
+        if (usageResponse.status === 402) {
+          toast.error("Insufficient credits. Please add credits to continue.");
+        } else {
+          toast.error(errorData.error || "Failed to start session");
+        }
+        setCallStatus("idle");
+        return;
+      }
+
+      const usageData = await usageResponse.json();
+      setCurrentSessionId(usageData.sessionId);
+      setSessionStartTime(new Date());
+
       // Request microphone permissions
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -594,8 +644,9 @@ export default function RoleplayPage() {
             )}
           </Badge>
 
-          {/* Settings Icon - Right side, inline with status */}
-          <div className="absolute right-4 sm:right-6">
+          {/* Credits and Settings - Right side, inline with status */}
+          <div className="absolute right-4 sm:right-6 flex items-center gap-3">
+            <CreditsDisplay onCreditsUpdate={setUserCredits} />
             <RoleplaySettings
               scenario={scenario}
               setScenario={setScenario}
@@ -692,6 +743,12 @@ export default function RoleplayPage() {
             <p className="mt-4 max-w-sm text-center text-sm text-muted-foreground">
               Please set up your scenario using the settings icon in the top
               right corner before starting a call
+            </p>
+          )}
+          
+          {scenario.trim() && userCredits < 0.45 && (
+            <p className="mt-4 max-w-sm text-center text-sm text-orange-600">
+              ⚠️ Low credits detected. Add more credits to ensure uninterrupted sessions.
             </p>
           )}
         </div>
