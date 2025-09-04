@@ -11,7 +11,7 @@ const isPublicRoute = createRouteMatcher([
   '/privacy',
   '/waitlist',
   '/how-it-works',
-  '/roleplay',
+  // '/roleplay',
   "/api/scraping/process-job",
   "/api/roleplay/(.*)",
   "/api/test",
