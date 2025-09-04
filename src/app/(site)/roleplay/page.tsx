@@ -22,7 +22,7 @@ import {
   Phone,
   PhoneOff,
 } from "lucide-react";
-import { UserButton } from "@clerk/nextjs";
+import { UserButton, SignIn, useUser } from "@clerk/nextjs";
 import Image from "next/image";
 import LiquidOrbButton from "@/components/roleplay/LiquidOrbButton";
 import RoleplaySettings from "@/components/roleplay/settings";
@@ -51,6 +51,8 @@ interface Voice {
 }
 
 export default function RoleplayPage() {
+  const { isSignedIn, isLoaded } = useUser();
+
   useEffect(() => {
     // Set custom attributes on the document body to hide both header and footer
     document.body.setAttribute("data-hide-header", "true");
@@ -923,6 +925,23 @@ export default function RoleplayPage() {
           </a>
         </div>
       </footer>
+
+      {/* Sign-in overlay for unauthenticated users */}
+      {isLoaded && !isSignedIn && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="relative">
+            <SignIn 
+              appearance={{
+                elements: {
+                  rootBox: "mx-auto",
+                  card: "bg-white/95 backdrop-blur-md shadow-2xl border border-white/20",
+                }
+              }}
+              redirectUrl="/roleplay"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
