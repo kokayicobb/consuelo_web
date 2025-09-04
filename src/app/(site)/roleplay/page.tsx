@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import LiquidOrbButton from "@/components/roleplay/LiquidOrbButton";
 import RoleplaySettings from "@/components/roleplay/settings";
-import { UserButton } from "@clerk/nextjs";
+import { UserButton, useUser, SignUpButton } from "@clerk/nextjs";
 
 interface Message {
   role: "user" | "assistant";
@@ -50,6 +50,8 @@ interface Voice {
 }
 
 export default function RoleplayPage() {
+  const { user, isLoaded } = useUser();
+
   useEffect(() => {
     // Set custom attributes on the document body to hide both header and footer
     document.body.setAttribute("data-hide-header", "true");
@@ -61,6 +63,104 @@ export default function RoleplayPage() {
       document.body.removeAttribute("data-hide-footer");
     };
   }, []);
+
+  // Show loading state while Clerk is initializing
+  if (!isLoaded) {
+    return (
+      <div className="h-screen bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-900 dark:to-purple-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin h-8 w-8 border-2 border-purple-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show sign-up prompt if user is not authenticated
+  if (!user) {
+    return (
+      <div className="h-screen bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-900 dark:to-purple-900 flex flex-col overflow-hidden">
+        {/* Header with logo */}
+        <div className="relative flex items-center justify-center p-4 sm:p-6 flex-shrink-0">
+          <div className="absolute left-4 sm:left-6">
+            <img 
+              src="/apple-touch-icon.png" 
+              alt="Consuelo" 
+              className="h-6 sm:h-8 w-auto"
+            />
+          </div>
+        </div>
+
+        {/* Main content with roleplay preview and sign-up overlay */}
+        <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6 relative">
+          {/* Background content (slightly dimmed) */}
+          <div className="absolute inset-0 opacity-30">
+            <div className="flex flex-col items-center justify-center h-full">
+              <div className="mb-12 text-center">
+                <h1 className="mb-4 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-4xl font-bold text-transparent">
+                  Roleplay With Zara
+                </h1>
+                <p className="max-w-md text-lg text-muted-foreground">
+                  Sharpen your sales skills with a challenging scenario and remember to review your post-call report
+                </p>
+              </div>
+
+              <div className="mb-12 sm:mb-16">
+                <LiquidOrbButton
+                  size="xl"
+                  className="h-48 w-48 sm:h-64 sm:w-64"
+                  disabled={true}
+                >
+                  <span></span>
+                </LiquidOrbButton>
+              </div>
+            </div>
+          </div>
+
+          {/* Sign-up overlay */}
+          <div className="relative z-10 text-center bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm p-8 rounded-2xl shadow-xl max-w-md w-full mx-4">
+            <h2 className="text-2xl font-bold mb-4 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+              Ready to Practice?
+            </h2>
+            <p className="text-muted-foreground mb-6">
+              Sign up to start practicing your sales skills with AI-powered roleplay scenarios
+            </p>
+            <SignUpButton mode="modal">
+              <Button size="lg" className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
+                Get Started Free
+              </Button>
+            </SignUpButton>
+            <p className="text-xs text-muted-foreground mt-4">
+              Already have an account? The sign-up dialog also has a sign-in option.
+            </p>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <footer className="py-3 px-6 flex-shrink-0">
+          <div className="flex flex-row items-center justify-center gap-2 text-xs text-slate-700">
+            <div className="flex items-center gap-1">
+              <a href="https://consuelohq.com" className="underline text-slate-800 hover:text-slate-600 transition-colors">
+                Consuelo v0.0.7
+              </a>
+              <span className="text-slate-800 hidden sm:inline">-</span>
+              <span className="text-slate-800 hidden sm:inline">The Modern Workspace for Sales</span>
+            </div>
+            <div className="h-2.5 w-px bg-slate-400"></div>
+            <a href="https://workforce.consuelohq.com/" className="underline text-slate-800 hover:text-slate-600 transition-colors">
+              Employees
+            </a>
+            <div className="h-2.5 w-px bg-slate-400"></div>
+            <a href="https://calls.consuelohq.com/" className="underline text-slate-800 hover:text-slate-600 transition-colors">
+              Calls
+            </a>
+          </div>
+        </footer>
+      </div>
+    );
+  }
+
+  // Authenticated user - show the full roleplay interface
   const [scenario, setScenario] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentMessage, setCurrentMessage] = useState("");
