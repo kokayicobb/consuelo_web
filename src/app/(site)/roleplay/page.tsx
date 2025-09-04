@@ -664,7 +664,7 @@ export default function RoleplayPage() {
           {isPlaying && (
             <Badge variant="default" className="animate-pulse">
               <Volume2 className="mr-1 h-3 w-3" />
-              AI Speaking
+              Zara Speaking
             </Badge>
           )}
         </div>
