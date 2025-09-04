@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import LiquidOrbButton from "@/components/roleplay/LiquidOrbButton";
 import RoleplaySettings from "@/components/roleplay/settings";
+import { UserButton } from "@clerk/nextjs";
 
 interface Message {
   role: "user" | "assistant";
@@ -565,6 +566,15 @@ export default function RoleplayPage() {
       {/* Header with centered status */}
       {!isCallActive && (
         <div className="relative flex items-center justify-center p-4 sm:p-6 flex-shrink-0">
+          {/* Logo - Top left */}
+          <div className="absolute left-4 sm:left-6">
+            <img 
+              src="/apple-touch-icon.png" 
+              alt="Consuelo" 
+              className="h-6 sm:h-8 w-auto"
+            />
+          </div>
+
           {/* Centered Status Badge */}
           <Badge
             variant={
@@ -595,7 +605,7 @@ export default function RoleplayPage() {
           </Badge>
 
           {/* Settings Icon - Right side, inline with status */}
-          <div className="absolute right-4 sm:right-6">
+          <div className="absolute right-4 sm:right-6 flex items-center gap-3">
             <RoleplaySettings
               scenario={scenario}
               setScenario={setScenario}
@@ -604,48 +614,50 @@ export default function RoleplayPage() {
               setSelectedVoiceId={setSelectedVoiceId}
               isLoadingVoices={isLoadingVoices}
             />
+            <UserButton 
+              appearance={{
+                elements: {
+                  avatarBox: "w-8 h-8"
+                }
+              }}
+            />
           </div>
         </div>
       )}
 
       {/* In-call status badges */}
       {isCallActive && (
-        <div className="flex justify-center gap-2 p-4 flex-shrink-0">
+        <div className="flex justify-center gap-2 p-4 flex-shrink-0" style={{ backgroundColor: 'white' }}>
           <Badge
-            variant={
-              callStatus === "active" ||
-              callStatus === "listening" ||
-              callStatus === "speaking"
-                ? "default"
-                : "secondary"
-            }
+            variant="white"
+            className="text-xs"
           >
             {callStatus === "idle" ? (
               <>
-                <PhoneOff className="mr-1 h-3 w-3" />
+                <PhoneOff className="mr-1 h-2 w-2" />
                 Ready to Start
               </>
             ) : callStatus === "connecting" ? (
               <>
-                <Phone className="mr-1 h-3 w-3" />
+                <Phone className="mr-1 h-2 w-2" />
                 Connecting...
               </>
             ) : (
               <>
-                <Phone className="mr-1 h-3 w-3" />
+                <Phone className="mr-1 h-2 w-2" />
                 Live Call
               </>
             )}
           </Badge>
           {isRecording && (
-            <Badge variant="destructive" className="animate-pulse">
-              <Mic className="mr-1 h-3 w-3" />
+            <Badge variant="white" className="animate-pulse text-xs text-red-600">
+              <Mic className="mr-1 h-2 w-2" />
               Recording
             </Badge>
           )}
           {isPlaying && (
-            <Badge variant="default" className="animate-pulse">
-              <Volume2 className="mr-1 h-3 w-3" />
+            <Badge variant="white" className="animate-pulse text-xs text-blue-600">
+              <Volume2 className="mr-1 h-2 w-2" />
               AI Speaking
             </Badge>
           )}
@@ -682,10 +694,11 @@ export default function RoleplayPage() {
             disabled={!scenario.trim()}
             size="lg"
             variant="default"
-            // className="text: bg-white bg-gradient-to-r from-purple-600 to-pink-600 px-12 py-6 text-lg font-semibold hover:from-purple-700 hover:to-pink-700"
+            className="px-8 py-4 sm:px-12 sm:py-6 text-base sm:text-lg font-semibold"
           >
-            <Phone className="mr-3 h-6 w-6" />
-            Start Voice Call
+            <Phone className="mr-2 sm:mr-3 h-5 w-5 sm:h-6 sm:w-6" />
+            <span className="hidden sm:inline">Start Voice Call</span>
+            <span className="sm:hidden">Start Call</span>
           </Button>
 
           {!scenario.trim() && (

@@ -51,10 +51,10 @@ interface SettingsProps {
 
 const presetScenarios: PresetScenario[] = [
   {
-    id: "cold-call-crm",
-    title: "Cold Call - CRM Software",
-    description: "Selling CRM software to a busy business owner",
-    llmPrompt: "You are a busy business owner who has been cold-called about CRM software. You run a mid-sized marketing agency with 25 employees and are currently using a mix of spreadsheets and basic tools to manage client relationships. You're skeptical of sales calls and initially resistant, but you do have real pain points around client data organization, follow-up tracking, and team collaboration. You tend to be direct, ask tough questions about ROI, and want to see concrete examples of how this would solve your specific problems. Start the conversation with mild irritation at being interrupted during your busy day."
+    id: "life-insurance-cold-call",
+    title: "Cold Call - Life Insurance",
+    description: "Insurance agent calling a potential life insurance prospect",
+    llmPrompt: "You are a 34-year-old marketing manager who just bought your first home 6 months ago with a $380,000 mortgage. You have a spouse and an 8-year-old daughter, and you're the primary income earner making $95,000/year. You have basic term life insurance through work (2x salary = $190,000) but haven't really thought much about whether it's enough. You're generally skeptical of insurance sales calls and initially annoyed at being interrupted during your workday. However, you're not completely closed-minded - you do worry sometimes about what would happen to your family if something happened to you, especially with the new mortgage. Your main objections will be: 'I already have coverage through work,' 'I need to discuss this with my spouse first,' 'I can't afford another bill right now with the new house,' and 'How do I know you're not just trying to oversell me?' You'll warm up slightly if the agent demonstrates genuine understanding of your situation and asks good questions about your family's needs, but you'll remain cautious about making any commitments. You want to understand the real costs and whether this is actually necessary. Start the conversation by saying you're busy at work and asking how they got your number."
   },
   {
     id: "enterprise-saas",
@@ -136,11 +136,11 @@ export default function RoleplaySettings({
     <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
       <DialogTrigger asChild>
         <Button
-          variant="outline"
-          size="icon"
-          className="rounded-full bg-white/80 backdrop-blur-sm"
+          variant="default"
+        
+          className="px-6 py-3 text-xl"
         >
-          <Settings className="h-4 w-4" />
+          <Settings className="h-6 w-6" />
         </Button>
       </DialogTrigger>
       <DialogContent className="mx-auto w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
