@@ -581,14 +581,8 @@ export default function RoleplayPage() {
           {/* Center - Status Badge */}
           <div className="absolute left-1/2 transform -translate-x-1/2">
             <Badge
-              variant={
-                callStatus === "active" ||
-                callStatus === "listening" ||
-                callStatus === "speaking"
-                  ? "default"
-                  : "secondary"
-              }
-              className="px-4 py-2 text-sm sm:text-base"
+              variant="white"
+              className="px-2 py-1 text-xs"
             >
               {callStatus === "idle" ? (
                 <>
@@ -630,13 +624,8 @@ export default function RoleplayPage() {
       {isCallActive && (
         <div className="flex justify-center gap-2 p-4 flex-shrink-0">
           <Badge
-            variant={
-              callStatus === "active" ||
-              callStatus === "listening" ||
-              callStatus === "speaking"
-                ? "default"
-                : "secondary"
-            }
+            variant="white"
+            className="text-xs px-2 py-1"
           >
             {callStatus === "idle" ? (
               <>
@@ -656,13 +645,13 @@ export default function RoleplayPage() {
             )}
           </Badge>
           {isRecording && (
-            <Badge variant="destructive" className="animate-pulse">
+            <Badge variant="destructive" className="animate-pulse text-xs px-2 py-1">
               <Mic className="mr-1 h-3 w-3" />
               Recording
             </Badge>
           )}
           {isPlaying && (
-            <Badge variant="default" className="animate-pulse">
+            <Badge variant="white" className="animate-pulse text-xs px-2 py-1">
               <Volume2 className="mr-1 h-3 w-3" />
               Zara Speaking
             </Badge>
