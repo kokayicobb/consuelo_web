@@ -24,7 +24,7 @@ export default function ClientLayout({
   const isAppRoute = pathname?.startsWith('/app') || pathname?.startsWith('/dashboard') || pathname?.startsWith('/roleplay');
   
   // Check if we're on a blank page (contact or roleplay)
-  const isBlankPage = pathname === '/waitlist' || pathname === '/roleplay' || pathname === '/ucs';
+   const isBlankPage = pathname === '/waitlist' || pathname === '/roleplay' || pathname === '/ucs' || pathname === '/sign-in'|| pathname === '/sign-up';
 
   useEffect(() => {
     // Initialize the header visibility based on scroll position
