@@ -83,7 +83,7 @@ IMPORTANT: Only provide the exact words you would speak. Do not include any stag
         },
         body: JSON.stringify({
           messages: messages,
-          model: "llama3-70b-8192", // Use Llama 3 70B for better responses
+          model: "openai/gpt-oss-120b", // Use Llama 3 70B for better responses
           temperature: 0.7,
           max_tokens: 150,
           top_p: 0.9,

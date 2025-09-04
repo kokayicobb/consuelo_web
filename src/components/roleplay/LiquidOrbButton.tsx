@@ -8,6 +8,7 @@ interface LiquidOrbButtonProps {
   onMouseLeave?: () => void
   onTouchStart?: () => void
   onTouchEnd?: () => void
+  onClick?: () => void
   disabled?: boolean
   isPressed?: boolean
   className?: string
@@ -21,6 +22,7 @@ export default function LiquidOrbButton({
   onMouseLeave,
   onTouchStart,
   onTouchEnd,
+  onClick,
   disabled = false,
   isPressed = false,
   className = "",
@@ -49,6 +51,7 @@ export default function LiquidOrbButton({
         onMouseLeave={onMouseLeave}
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
+        onClick={onClick}
         disabled={disabled}
         className={`
           liquid-orb-button
@@ -431,7 +434,7 @@ export default function LiquidOrbButton({
         .liquid-orb-button:active .liquid-streak-2 { animation-duration: 2.5s; }
         .liquid-orb-button:active .liquid-streak-3 { animation-duration: 2.2s; }
 
-        Disabled state - keep animations and full opacity
+        /* Disabled state - keep animations and full opacity */
         .liquid-orb-button:disabled .liquid-blob-1,
         .liquid-orb-button:disabled .liquid-blob-2,
         .liquid-orb-button:disabled .liquid-blob-3,

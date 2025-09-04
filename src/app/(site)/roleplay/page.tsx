@@ -22,10 +22,10 @@ import {
   Phone,
   PhoneOff,
 } from "lucide-react";
+import { UserButton } from "@clerk/nextjs";
+import Image from "next/image";
 import LiquidOrbButton from "@/components/roleplay/LiquidOrbButton";
 import RoleplaySettings from "@/components/roleplay/settings";
-import { UserButton, useUser, SignUpButton } from "@clerk/nextjs";
-import Image from "next/image";
 
 interface Message {
   role: "user" | "assistant";
@@ -51,9 +51,17 @@ interface Voice {
 }
 
 export default function RoleplayPage() {
-  const { user, isLoaded } = useUser();
+  useEffect(() => {
+    // Set custom attributes on the document body to hide both header and footer
+    document.body.setAttribute("data-hide-header", "true");
+    document.body.setAttribute("data-hide-footer", "true");
 
-  // All hooks must be called at the top level - before any early returns
+    // Clean up when component unmounts
+    return () => {
+      document.body.removeAttribute("data-hide-header");
+      document.body.removeAttribute("data-hide-footer");
+    };
+  }, []);
   const [scenario, setScenario] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentMessage, setCurrentMessage] = useState("");
@@ -87,34 +95,6 @@ export default function RoleplayPage() {
 
   // Modal states
   const [isTranscriptOpen, setIsTranscriptOpen] = useState(false);
-  
-  // Refs for audio functionality  
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
-  const streamRef = useRef<MediaStream | null>(null);
-  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
-  const isProcessingRef = useRef(false);
-
-  // All hooks must be declared before any conditional returns
-  const stopRecording = () => {
-    if (
-      mediaRecorderRef.current &&
-      mediaRecorderRef.current.state === "recording"
-    ) {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-      console.log("🎤 Stopped recording");
-    }
-  };
-
-  const stopCurrentAudio = () => {
-    if (currentAudioRef.current) {
-      currentAudioRef.current.pause();
-      currentAudioRef.current.currentTime = 0;
-      setIsPlaying(false);
-    }
-  };
-
   const endCall = useCallback(() => {
     setIsCallActive(false);
     setIsSessionActive(false);
@@ -137,19 +117,13 @@ export default function RoleplayPage() {
     }
 
     toast.success("Call ended");
-  }, [isRecording]);
-
-  useEffect(() => {
-    // Set custom attributes on the document body to hide both header and footer
-    document.body.setAttribute("data-hide-header", "true");
-    document.body.setAttribute("data-hide-footer", "true");
-
-    // Clean up when component unmounts
-    return () => {
-      document.body.removeAttribute("data-hide-header");
-      document.body.removeAttribute("data-hide-footer");
-    };
   }, []);
+  // Refs for audio functionality
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const streamRef = useRef<MediaStream | null>(null);
+  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
+  const isProcessingRef = useRef(false);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -181,52 +155,59 @@ export default function RoleplayPage() {
     fetchVoices();
   }, []);
 
-  // All function definitions must be declared before any early returns
-  const startRecording = () => {
-    if (
-      mediaRecorderRef.current &&
-      mediaRecorderRef.current.state === "inactive"
-    ) {
-      audioChunksRef.current = [];
-      mediaRecorderRef.current.start();
-      setIsRecording(true);
-      console.log("🎤 Started recording");
+  const startCall = async () => {
+    if (!scenario.trim()) {
+      toast.error("Please enter a scenario first");
+      return;
+    }
+
+    setCallStatus("connecting");
+
+    try {
+      // Request microphone permissions
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      });
+      streamRef.current = stream;
+
+      // Initialize media recorder
+      initializeMediaRecorder(stream);
+
+      setIsSessionActive(true);
+      setIsCallActive(true);
+      setMessages([]);
+      setFeedback(null);
+      setCallStatus("active");
+
+      toast.success("Call connected! Start speaking naturally.");
+
+      // Start the call with AI greeting
+      setTimeout(() => {
+        initiateAIGreeting();
+      }, 1000);
+    } catch (error) {
+      toast.error("Failed to connect. Please allow microphone access.");
+      console.error("Error starting call:", error);
+      setCallStatus("idle");
     }
   };
 
-  const processAudioChunk = async (audioBlob: Blob) => {
-    try {
-      console.log("🎤 Processing audio chunk, size:", audioBlob.size);
+  const handlePushToTalkStart = () => {
+    if (!isCallActive || isPlaying || callStatus !== "user_turn") return;
 
-      // Create FormData and append the audio file
-      const formData = new FormData();
-      formData.append("audio", audioBlob, "audio.webm");
+    setIsPushToTalkPressed(true);
+    startRecording();
+  };
 
-      // Send to Groq Whisper API
-      const response = await fetch("/api/roleplay/transcribe", {
-        method: "POST",
-        body: formData,
-      });
+  const handlePushToTalkEnd = () => {
+    if (!isPushToTalkPressed) return;
 
-      if (!response.ok) {
-        throw new Error("Transcription failed");
-      }
-
-      const data = await response.json();
-
-      if (data.text && data.text.trim().length > 2) {
-        console.log("🎤 Transcribed:", data.text);
-        setCurrentTranscript(data.text);
-
-        // Process the transcribed text
-        if (!isProcessingRef.current) {
-          await handleUserSpeech(data.text.trim());
-        }
-      }
-    } catch (error) {
-      console.error("Error processing audio chunk:", error);
-      setCallStatus("user_turn");
-    }
+    setIsPushToTalkPressed(false);
+    stopRecording();
   };
 
   const initializeMediaRecorder = (stream: MediaStream) => {
@@ -267,6 +248,64 @@ export default function RoleplayPage() {
     }
   };
 
+  const startRecording = () => {
+    if (
+      mediaRecorderRef.current &&
+      mediaRecorderRef.current.state === "inactive"
+    ) {
+      audioChunksRef.current = [];
+      mediaRecorderRef.current.start();
+      setIsRecording(true);
+      console.log("🎤 Started recording");
+    }
+  };
+
+  const stopRecording = () => {
+    if (
+      mediaRecorderRef.current &&
+      mediaRecorderRef.current.state === "recording"
+    ) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      console.log("🎤 Stopped recording");
+    }
+  };
+
+  const processAudioChunk = async (audioBlob: Blob) => {
+    try {
+      console.log("🎤 Processing audio chunk, size:", audioBlob.size);
+
+      // Create FormData and append the audio file
+      const formData = new FormData();
+      formData.append("audio", audioBlob, "audio.webm");
+
+      // Send to Groq Whisper API
+      const response = await fetch("/api/roleplay/transcribe", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Transcription failed");
+      }
+
+      const data = await response.json();
+
+      if (data.text && data.text.trim().length > 2) {
+        console.log("🎤 Transcribed:", data.text);
+        setCurrentTranscript(data.text);
+
+        // Process the transcribed text
+        if (!isProcessingRef.current) {
+          await handleUserSpeech(data.text.trim());
+        }
+      }
+    } catch (error) {
+      console.error("Error processing audio chunk:", error);
+      setCallStatus("user_turn");
+    }
+  };
+ 
   const handleUserSpeech = async (transcript: string) => {
     if (transcript.length < 3 || isProcessingRef.current) return;
 
@@ -278,17 +317,15 @@ export default function RoleplayPage() {
     
     setCurrentTranscript("");
 
-    // Use the current messages state for the API call
-    setMessages(prevMessages => {
-      const userMessage: Message = { role: "user", text: transcript };
-      const updatedMessages = [...prevMessages, userMessage];
-      console.log("🔍 DEBUG: Updated messages with user message:", updatedMessages);
-      
-      // Call API with the updated messages
-      getAIResponseAndUpdateMessages(transcript, updatedMessages);
-      
-      return updatedMessages;
-    });
+    // Add user message to conversation
+    const userMessage: Message = { role: "user", text: transcript };
+    const updatedMessages = [...messages, userMessage];
+    console.log("🔍 DEBUG: Updated messages with user message:", updatedMessages);
+    
+    setMessages(updatedMessages);
+    
+    // Call API with the updated messages
+    await getAIResponseAndUpdateMessages(transcript, updatedMessages);
   };
 
   const getAIResponseAndUpdateMessages = async (transcript: string, currentMessages: Message[]) => {
@@ -437,6 +474,8 @@ export default function RoleplayPage() {
     }
   };
 
+ 
+
   const resetScenario = () => {
     setScenario("");
     setMessages([]);
@@ -453,6 +492,14 @@ export default function RoleplayPage() {
     setIsMuted(!isMuted);
     if (currentAudioRef.current) {
       currentAudioRef.current.muted = !isMuted;
+    }
+  };
+
+  const stopCurrentAudio = () => {
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause();
+      currentAudioRef.current.currentTime = 0;
+      setIsPlaying(false);
     }
   };
 
@@ -513,208 +560,55 @@ export default function RoleplayPage() {
     }
   };
 
-  const startCall = async () => {
-    if (!scenario.trim()) {
-      toast.error("Please enter a scenario first");
-      return;
-    }
-
-    setCallStatus("connecting");
-
-    try {
-      // Request microphone permissions
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-        },
-      });
-      streamRef.current = stream;
-
-      // Initialize media recorder
-      initializeMediaRecorder(stream);
-
-      setIsSessionActive(true);
-      setIsCallActive(true);
-      setMessages([]);
-      setFeedback(null);
-      setCallStatus("active");
-
-      toast.success("Call connected! Start speaking naturally.");
-
-      // Start the call with AI greeting
-      setTimeout(() => {
-        initiateAIGreeting();
-      }, 1000);
-    } catch (error) {
-      toast.error("Failed to connect. Please allow microphone access.");
-      console.error("Error starting call:", error);
-      setCallStatus("idle");
-    }
-  };
-
-  const handlePushToTalkStart = () => {
-    if (!isCallActive || isPlaying || callStatus !== "user_turn") return;
-
-    setIsPushToTalkPressed(true);
-    startRecording();
-  };
-
-  const handlePushToTalkEnd = () => {
-    if (!isPushToTalkPressed) return;
-
-    setIsPushToTalkPressed(false);
-    stopRecording();
-  };
-
-  // Show loading state while Clerk is initializing
-  if (!isLoaded) {
-    return (
-      <div className="h-screen bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-900 dark:to-purple-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin h-8 w-8 border-2 border-purple-600 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Show sign-up prompt if user is not authenticated
-  if (!user) {
-    return (
-      <div className="h-screen bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-900 dark:to-purple-900 flex flex-col overflow-hidden">
-        {/* Header with logo */}
-        <div className="relative flex items-center justify-center p-4 sm:p-6 flex-shrink-0">
-          <div className="absolute left-4 sm:left-6">
-            <Image 
-              src="/apple-touch-icon.png" 
-              alt="Consuelo" 
-              width={32}
-              height={32}
-              className="h-6 sm:h-8 w-auto"
-            />
-          </div>
-        </div>
-
-        {/* Main content with roleplay preview and sign-up overlay */}
-        <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6 relative">
-          {/* Background content (slightly dimmed) */}
-          <div className="absolute inset-0 opacity-30">
-            <div className="flex flex-col items-center justify-center h-full">
-              <div className="mb-12 text-center">
-                <h1 className="mb-4 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-4xl font-bold text-transparent">
-                  Roleplay With Zara
-                </h1>
-                <p className="max-w-md text-lg text-muted-foreground">
-                  Sharpen your sales skills with a challenging scenario and remember to review your post-call report
-                </p>
-              </div>
-
-              <div className="mb-12 sm:mb-16">
-                <LiquidOrbButton
-                  size="xl"
-                  className="h-48 w-48 sm:h-64 sm:w-64"
-                  disabled={true}
-                >
-                  <span></span>
-                </LiquidOrbButton>
-              </div>
-            </div>
-          </div>
-
-          {/* Sign-up overlay */}
-          <div className="relative z-10 text-center bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm p-8 rounded-2xl shadow-xl max-w-md w-full mx-4">
-            <h2 className="text-2xl font-bold mb-4 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-              Ready to Practice?
-            </h2>
-            <p className="text-muted-foreground mb-6">
-              Sign up to start practicing your sales skills with AI-powered roleplay scenarios
-            </p>
-            <SignUpButton mode="modal">
-              <Button size="lg" className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
-                Get Started Free
-              </Button>
-            </SignUpButton>
-            <p className="text-xs text-muted-foreground mt-4">
-              Already have an account? The sign-up dialog also has a sign-in option.
-            </p>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <footer className="py-3 px-6 flex-shrink-0">
-          <div className="flex flex-row items-center justify-center gap-2 text-xs text-slate-700">
-            <div className="flex items-center gap-1">
-              <a href="https://consuelohq.com" className="underline text-slate-800 hover:text-slate-600 transition-colors">
-                Consuelo v0.0.7
-              </a>
-              <span className="text-slate-800 hidden sm:inline">-</span>
-              <span className="text-slate-800 hidden sm:inline">The Modern Workspace for Sales</span>
-            </div>
-            <div className="h-2.5 w-px bg-slate-400"></div>
-            <a href="https://workforce.consuelohq.com/" className="underline text-slate-800 hover:text-slate-600 transition-colors">
-              Employees
-            </a>
-            <div className="h-2.5 w-px bg-slate-400"></div>
-            <a href="https://calls.consuelohq.com/" className="underline text-slate-800 hover:text-slate-600 transition-colors">
-              Calls
-            </a>
-          </div>
-        </footer>
-      </div>
-    );
-  }
-
-  // Authenticated user - show the full roleplay interface
-
   return (
     <div className="h-screen bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-900 dark:to-purple-900 flex flex-col overflow-hidden">
-      {/* Header with centered status */}
+      {/* Header with logo, centered status, and user controls */}
       {!isCallActive && (
-        <div className="relative flex items-center justify-center p-4 sm:p-6 flex-shrink-0">
-          {/* Logo - Top left */}
-          <div className="absolute left-4 sm:left-6">
-            <Image 
-              src="/apple-touch-icon.png" 
-              alt="Consuelo" 
+        <div className="relative flex items-center justify-between p-4 sm:p-6 flex-shrink-0">
+          {/* Left side - Logo */}
+          <div className="flex items-center">
+            <Image
+              src="/apple-touch-icon.png"
+              alt="Consuelo Logo"
               width={32}
               height={32}
-              className="h-6 sm:h-8 w-auto"
+              className="w-6 h-6 sm:w-8 sm:h-8"
             />
           </div>
 
-          {/* Centered Status Badge */}
-          <Badge
-            variant={
-              callStatus === "active" ||
-              callStatus === "listening" ||
-              callStatus === "speaking"
-                ? "default"
-                : "secondary"
-            }
-            className="px-4 py-2 text-sm sm:text-base"
-          >
-            {callStatus === "idle" ? (
-              <>
-                <PhoneOff className="mr-2 h-4 w-4" />
-                Ready to Start
-              </>
-            ) : callStatus === "connecting" ? (
-              <>
-                <Phone className="mr-2 h-4 w-4" />
-                Connecting...
-              </>
-            ) : (
-              <>
-                <Phone className="mr-2 h-4 w-4" />
-                Live Call
-              </>
-            )}
-          </Badge>
+          {/* Center - Status Badge */}
+          <div className="absolute left-1/2 transform -translate-x-1/2">
+            <Badge
+              variant={
+                callStatus === "active" ||
+                callStatus === "listening" ||
+                callStatus === "speaking"
+                  ? "default"
+                  : "secondary"
+              }
+              className="px-4 py-2 text-sm sm:text-base"
+            >
+              {callStatus === "idle" ? (
+                <>
+                  <PhoneOff className="mr-2 h-4 w-4" />
+                  Ready to Start
+                </>
+              ) : callStatus === "connecting" ? (
+                <>
+                  <Phone className="mr-2 h-4 w-4" />
+                  Connecting...
+                </>
+              ) : (
+                <>
+                  <Phone className="mr-2 h-4 w-4" />
+                  Live Call
+                </>
+              )}
+            </Badge>
+          </div>
 
-          {/* Settings Icon - Right side, inline with status */}
-          <div className="absolute right-4 sm:right-6 flex items-center gap-3">
+          {/* Right side - Settings and User Button */}
+          <div className="flex items-center gap-2 sm:gap-3">
             <RoleplaySettings
               scenario={scenario}
               setScenario={setScenario}
@@ -723,50 +617,51 @@ export default function RoleplayPage() {
               setSelectedVoiceId={setSelectedVoiceId}
               isLoadingVoices={isLoadingVoices}
             />
-            <UserButton 
-              appearance={{
-                elements: {
-                  avatarBox: "w-8 h-8"
-                }
-              }}
-            />
+            <div className="scale-75 sm:scale-100">
+              <UserButton />
+            </div>
           </div>
         </div>
       )}
 
       {/* In-call status badges */}
       {isCallActive && (
-        <div className="flex justify-center gap-2 p-4 flex-shrink-0" style={{ backgroundColor: 'white' }}>
+        <div className="flex justify-center gap-2 p-4 flex-shrink-0">
           <Badge
-            variant="white"
-            className="text-xs"
+            variant={
+              callStatus === "active" ||
+              callStatus === "listening" ||
+              callStatus === "speaking"
+                ? "default"
+                : "secondary"
+            }
           >
             {callStatus === "idle" ? (
               <>
-                <PhoneOff className="mr-1 h-2 w-2" />
+                <PhoneOff className="mr-1 h-3 w-3" />
                 Ready to Start
               </>
             ) : callStatus === "connecting" ? (
               <>
-                <Phone className="mr-1 h-2 w-2" />
+                <Phone className="mr-1 h-3 w-3" />
                 Connecting...
               </>
             ) : (
               <>
-                <Phone className="mr-1 h-2 w-2" />
+                <Phone className="mr-1 h-3 w-3" />
                 Live Call
               </>
             )}
           </Badge>
           {isRecording && (
-            <Badge variant="white" className="animate-pulse text-xs text-red-600">
-              <Mic className="mr-1 h-2 w-2" />
+            <Badge variant="destructive" className="animate-pulse">
+              <Mic className="mr-1 h-3 w-3" />
               Recording
             </Badge>
           )}
           {isPlaying && (
-            <Badge variant="white" className="animate-pulse text-xs text-blue-600">
-              <Volume2 className="mr-1 h-2 w-2" />
+            <Badge variant="default" className="animate-pulse">
+              <Volume2 className="mr-1 h-3 w-3" />
               AI Speaking
             </Badge>
           )}
@@ -803,11 +698,10 @@ export default function RoleplayPage() {
             disabled={!scenario.trim()}
             size="lg"
             variant="default"
-            className="px-8 py-4 sm:px-12 sm:py-6 text-base sm:text-lg font-semibold"
+            // className="text: bg-white bg-gradient-to-r from-purple-600 to-pink-600 px-12 py-6 text-lg font-semibold hover:from-purple-700 hover:to-pink-700"
           >
-            <Phone className="mr-2 sm:mr-3 h-5 w-5 sm:h-6 sm:w-6" />
-            <span className="hidden sm:inline">Start Voice Call</span>
-            <span className="sm:hidden">Start Call</span>
+            <Phone className="mr-3 h-6 w-6" />
+            Start Voice Call
           </Button>
 
           {!scenario.trim() && (
