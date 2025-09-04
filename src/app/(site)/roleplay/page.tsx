@@ -902,7 +902,7 @@ export default function RoleplayPage() {
             Employees
           </a>
           <div className="h-2.5 w-px bg-slate-400"></div>
-          <a href="https://consuelohq.com/roleplay" className="underline text-slate-800 hover:text-slate-600 transition-colors">
+          <a href="https://calls.consuelohq.com/" className="underline text-slate-800 hover:text-slate-600 transition-colors">
             Calls
           </a>
         </div>
