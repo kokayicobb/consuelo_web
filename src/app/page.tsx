@@ -38,7 +38,7 @@ interface UseCase {
 };
 
 export const metadata: Metadata = {
-  title: "Consuelo: The CRM You Need",
+  title: "Consuelo: On The Job",
   description:
    'The AI Native business management platform that just works.',
 };

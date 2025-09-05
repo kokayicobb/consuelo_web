@@ -181,7 +181,7 @@ const ChatInterface = () => {
           <Button
             onClick={handleSend}
             size="icon"
-            className="bg-blue-500 hover:bg-blue-600"
+            className="bg-emerald-500 hover:bg-blue-600"
           >
             <Send size={16} />
           </Button>
