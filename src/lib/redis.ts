@@ -12,10 +12,8 @@ const getRedisClient = (): Redis | null => {
     
     try {
       redis = new Redis(redisUrl, {
-        maxRetriesPerRequest: 3,
-        retryDelayOnFailover: 100,
-        enableReadyCheck: false,
         maxRetriesPerRequest: null,
+        enableReadyCheck: false,
         lazyConnect: true,
       });
 
