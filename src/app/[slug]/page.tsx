@@ -65,7 +65,7 @@ const ALL_FEATURES_QUERY = `*[_type == "feature"] | order(order asc) {
 }`
 
 type Props = {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
