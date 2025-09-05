@@ -24,7 +24,7 @@ interface Feature {
   description: string
   image?: any
   imagePath?: string
-  href: string
+  slug: { current: string }
   isHero: boolean
   gradientFrom: string
   gradientTo: string
@@ -53,6 +53,9 @@ export function Features({ features }: FeaturesProps) {
     return item.imagePath || ""
   }
 
+  // Debug: Log the features to see what we're getting
+  console.log('Features data:', features.map(f => ({ title: f.title, slug: f.slug })))
+
   return (
     <section
       className="bg-transparent pt-8 sm:pt-12 pb-8 sm:pb-12"
@@ -79,7 +82,7 @@ export function Features({ features }: FeaturesProps) {
               icon={<IconLock className="h-8 w-8 text-accent" />}
               backgroundImage={getImageUrl(heroItem)}
               isHero={true}
-              href={heroItem.href}
+              href={`/${(heroItem.slug?.current || 'test-slug').replace(/^.*\//, '').trim()}`}
             />
           )}
 
@@ -103,7 +106,7 @@ export function Features({ features }: FeaturesProps) {
               }
               icon={<IconChartBar className="h-8 w-8 text-accent" />}
               backgroundImage={getImageUrl(item)}
-              href={item.href}
+              href={`/${(item.slug?.current || 'test-slug').replace(/^.*\//, '').trim()}`}
             />
           ))}
         </BentoGrid>
