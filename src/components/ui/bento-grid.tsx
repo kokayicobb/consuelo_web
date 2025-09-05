@@ -223,7 +223,7 @@ export const BentoGridItem = ({
           {/* Image background */}
           {backgroundImage ? (
             <div className="absolute inset-[1px] rounded-xl overflow-hidden">
-              <Image src={backgroundImage || "/placeholder.svg"} alt="Background" fill className="object-cover" />
+              <Image src={backgroundImage || "/placeholder.svg"} alt="Background" fill className="object-fill" />
               {/* Lighter overlay */}
               <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px]"></div>
             </div>
@@ -318,7 +318,7 @@ export const BentoGridItem = ({
           {/* Image background */}
           {backgroundImage ? (
             <div className="absolute inset-[1px] rounded-xl overflow-hidden">
-              <Image src={backgroundImage || "/placeholder.svg"} alt="Background" fill className="object-cover" />
+              <Image src={backgroundImage || "/placeholder.svg"} alt="Background" fill className="object-fill" />
               {/* Lighter overlay */}
               <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px]"></div>
             </div>

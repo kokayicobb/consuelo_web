@@ -26,6 +26,9 @@ interface EnterpriseContentProps {
 export default function EnterpriseContent({ onBack }: EnterpriseContentProps) {
   // Mock posts data since we can't use server components or direct file system access
   const [posts, setPosts] = useState([]);
+  
+  // Mock features data
+  const [features, setFeatures] = useState([]);
 
   // Simulate fetching posts
   useEffect(() => {
@@ -51,6 +54,58 @@ export default function EnterpriseContent({ onBack }: EnterpriseContentProps) {
         excerpt: "Exploring upcoming trends in fashion technology and virtual experiences.",
         coverImage: "/blog/post3.jpg",
         slug: "future-of-fashion-tech"
+      }
+    ]);
+
+    // Mock features data
+    setFeatures([
+      {
+        _id: "1",
+        title: "Insurance Demo",
+        description: "On-call coaching platform that helps managers shorten ramp time for new sales reps through real-time guidance on outbound calls",
+        image: null,
+        imagePath: "/videos/insurance-demo.mp4",
+        slug: { current: "insurance-demo" },
+        isHero: true,
+        gradientFrom: "from-blue-500",
+        gradientTo: "to-purple-600",
+        order: 1
+      },
+      {
+        _id: "2", 
+        title: "Exploring Life Insurance Options",
+        description: "A training session with Zara",
+        image: null,
+        imagePath: "/videos/life-insurance.mp4", 
+        slug: { current: "life-insurance" },
+        isHero: false,
+        gradientFrom: "from-green-500",
+        gradientTo: "to-blue-500",
+        order: 2
+      },
+      {
+        _id: "3",
+        title: "Objection Overcoming", 
+        description: "Watch Mercury help an agent overcome the objection of being called too much",
+        image: null,
+        imagePath: "/videos/objection-handling.mp4",
+        slug: { current: "objection-handling" },
+        isHero: false, 
+        gradientFrom: "from-purple-500",
+        gradientTo: "to-pink-500",
+        order: 3
+      },
+      {
+        _id: "4",
+        title: "Practicing objections",
+        description: "On-Call Coaching", 
+        image: null,
+        imagePath: "/videos/objection-practice.mp4",
+        slug: { current: "objection-practice" },
+        isHero: false,
+        gradientFrom: "from-red-500", 
+        gradientTo: "to-orange-500",
+        order: 4
       }
     ]);
   }, []);
@@ -130,7 +185,7 @@ export default function EnterpriseContent({ onBack }: EnterpriseContentProps) {
         <div className={`${styles['enterprise-sections']} space-y-8 pb-10`}>
           {/* Feature section */}
           <div className={`${styles['animate-section']} feature-section`}>
-            <Features />
+            <Features features={features} />
           </div>
 
           {/* Testimonials section */}
