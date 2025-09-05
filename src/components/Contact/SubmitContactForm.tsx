@@ -8,23 +8,27 @@ const supabase = createClient(
 )
 
 export async function submitContactForm(prevState: { message: string }, formData: FormData) {
-  const fullName = formData.get('name') as string
-  const company = formData.get('company') as string
   const email = formData.get('email') as string
-  const website = formData.get('website') as string
-  const message = formData.get('message') as string
+
+  if (!email) {
+    return { message: "Email is required." }
+  }
 
   try {
+    // Save to Supabase
     const { error } = await supabase
-      .from('contact_submissions')
+      .from('email_signups')
       .insert([
-        { full_name: fullName, company, email, website, message }
+        { email, created_at: new Date().toISOString() }
       ])
 
     if (error) throw error
 
-    return { message: "Form submitted successfully!" }
+    // Email will be sent via Supabase webhook automatically
+
+    return { message: "Successfully added to waitlist! Check your email." }
   } catch (error) {
+    console.error('Supabase error:', error)
     return { message: "Error submitting form. Please try again." }
   }
 }

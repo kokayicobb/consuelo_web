@@ -170,7 +170,7 @@ Remember: You're not just offering funding - you're providing access to the enti
 
 export async function sendChatMessage(
   messages: ChatMessage[],
-  model = "deepseek-r1-distill-llama-70b",
+  model = "Qwen/Qwen3-32B",
   maxTokens = 1024,
   onStream?: (chunk: string) => void,
   onToolCall?: (toolCall: any) => void,

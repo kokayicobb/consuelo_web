@@ -62,7 +62,7 @@ IMPORTANT: Only provide the exact words you would speak. Do not include any stag
 
     // Add current user message
     const userMessage = message.trim() === "" 
-      ? "Hello, I'm calling about a business opportunity. Do you have a moment to chat?"
+      ? `${scenario}` // Use the scenario as the initial message
       : message;
     
     messages.push({
@@ -83,7 +83,7 @@ IMPORTANT: Only provide the exact words you would speak. Do not include any stag
         },
         body: JSON.stringify({
           messages: messages,
-          model: "llama3-70b-8192", // Use Llama 3 70B for better responses
+          model: "openai/gpt-oss-120b", // Use Llama 3 70B for better responses
           temperature: 0.7,
           max_tokens: 150,
           top_p: 0.9,

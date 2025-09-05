@@ -457,7 +457,7 @@ const fetchAvailableSlots = async () => {
           )}
           <button
             onClick={handleBookMeetingClick}
-            className="flex-1 flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#3cb878] hover:bg-[#2ea660] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3cb878] transition-colors">
+            className="flex-1 flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-500 hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-600 transition-colors">
             Book Meeting
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
@@ -467,15 +467,12 @@ const fetchAvailableSlots = async () => {
 
         <div className="relative w-full">
   <textarea
-    rows={1}
+    rows={Math.min(Math.max(1, Math.ceil(input.length / 50)), 4)}
     value={input}
     onChange={(e) => setInput(e.target.value)}
     onKeyPress={handleKeyPress}
     placeholder={inputPlaceholder || "Type your message..."}
-    // Key Changes:
-    // 1. Fully rounded corners to contain the button visually.
-    // 2. Padding on the right (pr-12) to make space for the button.
-    className="block w-full rounded-md border-gray-300 dark:border-gray-600 p-2 pr-12 shadow-sm focus:ring-teal-500 focus:border-teal-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+    className="block w-full rounded-md border-gray-300 dark:border-gray-600 p-2 pr-12 shadow-sm focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 resize-none max-h-24 overflow-y-auto"
     disabled={isLoading}
   />
   <button
@@ -484,7 +481,7 @@ const fetchAvailableSlots = async () => {
     // 1. 'absolute' positioning to place it inside the textarea's container.
     // 2. 'right-2 top-1/2 -translate-y-1/2' to center it vertically on the right.
     // 3. Smaller size (h-8 w-8) and circular shape (rounded-full).
-    className="absolute right-2 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-teal-500 text-white hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:opacity-50"
+    className="absolute right-2 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500 text-white hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-50"
     disabled={isLoading}
   >
     <span className="sr-only">Send</span>

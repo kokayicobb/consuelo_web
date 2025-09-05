@@ -1,8 +1,8 @@
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Consuelo: The CRM You Need',
-  description: 'The AI Native business management platform that just works.',
+  title: 'Consuelo: On The Job',
+  description: 'Shorten the ramp time of newly onboarded sales agents and help your top performers pivot to new products.',
   metadataBase: new URL('https://www.consuelohq.com'),
   applicationName: 'Consuelo',
   keywords: ['AI', 'CRM', 'Sales Automation', 'Lead Management'],
@@ -11,8 +11,8 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: 'https://www.consuelohq.com',
     siteName: 'Consuelo',
-    title: 'Consuelo: The CRM You Need',
-    description: 'The AI Native business management platform that just works.',
+    title: 'Consuelo: On The Job',
+    description: 'Shorten the ramp time of newly onboarded sales agents and help your top performers pivot to new products.',
     images: [{
       url: '/images/transparent.png', // Use absolute URL
       width: 1200,
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     site: '@YourTwitterHandle',
     creator: '@YourTwitterHandle',
     title: 'Consuelo - AI-Powered Fit Technology',
-    description: 'The AI Native business management platform that just works.',
+    description: 'Shorten the ramp time of newly onboarded sales agents and help your top performers pivot to new products.',
     images: ['/images/transparent.png'] // Use absolute URL // Remove 'public' from path
   },
   icons: {

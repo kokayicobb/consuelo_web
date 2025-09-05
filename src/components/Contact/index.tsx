@@ -4,7 +4,7 @@ import React from "react";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { cn } from "@/lib/utils";
-import { Shirt, Building2, Zap, SendIcon } from 'lucide-react';
+import { Building2, Zap, SendIcon } from 'lucide-react';
 
 import { useFormState, useFormStatus } from "react-dom";
 import { submitContactForm } from "./SubmitContactForm";
@@ -22,7 +22,7 @@ function SubmitButton() {
       type="submit"
       disabled={pending}
     >
-      <span>{pending ? "Submitting..." : "Request Demo"}</span>
+      <span>{pending ? "Submitting..." : "Join Waitlist"}</span>
       <SendIcon className="h-4 w-4" />
       <BottomGradient />
     </button>
@@ -33,71 +33,80 @@ export function Contact() {
   const [state, formAction] = useFormState(submitContactForm, initialState);
 
   return (
-    <div className="w-full bg-gradient-to-b from-background to-background/80 py-24 sm:py-20">
+    <div className="w-full bg-gradient-to-b from-background to-background/80 py-40 sm:py-48">
+      {/* Header with consuelo text */}
+      <div className="fixed top-16 z-50 w-full">
+        <div className="mx-auto max-w-2xl px-6 lg:px-8">
+          <div className="pl-6 md:pl-8">
+            <span className="text-2xl font-semibold">
+              consuelo
+            </span>
+          </div>
+        </div>
+      </div>
       <div className="mx-auto max-w-2xl px-6 lg:px-8">
         <div className="mx-auto text-center mb-8">
-          <div className="mb-4 inline-flex items-center rounded-full bg-accent/10 px-3 py-1 text-sm font-medium">
-            <Zap className="mr-1 h-4 w-4 text-accent" />
-            <span className="text-accent">Revolutionizing E-commerce Fitting</span>
-          </div>
+         
     
           <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-            <span className="bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent">Perfect fit.</span>{" "}
-            <span className="text-primary">Perfect confidence.</span>
+            <span className="bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent">Pre Launch</span>{" "}
+            <span className="text-primary">Waitlist.</span>
           </h2>
         </div>
     
         <div className="max-w-xl w-full mx-auto rounded-xl p-6 md:p-8 shadow-input bg-card">
-          <div className="flex items-center gap-2 mb-4">
-            <Shirt className="w-8 h-8 text-primary" />
+          <div className="flex items-center gap-3 mb-4">
+            <img src="/apple-touch-icon.png" alt="Consuelo Logo" className="w-10 h-10" />
             <h2 className="font-bold text-2xl text-card-foreground">
-              Transform Your Fashion Experience
+              Support our Product Hunt launch.
             </h2>
           </div>
         
-          <p className="text-muted-foreground text-base max-w-sm mt-2">
-            Ready to revolutionize your online shopping experience? Get in touch to learn how Consuelo's virtual try-on technology can boost your sales and reduce returns.
+          <p className="text-muted-foreground text-base mt-2">
+            Hire AI employees for your existing work applications, reliably and finally in one place. No code. Fully Customizable.
           </p>
 
           <form className="mt-8" action={formAction}>
-            <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2 mb-4">
-              <LabelInputContainer>
+            <div className="flex flex-col space-y-4 mb-4">
+              {/* <LabelInputContainer>
                 <Label htmlFor="name">Full Name</Label>
                 <Input 
                   id="name" 
                   name="name"
                   placeholder="Jane Smith" 
                   type="text"
-                  className="bg-background/50 text-base"
+                  className="bg-background/50 text-base border border-slate-300"
                   required
                 />
-              </LabelInputContainer>
-              <LabelInputContainer>
+              </LabelInputContainer> */}
+              {/* <LabelInputContainer>
                 <Label htmlFor="company">Company</Label>
                 <Input 
                   id="company" 
                   name="company"
                   placeholder="Fashion Brand Inc." 
                   type="text"
-                 className="bg-background/50 text-base"
+                 className="bg-background/50 text-base border border-slate-300"
                   required
                 />
-              </LabelInputContainer>
+              </LabelInputContainer> */}
             </div>
 
             <LabelInputContainer className="mb-4">
-              <Label htmlFor="email">Business Email</Label>
+              <Label htmlFor="email">Email</Label>
               <Input 
                 id="email" 
                 name="email"
-                placeholder="jane@fashionbrand.com" 
+                placeholder="Enter your email address" 
                 type="email"
-                className="bg-background/50 text-base"
+                className="bg-background/50 text-base shadow-[0px_0px_2px_2px_var(--slate-500)]"
+                style={{ border: '2px solid rgb(203 213 225)' }}
+                disableHover={false}
                 required
               />
             </LabelInputContainer>
 
-            <LabelInputContainer className="mb-4">
+            {/* <LabelInputContainer className="mb-4">
               <Label htmlFor="website">Company Website (Optional)</Label>
               <Input 
                 id="website" 
@@ -106,9 +115,9 @@ export function Contact() {
                 type="url"
                className="bg-background/50 text-base"
               />
-            </LabelInputContainer>
+            </LabelInputContainer> */}
 
-            <LabelInputContainer className="mb-6">
+            {/* <LabelInputContainer className="mb-6">
               <Label htmlFor="message">Tell us about your needs</Label>
               <textarea
                 id="message"
@@ -117,7 +126,7 @@ export function Contact() {
                 className="min-h-[100px] w-full rounded-md border bg-background/50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary text-base"
                 required
               />
-            </LabelInputContainer>
+            </LabelInputContainer> */}
 
             <SubmitButton />
 
@@ -129,8 +138,8 @@ export function Contact() {
 
             <div className="mt-6 text-center text-sm text-muted-foreground">
               <div className="flex items-center justify-center gap-2">
-                <Building2 className="w-4 h-4" />
-                <span>Trusted by leading fashion retailers worldwide</span>
+                {/* <Building2 className="w-4 h-4" /> */}
+                <span>consuelo is on the job.</span>
               </div>
             </div>
           </form>

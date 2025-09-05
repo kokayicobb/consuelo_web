@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 export type ChatPosition = "bottom-right" | "bottom-left";
-export type ChatSize = "sm" | "md" | "lg" | "xl" | "full";
+export type ChatSize = "sm" | "md" | "lg" | "xl" | "2xl" | "full";
 
 const chatConfig = {
   dimensions: {
@@ -14,6 +14,7 @@ const chatConfig = {
     md: "sm:max-w-md sm:max-h-[600px]",
     lg: "sm:max-w-lg sm:max-h-[700px]",
     xl: "sm:max-w-xl sm:max-h-[800px]",
+    "2xl": "sm:max-w-2xl sm:max-h-[900px]",
     full: "sm:w-full sm:h-full",
   },
   positions: {
@@ -40,7 +41,7 @@ interface ExpandableChatProps extends React.HTMLAttributes<HTMLDivElement> {
 const ExpandableChat: React.FC<ExpandableChatProps> = ({
   className,
   position = "bottom-right",
-  size = "md",
+  size = "lg",
   icon,
   children,
   ...props
@@ -130,7 +131,7 @@ const ExpandableChatToggle: React.FC<ExpandableChatToggleProps> = ({
   variant="default"
   onClick={toggleChat}
   className={cn(
-    "h-12 px-4 rounded-full shadow-md flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 border border-gray-200 hover:shadow-lg hover:shadow-gray-300/50 transition-all duration-300 text-gray-700 hover:text-gray-800",
+    "h-14 px-8 rounded-full shadow-md flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 border border-gray-200 hover:shadow-lg hover:shadow-gray-300/50 transition-all duration-300 text-gray-700 hover:text-gray-800",
     className,
   )}
   {...props}
@@ -143,7 +144,7 @@ const ExpandableChatToggle: React.FC<ExpandableChatToggleProps> = ({
   ) : (
     <>
       <img
-        src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/apple-touch-icon-OnEhJzRCthwLXcIuoeeWSqvvYynB9c.png"
+        src="/chatbot/uniteccap_icon.webp"
         alt="Consuelo Logo"
         className="h-5 w-5"
       />
