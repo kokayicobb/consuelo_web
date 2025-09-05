@@ -57,14 +57,14 @@ export default function EnterpriseContent({ onBack }: EnterpriseContentProps) {
       }
     ]);
 
-    // Mock features data
+    // Mock features data with Loom URLs
     setFeatures([
       {
         _id: "1",
         title: "Insurance Demo",
         description: "On-call coaching platform that helps managers shorten ramp time for new sales reps through real-time guidance on outbound calls",
         image: null,
-        imagePath: "/videos/insurance-demo.mp4",
+        imagePath: "https://www.loom.com/share/a1b2c3d4e5f6",
         slug: { current: "insurance-demo" },
         isHero: true,
         gradientFrom: "from-blue-500",
@@ -76,7 +76,7 @@ export default function EnterpriseContent({ onBack }: EnterpriseContentProps) {
         title: "Exploring Life Insurance Options",
         description: "A training session with Zara",
         image: null,
-        imagePath: "/videos/life-insurance.mp4", 
+        imagePath: "https://www.loom.com/share/b2c3d4e5f6a1", 
         slug: { current: "life-insurance" },
         isHero: false,
         gradientFrom: "from-green-500",
@@ -88,7 +88,7 @@ export default function EnterpriseContent({ onBack }: EnterpriseContentProps) {
         title: "Objection Overcoming", 
         description: "Watch Mercury help an agent overcome the objection of being called too much",
         image: null,
-        imagePath: "/videos/objection-handling.mp4",
+        imagePath: "https://www.loom.com/share/c3d4e5f6a1b2",
         slug: { current: "objection-handling" },
         isHero: false, 
         gradientFrom: "from-purple-500",
@@ -100,7 +100,7 @@ export default function EnterpriseContent({ onBack }: EnterpriseContentProps) {
         title: "Practicing objections",
         description: "On-Call Coaching", 
         image: null,
-        imagePath: "/videos/objection-practice.mp4",
+        imagePath: "https://www.loom.com/share/d4e5f6a1b2c3",
         slug: { current: "objection-practice" },
         isHero: false,
         gradientFrom: "from-red-500", 
