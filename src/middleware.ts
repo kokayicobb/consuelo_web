@@ -15,6 +15,7 @@ const isPublicRoute = createRouteMatcher([
   '/((?!api|_next|.*\\.).+)', // Allow all slug pages but exclude API routes and Next.js internals
   "/api/scraping/process-job",
   "/api/roleplay/(.*)",
+  "/api/cached-video",
   "/api/test",
 ])
 

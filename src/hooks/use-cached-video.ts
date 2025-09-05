@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 
 interface VideoOptions {
   width?: number;
@@ -15,6 +15,9 @@ export const useCachedLoomVideo = (loomVideoUrl: string, options: VideoOptions =
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
+  // Extract individual option values to avoid object reference issues
+  const { width, height, quality, autoplay, hideControls } = options;
+
   useEffect(() => {
     if (!loomVideoUrl) {
       setThumbnailUrl('');
@@ -29,19 +32,22 @@ export const useCachedLoomVideo = (loomVideoUrl: string, options: VideoOptions =
 
     const loadVideoData = async () => {
       try {
-        const { width = 640, height = 360, autoplay = false, hideControls = true } = options;
+        const w = width || 640;
+        const h = height || 360;
+        const play = autoplay || false;
+        const hideCtrl = hideControls === undefined ? true : hideControls;
         
         // Try to use the cached API routes first
         const embedParams = new URLSearchParams({
           url: loomVideoUrl,
           type: 'embed',
-          preset: width <= 320 ? 'thumbnail' : width <= 640 ? 'preview' : 'full'
+          preset: w <= 320 ? 'thumbnail' : w <= 640 ? 'preview' : 'full'
         });
         
         const thumbnailParams = new URLSearchParams({
           url: loomVideoUrl,
           type: 'thumbnail',
-          preset: width <= 320 ? 'thumbnail' : width <= 640 ? 'preview' : 'full'
+          preset: w <= 320 ? 'thumbnail' : w <= 640 ? 'preview' : 'full'
         });
 
         const [embedResponse, thumbnailResponse] = await Promise.all([
@@ -72,11 +78,11 @@ export const useCachedLoomVideo = (loomVideoUrl: string, options: VideoOptions =
           const videoId = match[1];
           
           if (!embedUrl) {
-            embedUrl = `https://www.loom.com/embed/${videoId}?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true&autoplay=${autoplay}&hide_controls=${hideControls}`;
+            embedUrl = `https://www.loom.com/embed/${videoId}?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true&autoplay=${play}&hide_controls=${hideCtrl}`;
           }
           
           if (!thumbnailUrl) {
-            thumbnailUrl = `https://cdn.loom.com/sessions/thumbnails/${videoId}-${width}x${height}.jpg`;
+            thumbnailUrl = `https://cdn.loom.com/sessions/thumbnails/${videoId}-${w}x${h}.jpg`;
           }
         }
         
@@ -94,10 +100,13 @@ export const useCachedLoomVideo = (loomVideoUrl: string, options: VideoOptions =
           }
 
           const videoId = match[1];
-          const { width = 640, height = 360, autoplay = false, hideControls = true } = options;
+          const w = width || 640;
+          const h = height || 360;
+          const play = autoplay || false;
+          const hideCtrl = hideControls === undefined ? true : hideControls;
           
-          const thumbnail = `https://cdn.loom.com/sessions/thumbnails/${videoId}-${width}x${height}.jpg`;
-          const embed = `https://www.loom.com/embed/${videoId}?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true&autoplay=${autoplay}&hide_controls=${hideControls}`;
+          const thumbnail = `https://cdn.loom.com/sessions/thumbnails/${videoId}-${w}x${h}.jpg`;
+          const embed = `https://www.loom.com/embed/${videoId}?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true&autoplay=${play}&hide_controls=${hideCtrl}`;
           
           if (isMounted) {
             setThumbnailUrl(thumbnail);
@@ -118,35 +127,36 @@ export const useCachedLoomVideo = (loomVideoUrl: string, options: VideoOptions =
     return () => {
       isMounted = false;
     };
-  }, [loomVideoUrl, JSON.stringify(options)]);
+  }, [loomVideoUrl, width, height, autoplay, hideControls]);
 
   return { thumbnailUrl, embedUrl, isLoading, error };
+};
+
+// Define presets outside of the component to avoid recreating on every render
+const VIDEO_PRESETS: Record<string, VideoOptions> = {
+  thumbnail: { 
+    width: 320, 
+    height: 180, 
+    hideControls: true,
+    autoplay: false
+  },
+  preview: { 
+    width: 640, 
+    height: 360, 
+    hideControls: true,
+    autoplay: false
+  },
+  full: { 
+    width: 1280, 
+    height: 720, 
+    hideControls: false,
+    autoplay: false
+  }
 };
 
 export const useOptimizedLoomVideo = (
   loomVideoUrl: string,
   preset: 'thumbnail' | 'preview' | 'full' = 'preview'
 ) => {
-  const presets: Record<string, VideoOptions> = {
-    thumbnail: { 
-      width: 320, 
-      height: 180, 
-      hideControls: true,
-      autoplay: false
-    },
-    preview: { 
-      width: 640, 
-      height: 360, 
-      hideControls: true,
-      autoplay: false
-    },
-    full: { 
-      width: 1280, 
-      height: 720, 
-      hideControls: false,
-      autoplay: false
-    }
-  };
-
-  return useCachedLoomVideo(loomVideoUrl, presets[preset]);
+  return useCachedLoomVideo(loomVideoUrl, VIDEO_PRESETS[preset]);
 };
