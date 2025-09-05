@@ -9,7 +9,33 @@ import { getAllPosts } from "@/utils/markdown";
 import { Metadata } from "next";
 import UseCases from "@/components/UseCases";
 import { client } from "@/sanity/lib/client";
-import { type SanityDocument } from "next-sanity";
+import { type SanityDocument } from "next-sanity"
+
+// Type definitions
+interface Feature {
+  _id: string
+  title: string
+  description: string
+  image?: any
+  imagePath?: string
+  slug: { current: string }
+  isHero: boolean
+  gradientFrom: string
+  gradientTo: string
+  order: number
+}
+
+interface UseCase {
+  _id: string
+  title: string
+  description: string
+  category: "ecommerce" | "fitness"
+  image?: any
+  imagePath?: string
+  href: string
+  altText: string
+  order: number
+};
 
 export const metadata: Metadata = {
   title: "Consuelo: The CRM You Need",
@@ -24,7 +50,7 @@ const FEATURES_QUERY = `*[_type == "feature"] | order(order asc) {
   description,
   image,
   imagePath,
-  href,
+  slug,
   isHero,
   gradientFrom,
   gradientTo,
@@ -43,15 +69,15 @@ const USE_CASES_QUERY = `*[_type == "useCase"] | order(order asc) {
   order
 }`;
 
-const options = { next: { revalidate: 30 } };
+const options = { next: { revalidate: process.env.NODE_ENV === 'development' ? 0 : 30 } };
 
 export default async function Home() {
   const posts = getAllPosts(["title", "date", "excerpt", "coverImage", "slug"]);
   
   // Fetch features and use cases from Sanity
   const [features, useCases] = await Promise.all([
-    client.fetch<SanityDocument[]>(FEATURES_QUERY, {}, options),
-    client.fetch<SanityDocument[]>(USE_CASES_QUERY, {}, options),
+    client.fetch<Feature[]>(FEATURES_QUERY, {}, options),
+    client.fetch<UseCase[]>(USE_CASES_QUERY, {}, options),
   ]);
 
   return (
