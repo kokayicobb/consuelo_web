@@ -24,57 +24,21 @@ export const useCachedImage = (source: SanityImageSource, options: CacheOptions 
     }
 
     let isMounted = true;
-    setIsLoading(true);
     setError(null);
 
-    const loadImage = async () => {
-      try {
-        // Try to use the cached API route first
-        const encodedSource = encodeURIComponent(JSON.stringify(source));
-        const params = new URLSearchParams({
-          ref: encodedSource,
-          ...(options.width && { width: options.width.toString() }),
-          ...(options.height && { height: options.height.toString() }),
-          ...(options.quality && { quality: options.quality.toString() }),
-          ...(options.format && { format: options.format }),
-          ...(options.fit && { fit: options.fit }),
-        });
-
-        const response = await fetch(`/api/cached-image?${params}`);
-        if (response.ok) {
-          const data = await response.json();
-          if (isMounted && data.imageUrl) {
-            setImageUrl(data.imageUrl);
-            setIsLoading(false);
-            return;
-          }
-        }
-
-        // Fallback to direct image generation
-        const url = generateImageUrl(source, options);
-        
-        if (isMounted) {
-          setImageUrl(url);
-          setIsLoading(false);
-        }
-      } catch (err) {
-        // On error, fallback to direct generation
-        try {
-          const url = generateImageUrl(source, options);
-          if (isMounted) {
-            setImageUrl(url);
-            setIsLoading(false);
-          }
-        } catch (fallbackErr) {
-          if (isMounted) {
-            setError(fallbackErr as Error);
-            setIsLoading(false);
-          }
-        }
+    // Generate URL immediately for instant loading
+    try {
+      const url = generateImageUrl(source, options);
+      if (isMounted) {
+        setImageUrl(url);
+        setIsLoading(false);
       }
-    };
-
-    loadImage();
+    } catch (err) {
+      if (isMounted) {
+        setError(err as Error);
+        setIsLoading(false);
+      }
+    }
 
     return () => {
       isMounted = false;
