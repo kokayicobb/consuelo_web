@@ -9,14 +9,18 @@ interface VideoOptions {
   hideControls?: boolean;
 }
 
-export const useCachedLoomVideo = (loomVideoUrl: string, options: VideoOptions = {}) => {
+export const useCachedLoomVideo = (
+  loomVideoUrl: string, 
+  options: VideoOptions = {},
+  shouldLoad: boolean = true
+) => {
   const [thumbnailUrl, setThumbnailUrl] = useState<string>('');
   const [embedUrl, setEmbedUrl] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    if (!loomVideoUrl) {
+    if (!loomVideoUrl || !shouldLoad) {
       setThumbnailUrl('');
       setEmbedUrl('');
       setIsLoading(false);
@@ -44,7 +48,7 @@ export const useCachedLoomVideo = (loomVideoUrl: string, options: VideoOptions =
     return () => {
       isMounted = false;
     };
-  }, [loomVideoUrl, JSON.stringify(options)]);
+  }, [loomVideoUrl, JSON.stringify(options), shouldLoad]);
 
   return { thumbnailUrl, embedUrl, isLoading, error };
 };
@@ -73,7 +77,8 @@ const VIDEO_PRESETS: Record<string, VideoOptions> = {
 
 export const useOptimizedLoomVideo = (
   loomVideoUrl: string,
-  preset: 'thumbnail' | 'preview' | 'full' = 'preview'
+  preset: 'thumbnail' | 'preview' | 'full' = 'preview',
+  shouldLoad: boolean = true
 ) => {
-  return useCachedLoomVideo(loomVideoUrl, VIDEO_PRESETS[preset]);
+  return useCachedLoomVideo(loomVideoUrl, VIDEO_PRESETS[preset], shouldLoad);
 };
