@@ -10,6 +10,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { usePathname } from "next/navigation";
 import { SignInButton, SignUpButton, SignedIn, SignedOut } from "@clerk/nextjs";
 import { User } from "@clerk/nextjs/server";
+import { themeConfig } from "@/lib/theme";
 
 export function Header() {
   const [isScrolled, setIsScrolled] = React.useState(false);
@@ -43,16 +44,7 @@ export function Header() {
     return null;
   }
 
-  const navItems = [
-    { name: "Zara", href: "/zara" },
-    // { name: "Platform", href: "/platform" },
-    { name: "Mercury", href: "/mercury" },
-    { name: "Pricing", href: "/pricing" },
-    { name: "Use Cases", href: "/platform" },
-    { name: "Research", href: "/integrations" },
-   
-    { name: "Investors", href: "/integrations" },
-  ];
+  const navItems = themeConfig.navigation.items;
 
   return (
     <>
@@ -70,11 +62,11 @@ export function Header() {
                     : "translate-y-0 opacity-100",
                 )}
               >
-                consuelo
+{themeConfig.branding.logo.text}
               </span>
               <img
-                src="/apple-touch-icon.png"
-                alt="Consuelo Logo"
+                src={themeConfig.branding.logo.image.src}
+                alt={themeConfig.branding.logo.image.alt}
                 className={cn(
                   "absolute inset-0 h-10 w-10 transition-all duration-500 ease-in-out",
                   isScrolled
@@ -98,7 +90,7 @@ export function Header() {
                 <div className="flex h-full flex-col">
                   <div className="border-b p-4">
                     <Link href="/" className="flex items-center">
-                      <span className="text-xl font-semibold">consuelo</span>
+                      <span className="text-xl font-semibold">{themeConfig.branding.name}</span>
                     </Link>
                   </div>
                   <nav className="flex-1 overflow-auto p-4">
@@ -116,12 +108,12 @@ export function Header() {
                       <SignedOut>
                         <SignInButton mode="modal">
                           <button className="block w-full py-3 text-left text-sm transition-colors hover:text-primary">
-                            Sign In
+                            {themeConfig.buttons.auth.signIn}
                           </button>
                         </SignInButton>
                         <SignUpButton mode="modal">
                           <button className="block w-full py-3 text-left text-sm transition-colors hover:text-primary">
-                            Sign Up
+                            {themeConfig.buttons.auth.signUp}
                           </button>
                         </SignUpButton>
                       </SignedOut>
@@ -130,7 +122,7 @@ export function Header() {
                           href="/app"
                           className="block py-3 text-sm transition-colors hover:text-primary"
                         >
-                          Go to App
+                          {themeConfig.buttons.auth.goToApp}
                         </Link>
                       </SignedIn>
                       <div className="flex items-center justify-between">
@@ -140,7 +132,7 @@ export function Header() {
                           className="flex-1 justify-start bg-white px-2 py-3 text-black mr-2"
                         >
                           <Search className="mr-2 h-4 w-4 opacity-70" />
-                          <span>Search</span>
+                          <span>{themeConfig.buttons.search.text}</span>
                         </Button>
                         <ThemeToggler />
                       </div>
@@ -154,20 +146,24 @@ export function Header() {
           {/* Right side items - only visible on desktop */}
           <div className="hidden items-center space-x-4 md:flex">
             <ThemeToggler />
-            <Button variant="default">
-              <Search className="h-5 w-5" />
-              <span className="sr-only">Search</span>
+            <Button 
+              variant="ghost" 
+              size="icon"
+              className="h-8 w-8 text-body-color duration-300 dark:text-white"
+            >
+              <Search className="h-[22px] w-[22px]" />
+              <span className="sr-only">{themeConfig.buttons.search.ariaLabel}</span>
             </Button>
             
             <SignedOut>
               <SignInButton mode="modal">
                 <Button variant="default">
-                  Sign In
+                  {themeConfig.buttons.auth.signIn}
                 </Button>
               </SignInButton>
               <SignUpButton mode="modal">
                 <Button variant="default">
-                  Sign Up
+                  {themeConfig.buttons.auth.signUp}
                 </Button>
               </SignUpButton>
             </SignedOut>
@@ -175,7 +171,7 @@ export function Header() {
             <SignedIn>
               <Link href="/app">
                 <Button variant="default">
-                  Go to App
+                  {themeConfig.buttons.auth.goToApp}
                 </Button>
               </Link>
             </SignedIn>
