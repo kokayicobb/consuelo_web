@@ -31,20 +31,11 @@ export default function UseCases({ useCases }: UseCasesProps) {
     .filter(useCase => useCase.category === "b2b")
     .sort((a, b) => a.order - b.order);
 
-  const getLoomThumbnailUrl = (loomUrl: string) => {
-    const match = loomUrl.match(/loom\.com\/share\/([a-zA-Z0-9]+)/);
-    if (match) {
-      // Use Loom's embed thumbnail API
-      return `https://cdn.loom.com/sessions/thumbnails/${match[1]}-with-play.gif`;
-    }
-    return "/placeholder-video.jpg"; // fallback to a local placeholder
-  };
-
   return (
     <div className="mx-auto max-w-7xl px-8 py-64">
       <div className="mb-12 flex items-center justify-between">
         <h2 className="text-2xl font-bold">Use Cases</h2>
-        <Link href="/platform" className="text-sm hover:underline">
+        <Link href="/contact" className="text-sm hover:underline">
           Learn More
         </Link>
       </div>
@@ -80,7 +71,7 @@ export default function UseCases({ useCases }: UseCasesProps) {
             <UseCaseItem
               key={useCase._id}
               href={`/${useCase.slug.current}`}
-              imageSrc={getLoomThumbnailUrl(useCase.loomVideoUrl)}
+              loomVideoUrl={useCase.loomVideoUrl}
               altText={useCase.altText}
               title={useCase.title}
               description={useCase.description}
@@ -93,7 +84,7 @@ export default function UseCases({ useCases }: UseCasesProps) {
             <UseCaseItem
               key={useCase._id}
               href={`/${useCase.slug.current}`}
-              imageSrc={getLoomThumbnailUrl(useCase.loomVideoUrl)}
+              loomVideoUrl={useCase.loomVideoUrl}
               altText={useCase.altText}
               title={useCase.title}
               description={useCase.description}
@@ -105,22 +96,55 @@ export default function UseCases({ useCases }: UseCasesProps) {
   );
 }
 
-function UseCaseItem({ href, imageSrc, altText, title, description, }) {
+interface UseCaseItemProps {
+  href: string;
+  loomVideoUrl: string;
+  altText: string;
+  title: string;
+  description: string;
+}
+
+function UseCaseItem({ href, loomVideoUrl, altText, title, description }: UseCaseItemProps) {
+  // Extract Loom video ID from URL
+  const getLoomVideoId = (url: string) => {
+    if (!url) return null;
+    const match = url.match(/loom\.com\/share\/([a-zA-Z0-9]+)/);
+    return match ? match[1] : null;
+  };
+  
+  const loomVideoId = getLoomVideoId(loomVideoUrl);
+  
   return (
     <div className="flex flex-col gap-8 md:flex-row">
       <div className="relative w-full max-w-[200px] shrink-0">
         <Link href={href}>
-          <div className="relative aspect-square w-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 rounded-lg flex items-center justify-center">
-            {/* Video Icon */}
-            <svg
-              className="w-12 h-12 text-gray-400"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
-            </svg>
-            <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/20 opacity-0 transition-opacity hover:opacity-100">
+          <div className="relative aspect-square w-full overflow-hidden rounded-lg">
+            {loomVideoId ? (
+              // Use iframe with Loom embed for thumbnail preview
+              <>
+                <iframe
+                  src={`https://www.loom.com/embed/${loomVideoId}?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true&autoplay=false`}
+                  className="absolute inset-0 w-full h-full"
+                  frameBorder="0"
+                  allowFullScreen
+                  style={{ pointerEvents: 'none' }}
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 z-10" /> {/* Overlay to prevent iframe interaction */}
+              </>
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center">
+                <svg
+                  className="w-12 h-12 text-gray-400"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
+                </svg>
+              </div>
+            )}
+            <div className="absolute inset-0 z-20 flex items-center justify-center rounded-lg bg-black/20 opacity-0 transition-opacity hover:opacity-100">
               <span className="px-2 py-1 text-center font-medium text-white">
                 Watch Demo
               </span>
