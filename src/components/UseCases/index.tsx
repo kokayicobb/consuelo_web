@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import React, { useState } from "react";
 import { urlFor } from "@/sanity/lib/image";
+import { useOptimizedLoomVideo } from "@/hooks/use-cached-video";
 
 interface UseCase {
   _id: string;
@@ -105,7 +106,10 @@ interface UseCaseItemProps {
 }
 
 function UseCaseItem({ href, loomVideoUrl, altText, title, description }: UseCaseItemProps) {
-  // Extract Loom video ID from URL
+  // Use cached Loom video hook
+  const { thumbnailUrl, embedUrl, isLoading, error } = useOptimizedLoomVideo(loomVideoUrl, 'preview');
+  
+  // Extract Loom video ID from URL as fallback
   const getLoomVideoId = (url: string) => {
     if (!url) return null;
     const match = url.match(/loom\.com\/share\/([a-zA-Z0-9]+)/);
@@ -119,11 +123,11 @@ function UseCaseItem({ href, loomVideoUrl, altText, title, description }: UseCas
       <div className="relative w-full max-w-[200px] shrink-0">
         <Link href={href}>
           <div className="relative aspect-square w-full overflow-hidden rounded-lg">
-            {loomVideoId ? (
-              // Use iframe with Loom embed for thumbnail preview
+            {embedUrl && !isLoading ? (
+              // Use iframe with cached Loom embed URL
               <>
                 <iframe
-                  src={`https://www.loom.com/embed/${loomVideoId}?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true&autoplay=false`}
+                  src={embedUrl}
                   className="absolute inset-0 w-full h-full"
                   frameBorder="0"
                   allowFullScreen
@@ -132,6 +136,10 @@ function UseCaseItem({ href, loomVideoUrl, altText, title, description }: UseCas
                 />
                 <div className="absolute inset-0 z-10" /> {/* Overlay to prevent iframe interaction */}
               </>
+            ) : isLoading ? (
+              <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-600"></div>
+              </div>
             ) : (
               <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center">
                 <svg

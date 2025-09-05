@@ -33,6 +33,8 @@ const nextConfig = {
         assert: false,
         os: false,
         path: false,
+        dns: false,
+        ioredis: false,
         'https-proxy-agent': false,
         'http-proxy-agent': false,
         'gaxios': false,

@@ -1,8 +1,10 @@
+"use client"
 // src/components/Features/index.tsx
 import type React from "react"
 import { BentoGrid, BentoGridItem } from "../ui/bento-grid"
 import { IconShirt, IconRuler, IconCube, IconChartBar, IconMail, IconLock } from "@tabler/icons-react"
 import { urlFor } from "@/sanity/lib/image"
+import { useOptimizedImage } from "@/hooks/use-cached-image"
 
 interface BackgroundPatternProps {
   children: React.ReactNode
@@ -44,11 +46,26 @@ export function Features({ features }: FeaturesProps) {
     .filter((item) => !item.isHero)
     .sort((a, b) => a.order - b.order)
 
+  // Cache optimized images for hero item
+  const heroImageData = useOptimizedImage(heroItem?.image, 'hero')
   
+  // Call hooks for each regular item individually at top level
+  const regularImageData = [
+    useOptimizedImage(regularItems[0]?.image, 'feature'),
+    useOptimizedImage(regularItems[1]?.image, 'feature'),
+    useOptimizedImage(regularItems[2]?.image, 'feature'),
+    useOptimizedImage(regularItems[3]?.image, 'feature'),
+    useOptimizedImage(regularItems[4]?.image, 'feature'),
+    useOptimizedImage(regularItems[5]?.image, 'feature'),
+  ]
 
-  const getImageUrl = (item: Feature) => {
+  const getImageUrl = (item: Feature, index?: number) => {
     if (item.image) {
-      return urlFor(item.image).url()
+      if (item.isHero) {
+        return heroImageData.imageUrl;
+      } else {
+        return regularImageData[index || 0]?.imageUrl || "";
+      }
     }
     return item.imagePath || ""
   }
@@ -105,7 +122,7 @@ export function Features({ features }: FeaturesProps) {
                 </BackgroundPattern>
               }
               icon={<IconChartBar className="h-8 w-8 text-accent" />}
-              backgroundImage={getImageUrl(item)}
+              backgroundImage={getImageUrl(item, i)}
               href={`/${(item.slug?.current || 'test-slug').replace(/^.*\//, '').trim()}`}
             />
           ))}
