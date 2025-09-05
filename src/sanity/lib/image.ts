@@ -9,3 +9,6 @@ const builder = createImageUrlBuilder({ projectId, dataset })
 export const urlFor = (source: SanityImageSource) => {
   return builder.image(source)
 }
+
+// Note: Cached image functions are available in @/lib/cached-images
+// They are not re-exported here to avoid client-side bundling issues with Redis
