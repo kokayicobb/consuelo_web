@@ -220,12 +220,33 @@ export const BentoGridItem = ({
           {/* Gradient border container */}
           <div className="absolute inset-0 bg-gradient-to-r from-[#FF1493]/20 to-[#00BFFF]/20 rounded-xl opacity-60"></div>
 
-          {/* Image background */}
+          {/* Image/Video background */}
           {backgroundImage ? (
             <div className="absolute inset-[1px] rounded-xl overflow-hidden">
-              <Image src={backgroundImage || "/placeholder.svg"} alt="Background" fill className="object-fill" />
-              {/* Lighter overlay */}
-              <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px]"></div>
+              {/* Check if it's a Loom URL */}
+              {backgroundImage.includes('loom.com') ? (
+                <>
+                  <iframe
+                    src={backgroundImage.includes('/embed/') 
+                      ? `${backgroundImage}?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true&autoplay=false`
+                      : `https://www.loom.com/embed/${backgroundImage.match(/loom\.com\/share\/([a-zA-Z0-9]+)/)?.[1]}?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true&autoplay=false`
+                    }
+                    className="absolute inset-0 w-full h-full"
+                    frameBorder="0"
+                    allowFullScreen
+                    style={{ pointerEvents: 'none' }}
+                    loading="lazy"
+                  />
+                  {/* Overlay to prevent iframe interaction and add slight tint */}
+                  <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px] z-10"></div>
+                </>
+              ) : (
+                <>
+                  <Image src={backgroundImage || "/placeholder.svg"} alt="Background" fill className="object-fill" />
+                  {/* Lighter overlay */}
+                  <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px]"></div>
+                </>
+              )}
             </div>
           ) : (
             <div className="absolute inset-[1px] bg-background rounded-xl"></div>
@@ -315,12 +336,33 @@ export const BentoGridItem = ({
           {/* Gradient border container */}
           <div className="absolute inset-0 bg-gradient-to-r from-[#FF1493]/20 to-[#00BFFF]/20 rounded-xl opacity-60"></div>
 
-          {/* Image background */}
+          {/* Image/Video background */}
           {backgroundImage ? (
             <div className="absolute inset-[1px] rounded-xl overflow-hidden">
-              <Image src={backgroundImage || "/placeholder.svg"} alt="Background" fill className="object-fill" />
-              {/* Lighter overlay */}
-              <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px]"></div>
+              {/* Check if it's a Loom URL */}
+              {backgroundImage.includes('loom.com') ? (
+                <>
+                  <iframe
+                    src={backgroundImage.includes('/embed/') 
+                      ? `${backgroundImage}?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true&autoplay=false`
+                      : `https://www.loom.com/embed/${backgroundImage.match(/loom\.com\/share\/([a-zA-Z0-9]+)/)?.[1]}?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true&autoplay=false`
+                    }
+                    className="absolute inset-0 w-full h-full"
+                    frameBorder="0"
+                    allowFullScreen
+                    style={{ pointerEvents: 'none' }}
+                    loading="lazy"
+                  />
+                  {/* Overlay to prevent iframe interaction and add slight tint */}
+                  <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px] z-10"></div>
+                </>
+              ) : (
+                <>
+                  <Image src={backgroundImage || "/placeholder.svg"} alt="Background" fill className="object-fill" />
+                  {/* Lighter overlay */}
+                  <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px]"></div>
+                </>
+              )}
             </div>
           ) : (
             <div className="absolute inset-[1px] bg-background rounded-xl"></div>
