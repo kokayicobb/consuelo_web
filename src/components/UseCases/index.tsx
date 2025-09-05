@@ -91,8 +91,14 @@ export default function UseCases({ useCases }: UseCasesProps) {
         </div>
       </div>
 
-      {activeTab === "insurance" ? (
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+      {/* Tab Content Container */}
+      <div className="relative">
+        {/* Insurance Use Cases */}
+        <div 
+          className={`grid grid-cols-1 gap-8 md:grid-cols-2 transition-opacity duration-300 ${
+            activeTab === "insurance" ? "opacity-100" : "opacity-0 absolute inset-0 pointer-events-none"
+          }`}
+        >
           {insuranceUseCases.map((useCase) => (
             <UseCaseItem
               key={useCase._id}
@@ -104,8 +110,13 @@ export default function UseCases({ useCases }: UseCasesProps) {
             />
           ))}
         </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+
+        {/* B2B Use Cases */}
+        <div 
+          className={`grid grid-cols-1 gap-8 md:grid-cols-2 transition-opacity duration-300 ${
+            activeTab === "b2b" ? "opacity-100" : "opacity-0 absolute inset-0 pointer-events-none"
+          }`}
+        >
           {b2bUseCases.map((useCase) => (
             <UseCaseItem
               key={useCase._id}
@@ -117,7 +128,7 @@ export default function UseCases({ useCases }: UseCasesProps) {
             />
           ))}
         </div>
-      )}
+      </div>
     </div>
   );
 }
