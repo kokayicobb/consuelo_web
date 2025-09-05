@@ -120,11 +120,33 @@ export default function LiquidOrbButton({
             inset 0 0 30px rgba(255, 255, 255, 0.12);
         }
 
+        /* Dark theme enhancements - slightly brighter while keeping the same aesthetic */
+        :global(.dark) .liquid-orb-button {
+          box-shadow: 
+            0 8px 32px rgba(139, 92, 246, 0.2),
+            inset 0 0 20px rgba(255, 255, 255, 0.12);
+        }
+
+        :global(.dark) .liquid-orb-button:hover {
+          box-shadow: 
+            0 12px 40px rgba(139, 92, 246, 0.25),
+            inset 0 0 30px rgba(255, 255, 255, 0.16);
+        }
+
         .glass-base {
           background: radial-gradient(circle at center, 
             rgba(255, 255, 255, 0.08) 0%, 
             rgba(139, 92, 246, 0.03) 50%,
             rgba(124, 58, 237, 0.05) 100%
+          );
+        }
+
+        /* Dark theme: slightly more visible glass base */
+        :global(.dark) .glass-base {
+          background: radial-gradient(circle at center, 
+            rgba(255, 255, 255, 0.12) 0%, 
+            rgba(139, 92, 246, 0.06) 50%,
+            rgba(124, 58, 237, 0.08) 100%
           );
         }
 

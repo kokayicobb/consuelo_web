@@ -44,13 +44,14 @@ export function Header() {
   }
 
   const navItems = [
-    { name: "Employees", href: "/platform" },
+    { name: "Zara", href: "/zara" },
     // { name: "Platform", href: "/platform" },
-    { name: "Connections", href: "/integrations" },
+    { name: "Mercury", href: "/mercury" },
     { name: "Pricing", href: "/pricing" },
-    { name: "How It Works", href: "/platform" },
-    { name: "SaleForce", href: "/integrations" },
-    { name: "Hubspot", href: "/integrations" },
+    { name: "Use Cases", href: "/platform" },
+    { name: "Research", href: "/integrations" },
+   
+    { name: "Investors", href: "/integrations" },
   ];
 
   return (
