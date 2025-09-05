@@ -66,6 +66,12 @@ const nextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'cdn.loom.com',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
   

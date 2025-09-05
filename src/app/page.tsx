@@ -29,10 +29,9 @@ interface UseCase {
   _id: string
   title: string
   description: string
-  category: "ecommerce" | "fitness"
-  image?: any
-  imagePath?: string
-  href: string
+  category: "insurance" | "b2b"
+  slug: { current: string }
+  loomVideoUrl: string
   altText: string
   order: number
 };
@@ -62,9 +61,8 @@ const USE_CASES_QUERY = `*[_type == "useCase"] | order(order asc) {
   title,
   description,
   category,
-  image,
-  imagePath,
-  href,
+  slug,
+  loomVideoUrl,
   altText,
   order
 }`;

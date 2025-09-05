@@ -8,6 +8,7 @@ import { urlFor } from '@/sanity/lib/image'
 import PortableText from '@/components/PortableText'
 import { MarkdownContent } from '@/components/ui/markdown-content'
 import { Zap, Shield, Clock, ArrowRight } from 'lucide-react'
+import UseCaseVideo from '@/components/UseCaseVideo'
 
 // Icon mapping for the features section
 const iconMap = {
@@ -41,6 +42,14 @@ const FEATURE_QUERY = `*[_type == "feature" && slug.current == $slug][0] {
   }
 }`
 
+const USE_CASE_QUERY = `*[_type == "useCase" && slug.current == $slug][0] {
+  _id,
+  title,
+  description,
+  loomVideoUrl,
+  slug
+}`
+
 const ALL_FEATURES_QUERY = `*[_type == "feature"] | order(order asc) {
   _id,
   title,
@@ -61,37 +70,69 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const resolvedParams = await params
-  const feature = await client.fetch<SanityDocument>(FEATURE_QUERY, resolvedParams)
+  const [feature, useCase] = await Promise.all([
+    client.fetch<SanityDocument>(FEATURE_QUERY, resolvedParams),
+    client.fetch<SanityDocument>(USE_CASE_QUERY, resolvedParams),
+  ])
   
-  if (!feature) {
+  const content = feature || useCase
+  
+  if (!content) {
     return {
       title: 'Page Not Found',
     }
   }
 
   return {
-    title: `${feature.title} | Consuelo`,
-    description: feature.description,
+    title: `${content.title} | Consuelo`,
+    description: content.description,
   }
 }
 
 export async function generateStaticParams() {
-  const features = await client.fetch<SanityDocument[]>(
-    `*[_type == "feature"]{ slug }`
-  )
+  const [features, useCases] = await Promise.all([
+    client.fetch<SanityDocument[]>(`*[_type == "feature"]{ slug }`),
+    client.fetch<SanityDocument[]>(`*[_type == "useCase"]{ slug }`),
+  ])
 
-  return features.map((feature) => ({
-    slug: feature.slug.current,
-  }))
+  return [
+    ...features
+      .filter((feature) => feature.slug?.current)
+      .map((feature) => ({
+        slug: feature.slug.current,
+      })),
+    ...useCases
+      .filter((useCase) => useCase.slug?.current)
+      .map((useCase) => ({
+        slug: useCase.slug.current,
+      })),
+  ]
 }
 
 export default async function FeaturePage({ params }: Props) {
   const resolvedParams = await params
-  const [feature, allFeatures] = await Promise.all([
+  const [feature, useCase, allFeatures] = await Promise.all([
     client.fetch<SanityDocument>(FEATURE_QUERY, resolvedParams),
+    client.fetch<SanityDocument>(USE_CASE_QUERY, resolvedParams),
     client.fetch<SanityDocument[]>(ALL_FEATURES_QUERY),
   ])
 
+  if (!feature && !useCase) {
+    notFound()
+  }
+
+  // If it's a use case, render the video component
+  if (useCase) {
+    return (
+      <UseCaseVideo
+        videoUrl={useCase.loomVideoUrl}
+        title={useCase.title}
+        description={useCase.description}
+      />
+    )
+  }
+
+  // Otherwise render the feature page as before
   if (!feature) {
     notFound()
   }

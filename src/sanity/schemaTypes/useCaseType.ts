@@ -18,35 +18,33 @@ export const useCaseType = defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
+      name: 'slug',
+      title: 'Slug',
+      type: 'slug',
+      description: 'Used for the URL path (e.g., /ecommerce-demo)',
+      options: {
+        source: 'title',
+        maxLength: 200,
+      },
+      validation: (Rule) => Rule.required(),
+    }),
+    defineField({
       name: 'category',
       title: 'Category',
       type: 'string',
       options: {
         list: [
-          { title: 'E-commerce', value: 'ecommerce' },
-          { title: 'Health & Fitness', value: 'fitness' },
+          { title: 'Insurance', value: 'insurance' },
+          { title: 'B2B', value: 'b2b' },
         ],
       },
       validation: (Rule) => Rule.required(),
     }),
     defineField({
-      name: 'image',
-      title: 'Image',
-      type: 'image',
-      options: {
-        hotspot: true,
-      },
-    }),
-    defineField({
-      name: 'imagePath',
-      title: 'Image Path (fallback)',
-      description: 'Alternative to uploading image - use existing image path like /StablityFlowers2.png',
-      type: 'string',
-    }),
-    defineField({
-      name: 'href',
-      title: 'Link URL',
-      type: 'string',
+      name: 'loomVideoUrl',
+      title: 'Loom Video URL',
+      description: 'Full Loom video URL (e.g., https://www.loom.com/share/...)',
+      type: 'url',
       validation: (Rule) => Rule.required(),
     }),
     defineField({
@@ -66,7 +64,6 @@ export const useCaseType = defineType({
     select: {
       title: 'title',
       subtitle: 'description',
-      media: 'image',
     },
   },
 })

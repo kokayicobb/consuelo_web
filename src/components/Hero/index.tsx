@@ -2,30 +2,33 @@
 
 import { motion } from "framer-motion";
 import LiquidOrbButton from "@/components/roleplay/LiquidOrbButton";
+import { HoverBorderGradient } from "./hover-button";
 
 export function WavyBackgroundDemo() {
   return (
     <div className="relative flex h-[85vh] w-full flex-col items-center justify-start bg-transparent pt-8">
-      <div className="mx-auto flex w-full max-w-3xl flex-col items-center justify-center mt-16">
+      <div className="mx-auto flex w-full max-w-3xl flex-col items-center justify-center mt-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
           className="mb-12 text-center"
         >
-          <h1 className="mb-8 text-4xl font-medium text-foreground">
-            Chat with Consuelo
+          <h1 className="mb-8 text-6xl font-medium text-foreground leading-tight">
+          <div className="text-center">Voice AI agents</div>
+          <div className="text-left ml-[1rem]">for sales teams</div>
           </h1>
           
           <div className="flex justify-center">
             <LiquidOrbButton 
-              size="xlx"
+              size="xl"
               className="w-80 h-80"
               onClick={() => {
                 // Add chat functionality here
                 console.log("Starting chat with Consuelo...");
               }}
             >
+              
             </LiquidOrbButton>
           </div>
         </motion.div>
@@ -45,12 +48,14 @@ export function WavyBackgroundDemo() {
           <button className="rounded-full border border-border bg-transparent px-4 py-2 text-sm text-foreground transition-colors hover:bg-card/10">
             Call Analytics
           </button>
-          <button className="rounded-full border border-border bg-transparent px-4 py-2 text-sm text-foreground transition-colors hover:bg-card/10">
-            Call Notes
-          </button>
-          <button className="rounded-full border border-border bg-transparent px-4 py-2 text-sm text-foreground transition-colors hover:bg-card/10">
-            Reporting
-          </button>
+          <HoverBorderGradient
+            containerClassName="rounded-full"
+            as="button"
+            className="dark:bg-black bg-white text-black dark:text-white flex items-center space-x-2"
+          >
+            <span>Talk to Consuelo</span>
+          </HoverBorderGradient>
+        
         </motion.div>
       </div>
 
