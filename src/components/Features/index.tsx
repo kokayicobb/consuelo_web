@@ -1,10 +1,8 @@
-"use client"
-
 // src/components/Features/index.tsx
 import type React from "react"
-import { useEffect, useRef } from "react"
 import { BentoGrid, BentoGridItem } from "../ui/bento-grid"
 import { IconShirt, IconRuler, IconCube, IconChartBar, IconMail, IconLock } from "@tabler/icons-react"
+import { urlFor } from "@/sanity/lib/image"
 
 interface BackgroundPatternProps {
   children: React.ReactNode
@@ -20,21 +18,46 @@ const BackgroundPattern: React.FC<BackgroundPatternProps> = ({ children, classNa
   </div>
 )
 
-export function Features() {
-  // Get the hero item (using AI Commerce Suite which has md:col-span-2 in the original)
-  const heroItem = items.find((item) => item.title === "Introducing Consuelo: AI Naitve CRM")
+interface Feature {
+  _id: string
+  title: string
+  description: string
+  image?: any
+  imagePath?: string
+  slug: { current: string }
+  isHero: boolean
+  gradientFrom: string
+  gradientTo: string
+  order: number
+}
 
-  // Get all other items except the hero
-  const regularItems = items.filter((item) => item.title !== "Introducing Consuelo: AI Naitve CRM")
+interface FeaturesProps {
+  features: Feature[]
+}
 
-  // Ref for the section
-  const sectionRef = useRef<HTMLElement>(null)
+export function Features({ features }: FeaturesProps) {
+  // Get the hero item
+  const heroItem = features.find((item) => item.isHero)
+
+  // Get all other items except the hero, sorted by order
+  const regularItems = features
+    .filter((item) => !item.isHero)
+    .sort((a, b) => a.order - b.order)
 
   
 
+  const getImageUrl = (item: Feature) => {
+    if (item.image) {
+      return urlFor(item.image).url()
+    }
+    return item.imagePath || ""
+  }
+
+  // Debug: Log the features to see what we're getting
+  console.log('Features data:', features.map(f => ({ title: f.title, slug: f.slug })))
+
   return (
     <section
-      ref={sectionRef}
       className="bg-transparent pt-8 sm:pt-12 pb-8 sm:pb-12"
       style={{ minHeight: "0vh", paddingBottom: "0vh" }}
     >
@@ -46,47 +69,44 @@ export function Features() {
               title={heroItem.title}
               description={heroItem.description}
               header={
-                heroItem.header || (
-                  <BackgroundPattern gradientFrom="from-purple-500" gradientTo="to-blue-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-full h-full">
-                      <path d="M20,50 Q35,20 50,50 T80,50" fill="none" stroke="white" strokeWidth="2" />
-                      <path d="M20,70 Q35,40 50,70 T80,70" fill="none" stroke="white" strokeWidth="2" />
-                    </svg>
-                  </BackgroundPattern>
-                )
+                <BackgroundPattern 
+                  gradientFrom={heroItem.gradientFrom} 
+                  gradientTo={heroItem.gradientTo}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-full h-full">
+                    <path d="M20,50 Q35,20 50,50 T80,50" fill="none" stroke="white" strokeWidth="2" />
+                    <path d="M20,70 Q35,40 50,70 T80,70" fill="none" stroke="white" strokeWidth="2" />
+                  </svg>
+                </BackgroundPattern>
               }
-              icon={heroItem.icon}
-              backgroundImage={heroItem.image}
+              icon={<IconLock className="h-8 w-8 text-accent" />}
+              backgroundImage={getImageUrl(heroItem)}
               isHero={true}
-              href={heroItem.href}
+              href={`/${(heroItem.slug?.current || 'test-slug').replace(/^.*\//, '').trim()}`}
             />
           )}
 
-          {/* Regular items for the right column */}
+          {/* Regular items */}
           {regularItems.map((item, i) => (
             <BentoGridItem
-              key={i}
+              key={item._id}
               index={i}
               title={item.title}
               description={item.description}
-              header={item.header}
-              icon={item.icon}
-              backgroundImage={item.image}
-              href={
-                item.title === "Marketing AI Agent"
-                  ? "/integrations/klaviyo"
-                  : item.title === "Chat Smarter"
-                    ? "/marketing"
-                  : item.title === "AI Shopping Assistant"
-                      ? "/ai-assistant"
-                      : item.title === "Analytics Dashboard"
-                        ? "/dashboard"
-                        : item.title === "Contact"
-                          ? "/contact"
-                          : item.title === "Klaviyo Integration"
-                            ? "/security"
-                            : item.href || "#"
+              header={
+                <BackgroundPattern 
+                  gradientFrom={item.gradientFrom} 
+                  gradientTo={item.gradientTo}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-full h-full">
+                    <path d="M20,50 Q35,20 50,50 T80,50" fill="none" stroke="white" strokeWidth="2" />
+                    <path d="M20,70 Q35,40 50,70 T80,70" fill="none" stroke="white" strokeWidth="2" />
+                  </svg>
+                </BackgroundPattern>
               }
+              icon={<IconChartBar className="h-8 w-8 text-accent" />}
+              backgroundImage={getImageUrl(item)}
+              href={`/${(item.slug?.current || 'test-slug').replace(/^.*\//, '').trim()}`}
             />
           ))}
         </BentoGrid>
@@ -94,119 +114,5 @@ export function Features() {
     </section>
   )
 }
-
-const items = [
-  {
-    title: "Introducing Consuelo: AI Naitve CRM",
-    image: "/StablityBlue3.png",
-    description: "Release | 8 min read",
-    className: "md:col-span-2",
-    href: "/platform",
-  },
-  {
-    title: "Consuelo for B2C",
-     image: "/StablityBlue2.png",
-    description: "AI Platform | 5 min read",
-    href: "/platform",
-    header: (
-      <BackgroundPattern gradientFrom="from-purple-500" gradientTo="to-blue-500">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-full h-full">
-          <path d="M20,50 Q35,20 50,50 T80,50" fill="none" stroke="white" strokeWidth="2" />
-          <path d="M20,70 Q35,40 50,70 T80,70" fill="none" stroke="white" strokeWidth="2" />
-          <circle cx="30" cy="30" r="8" fill="white" fillOpacity="0.2" />
-          <circle cx="70" cy="40" r="10" fill="white" fillOpacity="0.2" />
-        </svg>
-      </BackgroundPattern>
-    ),
-    icon: <IconShirt className="h-8 w-8 text-accent" />,
-  },
-  {
-    title: "Consuelo for Health & Fitness",
-    image: "/StablityPurple1.png",
-    href: "/platform",
-    description: "AI Platform | 6 min read",
-    header: (
-      <BackgroundPattern gradientFrom="from-blue-500" gradientTo="to-cyan-500">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-full h-full">
-          <line x1="10" y1="20" x2="90" y2="20" stroke="white" strokeWidth="2" />
-          <line x1="10" y1="40" x2="90" y2="40" stroke="white" strokeWidth="2" />
-          <line x1="10" y1="60" x2="90" y2="60" stroke="white" strokeWidth="2" />
-          <line x1="10" y1="80" x2="90" y2="80" stroke="white" strokeWidth="2" />
-          <line x1="20" y1="10" x2="20" y2="90" stroke="white" strokeWidth="2" />
-          <line x1="40" y1="10" x2="40" y2="90" stroke="white" strokeWidth="2" />
-          <line x1="60" y1="10" x2="60" y2="90" stroke="white" strokeWidth="2" />
-          <line x1="80" y1="10" x2="80" y2="90" stroke="white" strokeWidth="2" />
-        </svg>
-      </BackgroundPattern>
-    ),
-    icon: <IconRuler className="h-8 w-8 text-accent" />,
-  },
-  {
-    title: "Consuelo Analytics",
-    image: "/StablityRiver2.png",
-    description: "Feature | 5 min read",
-    header: (
-      <BackgroundPattern gradientFrom="from-blue-500" gradientTo="to-purple-500">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-full h-full">
-          <circle cx="50" cy="50" r="40" fill="none" stroke="white" strokeWidth="2" />
-          <path d="M50,10 L50,90 M10,50 L90,50" stroke="white" strokeWidth="2" />
-          <path d="M30,30 L70,70 M30,70 L70,30" stroke="white" strokeWidth="2" />
-        </svg>
-      </BackgroundPattern>
-    ),
-    icon: <IconLock className="h-8 w-8 text-accent" />,
-  },
-  
-  // {
-  //   title: "Creative Studio",
-  //   image: "/StablityCloud1.png",
-  //   description: "Product | 4 min read",
-  //   header: (
-  //     <BackgroundPattern gradientFrom="from-cyan-500" gradientTo="to-teal-500">
-  //       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-full h-full">
-  //         <path d="M10,90 L50,10 L90,90 Z" fill="none" stroke="white" strokeWidth="2" />
-  //         <path d="M30,70 L50,30 L70,70" fill="none" stroke="white" strokeWidth="2" />
-  //         <path d="M10,90 L90,90" fill="none" stroke="white" strokeWidth="2" />
-  //       </svg>
-  //     </BackgroundPattern>
-  //   ),
-  //   icon: <IconCube className="h-8 w-8 text-accent" />,
-  // },
-  
-  // {
-  //   title: "Contact",
-  //   image: "/Square2.jpeg",
-  //   description: "Support | 2 min read",
-  //   header: (
-  //     <BackgroundPattern gradientFrom="from-purple-500" gradientTo="to-pink-500">
-  //       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-full h-full">
-  //         <path d="M10,20 L50,50 L90,20 L90,80 L10,80 Z" fill="none" stroke="white" strokeWidth="2" />
-  //         <path d="M10,20 L50,50 L90,20" fill="none" stroke="white" strokeWidth="2" />
-  //       </svg>
-  //     </BackgroundPattern>
-  //   ),
-  //   icon: <IconMail className="h-8 w-8 text-accent" />,
-  // },
- 
-  {
-    title: "Single source of truth",
-    image: "/StablitySky2.png",
-    description: "Platform | 7 min read",
-    header: (
-      <BackgroundPattern gradientFrom="from-teal-500" gradientTo="to-purple-500">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-full h-full">
-          <rect x="10" y="20" width="20" height="60" fill="white" fillOpacity="0.2" />
-          <rect x="40" y="40" width="20" height="40" fill="white" fillOpacity="0.2" />
-          <rect x="70" y="30" width="20" height="50" fill="white" fillOpacity="0.2" />
-          <circle cx="20" cy="15" r="5" fill="white" fillOpacity="0.2" />
-          <circle cx="50" cy="35" r="5" fill="white" fillOpacity="0.2" />
-          <circle cx="80" cy="25" r="5" fill="white" fillOpacity="0.2" />
-        </svg>
-      </BackgroundPattern>
-    ),
-    icon: <IconChartBar className="h-8 w-8 text-accent" />,
-    className: "md:col-span-2",
-  },
-]
 
 export default Features

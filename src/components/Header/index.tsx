@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Menu, Search } from "lucide-react";
+import ThemeToggler from "./ThemeToggler";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { usePathname } from "next/navigation";
 import { SignInButton, SignUpButton, SignedIn, SignedOut } from "@clerk/nextjs";
@@ -43,13 +44,14 @@ export function Header() {
   }
 
   const navItems = [
-    { name: "Employees", href: "/platform" },
+    { name: "Zara", href: "/zara" },
     // { name: "Platform", href: "/platform" },
-    { name: "Connections", href: "/integrations" },
+    { name: "Mercury", href: "/mercury" },
     { name: "Pricing", href: "/pricing" },
-    { name: "How It Works", href: "/platform" },
-    { name: "SaleForce", href: "/integrations" },
-    { name: "Hubspot", href: "/integrations" },
+    { name: "Use Cases", href: "/platform" },
+    { name: "Research", href: "/integrations" },
+   
+    { name: "Investors", href: "/integrations" },
   ];
 
   return (
@@ -131,14 +133,17 @@ export function Header() {
                           Go to App
                         </Link>
                       </SignedIn>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full justify-start bg-white px-2 py-3 text-black"
-                      >
-                        <Search className="mr-2 h-4 w-4 opacity-70" />
-                        <span>Search</span>
-                      </Button>
+                      <div className="flex items-center justify-between">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 justify-start bg-white px-2 py-3 text-black mr-2"
+                        >
+                          <Search className="mr-2 h-4 w-4 opacity-70" />
+                          <span>Search</span>
+                        </Button>
+                        <ThemeToggler />
+                      </div>
                     </div>
                   </nav>
                 </div>
@@ -148,6 +153,7 @@ export function Header() {
 
           {/* Right side items - only visible on desktop */}
           <div className="hidden items-center space-x-4 md:flex">
+            <ThemeToggler />
             <Button variant="default">
               <Search className="h-5 w-5" />
               <span className="sr-only">Search</span>
