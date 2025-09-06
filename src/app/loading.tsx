@@ -20,7 +20,7 @@ const SimpleLoader = () => {
   }, []);
   
   return (
-    <div className="fixed inset-0 flex flex-col items-center justify-center bg-white dark:bg-gray-900 z-50">
+    <div className="fixed inset-0 flex flex-col items-center justify-center bg-white dark:bg-dark-2 z-50">
       <div className="w-48 h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
         <div 
           className="h-full bg-blue-600 dark:bg-blue-400 transition-all duration-300 ease-out"

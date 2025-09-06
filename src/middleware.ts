@@ -17,6 +17,7 @@ const isPublicRoute = createRouteMatcher([
   "/api/roleplay/(.*)",
   "/api/cached-video",
   "/api/test",
+  "/api/tts",
 ])
 
 export default clerkMiddleware(async (auth, req) => {

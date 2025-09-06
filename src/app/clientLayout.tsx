@@ -53,7 +53,7 @@ export default function ClientLayout({
       <ThemeProvider
         attribute="class"
         enableSystem={true}
-        defaultTheme="light"
+        defaultTheme="system"
       >
         <ToasterContext />
         <div className="min-h-screen">
@@ -70,7 +70,7 @@ export default function ClientLayout({
       <ThemeProvider
         attribute="class"
         enableSystem={true}
-        defaultTheme="light"
+        defaultTheme="system"
       >
         <ToasterContext />
         <div className={`header-wrapper ${headerVisible ? 'header-visible' : 'header-hidden'}`}>

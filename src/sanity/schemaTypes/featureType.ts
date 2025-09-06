@@ -342,6 +342,22 @@ export const featureType = defineType({
       type: 'url',
       description: 'Where the CTA button should link to',
     }),
+    // Audio fields for text-to-speech
+    defineField({
+      name: 'audioFile',
+      title: 'Audio File (Text-to-Speech)',
+      type: 'file',
+      description: 'Upload an MP3/audio file for text-to-speech functionality',
+      options: {
+        accept: 'audio/*'
+      }
+    }),
+    defineField({
+      name: 'audioDuration',
+      title: 'Audio Duration (seconds)',
+      type: 'number',
+      description: 'Duration of the audio file in seconds (optional - will be auto-detected)',
+    }),
   ],
   preview: {
     select: {
