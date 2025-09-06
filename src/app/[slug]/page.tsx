@@ -186,7 +186,7 @@ export default async function FeaturePage({ params }: Props) {
               <div className="mt-12">
                 <Link
                   href={feature.ctaUrl}
-                  className="inline-flex items-center rounded-full backdrop-blur-sm px-8 py-4 text-sm font-medium text-white dark:text-white border border-gray-900 dark:border-white/20 hover:bg-gray-800 dark:hover:bg-white/20 transition-all duration-200 shadow-lg hover:shadow-xl"
+                  className="inline-flex items-center rounded-full backdrop-blur-sm px-8 py-4 text-sm font-medium bg-gray-900 text-white hover:bg-gray-800 border border-gray-900 dark:bg-white/10 dark:text-white dark:border-white/20 dark:hover:bg-white/20 transition-all duration-200 shadow-lg hover:shadow-xl"
                 >
                   {feature.ctaText || 'Get Started'}
                   <ArrowRight className="ml-2 h-4 w-4" />
@@ -199,28 +199,30 @@ export default async function FeaturePage({ params }: Props) {
 
       {/* Hero Image Section - Below Text */}
       {(feature.image || feature.imagePath) && (
-        <div className="relative">
-          {feature.image ? (
-            <div className="relative h-96 sm:h-[500px] lg:h-[600px] overflow-hidden">
-              <Image
-                src={urlFor(feature.image).width(1200).height(600).url()}
-                alt={feature.title || 'Feature image'}
-                fill
-                className="object-cover w-full h-full"
-                priority
-              />
-            </div>
-          ) : feature.imagePath ? (
-            <div className="relative h-96 sm:h-[500px] lg:h-[600px] overflow-hidden">
-              <Image
-                src={feature.imagePath}
-                alt={feature.title || 'Feature image'}
-                fill
-                className="object-cover w-full h-full"
-                priority
-              />
-            </div>
-          ) : null}
+        <div className="relative px-6 py-16 lg:px-8">
+          <div className="mx-auto max-w-5xl">
+            {feature.image ? (
+              <div className="relative h-80 sm:h-96 lg:h-[480px] overflow-hidden rounded-xl">
+                <Image
+                  src={urlFor(feature.image).width(1200).height(600).url()}
+                  alt={feature.title || 'Feature image'}
+                  fill
+                  className="object-cover w-full h-full"
+                  priority
+                />
+              </div>
+            ) : feature.imagePath ? (
+              <div className="relative h-80 sm:h-96 lg:h-[480px] overflow-hidden rounded-xl">
+                <Image
+                  src={feature.imagePath}
+                  alt={feature.title || 'Feature image'}
+                  fill
+                  className="object-cover w-full h-full"
+                  priority
+                />
+              </div>
+            ) : null}
+          </div>
         </div>
       )}
 

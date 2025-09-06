@@ -3,7 +3,7 @@
 import type React from "react"
 import { BentoGrid, BentoGridItem } from "../ui/bento-grid"
 import { IconShirt, IconRuler, IconCube, IconChartBar, IconMail, IconLock } from "@tabler/icons-react"
-import { urlFor } from "@/sanity/lib/image"
+import { urlFor, getVideoUrl } from "@/sanity/lib/image"
 import { useOptimizedImage } from "@/hooks/use-cached-image"
 
 interface BackgroundPatternProps {
@@ -26,6 +26,15 @@ interface Feature {
   description: string
   image?: any
   imagePath?: string
+  video?: {
+    videoType: 'youtube' | 'vimeo' | 'loom' | 'upload' | 'url'
+    url?: string
+    file?: any
+    autoplay?: boolean
+    loop?: boolean
+    muted?: boolean
+  }
+  heroVideo?: string
   slug: { current: string }
   isHero: boolean
   gradientFrom: string
@@ -70,8 +79,57 @@ export function Features({ features }: FeaturesProps) {
     return item.imagePath || ""
   }
 
+  const getFeatureVideoUrl = (video?: Feature['video'], heroVideo?: string, isHero?: boolean) => {
+    // For hero items, prioritize the heroVideo URL field
+    if (isHero && heroVideo) {
+      return heroVideo;
+    }
+    
+    if (!video) return null;
+    
+    switch (video.videoType) {
+      case 'youtube':
+        if (video.url) {
+          // Convert YouTube URL to embed format
+          const videoId = video.url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/)?.[1];
+          return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=${video.autoplay ? 1 : 0}&mute=${video.muted ? 1 : 0}&loop=${video.loop ? 1 : 0}` : null;
+        }
+        break;
+      case 'vimeo':
+        if (video.url) {
+          // Convert Vimeo URL to embed format
+          const videoId = video.url.match(/vimeo\.com\/(\d+)/)?.[1];
+          return videoId ? `https://player.vimeo.com/video/${videoId}?autoplay=${video.autoplay ? 1 : 0}&muted=${video.muted ? 1 : 0}&loop=${video.loop ? 1 : 0}` : null;
+        }
+        break;
+      case 'loom':
+        if (video.url) {
+          // Use existing Loom logic from BentoGridItem
+          return video.url.includes('/embed/') 
+            ? `${video.url}?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true&autoplay=${video.autoplay ? 'true' : 'false'}`
+            : `https://www.loom.com/embed/${video.url.match(/loom\.com\/share\/([a-zA-Z0-9]+)/)?.[1]}?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true&autoplay=${video.autoplay ? 'true' : 'false'}`;
+        }
+        break;
+      case 'upload':
+        // Handle uploaded video files using Sanity helper
+        return getVideoUrl(video.file);
+      case 'url':
+        // Direct video URL
+        return video.url || null;
+    }
+    return null;
+  }
+
   // Debug: Log the features to see what we're getting
-  console.log('Features data:', features.map(f => ({ title: f.title, slug: f.slug })))
+  console.log('Features data:', features.map(f => ({ 
+    title: f.title, 
+    slug: f.slug, 
+    isHero: f.isHero,
+    hasVideo: !!f.video,
+    videoType: f.video?.videoType,
+    heroVideo: f.heroVideo,
+    videoUrl: getFeatureVideoUrl(f.video, f.heroVideo, f.isHero)
+  })))
 
   return (
     <section
@@ -98,6 +156,8 @@ export function Features({ features }: FeaturesProps) {
               }
               icon={<IconLock className="h-8 w-8 text-accent" />}
               backgroundImage={getImageUrl(heroItem)}
+              backgroundVideo={getFeatureVideoUrl(heroItem.video, heroItem.heroVideo, true)}
+              videoConfig={heroItem.video}
               isHero={true}
               href={`/${(heroItem.slug?.current || 'test-slug').replace(/^.*\//, '').trim()}`}
             />
@@ -123,6 +183,8 @@ export function Features({ features }: FeaturesProps) {
               }
               icon={<IconChartBar className="h-8 w-8 text-accent" />}
               backgroundImage={getImageUrl(item, i)}
+              backgroundVideo={getFeatureVideoUrl(item.video, undefined, false)}
+              videoConfig={item.video}
               href={`/${(item.slug?.current || 'test-slug').replace(/^.*\//, '').trim()}`}
             />
           ))}
