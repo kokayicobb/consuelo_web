@@ -87,6 +87,23 @@ export default function TTSPlayer({ title, audioUrl, audioDuration }: TTSPlayerP
     return `${mins}:${secs.toString().padStart(2, "0")}`
   }
 
+  const handleShare = async () => {
+    try {
+      const currentUrl = window.location.href
+      await navigator.clipboard.writeText(currentUrl)
+      console.log("🔗 URL copied to clipboard:", currentUrl)
+    } catch (error) {
+      console.error("🔗 Failed to copy URL:", error)
+      // Fallback for browsers that don't support clipboard API
+      const textArea = document.createElement('textarea')
+      textArea.value = window.location.href
+      document.body.appendChild(textArea)
+      textArea.select()
+      document.execCommand('copy')
+      document.body.removeChild(textArea)
+    }
+  }
+
   // Don't render if no audio URL
   if (!audioUrl) {
     console.log("🔊 No audio URL provided, not rendering player")
@@ -94,7 +111,7 @@ export default function TTSPlayer({ title, audioUrl, audioDuration }: TTSPlayerP
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto">
+    <div className="w-full max-w-2xl mx-auto">
       {/* Thin progress line that spans the full width */}
       <div className="w-full mb-6">
         <div className="relative w-full bg-border h-px">
@@ -116,13 +133,13 @@ export default function TTSPlayer({ title, audioUrl, audioDuration }: TTSPlayerP
             onClick={togglePlayPause}
             className="flex items-center justify-center w-8 h-8 bg-muted hover:bg-muted/80 rounded-full transition-colors"
           >
-            {isPlaying ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3 ml-0.5" />}
+            {isPlaying ? <Pause className="w-3 h-3 fill-current" /> : <Play className="w-3 h-3 ml-0.5 fill-current" />}
           </button>
 
           {/* Time display or initial text */}
           <div className="text-sm">
             {isPlaying || currentTime > 0 ? (
-              <span className="font-mono">{formatTime(currentTime)}</span>
+              <span className="">{formatTime(currentTime)}</span>
             ) : (
               <span>Listen to article</span>
             )}
@@ -152,7 +169,10 @@ export default function TTSPlayer({ title, audioUrl, audioDuration }: TTSPlayerP
         )}
 
         {/* Right side - Share button */}
-        <button className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+        <button 
+          onClick={handleShare}
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
           <Link className="w-4 h-4" />
           <span>Share</span>
         </button>
