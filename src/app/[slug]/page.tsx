@@ -149,7 +149,7 @@ export default async function FeaturePage({ params }: Props) {
       {/* Hero Section - Text with Author/Date */}
       <div >
         <div className="mx-auto max-w-5xl px-6 py-16 sm:py-24 lg:px-8">
-          <div className="mx-auto max-w-4xl text-center">
+          <div className="mx-auto max-w-2xl text-center px-8">
             {/* Author and Date Section */}
             {(feature.publishedAt || feature.author) && (
               <div className="mb-8 flex items-center justify-center gap-4 text-sm text-gray-600 dark:text-gray-400">
@@ -180,10 +180,10 @@ export default async function FeaturePage({ params }: Props) {
               </div>
             )}
 
-            <h1 className="text-5xl font-light tracking-tight text-gray-900 dark:text-white sm:text-7xl lg:text-8xl">
+            <h1 className="text-3xl font-light tracking-tight text-gray-900 dark:text-white sm:text-4xl lg:text-5xl">
               {feature.title}
             </h1>
-            <p className="mt-8 text-xl leading-relaxed text-gray-700 dark:text-gray-300 sm:text-2xl max-w-3xl mx-auto font-light">
+            <p className="mt-6 text-base leading-relaxed text-gray-700 dark:text-gray-300 sm:text-lg max-w-lg mx-auto font-light">
               {feature.description}
             </p>
             {feature.ctaUrl && (
@@ -232,8 +232,8 @@ export default async function FeaturePage({ params }: Props) {
 
       {/* Text-to-Speech Player */}
       {feature.audioFile && (
-        <div className="px-6 py-8 lg:px-8">
-          <div className="mx-auto max-w-5xl">
+        <div className="py-8">
+          <div className="mx-auto max-w-2xl px-8 lg:px-12">
             <TTSPlayer 
               title={feature.title}
               audioUrl={getVideoUrl(feature.audioFile)}
@@ -246,8 +246,8 @@ export default async function FeaturePage({ params }: Props) {
       {/* Rich Content Section - Modern Article Layout */}
       {(feature.content || feature.contentMarkdown) && (
         <div >
-          <div className="mx-auto max-w-4xl px-6 py-24 sm:py-32 lg:px-8">
-            <div className="prose prose-xl max-w-none dark:prose-invert prose-headings:font-light prose-headings:tracking-tight prose-h2:text-4xl prose-h2:leading-tight prose-h2:mt-16 prose-h2:mb-8 prose-h3:text-2xl prose-h3:mt-12 prose-h3:mb-6 prose-p:text-gray-700 dark:prose-p:text-gray-300 prose-p:leading-8 prose-p:mb-6 prose-li:text-gray-700 dark:prose-li:text-gray-300 prose-li:leading-relaxed prose-strong:text-gray-900 dark:prose-strong:text-gray-100 prose-img:rounded-xl prose-img:shadow-lg">
+          <div className="mx-auto max-w-2xl px-8 py-16 sm:py-20 lg:px-12">
+            <div className="prose prose-lg max-w-none dark:prose-invert prose-headings:font-light prose-headings:tracking-tight prose-h2:text-2xl prose-h2:leading-tight prose-h2:mt-12 prose-h2:mb-6 prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-4 prose-p:text-gray-700 dark:prose-p:text-gray-300 prose-p:leading-7 prose-p:mb-4 prose-li:text-gray-700 dark:prose-li:text-gray-300 prose-li:leading-relaxed prose-strong:text-gray-900 dark:prose-strong:text-gray-100 prose-img:rounded-xl prose-img:shadow-lg">
               {/* Handle rich content array (new format) */}
               {feature.content && Array.isArray(feature.content) ? (
                 <PortableText value={feature.content} />
