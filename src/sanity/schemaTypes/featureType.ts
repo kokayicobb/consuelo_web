@@ -57,6 +57,76 @@ export const featureType = defineType({
       type: 'string',
     }),
     defineField({
+      name: 'video',
+      title: 'Background Video',
+      type: 'object',
+      description: 'Video to use as background instead of image (takes priority over image)',
+      fields: [
+        {
+          name: 'videoType',
+          title: 'Video Type',
+          type: 'string',
+          options: {
+            list: [
+              { title: 'YouTube', value: 'youtube' },
+              { title: 'Vimeo', value: 'vimeo' },
+              { title: 'Loom', value: 'loom' },
+              { title: 'Direct Upload (MP4)', value: 'upload' },
+              { title: 'Custom URL', value: 'url' }
+            ]
+          },
+          validation: (Rule) => Rule.required()
+        },
+        {
+          name: 'url',
+          title: 'Video URL',
+          type: 'url',
+          description: 'Full URL for YouTube, Vimeo, Loom, or custom video',
+          hidden: ({ parent }) => parent?.videoType === 'upload'
+        },
+        {
+          name: 'file',
+          title: 'Video File',
+          type: 'file',
+          description: 'Upload video file directly (MP4 recommended)',
+          hidden: ({ parent }) => parent?.videoType !== 'upload'
+        },
+        {
+          name: 'autoplay',
+          title: 'Autoplay',
+          type: 'boolean',
+          description: 'Should the video autoplay (muted)',
+          initialValue: true
+        },
+        {
+          name: 'loop',
+          title: 'Loop',
+          type: 'boolean',
+          description: 'Should the video loop',
+          initialValue: true
+        },
+        {
+          name: 'muted',
+          title: 'Muted',
+          type: 'boolean',
+          description: 'Should the video be muted',
+          initialValue: true
+        }
+      ],
+      preview: {
+        select: {
+          videoType: 'videoType',
+          url: 'url'
+        },
+        prepare({ videoType, url }) {
+          return {
+            title: 'Background Video',
+            subtitle: `${videoType?.toUpperCase()} - ${url || 'Uploaded file'}`
+          }
+        }
+      }
+    }),
+    defineField({
       name: 'isHero',
       title: 'Is Hero Feature',
       description: 'Should this feature be displayed as the large hero item?',
