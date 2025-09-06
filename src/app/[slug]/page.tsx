@@ -9,6 +9,8 @@ import PortableText from '@/components/PortableText'
 import { MarkdownContent } from '@/components/ui/markdown-content'
 import { Zap, Shield, Clock, ArrowRight } from 'lucide-react'
 import UseCaseVideo from '@/components/UseCaseVideo'
+import TTSPlayer from '@/components/TTSPlayer'
+import { getVideoUrl } from '@/sanity/lib/image'
 
 // Icon mapping for the features section
 const iconMap = {
@@ -35,6 +37,8 @@ const FEATURE_QUERY = `*[_type == "feature" && slug.current == $slug][0] {
   ctaText,
   ctaUrl,
   publishedAt,
+  audioFile,
+  audioDuration,
   author->{
     name,
     image,
@@ -226,6 +230,19 @@ export default async function FeaturePage({ params }: Props) {
         </div>
       )}
 
+      {/* Text-to-Speech Player */}
+      {feature.audioFile && (
+        <div className="px-6 py-8 lg:px-8">
+          <div className="mx-auto max-w-5xl">
+            <TTSPlayer 
+              title={feature.title}
+              audioUrl={getVideoUrl(feature.audioFile)}
+              audioDuration={feature.audioDuration}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Rich Content Section - Modern Article Layout */}
       {(feature.content || feature.contentMarkdown) && (
         <div >
@@ -250,13 +267,13 @@ export default async function FeaturePage({ params }: Props) {
 
       {/* Features Grid Section - Minimal Modern */}
       {feature.featuresSection && feature.featuresSection.length > 0 && (
-        <div className="bg-gray-50 dark:bg-gray-900/50 py-32">
+        <div className="bg-muted py-32">
           <div className="mx-auto max-w-6xl px-6 lg:px-8">
             <div className="mx-auto max-w-3xl text-center mb-20">
-              <h2 className="text-4xl font-light tracking-tight text-gray-900 dark:text-white sm:text-5xl">
+              <h2 className="text-4xl font-light tracking-tight text-foreground sm:text-5xl">
                 Why Choose {feature.title}?
               </h2>
-              <p className="mt-6 text-xl leading-8 text-gray-600 dark:text-gray-400 font-light">
+              <p className="mt-6 text-xl leading-8 text-muted-foreground font-light">
                 Discover the powerful capabilities that set us apart
               </p>
             </div>
@@ -266,13 +283,13 @@ export default async function FeaturePage({ params }: Props) {
                   const IconComponent = iconMap[item.icon as keyof typeof iconMap] || Zap
                   return (
                     <div key={index} className="text-center group">
-                      <div className="mx-auto mb-6 w-12 h-12 rounded-full bg-gradient-to-br from-gray-900 to-gray-700 dark:from-gray-200 dark:to-gray-400 flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
-                        <IconComponent className="h-6 w-6 text-white dark:text-gray-900" />
+                      <div className="mx-auto mb-6 w-12 h-12 rounded-full bg-primary flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                        <IconComponent className="h-6 w-6 text-primary-foreground" />
                       </div>
-                      <dt className="text-xl font-medium text-gray-900 dark:text-white mb-4">
+                      <dt className="text-xl font-medium text-foreground mb-4">
                         {item.title}
                       </dt>
-                      <dd className="text-base leading-7 text-gray-600 dark:text-gray-400 max-w-xs mx-auto">
+                      <dd className="text-base leading-7 text-muted-foreground max-w-xs mx-auto">
                         {item.description}
                       </dd>
                     </div>
