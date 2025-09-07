@@ -54,7 +54,7 @@ export default async function StoriesPage() {
   const features = await client.fetch<Feature[]>(FEATURES_QUERY, {}, options);
 
   return (
-    <main className="min-h-screen bg-white dark:bg-gray-900">
+    <main className="min-h-screen bg-white dark:bg-transparent">
       <div className="mx-auto max-w-7xl px-8 py-24">
         <div className="mb-12 text-center">
           <h1 className="mb-4 text-4xl font-bold text-gray-900 dark:text-white">
