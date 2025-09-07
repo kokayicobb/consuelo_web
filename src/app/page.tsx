@@ -10,6 +10,7 @@ import { Metadata } from "next";
 import UseCases from "@/components/UseCases";
 import { client } from "@/sanity/lib/client";
 import { type SanityDocument } from "next-sanity"
+import JsonLd, { consueloOrganizationSchema, consueloWebApplicationSchema } from "@/components/JsonLd";
 
 // Type definitions
 interface Feature {
@@ -37,9 +38,9 @@ interface UseCase {
 };
 
 export const metadata: Metadata = {
-  title: "Consuelo: On The Job",
+  title: "Consuelo: On The Job - AI Sales Agent Training Platform",
   description:
-   'The AI Native business management platform that just works.',
+   'The AI Native business management platform that just works. Shorten the ramp time of newly onboarded sales agents and help your top performers pivot to new products.',
 };
 
 // GROQ queries for fetching data
@@ -80,6 +81,8 @@ export default async function Home() {
 
   return (
     <main>
+      <JsonLd data={consueloOrganizationSchema} />
+      <JsonLd data={consueloWebApplicationSchema} />
       <ScrollUp />
       <WavyBackgroundDemo />
       <Features features={features} />
