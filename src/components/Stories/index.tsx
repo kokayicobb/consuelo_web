@@ -139,46 +139,43 @@ const FeatureCard: React.FC<{ feature: Feature }> = ({ feature }) => {
   return (
     <div className="group relative overflow-hidden rounded-lg flex-shrink-0">
       <Link href={`/${(feature.slug?.current || 'test-slug').replace(/^.*\//, '').trim()}`}>
-{videoUrl ? (
-            // Video with reasonable sizing but scaled up
-            feature.video?.videoType === 'upload' || feature.video?.videoType === 'url' ? (
-              <video 
-                src={videoUrl}
-                autoPlay={true}
-                loop={feature.video?.loop !== false}
-                muted={true}
-                playsInline
-                className="max-w-[500px] max-h-[700px] w-auto h-auto rounded-lg scale-150"
-                style={{ pointerEvents: 'none' }}
-              />
-            ) : (
-              // For embedded videos with scale
-              <iframe
-                src={videoUrl}
-                className="rounded-lg scale-150"
-                style={{
-                  pointerEvents: 'none',
-                  width: '400px',
-                  height: '225px'
-                }}
-                frameBorder="0"
-                allowFullScreen
-                allow="autoplay; encrypted-media"
-                loading="lazy"
-              />
-            )
-          ) : imageUrl ? (
-            <div className="relative h-[600px] w-[500px] rounded-lg overflow-hidden">
-              <Image
-                src={imageUrl}
-                fill
-                className="object-cover"
-                alt={feature.title}
-              />
-            </div>
+        {videoUrl ? (
+          // Video with proper sizing
+          feature.video?.videoType === 'upload' || feature.video?.videoType === 'url' ? (
+            <video 
+              src={videoUrl}
+              autoPlay={true}
+              loop={feature.video?.loop !== false}
+              muted={true}
+              playsInline
+              className="w-[400px] h-[600px] object-cover rounded-lg scale-125"
+              style={{ pointerEvents: 'none' }}
+            />
           ) : (
-            <div className={`h-[600px] w-[500px] bg-gradient-to-br ${feature.gradientFrom} ${feature.gradientTo} rounded-lg`} />
-          )}
+            // For embedded videos with proper dimensions
+            <iframe
+              src={videoUrl}
+              className="rounded-lg w-[400px] h-[600px] scale-125"
+              style={{
+                pointerEvents: 'none'
+              }}
+              frameBorder="0"
+              allowFullScreen
+              allow="autoplay; encrypted-media"
+              loading="lazy"
+            />
+          )
+        ) : imageUrl ? (
+          <Image
+            src={imageUrl}
+            width={400}
+            height={600}
+            className="w-[400px] h-[600px] object-cover rounded-lg scale-125"
+            alt={feature.title}
+          />
+        ) : (
+          <div className={`h-[600px] w-[400px] bg-gradient-to-br ${feature.gradientFrom} ${feature.gradientTo} rounded-lg`} />
+        )}
 
         {/* Overlay */}
         <div className="absolute inset-0 bg-black/20 transition-opacity group-hover:bg-black/40 rounded-lg" />
