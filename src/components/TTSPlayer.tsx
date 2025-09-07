@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { Play, Pause, Share2, Link } from "lucide-react"
+import { toast } from "sonner"
 
 interface TTSPlayerProps {
   title: string
@@ -87,11 +88,21 @@ export default function TTSPlayer({ title, audioUrl, audioDuration }: TTSPlayerP
     return `${mins}:${secs.toString().padStart(2, "0")}`
   }
 
-  const handleShare = async () => {
+  const handleShare = async (e: React.MouseEvent) => {
     try {
       const currentUrl = window.location.href
       await navigator.clipboard.writeText(currentUrl)
       console.log("🔗 URL copied to clipboard:", currentUrl)
+      toast("Copied", {
+        duration: 2000,
+        style: {
+          padding: '8px 16px',
+          width: 'auto',
+          minWidth: '80px',
+          maxWidth: '120px',
+        },
+        position: 'bottom-right'
+      })
     } catch (error) {
       console.error("🔗 Failed to copy URL:", error)
       // Fallback for browsers that don't support clipboard API
@@ -101,6 +112,16 @@ export default function TTSPlayer({ title, audioUrl, audioDuration }: TTSPlayerP
       textArea.select()
       document.execCommand('copy')
       document.body.removeChild(textArea)
+      toast("Copied", {
+        duration: 2000,
+        style: {
+          padding: '8px 16px',
+          width: 'auto',
+          minWidth: '80px',
+          maxWidth: '120px',
+        },
+        position: 'bottom-right'
+      })
     }
   }
 
