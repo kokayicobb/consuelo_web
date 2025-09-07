@@ -53,8 +53,8 @@ export const themeConfig: ThemeConfig = {
       { name: "Mercury", href: "/mercury" },
       { name: "Pricing", href: "/pricing" },
       { name: "Use Cases", href: "/platform" },
-      { name: "Research", href: "/integrations" },
-      { name: "Investors", href: "/integrations" },
+      { name: "Stories", href: "/stories" },
+      { name: "Investors", href: "/investors" },
     ],
   },
   buttons: {

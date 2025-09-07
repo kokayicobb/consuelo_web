@@ -75,7 +75,14 @@ export const featureType = defineType({
               { title: 'Custom URL', value: 'url' }
             ]
           },
-          validation: (Rule) => Rule.required()
+          validation: (Rule) => Rule.custom((value, context) => {
+            const parent = context.parent as any;
+            // Only require videoType if there's a URL or file provided
+            if (parent?.url || parent?.file) {
+              return value ? true : 'Video type is required when URL or file is provided';
+            }
+            return true;
+          })
         },
         {
           name: 'url',
