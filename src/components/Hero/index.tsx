@@ -6,7 +6,7 @@ import { HoverBorderGradient } from "./hover-button";
 
 export function WavyBackgroundDemo() {
   return (
-    <div className="relative flex h-[85vh] w-full flex-col items-center justify-start bg-transparent pt-8">
+    <div className="relative flex min-h-[85vh] h-[85vh] md:h-[85vh] w-full flex-col items-center justify-start bg-transparent pt-8">
       <div className="mx-auto flex w-full max-w-3xl flex-col items-center justify-center mt-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -14,9 +14,11 @@ export function WavyBackgroundDemo() {
           transition={{ duration: 0.8, ease: "easeOut" }}
           className="mb-12 text-center"
         >
-          <h1 className="mb-8 text-6xl font-medium text-foreground leading-tight">
-          <div className="text-center">Voice AI agents</div>
-          <div className="text-left ml-[1rem]">for sales teams</div>
+          <h1 className="mb-8 text-4xl md:text-6xl font-medium text-foreground leading-tight">
+          <div className="text-center block md:hidden">Train agents to</div>
+          <div className="text-center block md:hidden">close how you close.</div>
+          <div className="text-center hidden md:block">Train agents how to</div>
+          <div className="text-center hidden md:block">close how you close.</div>
           </h1>
           
           <div className="flex justify-center">
@@ -60,7 +62,7 @@ export function WavyBackgroundDemo() {
       </div>
 
       <motion.div
-        className="absolute bottom-0 left-1/2 flex -translate-x-1/2 flex-row items-center gap-1"
+        className="absolute bottom-1 md:bottom-0 left-1/2 flex -translate-x-1/2 flex-row items-center gap-1"
         initial={{ opacity: 0 }}
         animate={{
           opacity: 1,

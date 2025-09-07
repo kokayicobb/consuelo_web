@@ -13,7 +13,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: 'Consuelo: Voice AI to shorten ramp time on sales teams.',
+    default: 'Consuelo:  Voice AI that shortens ramp time on sales teams.',
     template: '%s | Consuelo'
   },
   description: 'Shorten the ramp time of newly onboarded sales agents and help your top performers pivot to new products with AI-powered training and CRM automation.',
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: 'https://www.consuelohq.com',
     siteName: 'Consuelo',
-    title: 'Consuelo: Voice AI to shorten ramp time on sales teams.',
+    title: 'Consuelo: Voice AI that shortens ramp time on sales teams.',
     description: 'Shorten the ramp time of newly onboarded sales agents and help your top performers pivot to new products with AI-powered training and CRM automation.',
     images: [{
       url: '/real-preview.png',
@@ -65,7 +65,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     site: '@consuelohq',
     creator: '@consuelohq',
-    title: 'Consuelo: Voice AI to shorten ramp time on sales teams.',
+    title: 'Consuelo: Voice AI that shortens ramp time on sales teams.',
     description: 'Shorten the ramp time of newly onboarded sales agents and help your top performers pivot to new products with AI-powered training.',
     images: [{
       url: '/real-preview.png',
