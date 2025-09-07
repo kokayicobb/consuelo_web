@@ -52,7 +52,7 @@ export const metadata: Metadata = {
     title: 'Consuelo: On The Job - AI Sales Agent Training Platform',
     description: 'Shorten the ramp time of newly onboarded sales agents and help your top performers pivot to new products with AI-powered training and CRM automation.',
     images: [{
-      url: '/images/og-image.png',
+      url: '/images/transparent.png',
       width: 1200,
       height: 630,
       alt: 'Consuelo - AI Sales Agent Training Platform',
@@ -68,7 +68,7 @@ export const metadata: Metadata = {
     title: 'Consuelo: On The Job - AI Sales Agent Training Platform',
     description: 'Shorten the ramp time of newly onboarded sales agents and help your top performers pivot to new products with AI-powered training.',
     images: [{
-      url: '/images/twitter-image.png',
+      url: '/images/transparent.png',
       width: 1200,
       height: 630,
       alt: 'Consuelo - AI Sales Agent Training Platform'
