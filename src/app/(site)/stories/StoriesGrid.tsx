@@ -57,33 +57,40 @@ const StoryCard: React.FC<{ feature: Feature }> = ({ feature }) => {
   }
 
   const getFeatureVideoUrl = () => {
-    if (!feature.video) return null
-    
-    switch (feature.video.videoType) {
-      case 'youtube':
-        if (feature.video.url) {
-          const videoId = feature.video.url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/)?.[1]
-          return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=0&mute=1&loop=${feature.video.loop ? 1 : 0}` : null
-        }
-        break
-      case 'vimeo':
-        if (feature.video.url) {
-          const videoId = feature.video.url.match(/vimeo\.com\/(\d+)/)?.[1]
-          return videoId ? `https://player.vimeo.com/video/${videoId}?autoplay=0&muted=1&loop=${feature.video.loop ? 1 : 0}` : null
-        }
-        break
-      case 'loom':
-        if (feature.video.url) {
-          return feature.video.url.includes('/embed/') 
-            ? `${feature.video.url}?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true&autoplay=false`
-            : `https://www.loom.com/embed/${feature.video.url.match(/loom\.com\/share\/([a-zA-Z0-9]+)/)?.[1]}?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true&autoplay=false`
-        }
-        break
-      case 'upload':
-        return getVideoUrl(feature.video.file)
-      case 'url':
-        return feature.video.url || null
+    // Priority: video object > heroVideo URL (like in slug page)
+    if (feature.video) {
+      switch (feature.video.videoType) {
+        case 'youtube':
+          if (feature.video.url) {
+            const videoId = feature.video.url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/)?.[1]
+            return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=0&mute=1&loop=${feature.video.loop ? 1 : 0}` : null
+          }
+          break
+        case 'vimeo':
+          if (feature.video.url) {
+            const videoId = feature.video.url.match(/vimeo\.com\/(\d+)/)?.[1]
+            return videoId ? `https://player.vimeo.com/video/${videoId}?autoplay=0&muted=1&loop=${feature.video.loop ? 1 : 0}` : null
+          }
+          break
+        case 'loom':
+          if (feature.video.url) {
+            return feature.video.url.includes('/embed/') 
+              ? `${feature.video.url}?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true&autoplay=false`
+              : `https://www.loom.com/embed/${feature.video.url.match(/loom\.com\/share\/([a-zA-Z0-9]+)/)?.[1]}?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true&autoplay=false`
+          }
+          break
+        case 'upload':
+          return getVideoUrl(feature.video.file)
+        case 'url':
+          return feature.video.url || null
+      }
     }
+    
+    // Fallback to heroVideo if available (like in slug page)
+    if (feature.heroVideo) {
+      return feature.heroVideo
+    }
+    
     return null
   }
 
@@ -91,20 +98,36 @@ const StoryCard: React.FC<{ feature: Feature }> = ({ feature }) => {
   const imageUrl = getImageUrl()
 
   return (
-    <div className="group relative overflow-hidden rounded-lg bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-shadow duration-300">
+    <div className="group relative overflow-hidden rounded-lg bg-white dark:bg-transparent shadow-lg hover:shadow-xl transition-shadow duration-300">
       <Link href={`/${(feature.slug?.current || 'test-slug').replace(/^.*\//, '').trim()}`}>
         {/* Media Container */}
         <div className="relative aspect-video overflow-hidden">
           {videoUrl ? (
-            <iframe
-              src={videoUrl}
-              className="absolute inset-0 w-full h-full"
-              frameBorder="0"
-              allowFullScreen
-              allow="encrypted-media"
-              style={{ pointerEvents: 'none' }}
-              loading="lazy"
-            />
+            <>
+              {/* Handle different video types like BentoGrid */}
+              {feature.video?.videoType === 'upload' || feature.video?.videoType === 'url' ? (
+                <video 
+                  src={videoUrl}
+                  autoPlay={feature.video?.autoplay !== false}
+                  loop={feature.video?.loop !== false}
+                  muted={feature.video?.muted !== false}
+                  playsInline
+                  className="absolute inset-0 w-full h-full object-cover"
+                  style={{ pointerEvents: 'none' }}
+                />
+              ) : (
+                <iframe
+                  src={videoUrl}
+                  className="absolute inset-0 w-full h-full"
+                  frameBorder="0"
+                  allowFullScreen
+                  allow="autoplay; encrypted-media"
+                  loading="lazy"
+                />
+              )}
+              {/* Video overlay for better visual consistency */}
+              <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px] z-10"></div>
+            </>
           ) : imageUrl ? (
             <Image
               src={imageUrl}

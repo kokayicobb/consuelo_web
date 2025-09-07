@@ -348,7 +348,7 @@ export default async function FeaturePage({ params }: Props) {
                 Why Choose {feature.title}?
               </h2>
               <p className="mt-6 text-xl leading-8 text-muted-foreground font-light">
-                Discover the powerful capabilities that set us apart
+                Discover how voice AI technology shortens your learning curve and accelerates time to value
               </p>
             </div>
             <div className="mx-auto max-w-5xl">
@@ -406,10 +406,10 @@ export default async function FeaturePage({ params }: Props) {
           <div className="mx-auto max-w-6xl px-6 lg:px-8">
             <div className="mx-auto max-w-3xl text-center mb-20">
               <h2 className="text-4xl font-light tracking-tight text-gray-900 dark:text-white sm:text-5xl">
-                Explore More Features
+                Explore more from Consuelo
               </h2>
               <p className="mt-6 text-xl leading-8 text-gray-600 dark:text-gray-400 font-light">
-                Discover our complete suite of tools and capabilities
+                Discover how voice AI reduces onboarding time and accelerates productivity
               </p>
             </div>
             
@@ -422,8 +422,12 @@ export default async function FeaturePage({ params }: Props) {
                 >
                   <div className="border-b border-gray-200 dark:border-gray-800 pb-8 group-hover:border-gray-400 dark:group-hover:border-gray-600 transition-colors duration-200">
                     <div className="mb-6">
-                      <div className={`inline-flex rounded-full bg-gradient-to-r ${otherFeature.gradientFrom} ${otherFeature.gradientTo} p-3`}>
-                        <div className="h-6 w-6 bg-white/20 rounded"></div>
+                      <div className="inline-flex rounded-full bg-white border border-gray-200 dark:border-gray-700 p-3 shadow-sm">
+                        <img 
+                          src="/apple-touch-icon.png" 
+                          alt="Consuelo" 
+                          className="h-6 w-6"
+                        />
                       </div>
                     </div>
                     <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-3 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors">
