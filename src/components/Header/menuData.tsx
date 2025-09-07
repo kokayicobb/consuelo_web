@@ -74,8 +74,8 @@ export function Header() {
       <div className="container flex flex-1">
         <div className="w-48 pt-8">
           <nav className="flex flex-col space-y-4">
-            <Link href="/research" className="text-sm hover:text-primary transition-colors">
-              Research
+            <Link href="/stories" className="text-sm hover:text-primary transition-colors">
+              Stories
             </Link>
             <Link href="/safety" className="text-sm hover:text-primary transition-colors">
               Safety
