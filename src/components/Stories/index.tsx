@@ -39,15 +39,34 @@ const Stories: React.FC<StoriesProps> = ({ features }) => {
   const targetRef = React.useRef<HTMLDivElement>(null)
   const { scrollYProgress } = useScroll({
     target: targetRef,
-    offset: ["start end", "end start"]
+    offset: ["start start", "end end"]
   })
 
-  // Filter to show only items with order > 5, sorted by order
+  // Filter to show only items with order 6-10, sorted by order
   const scrollFeatures = features
-    .filter((item) => item.order > 5)
+    .filter((item) => item.order >= 6 && item.order <= 10)
     .sort((a, b) => a.order - b.order)
 
-  const x = useTransform(scrollYProgress, [0.4, 0.8], ["5%", "-95%"])
+  // Calculate transform to show all cards - ensure the last card is fully visible
+  const numCards = scrollFeatures.length
+  
+  // Increase scroll distance and add easing for smoother movement
+  const translatePercent = Math.max(95, numCards * 25) // More distance per scroll
+  
+  // Use smooth easing curve for more fluid scroll movement
+  const x = useTransform(
+    scrollYProgress, 
+    [0, 1], 
+    ["0%", `-${Math.min(translatePercent, 130)}%`],
+    {
+      ease: (t: number) => {
+        // Custom easing function for smoother acceleration/deceleration
+        return t < 0.5 
+          ? 4 * t * t * t 
+          : 1 - Math.pow(-2 * t + 2, 3) / 2
+      }
+    }
+  )
 
   return (
     <div className="mx-auto max-w-7xl px-8 py-24">
@@ -69,7 +88,8 @@ const Stories: React.FC<StoriesProps> = ({ features }) => {
       
       <section
         ref={targetRef}
-        className="relative h-[150vh] w-full -mt-20"
+        className="relative w-full -mt-20"
+        style={{ height: `${Math.max(400, scrollFeatures.length * 80)}vh` }}
       >
         <div className="sticky top-0 flex h-screen items-start overflow-hidden pt-32">
           <motion.div
@@ -82,6 +102,39 @@ const Stories: React.FC<StoriesProps> = ({ features }) => {
                 feature={feature}
               />
             ))}
+            
+            {/* View All Stories Card */}
+            <div className="flex-shrink-0 w-[400px] h-[600px] rounded-lg bg-transparent flex flex-col items-center justify-center text-white group cursor-pointer">
+              <Link href="/stories" className="flex flex-col items-center justify-center h-full w-full text-center p-8">
+                <div className="mb-8">
+                  <Image
+                    src="/apple-touch-icon.png"
+                    width={80}
+                    height={80}
+                    alt="Logo"
+                    className="opacity-80"
+                  />
+                </div>
+                <h3 className="text-2xl font-semibold mb-4">View all stories</h3>
+                <div className="transition-transform group-hover:translate-x-2">
+                  <svg 
+                    width="24" 
+                    height="24" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path 
+                      d="M5 12H19M19 12L12 5M19 12L12 19" 
+                      stroke="currentColor" 
+                      strokeWidth="2" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+              </Link>
+            </div>
           </motion.div>
         </div>
       </section>
