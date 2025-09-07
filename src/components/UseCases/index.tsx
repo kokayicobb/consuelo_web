@@ -70,7 +70,7 @@ export default function UseCases({ useCases }: UseCasesProps) {
         <div className="inline-flex rounded-lg border p-1">
           <button
             onClick={() => setActiveTab("insurance")}
-            className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium ${
+            className={`flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium flex-1 min-w-[80px] ${
               activeTab === "insurance"
                 ? "bg-primary text-primary-foreground"
                 : "bg-transparent hover:bg-muted"
@@ -80,7 +80,7 @@ export default function UseCases({ useCases }: UseCasesProps) {
           </button>
           <button
             onClick={() => setActiveTab("b2b")}
-            className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium ${
+            className={`flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium flex-1 min-w-[80px] ${
               activeTab === "b2b"
                 ? "bg-primary text-primary-foreground"
                 : "bg-transparent hover:bg-muted"
@@ -171,7 +171,7 @@ function UseCaseItem({ href, loomVideoUrl, altText, title, description }: UseCas
               <>
                 <iframe
                   src={embedUrl}
-                  className="absolute inset-0 w-full h-full"
+                  className="absolute inset-0 w-full h-full scale-150"
                   frameBorder="0"
                   allowFullScreen
                   style={{ pointerEvents: 'none' }}

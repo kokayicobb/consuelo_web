@@ -10,6 +10,7 @@ import { MarkdownContent } from '@/components/ui/markdown-content'
 import { Zap, Shield, Clock, ArrowRight } from 'lucide-react'
 import UseCaseVideo from '@/components/UseCaseVideo'
 import TTSPlayer from '@/components/TTSPlayer'
+import VideoPlayer from '@/components/VideoPlayer'
 import { getVideoUrl } from '@/sanity/lib/image'
 
 // Icon mapping for the features section
@@ -26,6 +27,7 @@ const FEATURE_QUERY = `*[_type == "feature" && slug.current == $slug][0] {
   description,
   image,
   imagePath,
+  video,
   isHero,
   gradientFrom,
   gradientTo,
@@ -144,6 +146,49 @@ export default async function FeaturePage({ params }: Props) {
   // Filter out the current feature from other features
   const otherFeatures = allFeatures.filter(f => f._id !== feature._id)
 
+  // Helper function to get video URL from feature video config
+  const getFeatureVideoUrl = () => {
+    // Priority: video object > heroVideo URL
+    if (feature.video) {
+      switch (feature.video.videoType) {
+        case 'youtube':
+          if (feature.video.url) {
+            const videoId = feature.video.url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/)?.[1];
+            return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=${feature.video.autoplay ? 1 : 0}&mute=${feature.video.muted ? 1 : 0}&loop=${feature.video.loop ? 1 : 0}` : null;
+          }
+          break;
+        case 'vimeo':
+          if (feature.video.url) {
+            const videoId = feature.video.url.match(/vimeo\.com\/(\d+)/)?.[1];
+            return videoId ? `https://player.vimeo.com/video/${videoId}?autoplay=${feature.video.autoplay ? 1 : 0}&muted=${feature.video.muted ? 1 : 0}&loop=${feature.video.loop ? 1 : 0}` : null;
+          }
+          break;
+        case 'loom':
+          if (feature.video.url) {
+            return feature.video.url.includes('/embed/') 
+              ? `${feature.video.url}?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true&autoplay=${feature.video.autoplay ? 'true' : 'false'}`
+              : `https://www.loom.com/embed/${feature.video.url.match(/loom\.com\/share\/([a-zA-Z0-9]+)/)?.[1]}?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true&autoplay=${feature.video.autoplay ? 'true' : 'false'}`;
+          }
+          break;
+        case 'upload':
+          // Handle uploaded video files using Sanity helper
+          return getVideoUrl(feature.video.file);
+        case 'url':
+          // Direct video URL
+          return feature.video.url || null;
+      }
+    }
+    
+    // Fallback to heroVideo if available
+    if (feature.heroVideo) {
+      return feature.heroVideo;
+    }
+    
+    return null;
+  }
+
+  const videoUrl = getFeatureVideoUrl()
+
   return (
     <div className="min-h-screen">
       {/* Hero Section - Text with Author/Date */}
@@ -201,31 +246,60 @@ export default async function FeaturePage({ params }: Props) {
         </div>
       </div>
 
-      {/* Hero Image Section - Below Text */}
-      {(feature.image || feature.imagePath) && (
+      {/* Hero Media Section - Video or Image */}
+      {(videoUrl || feature.image || feature.imagePath) && (
         <div className="relative px-6 py-16 lg:px-8">
           <div className="mx-auto max-w-5xl">
-            {feature.image ? (
-              <div className="relative h-80 sm:h-96 lg:h-[480px] overflow-hidden rounded-xl">
-                <Image
-                  src={urlFor(feature.image).width(1200).height(600).url()}
-                  alt={feature.title || 'Feature image'}
-                  fill
-                  className="object-cover w-full h-full"
-                  priority
-                />
+{videoUrl ? (
+              // Video with orientation-based sizing
+              <div className="flex justify-center">
+                {feature.video?.videoType === 'upload' || feature.video?.videoType === 'url' ? (
+                  <VideoPlayer
+                    src={videoUrl}
+                    autoPlay={feature.video?.autoplay !== false}
+                    loop={feature.video?.loop !== false}
+                    muted={feature.video?.muted !== false}
+                  />
+                ) : (
+                  // For embedded videos - use fixed dimensions similar to images
+                  <div className="relative overflow-hidden rounded-xl" style={{
+                    width: '100%',
+                    maxWidth: '800px',
+                    height: '450px', // Standard 16:9 ratio like images
+                  }}>
+                    <iframe
+                      src={videoUrl}
+                      className="absolute inset-0 w-full h-full"
+                      frameBorder="0"
+                      allowFullScreen
+                      allow="autoplay; encrypted-media"
+                      loading="lazy"
+                    />
+                  </div>
+                )}
               </div>
-            ) : feature.imagePath ? (
+            ) : (
+              // Images maintain fixed height for consistency
               <div className="relative h-80 sm:h-96 lg:h-[480px] overflow-hidden rounded-xl">
-                <Image
-                  src={feature.imagePath}
-                  alt={feature.title || 'Feature image'}
-                  fill
-                  className="object-cover w-full h-full"
-                  priority
-                />
+                {feature.image ? (
+                  <Image
+                    src={urlFor(feature.image).width(1200).height(600).url()}
+                    alt={feature.title || 'Feature image'}
+                    fill
+                    className="object-cover w-full h-full"
+                    priority
+                  />
+                ) : feature.imagePath ? (
+                  <Image
+                    src={feature.imagePath}
+                    alt={feature.title || 'Feature image'}
+                    fill
+                    className="object-cover w-full h-full"
+                    priority
+                  />
+                ) : null}
               </div>
-            ) : null}
+            )}
           </div>
         </div>
       )}

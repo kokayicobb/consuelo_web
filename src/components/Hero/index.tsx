@@ -1,10 +1,13 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import LiquidOrbButton from "@/components/roleplay/LiquidOrbButton";
 import { HoverBorderGradient } from "./hover-button";
 
 export function WavyBackgroundDemo() {
+  const router = useRouter();
+
   return (
     <div className="relative flex min-h-[85vh] h-[85vh] md:h-[85vh] w-full flex-col items-center justify-start bg-transparent pt-8">
       <div className="mx-auto flex w-full max-w-3xl flex-col items-center justify-center mt-4">
@@ -41,7 +44,10 @@ export function WavyBackgroundDemo() {
           transition={{ duration: 0.5, delay: 0.4 }}
           className="mt-8 flex flex-wrap items-center justify-center gap-2 px-1"
         >
-          <button className="rounded-full border border-border bg-transparent px-4 py-2 text-sm text-foreground transition-colors hover:bg-card/10">
+          <button 
+            onClick={() => router.push('/mercury/roleplay/zara')}
+            className="rounded-full border border-border bg-transparent px-4 py-2 text-sm text-foreground transition-colors hover:bg-card/10"
+          >
            On-Call Coach
           </button>
           <button className="rounded-full border border-border bg-transparent px-4 py-2 text-sm text-foreground transition-colors hover:bg-card/10">

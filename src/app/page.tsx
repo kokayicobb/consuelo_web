@@ -4,6 +4,7 @@ import HomeBlogSection from "@/components/Blog/HomeBlogSection";
 import Clients from "@/components/Clients";
 import ScrollUp from "@/components/Common/ScrollUp";
 import Features from "@/components/Features";
+import { HorizontalScrollFeatures } from "@/components/Stories";
 import Pricing from "@/components/Pricing";
 import { getAllPosts } from "@/utils/markdown";
 import { Metadata } from "next";
@@ -19,6 +20,15 @@ interface Feature {
   description: string
   image?: any
   imagePath?: string
+  video?: {
+    videoType: 'youtube' | 'vimeo' | 'loom' | 'upload' | 'url'
+    url?: string
+    file?: any
+    autoplay?: boolean
+    loop?: boolean
+    muted?: boolean
+  }
+  heroVideo?: string
   slug: { current: string }
   isHero: boolean
   gradientFrom: string
@@ -50,6 +60,8 @@ const FEATURES_QUERY = `*[_type == "feature"] | order(order asc) {
   description,
   image,
   imagePath,
+  video,
+  heroVideo,
   slug,
   isHero,
   gradientFrom,
@@ -86,9 +98,8 @@ export default async function Home() {
       <ScrollUp />
       <WavyBackgroundDemo />
       <Features features={features} />
-      {/* Use Case gallery Place here */}
-
       <UseCases useCases={useCases} />
+      <HorizontalScrollFeatures features={features} />
       <Pricing />
 
       <Clients />
