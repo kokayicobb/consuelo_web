@@ -38,7 +38,7 @@ interface UseCase {
 };
 
 export const metadata: Metadata = {
-  title: "Consuelo: Voice AI to shorten ramp time on sales teams.",
+  title: 'Consuelo: Voice AI that shortens ramp time on sales teams.',
   description:
    'The AI Native business management platform that just works. Shorten the ramp time of newly onboarded sales agents and help your top performers pivot to new products.',
 };
