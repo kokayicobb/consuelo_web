@@ -50,14 +50,26 @@ const Stories: React.FC<StoriesProps> = ({ features }) => {
   // Calculate transform to show all cards - ensure the last card is fully visible
   const numCards = scrollFeatures.length
   
-  // Increase scroll distance and add easing for smoother movement
-  const translatePercent = Math.max(95, numCards * 25) // More distance per scroll
+  // Responsive scroll distance - much more distance for mobile
+  const [isMobile, setIsMobile] = React.useState(false)
+  
+  React.useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+  
+  // More aggressive translation for mobile to ensure all cards are visible
+  const translatePercent = isMobile 
+    ? Math.max(195, numCards * 82) // Tiny bump more
+    : Math.max(95, numCards * 25) // Original desktop behavior
   
   // Use smooth easing curve for more fluid scroll movement
   const x = useTransform(
     scrollYProgress, 
     [0, 1], 
-    ["0%", `-${Math.min(translatePercent, 130)}%`],
+    ["0%", `-${Math.min(translatePercent, isMobile ? 385 : 130)}%`],
     {
       ease: (t: number) => {
         // Custom easing function for smoother acceleration/deceleration
@@ -89,7 +101,7 @@ const Stories: React.FC<StoriesProps> = ({ features }) => {
       <section
         ref={targetRef}
         className="relative w-full -mt-20"
-        style={{ height: `${Math.max(400, scrollFeatures.length * 80)}vh` }}
+        style={{ height: `${Math.max(400, scrollFeatures.length * (isMobile ? 120 : 80))}vh` }}
       >
         <div className="sticky top-0 flex h-screen items-start overflow-hidden pt-32">
           <motion.div
