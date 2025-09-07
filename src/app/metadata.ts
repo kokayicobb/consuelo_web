@@ -13,7 +13,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: 'Consuelo: On The Job - AI Sales Agent Training Platform',
+    default: 'Consuelo: Faster to Revenue - AI Sales Agent Training Platform',
     template: '%s | Consuelo'
   },
   description: 'Shorten the ramp time of newly onboarded sales agents and help your top performers pivot to new products with AI-powered training and CRM automation.',
@@ -52,7 +52,7 @@ export const metadata: Metadata = {
     title: 'Consuelo: On The Job - AI Sales Agent Training Platform',
     description: 'Shorten the ramp time of newly onboarded sales agents and help your top performers pivot to new products with AI-powered training and CRM automation.',
     images: [{
-      url: '/images/transparent.png',
+      url: '/PreviewImage.png',
       width: 1200,
       height: 630,
       alt: 'Consuelo - AI Sales Agent Training Platform',
