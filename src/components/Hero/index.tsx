@@ -44,25 +44,22 @@ export function WavyBackgroundDemo() {
           transition={{ duration: 0.5, delay: 0.4 }}
           className="mt-8 flex flex-wrap items-center justify-center gap-2 px-1"
         >
-          <button 
-            onClick={() => router.push('/mercury/roleplay/zara')}
+          <a 
+            href="/mercury"
             className="rounded-full border border-border bg-transparent px-4 py-2 text-sm text-foreground transition-colors hover:bg-card/10"
           >
            On-Call Coach
-          </button>
-          <button className="rounded-full border border-border bg-transparent px-4 py-2 text-sm text-foreground transition-colors hover:bg-card/10">
+          </a>
+          <a href="/zara" className="rounded-full border border-border bg-transparent px-4 py-2 text-sm text-foreground transition-colors hover:bg-card/10">
             Sales Roleplay
-          </button>
-          <button className="rounded-full border border-border bg-transparent px-4 py-2 text-sm text-foreground transition-colors hover:bg-card/10">
+          </a>
+          <a href="/analytics" className="rounded-full border border-border bg-transparent px-4 py-2 text-sm text-foreground transition-colors hover:bg-card/10">
             Call Analytics
-          </button>
-          <HoverBorderGradient
-            containerClassName="rounded-full"
-            as="button"
-            className="dark:bg-black bg-white text-black dark:text-white flex items-center space-x-2"
-          >
-            <span>Talk to Consuelo</span>
-          </HoverBorderGradient>
+          </a>
+        
+          <a href="/roleplay" className="rounded-full border border-border bg-transparent px-4 py-2 text-sm text-foreground transition-colors hover:bg-card/10">
+            Talk to Consuelo
+          </a>
         
         </motion.div>
       </div>
