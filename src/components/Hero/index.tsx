@@ -57,9 +57,14 @@ export function WavyBackgroundDemo() {
             Call Analytics
           </a>
         
-          <a href="/roleplay" className="rounded-full border border-border bg-transparent px-4 py-2 text-sm text-foreground transition-colors hover:bg-card/10">
-            Talk to Consuelo
-          </a>
+          <HoverBorderGradient
+            containerClassName="rounded-full"
+            as="a"
+            href="/roleplay"
+            className="dark:bg-black bg-white text-black dark:text-white flex items-center space-x-2"
+          >
+            <span>Talk to Consuelo</span>
+          </HoverBorderGradient>
         
         </motion.div>
       </div>
