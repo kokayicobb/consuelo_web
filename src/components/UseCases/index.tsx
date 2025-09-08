@@ -34,29 +34,30 @@ export default function UseCases({ useCases }: UseCasesProps) {
     .filter(useCase => useCase.category === "b2b")
     .sort((a, b) => a.order - b.order);
 
-  // Preload all video URLs immediately when component mounts
+  // Preload video thumbnails for visible tab only
   React.useEffect(() => {
-    const allUseCases = [...insuranceUseCases, ...b2bUseCases];
-    allUseCases.forEach((useCase) => {
-      if (useCase.loomVideoUrl) {
-        // Preload iframe by creating a hidden link element
-        const iframe = document.createElement('iframe');
-        iframe.src = `https://www.loom.com/embed/${useCase.loomVideoUrl.match(/loom\.com\/share\/([a-zA-Z0-9]+)/)?.[1]}?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true&autoplay=false&hide_controls=true&hide_speed=true&hide_transcript=true&hide_sidebar=true`;
-        iframe.style.display = 'none';
-        iframe.style.position = 'absolute';
-        iframe.style.left = '-9999px';
-        iframe.loading = 'lazy';
-        document.body.appendChild(iframe);
-        
-        // Remove after a delay to clean up
-        setTimeout(() => {
-          if (iframe.parentNode) {
-            iframe.parentNode.removeChild(iframe);
+    const currentUseCases = activeTab === "insurance" ? insuranceUseCases : b2bUseCases;
+    
+    // Use requestIdleCallback to defer preloading until browser is idle
+    const preloadThumbnails = () => {
+      currentUseCases.forEach((useCase, index) => {
+        if (useCase.loomVideoUrl && index < 4) { // Only preload first 4 videos
+          const loomId = useCase.loomVideoUrl.match(/loom\.com\/share\/([a-zA-Z0-9]+)/)?.[1];
+          if (loomId) {
+            // Preload thumbnail image instead of full iframe
+            const img = new window.Image();
+            img.src = `https://cdn.loom.com/sessions/thumbnails/${loomId}-with-play.gif`;
           }
-        }, 5000);
-      }
-    });
-  }, [insuranceUseCases, b2bUseCases]);
+        }
+      });
+    };
+
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(preloadThumbnails);
+    } else {
+      setTimeout(preloadThumbnails, 100);
+    }
+  }, [activeTab, insuranceUseCases, b2bUseCases]);
 
   return (
     <div id="use-cases" className="mx-auto max-w-7xl px-8 py-24">
@@ -146,9 +147,9 @@ interface UseCaseItemProps {
 }
 
 function UseCaseItem({ href, loomVideoUrl, altText, title, description, productName }: UseCaseItemProps) {
-  // Use intersection observer for lazy loading with aggressive preloading (400px margin)
+  // Use intersection observer for lazy loading with moderate preloading
   const { elementRef, shouldLoad } = useIntersectionObserver({
-    rootMargin: '400px', // Start loading 400px before the element enters viewport
+    rootMargin: '200px', // Start loading 200px before the element enters viewport
     threshold: 0.1,
     triggerOnce: true
   });
