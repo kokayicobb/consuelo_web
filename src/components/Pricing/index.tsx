@@ -1,64 +1,35 @@
-"use client";
 import * as React from "react";
 import { PricingCard } from "./pricing-card";
 import { FeatureCard } from "./feature-card";
 import { Tab } from "../ui/pricing-tab";
+import { client } from "@/sanity/lib/client";
+import { PRICING_PLANS_QUERY } from "@/sanity/lib/queries";
 
-const features = [
-  // Zara Features
-  { name: "Set up in under an hour", included: "growth" },
-  { name: "Complete performance tracking & insights", included: "growth" },
-  { name: "Contextual Learning", included: "growth" },
-  { name: "Advanced sales scenario simulations", included: "growth" },
+interface PricingFeature {
+  _id: string;
+  name: string;
+  description?: string;
+  category: string;
+  order: number;
+}
 
- 
-  { name: "CRM integrations", included: "growth" },
-  { name: "A/B testing complex stratagies", included: "growth" },
-  { name: "Priority support", included: "growth" },
+interface PricingPlan {
+  _id: string;
+  name: string;
+  slug: { current: string };
+  monthlyPrice: number;
+  description: string;
+  cta: string;
+  popular: boolean;
+  beta: boolean;
+  level: string;
+  order: number;
+  features: PricingFeature[];
+}
 
-  // Mercury Features
-  { name: "Set up in under an hour", included: "scale" },
-  { name: "Complete performance tracking & insights", included: "scale" },
-  { name: "Contextual Learning", included: "scale" },
-  { name: "Sequential Dialing", included: "scale" },
 
-  { name: "Twilio integration for sales optimization", included: "scale" },
-  
-  { name: "CRM integrations", included: "scale" },
-
-  
-  { name: "Priority support", included: "scale" },
-];
-
-const pricingTiers = [
-  {
-    name: "Zara: Roleplay Agent",
-    price: { monthly: 0.15, yearly: 5 },
-    description:
-      "Get started with AI-powered sales coaching and roleplay training.",
-    features: features
-      .filter((f) => f.included === "growth")
-      .map((f) => f.name),
-    cta: "Free 14 day trial",
-    level: "growth",
-    popular: false,
-    beta: false,
-  },
-  {
-    name: "Mercury: On-Call Agent",
-    price: { monthly: 0.01, yearly: 20 },
-    description:
-      "Advanced AI sales training with premium features and extended usage credits.",
-    features: features.filter((f) => f.included === "scale").map((f) => f.name),
-    cta: "Free 14 day trial",
-    level: "scale",
-    popular: true,
-    beta: false,
-  },
-];
-
-export default function Pricing() {
-  const [interval, setInterval] = React.useState("monthly");
+export default async function Pricing() {
+  const pricingTiers: PricingPlan[] = await client.fetch(PRICING_PLANS_QUERY);
 
   return (
     <div className="container flex flex-col items-center justify-center">
@@ -77,15 +48,15 @@ export default function Pricing() {
 
       <div className="grid w-full max-w-4xl grid-cols-1 gap-6 md:grid-cols-2">
         {pricingTiers.map((tier) => (
-          <div key={tier.name} className="w-full">
-            <PricingCard tier={tier} paymentFrequency={interval} />
+          <div key={tier._id} className="w-full">
+            <PricingCard tier={tier} />
           </div>
         ))}
       </div>
 
       <div className="mt-6 grid w-full max-w-4xl grid-cols-1 gap-6 md:grid-cols-2">
         {pricingTiers.map((tier) => (
-          <div key={`${tier.name}`} className="w-full">
+          <div key={`feature-${tier._id}`} className="w-full">
             <FeatureCard tier={tier} />
           </div>
         ))}

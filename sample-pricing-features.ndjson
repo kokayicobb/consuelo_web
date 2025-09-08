@@ -1,0 +1,9 @@
+{"_type": "pricingFeature", "_id": "feature-setup-hour", "name": "Set up in under an hour", "category": "setup", "order": 1}
+{"_type": "pricingFeature", "_id": "feature-performance-tracking", "name": "Complete performance tracking & insights", "category": "analytics", "order": 1}
+{"_type": "pricingFeature", "_id": "feature-contextual-learning", "name": "Contextual Learning", "category": "ai", "order": 1}
+{"_type": "pricingFeature", "_id": "feature-sales-scenarios", "name": "Advanced sales scenario simulations", "category": "ai", "order": 2}
+{"_type": "pricingFeature", "_id": "feature-crm-integrations", "name": "CRM integrations", "category": "setup", "order": 2}
+{"_type": "pricingFeature", "_id": "feature-ab-testing", "name": "A/B testing complex strategies", "category": "analytics", "order": 2}
+{"_type": "pricingFeature", "_id": "feature-priority-support", "name": "Priority support", "category": "support", "order": 1}
+{"_type": "pricingFeature", "_id": "feature-sequential-dialing", "name": "Sequential Dialing", "category": "sales", "order": 1}
+{"_type": "pricingFeature", "_id": "feature-twilio-integration", "name": "Twilio integration for sales optimization", "category": "setup", "order": 3}

@@ -5,28 +5,35 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils"; // Assuming you have this utility
 
-export interface PricingTier {
+interface PricingFeature {
+  _id: string;
   name: string;
-  price: Record<string, number | string>;
   description?: string;
-  features: string[];
+  category: string;
+  order: number;
+}
+
+export interface PricingTier {
+  _id: string;
+  name: string;
+  slug: { current: string };
+  monthlyPrice: number;
+  description: string;
   cta: string;
-  highlighted?: boolean;
-  beta?: boolean;
-  credits?: number;
-  concurrentTasks?: number;
-  level?: string;
-  popular?: boolean;
+  popular: boolean;
+  beta: boolean;
+  level: string;
+  order: number;
+  features: PricingFeature[];
 }
 
 interface PricingCardProps {
   tier: PricingTier;
-  paymentFrequency: string;
 }
 
-export function PricingCard({ tier, paymentFrequency }: PricingCardProps) {
-  const price = tier.price[paymentFrequency];
-  const isHighlighted = tier.highlighted || tier.popular;
+export function PricingCard({ tier }: PricingCardProps) {
+  const price = tier.monthlyPrice;
+  const isHighlighted = tier.popular;
 
   return (
     <Card className="flex w-full flex-col justify-between rounded-3xl border border-zinc-200 dark:border-white/10 dark:bg-transparent bg-white shadow-sm p-7 backdrop-blur-[2px] min-h-[400px]">
@@ -52,33 +59,27 @@ export function PricingCard({ tier, paymentFrequency }: PricingCardProps) {
         </div>
 
         <div className="mt-12 flex items-start gap-3">
-          {typeof price === "number" ? (
-            <>
-              <span className="text-7xl font-bold text-zinc-900 dark:text-white">${price}</span>
-              <div className="flex flex-col">
-                <span className="text-xs text-zinc-900 dark:text-white -mt-3 uppercase">
-                  per minute
-                </span>
-                <div className="text-xs text-zinc-600 dark:text-zinc-400 mt-4 text-left uppercase">
-                  {tier.name === "Zara: Roleplay Agent" ? (
-                    <>
-                      1 hour<br />
-                      per month<br />
-                      minimum
-                    </>
-                  ) : (
-                    <>
-                      5 hours<br />
-                      per month<br />
-                      minimum
-                    </>
-                  )}
-                </div>
-              </div>
-            </>
-          ) : (
-            <span className="text-7xl font-bold text-zinc-900 dark:text-white">{price}</span>
-          )}
+          <span className="text-7xl font-bold text-zinc-900 dark:text-white">${price}</span>
+          <div className="flex flex-col">
+            <span className="text-xs text-zinc-900 dark:text-white -mt-3 uppercase">
+              per minute
+            </span>
+            <div className="text-xs text-zinc-600 dark:text-zinc-400 mt-4 text-left uppercase">
+              {tier.name.includes("Zara") ? (
+                <>
+                  1 hour<br />
+                  per month<br />
+                  minimum
+                </>
+              ) : (
+                <>
+                  5 hours<br />
+                  per month<br />
+                  minimum
+                </>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
