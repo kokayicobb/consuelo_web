@@ -40,7 +40,7 @@ export function Header() {
         <div className="container flex h-16 items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
-            <span className="text-xl font-semibold">consuelo</span>
+            <span className="text-xl font-semibold text-primary">consuelo</span>
           </Link>
 
           {/* Right side items */}
@@ -74,31 +74,31 @@ export function Header() {
       <div className="container flex flex-1">
         <div className="w-48 pt-8">
           <nav className="flex flex-col space-y-4">
-            <Link href="/stories" className="text-sm hover:text-primary transition-colors">
+            <Link href="/stories" className="text-sm text-primary hover:text-accent transition-colors">
               Stories
             </Link>
-            <Link href="/safety" className="text-sm hover:text-primary transition-colors">
+            <Link href="/safety" className="text-sm text-primary hover:text-accent transition-colors">
               Safety
             </Link>
-            <Link href="/chatgpt" className="text-sm hover:text-primary transition-colors">
+            <Link href="/chatgpt" className="text-sm text-primary hover:text-accent transition-colors">
               ChatGPT
             </Link>
-            <Link href="/sora" className="text-sm hover:text-primary transition-colors">
+            <Link href="/sora" className="text-sm text-primary hover:text-accent transition-colors">
               Sora
             </Link>
-            <Link href="/api" className="text-sm hover:text-primary transition-colors">
+            <Link href="/api" className="text-sm text-primary hover:text-accent transition-colors">
               API Platform
             </Link>
-            <Link href="/business" className="text-sm hover:text-primary transition-colors">
+            <Link href="/business" className="text-sm text-primary hover:text-accent transition-colors">
               For Business
             </Link>
-            <Link href="/stories" className="text-sm hover:text-primary transition-colors">
+            <Link href="/stories" className="text-sm text-primary hover:text-accent transition-colors">
               Stories
             </Link>
-            <Link href="/company" className="text-sm hover:text-primary transition-colors">
+            <Link href="/company" className="text-sm text-primary hover:text-accent transition-colors">
               Company
             </Link>
-            <Link href="/news" className="text-sm hover:text-primary transition-colors">
+            <Link href="/news" className="text-sm text-primary hover:text-accent transition-colors">
               News
             </Link>
           </nav>

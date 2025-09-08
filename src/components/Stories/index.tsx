@@ -81,7 +81,7 @@ const Stories: React.FC<StoriesProps> = ({ features }) => {
   )
 
   return (
-    <div className="mx-auto max-w-7xl px-8 py-24">
+    <div id="stories" className="mx-auto max-w-7xl px-8 py-24">
       <div className="mb-8 flex items-center justify-between relative z-20">
         <h2 className="text-2xl font-bold">Stories</h2>
         <button 

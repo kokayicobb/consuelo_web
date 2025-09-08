@@ -51,10 +51,11 @@ export const themeConfig: ThemeConfig = {
     items: [
       { name: "Zara", href: "/zara" },
       { name: "Mercury", href: "/mercury" },
-      { name: "Pricing", href: "/pricing" },
+     
       { name: "Use Cases", href: "/use-cases" },
       { name: "Stories", href: "/stories" },
-      { name: "Investors", href: "/investors" },
+      { name: "Investors", href: "#contact" },
+      { name: "Pricing", href: "/pricing" },
     ],
   },
   buttons: {
@@ -64,7 +65,7 @@ export const themeConfig: ThemeConfig = {
     },
     auth: {
       signIn: "Sign In",
-      signUp: "Sign Up",
+      signUp: "Start free trial",
       goToApp: "Go to App",
     },
   },

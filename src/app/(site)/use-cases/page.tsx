@@ -2,6 +2,8 @@
 import { Metadata } from "next";
 import { client } from "@/sanity/lib/client";
 import UseCasesGrid from "./UseCasesGrid";
+import Faq from "@/components/Faq";
+import Pricing from "@/components/Pricing";
 
 // Type definitions
 interface UseCase {
@@ -17,7 +19,7 @@ interface UseCase {
 }
 
 export const metadata: Metadata = {
-  title: 'Use Cases - Consuelo',
+  title: 'Use Cases',
   description: 'Explore all our customer use cases and success stories.',
 };
 
@@ -53,6 +55,9 @@ export default async function UseCasesPage() {
         </div>
         
         <UseCasesGrid useCases={useCases} />
+        <div className="h-32"></div>
+        <Pricing />
+        <Faq />
       </div>
     </main>
   );
