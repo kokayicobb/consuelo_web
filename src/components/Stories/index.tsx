@@ -127,8 +127,8 @@ const Stories: React.FC<StoriesProps> = ({ features }) => {
                     className="opacity-80"
                   />
                 </div>
-                <h3 className="text-2xl font-semibold mb-4">View all stories</h3>
-                <div className="transition-transform group-hover:translate-x-2">
+                <h3 className="text-2xl font-semibold mb-4 text-foreground">View all stories</h3>
+                <div className="transition-transform group-hover:translate-x-2 text-foreground">
                   <svg 
                     width="24" 
                     height="24" 
