@@ -36,13 +36,15 @@ const Footer = () => {
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-3">
           <div>
             <div className="flex items-center gap-4">
-              <img
-                src="/apple-touch-icon.png"
-                alt="Consuelo Logo"
-                className="h-12 w-auto text-muted-foreground [&>path]:fill-current"
-              />
+              <Link href="/">
+                <img
+                  src="/apple-touch-icon.png"
+                  alt="Consuelo Logo"
+                  className="h-12 w-auto text-muted-foreground [&>path]:fill-current cursor-pointer hover:opacity-80 transition-opacity"
+                />
+              </Link>
               <span className="text-2xl font-medium">consuelo</span>
-              </div>
+            </div>
 <p className="mt-5 max-w-xs text-xs text-muted-foreground">
   Consuelo, derived from the Spanish word for "consolation," 
   is an AI layer that turns your insights into actions.
@@ -59,21 +61,21 @@ const Footer = () => {
               <nav className="mt-5 flex flex-col space-y-3 text-sm text-muted-foreground">
                 <Link
                   className="flex items-center gap-1 transition-colors hover:text-accent"
-                  href="/virtual-try-on"
+                  href="https://www.linkedin.com/company/consuelo/"
                 >
                   <span>LinkedIn</span>
                   <ArrowUpRight className="h-4 w-4" />
                 </Link>
                 <Link
                   className="flex items-center gap-1 transition-colors hover:text-accent"
-                  href="/playground"
+                  href="https://www.instagram.com/consuelohq?igsh=bG9ybmVrMGpxaW54&utm_source=qr"
                 >
                   <span>Instagram</span>
                   <ArrowUpRight className="h-4 w-4" />
                 </Link>
                 <Link
                   className="flex items-center gap-1 transition-colors hover:text-accent"
-                  href="/playground"
+                  href=""
                 >
                   <span>X (Twitter)</span>
                   <ArrowUpRight className="h-4 w-4" />
@@ -97,7 +99,7 @@ const Footer = () => {
                 </Link>
                 <Link
                   className="transition-colors hover:text-accent"
-                  href="/careers"
+                  href="https://www.linkedin.com/in/kokayicobb"
                 >
                   Careers
                 </Link>
