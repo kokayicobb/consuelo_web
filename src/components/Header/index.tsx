@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Menu, Search } from "lucide-react";
+import { Menu, Search, PanelRight } from "lucide-react";
 import ThemeToggler from "./ThemeToggler";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { usePathname } from "next/navigation";
@@ -56,7 +56,7 @@ export function Header() {
             <div className="relative h-8 w-[100px]">
               <span
                 className={cn(
-                  "absolute inset-0 flex items-center text-2xl font-semibold transition-all duration-500 ease-in-out",
+                  "absolute inset-0 flex items-center text-2xl font-semibold transition-all duration-500 ease-in-out text-primary",
                   isScrolled
                     ? "translate-y-2 opacity-0"
                     : "translate-y-0 opacity-100",
@@ -82,15 +82,15 @@ export function Header() {
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon">
-                  <Menu className="h-5 w-5" />
+                  <PanelRight className="h-6 w-6 text-primary" />
                   <span className="sr-only">Toggle menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[240px] p-0">
+              <SheetContent side="right" className="w-[240px] p-0 bg-transparent backdrop-blur-md border-l border-border/20 [&_button[data-sheet-close]]:text-white [&_button[data-sheet-close]_svg]:text-white">
                 <div className="flex h-full flex-col">
-                  <div className="border-b p-4">
+                  <div className="border-b border-white/20 p-4">
                     <Link href="/" className="flex items-center">
-                      <span className="text-xl font-semibold">{themeConfig.branding.name}</span>
+                      <span className="text-xl font-semibold text-white">{themeConfig.branding.name}</span>
                     </Link>
                   </div>
                   <nav className="flex-1 overflow-auto p-4">
@@ -98,21 +98,21 @@ export function Header() {
                       <Link
                         key={item.name}
                         href={item.href}
-                        className="block py-3 text-sm transition-colors hover:text-primary"
+                        className="block py-3 text-sm transition-colors hover:text-white/80 text-white"
                       >
                         {item.name}
                       </Link>
                     ))}
-                    <div className="mt-6 border-t pt-6">
+                    <div className="mt-6 border-t border-white/20 pt-6">
                       {/* Mobile auth buttons */}
                       <SignedOut>
                         <SignInButton mode="modal">
-                          <button className="block w-full py-3 text-left text-sm transition-colors hover:text-primary">
+                          <button className="block w-full py-3 text-left text-sm transition-colors hover:text-white/80 text-white">
                             {themeConfig.buttons.auth.signIn}
                           </button>
                         </SignInButton>
                         <SignUpButton mode="modal">
-                          <button className="block w-full py-3 text-left text-sm transition-colors hover:text-primary">
+                          <button className="block w-full py-3 text-left text-sm transition-colors hover:text-white/80 text-white">
                             {themeConfig.buttons.auth.signUp}
                           </button>
                         </SignUpButton>
@@ -120,21 +120,15 @@ export function Header() {
                       <SignedIn>
                         <Link
                           href="/app"
-                          className="block py-3 text-sm transition-colors hover:text-primary"
+                          className="block py-3 text-sm transition-colors hover:text-white/80 text-white"
                         >
                           {themeConfig.buttons.auth.goToApp}
                         </Link>
                       </SignedIn>
-                      <div className="flex items-center justify-between">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex-1 justify-start bg-white px-2 py-3 text-black mr-2"
-                        >
-                          <Search className="mr-2 h-4 w-4 opacity-70" />
-                          <span>{themeConfig.buttons.search.text}</span>
-                        </Button>
-                        <ThemeToggler />
+                      <div className="flex items-center justify-start">
+                        <div className="[&_button]:text-white [&_svg]:text-white">
+                          <ThemeToggler />
+                        </div>
                       </div>
                     </div>
                   </nav>
@@ -149,7 +143,7 @@ export function Header() {
             <Button 
               variant="ghost" 
               size="icon"
-              className="h-8 w-8 text-body-color duration-300 dark:text-white"
+              className="h-8 w-8 text-primary duration-300"
             >
               <Search className="h-[22px] w-[22px]" />
               <span className="sr-only">{themeConfig.buttons.search.ariaLabel}</span>
@@ -187,7 +181,7 @@ export function Header() {
               <Link
                 key={item.name}
                 href={item.href}
-                className="py-3 text-sm transition-colors hover:text-primary"
+                className="py-3 text-sm transition-colors hover:text-accent text-primary"
               >
                 {item.name}
               </Link>
