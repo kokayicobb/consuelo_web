@@ -14,6 +14,7 @@ import { themeConfig } from "@/lib/theme";
 
 export function Header() {
   const [isScrolled, setIsScrolled] = React.useState(false);
+  const [isSheetOpen, setIsSheetOpen] = React.useState(false);
   const pathname = usePathname();
 
   // Check if we're in a dashboard or app route
@@ -79,7 +80,7 @@ export function Header() {
 
           {/* Mobile menu trigger */}
           <div className="md:hidden">
-            <Sheet>
+            <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon">
                   <PanelRight className="h-6 w-6 text-primary" />
@@ -99,6 +100,7 @@ export function Header() {
                         key={item.name}
                         href={item.href}
                         className="block py-3 text-sm transition-colors hover:text-white/80 text-white"
+                        onClick={() => setIsSheetOpen(false)}
                       >
                         {item.name}
                       </Link>
@@ -121,6 +123,7 @@ export function Header() {
                         <Link
                           href="/app"
                           className="block py-3 text-sm transition-colors hover:text-white/80 text-white"
+                          onClick={() => setIsSheetOpen(false)}
                         >
                           {themeConfig.buttons.auth.goToApp}
                         </Link>

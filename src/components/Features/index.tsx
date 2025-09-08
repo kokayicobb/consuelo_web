@@ -133,6 +133,7 @@ export function Features({ features }: FeaturesProps) {
 
   return (
     <section
+      id="features"
       className="bg-transparent pt-8 sm:pt-12 pb-8 sm:pb-12"
       style={{ minHeight: "0vh", paddingBottom: "0vh" }}
     >

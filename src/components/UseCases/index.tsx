@@ -59,7 +59,7 @@ export default function UseCases({ useCases }: UseCasesProps) {
   }, [insuranceUseCases, b2bUseCases]);
 
   return (
-    <div className="mx-auto max-w-7xl px-8 py-24">
+    <div id="use-cases" className="mx-auto max-w-7xl px-8 py-24">
       <div className="mb-12 flex items-center justify-between">
         <h2 className="text-2xl font-bold">Use Cases</h2>
         <Link href="/use-cases" className="text-sm hover:underline">

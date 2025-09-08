@@ -2,6 +2,8 @@
 import { Metadata } from "next";
 import { client } from "@/sanity/lib/client";
 import StoriesGrid from "./StoriesGrid";
+import Faq from "@/components/Faq";
+import Pricing from "@/components/Pricing";
 
 // Type definitions
 interface Feature {
@@ -66,6 +68,9 @@ export default async function StoriesPage() {
         </div>
         
         <StoriesGrid features={features} />
+        <div className="h-32"></div>
+        <Pricing />
+        <Faq />
       </div>
     </main>
   );
