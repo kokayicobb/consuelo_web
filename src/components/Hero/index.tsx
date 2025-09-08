@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import LiquidOrbButton from "@/components/roleplay/LiquidOrbButton";
 import { HoverBorderGradient } from "./hover-button";
 
@@ -57,14 +58,15 @@ export function WavyBackgroundDemo() {
             Call Analytics
           </a>
         
-          <HoverBorderGradient
-            containerClassName="rounded-full"
-            as="a"
-            href="/roleplay"
-            className="dark:bg-black bg-white text-black dark:text-white flex items-center space-x-2"
-          >
-            <span>Talk to Consuelo</span>
-          </HoverBorderGradient>
+          <Link href="/roleplay">
+            <HoverBorderGradient
+              containerClassName="rounded-full"
+              as="button"
+              className="dark:bg-black bg-white text-black dark:text-white flex items-center space-x-2"
+            >
+              <span>Talk to Consuelo</span>
+            </HoverBorderGradient>
+          </Link>
         
         </motion.div>
       </div>
