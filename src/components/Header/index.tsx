@@ -82,8 +82,8 @@ export function Header() {
           <div className="md:hidden">
             <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <PanelRight className="h-6 w-6 text-primary" />
+                <Button variant="ghost" className="!h-8 !w-8 !p-4">
+                  <PanelRight className="!h-5 !w-5 text-primary" />
                   <span className="sr-only">Toggle menu</span>
                 </Button>
               </SheetTrigger>
