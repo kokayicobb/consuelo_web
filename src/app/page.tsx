@@ -45,6 +45,7 @@ interface UseCase {
   loomVideoUrl: string
   altText: string
   order: number
+  productName?: "Zara" | "Mercury"
 };
 
 export const metadata: Metadata = {
@@ -77,7 +78,8 @@ const USE_CASES_QUERY = `*[_type == "useCase"] | order(order asc) {
   slug,
   loomVideoUrl,
   altText,
-  order
+  order,
+  productName
 }`;
 
 const options = { next: { revalidate: process.env.NODE_ENV === 'development' ? 0 : 30 } };

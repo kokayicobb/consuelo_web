@@ -59,6 +59,18 @@ export const useCaseType = defineType({
       type: 'number',
       validation: (Rule) => Rule.required().min(0),
     }),
+    defineField({
+      name: 'productName',
+      title: 'Product Name',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'Zara', value: 'Zara' },
+          { title: 'Mercury', value: 'Mercury' },
+        ],
+      },
+      description: 'Select the product associated with this use case',
+    }),
   ],
   preview: {
     select: {

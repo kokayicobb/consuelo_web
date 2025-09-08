@@ -16,7 +16,7 @@ export const generateLoomUrls = (loomVideoUrl: string, options: VideoOptions = {
   const videoId = match[1];
   const { width = 640, height = 360, autoplay = false, hideControls = true } = options;
 
-  const embedUrl = `https://www.loom.com/embed/${videoId}?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true&autoplay=${autoplay}&hide_controls=${hideControls}`;
+  const embedUrl = `https://www.loom.com/embed/${videoId}?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true&autoplay=${autoplay}&hide_controls=${hideControls}&hide_speed=true&hide_transcript=true&hide_sidebar=true&hide_watermark=true`;
   const thumbnailUrl = `https://cdn.loom.com/sessions/thumbnails/${videoId}-${width}x${height}.jpg`;
 
   return { embedUrl, thumbnailUrl };

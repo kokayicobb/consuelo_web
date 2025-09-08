@@ -52,7 +52,7 @@ export const themeConfig: ThemeConfig = {
       { name: "Zara", href: "/zara" },
       { name: "Mercury", href: "/mercury" },
       { name: "Pricing", href: "/pricing" },
-      { name: "Use Cases", href: "/platform" },
+      { name: "Use Cases", href: "/use-cases" },
       { name: "Stories", href: "/stories" },
       { name: "Investors", href: "/investors" },
     ],
