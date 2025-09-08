@@ -5,7 +5,7 @@ import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title:
-    "Pricing Page | Consuelo - AI-Powered Fit Technology",
+    "Start a 14-day free trial of Consuelo Today",
   description: "This is pricing page description",
 };
 
