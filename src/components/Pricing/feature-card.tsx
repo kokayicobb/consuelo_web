@@ -15,12 +15,13 @@ export function FeatureCard({ tier }: FeatureCardProps) {
       </h3>
       <div className="space-y-4">
         {tier.features.map((feature, index) => {
+          const featureName = typeof feature === 'string' ? feature : feature.name;
           // Check if this is the credits feature
-          const isCreditsFeature = feature.includes("cost per hour");
+          const isCreditsFeature = featureName.includes("cost per hour");
 
           if (isCreditsFeature) {
             // Extract the number from the feature text
-            const creditsMatch = feature.match(/(\d+,\d+)/);
+            const creditsMatch = featureName.match(/(\d+,\d+)/);
             const creditsText = creditsMatch ? creditsMatch[1] : "";
 
             return (
@@ -43,11 +44,11 @@ export function FeatureCard({ tier }: FeatureCardProps) {
           }
 
           // Check if this is the concurrent tasks feature
-          const isTasksFeature = feature.includes("tasks concurrently");
+          const isTasksFeature = featureName.includes("tasks concurrently");
 
           if (isTasksFeature) {
             // Extract the number from the feature text
-            const tasksMatch = feature.match(/(\d+)/);
+            const tasksMatch = featureName.match(/(\d+)/);
             const tasksNumber = tasksMatch ? tasksMatch[1] : "";
 
             return (
@@ -68,7 +69,7 @@ export function FeatureCard({ tier }: FeatureCardProps) {
           return (
             <div key={index} className="flex gap-3">
               <Check className="mt-0.5 h-5 w-5 flex-shrink-0 text-zinc-600 dark:text-zinc-300" />
-              <div className="text-zinc-700 dark:text-zinc-300">{feature}</div>
+              <div className="text-zinc-700 dark:text-zinc-300">{featureName}</div>
             </div>
           );
         })}

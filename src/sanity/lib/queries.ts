@@ -15,3 +15,31 @@ export const FAQS_BY_CATEGORY_QUERY = groq`*[_type == "faq" && category == $cate
   category,
   order
 }`
+
+export const PRICING_PLANS_QUERY = groq`*[_type == "pricingPlan"] | order(order asc) {
+  _id,
+  name,
+  slug,
+  monthlyPrice,
+  description,
+  cta,
+  popular,
+  beta,
+  level,
+  order,
+  "features": features[]-> {
+    _id,
+    name,
+    description,
+    category,
+    order
+  }
+}`
+
+export const PRICING_FEATURES_QUERY = groq`*[_type == "pricingFeature"] | order(category asc, order asc) {
+  _id,
+  name,
+  description,
+  category,
+  order
+}`
