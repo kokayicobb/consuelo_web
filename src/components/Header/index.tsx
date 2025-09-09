@@ -121,7 +121,7 @@ export function Header() {
                       </SignedOut>
                       <SignedIn>
                         <Link
-                          href="/app"
+                          href="/roleplay"
                           className="block py-3 text-sm transition-colors hover:text-white/80 text-white"
                           onClick={() => setIsSheetOpen(false)}
                         >
@@ -166,7 +166,7 @@ export function Header() {
             </SignedOut>
 
             <SignedIn>
-              <Link href="/app">
+              <Link href="/roleplay">
                 <Button variant="default">
                   {themeConfig.buttons.auth.goToApp}
                 </Button>

@@ -26,6 +26,8 @@ import { UserButton, SignIn, useUser } from "@clerk/nextjs";
 import Image from "next/image";
 import LiquidOrbButton from "@/components/roleplay/LiquidOrbButton";
 import RoleplaySettings from "@/components/roleplay/settings";
+import CreditsDisplay from "@/components/roleplay/CreditsDisplay";
+import ThemeToggler from "@/components/Header/ThemeToggler";
 
 interface Message {
   role: "user" | "assistant";
@@ -97,7 +99,12 @@ export default function RoleplayPage() {
 
   // Modal states
   const [isTranscriptOpen, setIsTranscriptOpen] = useState(false);
-  const endCall = useCallback(() => {
+  
+  // Usage tracking states
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [userCredits, setUserCredits] = useState(0);
+  const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
+  const endCall = useCallback(async () => {
     setIsCallActive(false);
     setIsSessionActive(false);
     setCallStatus("idle");
@@ -118,8 +125,32 @@ export default function RoleplayPage() {
       streamRef.current = null;
     }
 
-    toast.success("Call ended");
-  }, []);
+    // End usage session and deduct credits
+    if (currentSessionId) {
+      try {
+        const response = await fetch("/api/usage/end-session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionId: currentSessionId }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          toast.success(
+            `Call ended. Session: ${data.durationMinutes}min, Cost: $${data.creditsUsed.toFixed(2)}`
+          );
+          setUserCredits(data.remainingCredits);
+        }
+      } catch (error) {
+        console.error("Error ending usage session:", error);
+      }
+      
+      setCurrentSessionId(null);
+      setSessionStartTime(null);
+    } else {
+      toast.success("Call ended");
+    }
+  }, [currentSessionId, isRecording]);
   // Refs for audio functionality
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -166,6 +197,26 @@ export default function RoleplayPage() {
     setCallStatus("connecting");
 
     try {
+      // Start usage session and check credits
+      const usageResponse = await fetch("/api/usage/start-session", {
+        method: "POST",
+      });
+
+      if (!usageResponse.ok) {
+        const errorData = await usageResponse.json();
+        if (usageResponse.status === 402) {
+          toast.error("Insufficient credits. Please add credits to continue.");
+        } else {
+          toast.error(errorData.error || "Failed to start session");
+        }
+        setCallStatus("idle");
+        return;
+      }
+
+      const usageData = await usageResponse.json();
+      setCurrentSessionId(usageData.sessionId);
+      setSessionStartTime(new Date());
+
       // Request microphone permissions
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -563,7 +614,7 @@ export default function RoleplayPage() {
   };
 
   return (
-    <div className="h-screen bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-900 dark:to-purple-900 flex flex-col overflow-hidden">
+    <div className="h-screen bg-transparent flex flex-col overflow-hidden">
       {/* Header with logo, centered status, and user controls */}
       {!isCallActive && (
         <div className="relative flex items-center justify-between p-4 sm:p-6 flex-shrink-0">
@@ -603,8 +654,9 @@ export default function RoleplayPage() {
             </Badge>
           </div>
 
-          {/* Right side - Settings and User Button */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          {/* Credits and Settings - Right side, inline with status */}
+          <div className="absolute right-4 sm:right-6 flex items-center gap-2 sm:gap-3">
+            <CreditsDisplay onCreditsUpdate={setUserCredits} />
             <RoleplaySettings
               scenario={scenario}
               setScenario={setScenario}
@@ -613,6 +665,9 @@ export default function RoleplayPage() {
               setSelectedVoiceId={setSelectedVoiceId}
               isLoadingVoices={isLoadingVoices}
             />
+            <div className="mr-2">
+              <ThemeToggler />
+            </div>
             <div className="scale-75 sm:scale-100">
               <UserButton />
             </div>
@@ -701,6 +756,12 @@ export default function RoleplayPage() {
               right corner before starting a call
             </p>
           )}
+          
+          {scenario.trim() && userCredits < 0.45 && (
+            <p className="mt-4 max-w-sm text-center text-sm text-orange-600">
+              ⚠️ Low credits detected. Add more credits to ensure uninterrupted sessions.
+            </p>
+          )}
         </div>
       ) : (
         /* During Call - Unified Layout */
@@ -771,12 +832,12 @@ export default function RoleplayPage() {
                   e.key === "Enter" && !e.shiftKey && sendTextMessage()
                 }
                 disabled={isLoading || !isCallActive}
-                className="text-slate placeholder:text-slate/50 flex-1 border-white/30 bg-white/20 backdrop-blur-sm dark:border-white/20 dark:bg-black/20"
+                className="placeholder:text-slate/50 flex-1 border-white/30 bg-white/20 backdrop-blur-sm dark:border-white/20 dark:bg-black/20"
               />
               <Button
                 onClick={sendTextMessage}
                 disabled={isLoading || !currentMessage.trim() || !isCallActive}
-                className="text-slate border-white/30 bg-white/20 backdrop-blur-sm hover:bg-white/30"
+                className=" border-white/30 bg-white/20 backdrop-blur-sm hover:bg-white/30"
                 variant="outline"
               >
                 Send
@@ -794,7 +855,7 @@ export default function RoleplayPage() {
                 className={
                   isMuted
                     ? ""
-                    : "text-slate border-white/30 bg-white/20 backdrop-blur-sm hover:bg-white/30"
+                    : "border-white/30 bg-white/20 backdrop-blur-sm hover:bg-white/30"
                 }
               >
                 {isMuted ? (
@@ -814,7 +875,7 @@ export default function RoleplayPage() {
                 <Button
                   onClick={stopCurrentAudio}
                   variant="outline"
-                  className="text-slate border-white/30 bg-white/20 backdrop-blur-sm hover:bg-white/30"
+                  className="border-white/30 bg-white/20 backdrop-blur-sm hover:bg-white/30"
                 >
                   <VolumeX className="mr-2 h-4 w-4" />
                   Stop AI
@@ -834,7 +895,7 @@ export default function RoleplayPage() {
                 onClick={getFeedback}
                 variant="outline"
                 disabled={isLoading || messages.length === 0}
-                className="text-slate border-white/30 bg-white/20 backdrop-blur-sm hover:bg-white/30"
+                className="border-white/30 bg-white/20 backdrop-blur-sm hover:bg-white/30"
               >
                 {isLoading ? "Generating..." : "Get Feedback"}
               </Button>
@@ -848,7 +909,7 @@ export default function RoleplayPage() {
               <CollapsibleTrigger asChild>
                 <Button
                   variant="outline"
-                  className="text-slate w-full border-white/20 bg-white/10 backdrop-blur-sm hover:bg-white/20"
+                  className="w-full border-white/20 bg-white/10 backdrop-blur-sm hover:bg-white/20"
                 >
                   <span className="mr-2">Live Transcript</span>
                   {isTranscriptOpen ? (
@@ -896,20 +957,20 @@ export default function RoleplayPage() {
       
       {/* Footer - Fixed at bottom */}
       <footer className="py-3 px-6 flex-shrink-0">
-        <div className="flex flex-row items-center justify-center gap-2 text-xs text-slate-700">
+        <div className="flex flex-row items-center justify-center gap-2 text-xs">
           <div className="flex items-center gap-1">
-            <a href="https://consuelohq.com" className="underline text-slate-800 hover:text-slate-600 transition-colors">
+            <a href="https://consuelohq.com" className="underline  transition-colors">
               Consuelo v0.0.7
             </a>
-            <span className="text-slate-800 hidden sm:inline">-</span>
-            <span className="text-slate-800 hidden sm:inline">The Modern Workspace for Sales</span>
+            <span className=" hidden sm:inline">-</span>
+            <span className=" hidden sm:inline">The Modern Workspace for Sales</span>
           </div>
           <div className="h-2.5 w-px bg-slate-400"></div>
-          <a href="https://workforce.consuelohq.com/" className="underline text-slate-800 hover:text-slate-600 transition-colors">
+          <a href="https://workforce.consuelohq.com/" className="underline transition-colors">
             Employees
           </a>
           <div className="h-2.5 w-px bg-slate-400"></div>
-          <a href="https://calls.consuelohq.com/" className="underline text-slate-800 hover:text-slate-600 transition-colors">
+          <a href="https://calls.consuelohq.com/" className="underline transition-colors">
             Calls
           </a>
         </div>
