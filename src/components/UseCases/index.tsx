@@ -2,191 +2,225 @@
 import Image from "next/image";
 import Link from "next/link";
 import React, { useState } from "react";
+import { urlFor } from "@/sanity/lib/image";
+import { useOptimizedLoomVideo } from "@/hooks/use-cached-video";
+import { useIntersectionObserver } from "@/hooks/use-intersection-observer";
 
-export default function UseCases() {
-  const [activeTab, setActiveTab] = useState("ecommerce");
+interface UseCase {
+  _id: string;
+  title: string;
+  description: string;
+  category: "insurance" | "b2b";
+  slug: { current: string };
+  loomVideoUrl: string;
+  altText: string;
+  order: number;
+  productName?: "Zara" | "Mercury";
+}
+
+interface UseCasesProps {
+  useCases: UseCase[];
+}
+
+export default function UseCases({ useCases }: UseCasesProps) {
+  const [activeTab, setActiveTab] = useState("insurance");
+  
+  // Filter and sort use cases by category
+  const insuranceUseCases = useCases
+    .filter(useCase => useCase.category === "insurance")
+    .sort((a, b) => a.order - b.order);
+    
+  const b2bUseCases = useCases
+    .filter(useCase => useCase.category === "b2b")
+    .sort((a, b) => a.order - b.order);
+
+  // Preload video thumbnails for visible tab only
+  React.useEffect(() => {
+    const currentUseCases = activeTab === "insurance" ? insuranceUseCases : b2bUseCases;
+    
+    // Use requestIdleCallback to defer preloading until browser is idle
+    const preloadThumbnails = () => {
+      currentUseCases.forEach((useCase, index) => {
+        if (useCase.loomVideoUrl && index < 4) { // Only preload first 4 videos
+          const loomId = useCase.loomVideoUrl.match(/loom\.com\/share\/([a-zA-Z0-9]+)/)?.[1];
+          if (loomId) {
+            // Preload thumbnail image instead of full iframe
+            const img = new window.Image();
+            img.src = `https://cdn.loom.com/sessions/thumbnails/${loomId}-with-play.gif`;
+          }
+        }
+      });
+    };
+
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(preloadThumbnails);
+    } else {
+      setTimeout(preloadThumbnails, 100);
+    }
+  }, [activeTab, insuranceUseCases, b2bUseCases]);
 
   return (
-    <div className="mx-auto max-w-7xl px-8 py-64">
+    <div id="use-cases" className="mx-auto max-w-7xl px-8 py-24">
       <div className="mb-12 flex items-center justify-between">
         <h2 className="text-2xl font-bold">Use Cases</h2>
-        <Link href="/platform" className="text-sm hover:underline">
-          Learn More
+        <Link href="/use-cases" className="text-sm hover:underline">
+          View All
         </Link>
       </div>
 
       <div className="mb-8 flex justify-center">
         <div className="inline-flex rounded-lg border p-1">
           <button
-            onClick={() => setActiveTab("ecommerce")}
-            className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium ${
-              activeTab === "ecommerce"
+            onClick={() => setActiveTab("insurance")}
+            className={`flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium flex-1 min-w-[80px] ${
+              activeTab === "insurance"
                 ? "bg-primary text-primary-foreground"
                 : "bg-transparent hover:bg-muted"
             }`}
           >
-            <span>E-commerce</span>
+            <span>Insurance</span>
           </button>
           <button
-            onClick={() => setActiveTab("fitness")}
-            className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium ${
-              activeTab === "fitness"
+            onClick={() => setActiveTab("b2b")}
+            className={`flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium flex-1 min-w-[80px] ${
+              activeTab === "b2b"
                 ? "bg-primary text-primary-foreground"
                 : "bg-transparent hover:bg-muted"
             }`}
           >
-            <span>Health & Fitness</span>
+            <span>B2B</span>
           </button>
         </div>
       </div>
 
-      {activeTab === "ecommerce" ? (
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-          {/* E-commerce Use Case 1 */}
-          <UseCaseItem
-            href="/platform"
-            imageSrc="/StablityFlowers2.png"
-            altText="Marketing campaign orchestration"
-            title="Create Klaviyo flows using natural language"
-            description="Marketing | Revenue Lift"
-            
-          />
-
-          {/* E-commerce Use Case 2 */}
-          <UseCaseItem
-            href="/platform"
-            imageSrc="/StablityMountains1.png"
-            altText="Customer acquisition optimization"
-            title="Customer acquisition optimization"
-            description="Growth | Customer Expansion"
-          />
-          
-          {/* E-commerce Use Case 3 */}
-          <UseCaseItem
-            href="/use-cases/customer-lifetime-value-prediction"
-            imageSrc="/StablitySky1.png"
-            altText="Automatic product tagging for search"
-            title="Automatic product tagging for search"
-            description="Analytics | Strategic Planning"
-          />
-
-          {/* E-commerce Use Case 4 */}
-          <UseCaseItem
-            href="/platform"
-            imageSrc="/StablityWater1.png"
-            altText="Inventory management dashboard"
-            title="CLV-Based product bundling"
-            description="Retail | Brand Success"
-          />
-
-          {/* E-commerce Use Case 5 */}
-          <UseCaseItem
-            href="/platform"
-            imageSrc="/StablityDesert1.png"
-            altText="Pricing optimization dashboard"
-            title="Real time pricing optimization"
-            description="Strategy | Margin Improvement"
-          />
-
-          {/* E-commerce Use Case 6 */}
-          <UseCaseItem
-            href="/platform"
-            imageSrc="/StablityPicasso1.png"
-            altText="Unified performance dashboard"
-            title="Single performance dashboards"
-            description="Operations | Executive Insights"
-          />
+      {/* Tab Content Container */}
+      <div className="relative">
+        {/* Insurance Use Cases */}
+        <div 
+          className={`grid grid-cols-1 gap-8 md:grid-cols-2 transition-opacity duration-300 ${
+            activeTab === "insurance" ? "opacity-100" : "opacity-0 absolute inset-0 pointer-events-none"
+          }`}
+        >
+          {insuranceUseCases.map((useCase) => (
+            <UseCaseItem
+              key={useCase._id}
+              href={`/${useCase.slug.current}`}
+              loomVideoUrl={useCase.loomVideoUrl}
+              altText={useCase.altText}
+              title={useCase.title}
+              description={useCase.description}
+              productName={useCase.productName}
+            />
+          ))}
         </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-          {/* Health/Fitness Use Case 1 */}
-          <UseCaseItem
-            href="/platform"
-            imageSrc="/StablityFlowers2.png"
-            altText="Intro journey optimization"
-            title="Intro journey optimization & ranking"
-            description="Acquisition | New Member Conversion"
-          />
 
-          {/* Health/Fitness Use Case 2 */}
-          <UseCaseItem
-            href="/platform"
-            imageSrc="/StablityMountains1.png"
-            altText="Member churn prediction"
-            title="Early churn pattern detection"
-            description="Retention | Membership Longevity"
-          />
-          
-          {/* Health/Fitness Use Case 3 */}
-          <UseCaseItem
-            href="/platform"
-            imageSrc="/StablitySky1.png"
-            altText="Instructor performance analytics"
-            title="Instructor performance analytics"
-            description="Management | Team Development"
-          />
-
-          {/* Health/Fitness Use Case 4 */}
-          <UseCaseItem
-            href="/platform"
-            imageSrc="/StablityWater1.png"
-            altText="AI sales outreach"
-            title="AI-assisted sales outreach"
-            description="Sales | Membership Growth"
-          />
-
-          {/* Health/Fitness Use Case 5 */}
-          <UseCaseItem
-            href="/platform"
-            imageSrc="/StablityDesert1.png"
-            altText="Mindbody integration"
-            title="Enhanced Mindbody integration"
-            description="Technology | Operational Efficiency"
-          />
-
-          {/* Health/Fitness Use Case 6 */}
-          <UseCaseItem
-             href="/platform"
-            imageSrc="/StablityPicasso1.png"
-            altText="Class attendance prediction"
-            title="Class attendance prediction"
-            description="Planning | Resource Optimization"
-          />
+        {/* B2B Use Cases */}
+        <div 
+          className={`grid grid-cols-1 gap-8 md:grid-cols-2 transition-opacity duration-300 ${
+            activeTab === "b2b" ? "opacity-100" : "opacity-0 absolute inset-0 pointer-events-none"
+          }`}
+        >
+          {b2bUseCases.map((useCase) => (
+            <UseCaseItem
+              key={useCase._id}
+              href={`/${useCase.slug.current}`}
+              loomVideoUrl={useCase.loomVideoUrl}
+              altText={useCase.altText}
+              title={useCase.title}
+              description={useCase.description}
+              productName={useCase.productName}
+            />
+          ))}
         </div>
-      )}
+      </div>
     </div>
   );
 }
 
-function UseCaseItem({ href, imageSrc, altText, title, description, }) {
+interface UseCaseItemProps {
+  href: string;
+  loomVideoUrl: string;
+  altText: string;
+  title: string;
+  description: string;
+  productName?: "Zara" | "Mercury";
+}
+
+function UseCaseItem({ href, loomVideoUrl, altText, title, description, productName }: UseCaseItemProps) {
+  // Use intersection observer for lazy loading with moderate preloading
+  const { elementRef, shouldLoad } = useIntersectionObserver({
+    rootMargin: '200px', // Start loading 200px before the element enters viewport
+    threshold: 0.1,
+    triggerOnce: true
+  });
+
+  // Use cached Loom video hook with lazy loading
+  const { thumbnailUrl, embedUrl, isLoading, error } = useOptimizedLoomVideo(loomVideoUrl, 'preview', shouldLoad);
+  
+  // Extract Loom video ID from URL as fallback
+  const getLoomVideoId = (url: string) => {
+    if (!url) return null;
+    const match = url.match(/loom\.com\/share\/([a-zA-Z0-9]+)/);
+    return match ? match[1] : null;
+  };
+  
+  const loomVideoId = getLoomVideoId(loomVideoUrl);
+  
   return (
-    <div className="flex flex-col gap-8 md:flex-row">
-      <div className="relative w-full max-w-[200px] shrink-0">
+    <div ref={elementRef} className="flex flex-row gap-4 md:flex-row md:gap-8">
+      <div className="relative w-[160px] md:w-full md:max-w-[200px] shrink-0">
+        {productName && (
+          <div className="text-xs md:text-sm font-medium text-accent text-center mb-2">
+            {productName}
+          </div>
+        )}
         <Link href={href}>
-          <div className="relative aspect-square w-full">
-            <Image
-              src={imageSrc}
-              alt={altText}
-              fill
-              className="rounded-lg object-cover"
-            />
-            <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/20 opacity-0 transition-opacity hover:opacity-100">
-              <span className="px-2 py-1 text-center font-medium text-white">
-                View Case Study
-              </span>
+          <div className="relative aspect-square w-full overflow-hidden rounded-lg">
+            {embedUrl && !isLoading ? (
+              // Use iframe with cached Loom embed URL
+              <>
+                <iframe
+                  src={embedUrl}
+                  className="absolute inset-0 w-full h-full scale-150"
+                  frameBorder="0"
+                  allowFullScreen
+                  style={{ pointerEvents: 'none' }}
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 z-10" /> {/* Overlay to prevent iframe interaction */}
+              </>
+            ) : isLoading ? (
+              <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-600"></div>
+              </div>
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center">
+                <svg
+                  className="w-6 h-6 md:w-12 md:h-12 text-gray-400"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
+                </svg>
+              </div>
+            )}
+            <div className="absolute inset-0 z-20 flex items-center justify-center rounded-lg bg-black/20 opacity-0 transition-opacity hover:opacity-100">
+              <div className="w-8 h-8 md:w-12 md:h-12 bg-white/90 rounded-full flex items-center justify-center">
+                <svg className="w-3 h-3 md:w-4 md:h-4 text-black ml-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                </svg>
+              </div>
             </div>
           </div>
         </Link>
       </div>
-      <div className="flex flex-col justify-center">
+      <div className="flex flex-col justify-center flex-1">
         <Link href={href} className="group">
-          <h3 className="mb-1 text-lg font-medium group-hover:underline">
+          <h3 className="text-base md:text-lg font-medium group-hover:underline">
             {title}
           </h3>
         </Link>
-        <div className="flex items-center text-sm text-gray-600">
-          <span>{description}</span>
-        </div>
       </div>
     </div>
   );

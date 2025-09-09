@@ -22,9 +22,12 @@ import {
   Phone,
   PhoneOff,
 } from "lucide-react";
+import { UserButton, SignIn, useUser } from "@clerk/nextjs";
+import Image from "next/image";
 import LiquidOrbButton from "@/components/roleplay/LiquidOrbButton";
 import RoleplaySettings from "@/components/roleplay/settings";
 import CreditsDisplay from "@/components/roleplay/CreditsDisplay";
+import ThemeToggler from "@/components/Header/ThemeToggler";
 
 interface Message {
   role: "user" | "assistant";
@@ -50,6 +53,8 @@ interface Voice {
 }
 
 export default function RoleplayPage() {
+  const { isSignedIn, isLoaded } = useUser();
+
   useEffect(() => {
     // Set custom attributes on the document body to hide both header and footer
     document.body.setAttribute("data-hide-header", "true");
@@ -365,17 +370,15 @@ export default function RoleplayPage() {
     
     setCurrentTranscript("");
 
-    // Use the current messages state for the API call
-    setMessages(prevMessages => {
-      const userMessage: Message = { role: "user", text: transcript };
-      const updatedMessages = [...prevMessages, userMessage];
-      console.log("🔍 DEBUG: Updated messages with user message:", updatedMessages);
-      
-      // Call API with the updated messages
-      getAIResponseAndUpdateMessages(transcript, updatedMessages);
-      
-      return updatedMessages;
-    });
+    // Add user message to conversation
+    const userMessage: Message = { role: "user", text: transcript };
+    const updatedMessages = [...messages, userMessage];
+    console.log("🔍 DEBUG: Updated messages with user message:", updatedMessages);
+    
+    setMessages(updatedMessages);
+    
+    // Call API with the updated messages
+    await getAIResponseAndUpdateMessages(transcript, updatedMessages);
   };
 
   const getAIResponseAndUpdateMessages = async (transcript: string, currentMessages: Message[]) => {
@@ -611,41 +614,48 @@ export default function RoleplayPage() {
   };
 
   return (
-    <div className="h-screen bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-900 dark:to-purple-900 flex flex-col overflow-hidden">
-      {/* Header with centered status */}
+    <div className="h-screen bg-transparent flex flex-col overflow-hidden">
+      {/* Header with logo, centered status, and user controls */}
       {!isCallActive && (
-        <div className="relative flex items-center justify-center p-4 sm:p-6 flex-shrink-0">
-          {/* Centered Status Badge */}
-          <Badge
-            variant={
-              callStatus === "active" ||
-              callStatus === "listening" ||
-              callStatus === "speaking"
-                ? "default"
-                : "secondary"
-            }
-            className="px-4 py-2 text-sm sm:text-base"
-          >
-            {callStatus === "idle" ? (
-              <>
-                <PhoneOff className="mr-2 h-4 w-4" />
-                Ready to Start
-              </>
-            ) : callStatus === "connecting" ? (
-              <>
-                <Phone className="mr-2 h-4 w-4" />
-                Connecting...
-              </>
-            ) : (
-              <>
-                <Phone className="mr-2 h-4 w-4" />
-                Live Call
-              </>
-            )}
-          </Badge>
+        <div className="relative flex items-center justify-between p-4 sm:p-6 flex-shrink-0">
+          {/* Left side - Logo */}
+          <div className="flex items-center">
+            <Image
+              src="/apple-touch-icon.png"
+              alt="Consuelo Logo"
+              width={32}
+              height={32}
+              className="w-6 h-6 sm:w-8 sm:h-8"
+            />
+          </div>
+
+          {/* Center - Status Badge */}
+          <div className="absolute left-1/2 transform -translate-x-1/2">
+            <Badge
+              variant="white"
+              className="px-2 py-1 text-xs"
+            >
+              {callStatus === "idle" ? (
+                <>
+                  <PhoneOff className="mr-2 h-4 w-4" />
+                  Ready to Start
+                </>
+              ) : callStatus === "connecting" ? (
+                <>
+                  <Phone className="mr-2 h-4 w-4" />
+                  Connecting...
+                </>
+              ) : (
+                <>
+                  <Phone className="mr-2 h-4 w-4" />
+                  Live Call
+                </>
+              )}
+            </Badge>
+          </div>
 
           {/* Credits and Settings - Right side, inline with status */}
-          <div className="absolute right-4 sm:right-6 flex items-center gap-3">
+          <div className="absolute right-4 sm:right-6 flex items-center gap-2 sm:gap-3">
             <CreditsDisplay onCreditsUpdate={setUserCredits} />
             <RoleplaySettings
               scenario={scenario}
@@ -655,6 +665,12 @@ export default function RoleplayPage() {
               setSelectedVoiceId={setSelectedVoiceId}
               isLoadingVoices={isLoadingVoices}
             />
+            <div className="mr-2">
+              <ThemeToggler />
+            </div>
+            <div className="scale-75 sm:scale-100">
+              <UserButton />
+            </div>
           </div>
         </div>
       )}
@@ -663,13 +679,8 @@ export default function RoleplayPage() {
       {isCallActive && (
         <div className="flex justify-center gap-2 p-4 flex-shrink-0">
           <Badge
-            variant={
-              callStatus === "active" ||
-              callStatus === "listening" ||
-              callStatus === "speaking"
-                ? "default"
-                : "secondary"
-            }
+            variant="white"
+            className="text-xs px-2 py-1"
           >
             {callStatus === "idle" ? (
               <>
@@ -689,15 +700,15 @@ export default function RoleplayPage() {
             )}
           </Badge>
           {isRecording && (
-            <Badge variant="destructive" className="animate-pulse">
+            <Badge variant="destructive" className="animate-pulse text-xs px-2 py-1">
               <Mic className="mr-1 h-3 w-3" />
               Recording
             </Badge>
           )}
           {isPlaying && (
-            <Badge variant="default" className="animate-pulse">
+            <Badge variant="white" className="animate-pulse text-xs px-2 py-1">
               <Volume2 className="mr-1 h-3 w-3" />
-              AI Speaking
+              Zara Speaking
             </Badge>
           )}
         </div>
@@ -821,12 +832,12 @@ export default function RoleplayPage() {
                   e.key === "Enter" && !e.shiftKey && sendTextMessage()
                 }
                 disabled={isLoading || !isCallActive}
-                className="text-slate placeholder:text-slate/50 flex-1 border-white/30 bg-white/20 backdrop-blur-sm dark:border-white/20 dark:bg-black/20"
+                className="placeholder:text-slate/50 flex-1 border-white/30 bg-white/20 backdrop-blur-sm dark:border-white/20 dark:bg-black/20"
               />
               <Button
                 onClick={sendTextMessage}
                 disabled={isLoading || !currentMessage.trim() || !isCallActive}
-                className="text-slate border-white/30 bg-white/20 backdrop-blur-sm hover:bg-white/30"
+                className=" border-white/30 bg-white/20 backdrop-blur-sm hover:bg-white/30"
                 variant="outline"
               >
                 Send
@@ -844,7 +855,7 @@ export default function RoleplayPage() {
                 className={
                   isMuted
                     ? ""
-                    : "text-slate border-white/30 bg-white/20 backdrop-blur-sm hover:bg-white/30"
+                    : "border-white/30 bg-white/20 backdrop-blur-sm hover:bg-white/30"
                 }
               >
                 {isMuted ? (
@@ -864,7 +875,7 @@ export default function RoleplayPage() {
                 <Button
                   onClick={stopCurrentAudio}
                   variant="outline"
-                  className="text-slate border-white/30 bg-white/20 backdrop-blur-sm hover:bg-white/30"
+                  className="border-white/30 bg-white/20 backdrop-blur-sm hover:bg-white/30"
                 >
                   <VolumeX className="mr-2 h-4 w-4" />
                   Stop AI
@@ -884,7 +895,7 @@ export default function RoleplayPage() {
                 onClick={getFeedback}
                 variant="outline"
                 disabled={isLoading || messages.length === 0}
-                className="text-slate border-white/30 bg-white/20 backdrop-blur-sm hover:bg-white/30"
+                className="border-white/30 bg-white/20 backdrop-blur-sm hover:bg-white/30"
               >
                 {isLoading ? "Generating..." : "Get Feedback"}
               </Button>
@@ -898,7 +909,7 @@ export default function RoleplayPage() {
               <CollapsibleTrigger asChild>
                 <Button
                   variant="outline"
-                  className="text-slate w-full border-white/20 bg-white/10 backdrop-blur-sm hover:bg-white/20"
+                  className="w-full border-white/20 bg-white/10 backdrop-blur-sm hover:bg-white/20"
                 >
                   <span className="mr-2">Live Transcript</span>
                   {isTranscriptOpen ? (
@@ -946,24 +957,41 @@ export default function RoleplayPage() {
       
       {/* Footer - Fixed at bottom */}
       <footer className="py-3 px-6 flex-shrink-0">
-        <div className="flex flex-row items-center justify-center gap-2 text-xs text-slate-700">
+        <div className="flex flex-row items-center justify-center gap-2 text-xs">
           <div className="flex items-center gap-1">
-            <a href="https://consuelohq.com" className="underline text-slate-800 hover:text-slate-600 transition-colors">
+            <a href="https://consuelohq.com" className="underline  transition-colors">
               Consuelo v0.0.7
             </a>
-            <span className="text-slate-800 hidden sm:inline">-</span>
-            <span className="text-slate-800 hidden sm:inline">The Modern Workspace for Sales</span>
+            <span className=" hidden sm:inline">-</span>
+            <span className=" hidden sm:inline">The Modern Workspace for Sales</span>
           </div>
           <div className="h-2.5 w-px bg-slate-400"></div>
-          <a href="https://workforce.consuelohq.com/" className="underline text-slate-800 hover:text-slate-600 transition-colors">
+          <a href="https://workforce.consuelohq.com/" className="underline transition-colors">
             Employees
           </a>
           <div className="h-2.5 w-px bg-slate-400"></div>
-          <a href="https://calls.consuelohq.com/" className="underline text-slate-800 hover:text-slate-600 transition-colors">
+          <a href="https://calls.consuelohq.com/" className="underline transition-colors">
             Calls
           </a>
         </div>
       </footer>
+
+      {/* Sign-in overlay for unauthenticated users */}
+      {isLoaded && !isSignedIn && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="relative">
+            <SignIn 
+              appearance={{
+                elements: {
+                  rootBox: "mx-auto",
+                  card: "bg-white/95 backdrop-blur-md shadow-2xl border border-white/20",
+                }
+              }}
+              redirectUrl="/roleplay"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

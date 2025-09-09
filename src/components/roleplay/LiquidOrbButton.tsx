@@ -8,10 +8,11 @@ interface LiquidOrbButtonProps {
   onMouseLeave?: () => void
   onTouchStart?: () => void
   onTouchEnd?: () => void
+  onClick?: () => void
   disabled?: boolean
   isPressed?: boolean
   className?: string
-  children: ReactNode
+  children?: ReactNode
   size?: "sm" | "md" | "lg" | "xl"
 }
 
@@ -21,6 +22,7 @@ export default function LiquidOrbButton({
   onMouseLeave,
   onTouchStart,
   onTouchEnd,
+  onClick,
   disabled = false,
   isPressed = false,
   className = "",
@@ -49,6 +51,7 @@ export default function LiquidOrbButton({
         onMouseLeave={onMouseLeave}
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
+        onClick={onClick}
         disabled={disabled}
         className={`
           liquid-orb-button
@@ -117,11 +120,77 @@ export default function LiquidOrbButton({
             inset 0 0 30px rgba(255, 255, 255, 0.12);
         }
 
+        /* Mobile-specific fixes for square glow issue */
+        @media (max-width: 768px) {
+          .liquid-orb-button {
+            box-shadow: none;
+          }
+
+          .liquid-orb-button:hover {
+            box-shadow: none;
+          }
+
+          .liquid-orb-button::before {
+            content: '';
+            position: absolute;
+            inset: -8px;
+            border-radius: 50%;
+            background: radial-gradient(circle, 
+              rgba(139, 92, 246, 0.15) 0%,
+              rgba(139, 92, 246, 0.08) 40%,
+              transparent 70%
+            );
+            z-index: -1;
+            filter: blur(8px);
+          }
+        }
+
+        /* Dark theme enhancements - slightly brighter while keeping the same aesthetic */
+        :global(.dark) .liquid-orb-button {
+          box-shadow: 
+            0 8px 32px rgba(139, 92, 246, 0.2),
+            inset 0 0 20px rgba(139, 92, 246, 0.12);
+        }
+
+        :global(.dark) .liquid-orb-button:hover {
+          box-shadow: 
+            0 12px 40px rgba(139, 92, 246, 0.25),
+            inset 0 0 30px rgba(139, 92, 246, 0.16);
+        }
+
+        /* Mobile dark theme fixes */
+        @media (max-width: 768px) {
+          :global(.dark) .liquid-orb-button {
+            box-shadow: none;
+          }
+
+          :global(.dark) .liquid-orb-button:hover {
+            box-shadow: none;
+          }
+
+          :global(.dark) .liquid-orb-button::before {
+            background: radial-gradient(circle, 
+              rgba(139, 92, 246, 0.25) 0%,
+              rgba(139, 92, 246, 0.15) 40%,
+              transparent 70%
+            );
+          }
+        }
+
         .glass-base {
           background: radial-gradient(circle at center, 
             rgba(255, 255, 255, 0.08) 0%, 
             rgba(139, 92, 246, 0.03) 50%,
             rgba(124, 58, 237, 0.05) 100%
+          );
+        }
+
+        /* Dark theme: slightly more visible glass base */
+        :global(.dark) .glass-base {
+          background: radial-gradient(circle at center, 
+            rgba(139, 92, 246, 0.12) 0%, 
+            rgba(139, 92, 246, 0.06) 50%,
+            rgba(124, 58, 237, 0.08) 100%
           );
         }
 
@@ -298,6 +367,14 @@ export default function LiquidOrbButton({
             inset 0 -2px 8px rgba(88, 28, 135, 0.1);
         }
 
+        /* Mobile fixes for glass edge to prevent square border */
+        @media (max-width: 768px) {
+          .glass-edge {
+            border: none;
+            box-shadow: none;
+          }
+        }
+
         /* Enhanced animations with subtle 3D rotation for sphere effect */
         @keyframes blob1 {
           0%, 100% {
@@ -431,7 +508,7 @@ export default function LiquidOrbButton({
         .liquid-orb-button:active .liquid-streak-2 { animation-duration: 2.5s; }
         .liquid-orb-button:active .liquid-streak-3 { animation-duration: 2.2s; }
 
-        Disabled state - keep animations and full opacity
+        /* Disabled state - keep animations and full opacity */
         .liquid-orb-button:disabled .liquid-blob-1,
         .liquid-orb-button:disabled .liquid-blob-2,
         .liquid-orb-button:disabled .liquid-blob-3,

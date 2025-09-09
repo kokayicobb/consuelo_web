@@ -5,6 +5,7 @@ import Link from "next/link"
 import Image from "next/image"
 import React, { useRef, useEffect, useState } from "react"
 import { motion } from "framer-motion"
+import { getVideoUrl } from "@/sanity/lib/image"
 
 // Modified BentoGrid with Hero layout - Larger hero, smaller items, sidebar compatible
 export const BentoGrid = ({
@@ -156,6 +157,8 @@ export const BentoGridItem = ({
   href,
   onClick,
   backgroundImage,
+  backgroundVideo,
+  videoConfig,
   isHero = false,
   index = 0,
   isLast = false,
@@ -170,6 +173,15 @@ export const BentoGridItem = ({
   href?: string
   onClick?: () => void
   backgroundImage?: string
+  backgroundVideo?: string | null
+  videoConfig?: {
+    videoType: 'youtube' | 'vimeo' | 'loom' | 'upload' | 'url'
+    url?: string
+    file?: any
+    autoplay?: boolean
+    loop?: boolean
+    muted?: boolean
+  }
   isHero?: boolean
   index?: number
   isLast?: boolean
@@ -188,6 +200,200 @@ export const BentoGridItem = ({
         ease: [0.25, 0.1, 0.25, 1.0],
       },
     }),
+  }
+
+  // Helper function to render background media (video or image)
+  const renderBackgroundMedia = () => {
+    // Debug logging
+    if (backgroundVideo || videoConfig) {
+      console.log('BentoGridItem video debug:', {
+        backgroundVideo,
+        videoType: videoConfig?.videoType,
+        hasFile: !!videoConfig?.file,
+        title: typeof title === 'string' ? title : 'Complex title'
+      });
+    }
+    
+    // Priority: video > image > backgroundImage (existing logic)
+    if (backgroundVideo) {
+      // If we have videoConfig, use it for detailed control
+      if (videoConfig) {
+        // Handle different video types
+        if (videoConfig.videoType === 'upload' && videoConfig.file) {
+          // Direct MP4 video file - use Sanity helper to get proper URL
+          const videoUrl = getVideoUrl(videoConfig.file);
+          if (videoUrl) {
+            return (
+              <>
+                <video 
+                  src={videoUrl}
+                  autoPlay={videoConfig.autoplay !== false}
+                  loop={videoConfig.loop !== false}
+                  muted={videoConfig.muted !== false}
+                  playsInline
+                  className="absolute inset-0 w-full h-full object-cover"
+                  style={{ pointerEvents: 'none' }}
+                />
+                <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px] z-10"></div>
+              </>
+            );
+          }
+        } else if (videoConfig.videoType === 'loom' || backgroundVideo.includes('loom.com')) {
+          // Loom embed (keeping existing logic)
+          return (
+            <>
+              <iframe
+                src={backgroundVideo}
+                className="absolute inset-0 w-full h-full"
+                frameBorder="0"
+                allowFullScreen
+                style={{ pointerEvents: 'none' }}
+                loading="lazy"
+              />
+              <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px] z-10"></div>
+            </>
+          );
+        } else if (videoConfig.videoType === 'youtube' || videoConfig.videoType === 'vimeo') {
+          // YouTube/Vimeo embed
+          return (
+            <>
+              <iframe
+                src={backgroundVideo}
+                className="absolute inset-0 w-full h-full"
+                frameBorder="0"
+                allowFullScreen
+                style={{ pointerEvents: 'none' }}
+                loading="lazy"
+              />
+              <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px] z-10"></div>
+            </>
+          );
+        } else if (videoConfig.videoType === 'url' && backgroundVideo) {
+          // Direct video URL
+          return (
+            <>
+              <video 
+                src={backgroundVideo}
+                autoPlay={videoConfig.autoplay !== false}
+                loop={videoConfig.loop !== false}
+                muted={videoConfig.muted !== false}
+                playsInline
+                className="absolute inset-0 w-full h-full object-cover"
+                style={{ pointerEvents: 'none' }}
+              />
+              <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px] z-10"></div>
+            </>
+          );
+        }
+      } else {
+        // Simple video URL without config (like heroVideo)
+        // Try to detect the type and render appropriately
+        if (backgroundVideo.includes('loom.com')) {
+          // Loom URL
+          const embedUrl = backgroundVideo.includes('/embed/') 
+            ? `${backgroundVideo}?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true&autoplay=false`
+            : `https://www.loom.com/embed/${backgroundVideo.match(/loom\.com\/share\/([a-zA-Z0-9]+)/)?.[1]}?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true&autoplay=false`;
+          
+          return (
+            <>
+              <iframe
+                src={embedUrl}
+                className="absolute inset-0 w-full h-full"
+                frameBorder="0"
+                allowFullScreen
+                style={{ pointerEvents: 'none' }}
+                loading="lazy"
+              />
+              <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px] z-10"></div>
+            </>
+          );
+        } else if (backgroundVideo.includes('youtube.com') || backgroundVideo.includes('youtu.be')) {
+          // YouTube URL - convert to embed
+          const videoId = backgroundVideo.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/)?.[1];
+          if (videoId) {
+            return (
+              <>
+                <iframe
+                  src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}`}
+                  className="absolute inset-0 w-full h-full"
+                  frameBorder="0"
+                  allowFullScreen
+                  style={{ pointerEvents: 'none' }}
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px] z-10"></div>
+              </>
+            );
+          }
+        } else if (backgroundVideo.includes('vimeo.com')) {
+          // Vimeo URL - convert to embed
+          const videoId = backgroundVideo.match(/vimeo\.com\/(\d+)/)?.[1];
+          if (videoId) {
+            return (
+              <>
+                <iframe
+                  src={`https://player.vimeo.com/video/${videoId}?autoplay=1&muted=1&loop=1`}
+                  className="absolute inset-0 w-full h-full"
+                  frameBorder="0"
+                  allowFullScreen
+                  style={{ pointerEvents: 'none' }}
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px] z-10"></div>
+              </>
+            );
+          }
+        } else {
+          // Assume it's a direct video file URL
+          return (
+            <>
+              <video 
+                src={backgroundVideo}
+                autoPlay={true}
+                loop={true}
+                muted={true}
+                playsInline
+                className="absolute inset-0 w-full h-full object-cover"
+                style={{ pointerEvents: 'none' }}
+              />
+              <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px] z-10"></div>
+            </>
+          );
+        }
+      }
+    }
+    
+    // Fallback to existing image logic if no video
+    if (backgroundImage) {
+      // Keep existing Loom detection for backward compatibility
+      if (backgroundImage.includes('loom.com')) {
+        return (
+          <>
+            <iframe
+              src={backgroundImage.includes('/embed/') 
+                ? `${backgroundImage}?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true&autoplay=false`
+                : `https://www.loom.com/embed/${backgroundImage.match(/loom\.com\/share\/([a-zA-Z0-9]+)/)?.[1]}?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true&autoplay=false`
+              }
+              className="absolute inset-0 w-full h-full"
+              frameBorder="0"
+              allowFullScreen
+              style={{ pointerEvents: 'none' }}
+              loading="lazy"
+            />
+            <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px] z-10"></div>
+          </>
+        );
+      } else {
+        return (
+          <>
+            <Image src={backgroundImage || "/placeholder.svg"} alt="Background" fill className="object-fill" />
+            <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px]"></div>
+          </>
+        );
+      }
+    }
+    
+    return null;
   }
 
   // Render different components based on whether href is provided
@@ -209,7 +415,7 @@ export const BentoGridItem = ({
             "row-span-1 rounded-xl group/bento relative",
             "overflow-hidden",
             // Adjust aspect ratio - Make hero bigger, items smaller
-            isHero ? "aspect-[5/3] lg:aspect-[16/12]" : "aspect-[3/2]", // Hero is taller, items stay the same
+            isHero ? "aspect-[5/3] lg:aspect-[5/3]" : "aspect-[3/2]", // Hero has better aspect ratio
             // Width properties
             "w-full",
             "transition-all duration-200 ease-out",
@@ -220,12 +426,10 @@ export const BentoGridItem = ({
           {/* Gradient border container */}
           <div className="absolute inset-0 bg-gradient-to-r from-[#FF1493]/20 to-[#00BFFF]/20 rounded-xl opacity-60"></div>
 
-          {/* Image background */}
-          {backgroundImage ? (
+          {/* Image/Video background */}
+          {(backgroundVideo || backgroundImage) ? (
             <div className="absolute inset-[1px] rounded-xl overflow-hidden">
-              <Image src={backgroundImage || "/placeholder.svg"} alt="Background" fill className="object-cover" />
-              {/* Lighter overlay */}
-              <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px]"></div>
+              {renderBackgroundMedia()}
             </div>
           ) : (
             <div className="absolute inset-[1px] bg-background rounded-xl"></div>
@@ -258,8 +462,8 @@ export const BentoGridItem = ({
           <h3
             className={cn(
               "font-bold text-foreground mb-1", // Consistent margin
-              isHero || isLast
-                ? "text-2xl sm:text-3xl lg:text-4xl" // Hero and last item are always large
+              isHero
+                ? "text-2xl sm:text-3xl lg:text-4xl" // Hero is always large
                 : "text-sm sm:text-base lg:text-lg", // Regular items stay small
               "transition-all duration-300" // Smoother transition
             )}
@@ -271,8 +475,8 @@ export const BentoGridItem = ({
           <div className="flex items-center">
             <p className={cn(
               "text-muted-foreground",
-              isHero || isLast
-                ? "text-sm sm:text-base" // Hero and last item descriptions are always large
+              isHero
+                ? "text-sm sm:text-base" // Hero description is always large
                 : "text-xs", // Regular items stay small
               "transition-all duration-300" // Smoother transition
             )}>
@@ -299,7 +503,7 @@ export const BentoGridItem = ({
             "row-span-1 rounded-xl group/bento relative",
             "overflow-hidden",
             // Adjust aspect ratio - Make hero bigger, items smaller
-            isHero ? "aspect-[5/3] lg:aspect-[16/12]" : "aspect-[3/2]", // Hero is taller, items stay the same
+            isHero ? "aspect-[5/3] lg:aspect-[5/3]" : "aspect-[3/2]", // Hero has better aspect ratio
             // Width properties
             "w-full",
             "transition-all duration-200 ease-out",
@@ -315,12 +519,10 @@ export const BentoGridItem = ({
           {/* Gradient border container */}
           <div className="absolute inset-0 bg-gradient-to-r from-[#FF1493]/20 to-[#00BFFF]/20 rounded-xl opacity-60"></div>
 
-          {/* Image background */}
-          {backgroundImage ? (
+          {/* Image/Video background */}
+          {(backgroundVideo || backgroundImage) ? (
             <div className="absolute inset-[1px] rounded-xl overflow-hidden">
-              <Image src={backgroundImage || "/placeholder.svg"} alt="Background" fill className="object-cover" />
-              {/* Lighter overlay */}
-              <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px]"></div>
+              {renderBackgroundMedia()}
             </div>
           ) : (
             <div className="absolute inset-[1px] bg-background rounded-xl"></div>
@@ -353,8 +555,8 @@ export const BentoGridItem = ({
           <h3
             className={cn(
               "font-bold text-foreground mb-1", // Consistent margin
-              isHero || isLast
-                ? "text-2xl sm:text-3xl lg:text-4xl" // Hero and last item are always large
+              isHero
+                ? "text-2xl sm:text-3xl lg:text-4xl" // Hero is always large
                 : "text-sm sm:text-base lg:text-lg", // Regular items stay small
               "transition-all duration-300" // Smoother transition
             )}
@@ -366,8 +568,8 @@ export const BentoGridItem = ({
           <div className="flex items-center">
             <p className={cn(
               "text-muted-foreground",
-              isHero || isLast
-                ? "text-sm sm:text-base" // Hero and last item descriptions are always large
+              isHero
+                ? "text-sm sm:text-base" // Hero description is always large
                 : "text-xs", // Regular items stay small
               "transition-all duration-300" // Smoother transition
             )}>

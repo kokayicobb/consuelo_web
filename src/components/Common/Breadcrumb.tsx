@@ -11,8 +11,7 @@ interface BreadcrumbProps {
 
 const Breadcrumb: React.FC<BreadcrumbProps> = ({ pageName, pageDescription }) => {
   return (
-    <div className="relative z-10 overflow-hidden bg-gradient-to-b from-white to-white pb-12 pt-16 
-    dark:from-[hsl(240,3.7%,15.9%)] dark:to-[hsl(240,10%,3.9%)]">
+    <div className="relative z-10 overflow-hidden bg-transparent pb-12 pt-16">
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

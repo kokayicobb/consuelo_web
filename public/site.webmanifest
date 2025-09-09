@@ -1,7 +1,24 @@
 {
-  "name": "Consuelo",
+  "name": "Consuelo: On The Job",
   "short_name": "Consuelo",
+  "description": "AI-powered sales agent training platform that shortens ramp time for newly onboarded sales agents",
   "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "apple-touch-icon"
+    },
     {
       "src": "/favicon-192x192.png",
       "sizes": "192x192",
@@ -13,7 +30,13 @@
       "type": "image/png"
     }
   ],
-  "theme_color": "#ffffff",
+  "theme_color": "#6c47ff",
   "background_color": "#ffffff",
-  "display": "standalone"
+  "display": "standalone",
+  "start_url": "/",
+  "scope": "/",
+  "orientation": "portrait-primary",
+  "categories": ["business", "productivity", "technology"],
+  "lang": "en-US",
+  "dir": "ltr"
 }

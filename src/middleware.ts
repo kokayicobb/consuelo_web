@@ -11,10 +11,13 @@ const isPublicRoute = createRouteMatcher([
   '/privacy',
   '/waitlist',
   '/how-it-works',
-  // '/roleplay',
+  '/roleplay',
+  '/((?!api|_next|.*\\.).+)', // Allow all slug pages but exclude API routes and Next.js internals
   "/api/scraping/process-job",
   "/api/roleplay/(.*)",
+  "/api/cached-video",
   "/api/test",
+  "/api/tts",
 ])
 
 export default clerkMiddleware(async (auth, req) => {

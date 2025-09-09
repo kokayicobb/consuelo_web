@@ -33,6 +33,8 @@ const nextConfig = {
         assert: false,
         os: false,
         path: false,
+        dns: false,
+        ioredis: false,
         'https-proxy-agent': false,
         'http-proxy-agent': false,
         'gaxios': false,
@@ -57,6 +59,18 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'cdn.fashn.ai',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.sanity.io',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.loom.com',
         port: '',
         pathname: '/**',
       },

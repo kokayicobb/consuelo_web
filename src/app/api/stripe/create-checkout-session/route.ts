@@ -18,10 +18,11 @@ export async function POST(request: Request) {
 
     const { amount } = await request.json();
     
-    // Validate amount (minimum $5, maximum $500)
-    if (!amount || amount < 5 || amount > 500) {
+    // Validate that amount is one of the preset options
+    const allowedAmounts = [5, 10, 25, 50, 100];
+    if (!amount || !allowedAmounts.includes(amount)) {
       return NextResponse.json(
-        { error: 'Invalid amount. Must be between $5 and $500.' },
+        { error: 'Invalid amount. Must be one of: $5, $10, $25, $50, $100.' },
         { status: 400 }
       );
     }
@@ -54,23 +55,23 @@ export async function POST(request: Request) {
       await userCredits.save();
     }
 
-    // Create checkout session
+    const minutes = Math.floor(amount / 0.15);
+
+    // Create checkout session with single selected item
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ['card', 'link'],
-      line_items: [
-        {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: 'Roleplay Credits',
-              description: `$${amount} credits for roleplay coaching sessions ($0.15/minute)`,
-            },
-            unit_amount: amount * 100, // Convert to cents
+      line_items: [{
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: `$${amount} Roleplay Credits`,
+            description: `${minutes} minutes of roleplay coaching ($0.15/minute)`,
           },
-          quantity: 1,
+          unit_amount: amount * 100, // Convert to cents
         },
-      ],
+        quantity: 1,
+      }],
       mode: 'payment',
       ui_mode: 'embedded',
       return_url: `${process.env.NEXT_PUBLIC_APP_URL}/roleplay?session_id={CHECKOUT_SESSION_ID}`,
