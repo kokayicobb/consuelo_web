@@ -39,7 +39,7 @@ export async function POST(request: Request) {
       await userCredits.save();
     }
 
-    // Create Stripe customer if doesn't exist
+    // Create Stripe customer if doesn't exist or is invalid
     let customerId = userCredits.stripeCustomerId;
     
     if (!customerId) {
@@ -52,6 +52,25 @@ export async function POST(request: Request) {
       customerId = customer.id;
       userCredits.stripeCustomerId = customerId;
       await userCredits.save();
+    } else {
+      // Verify customer exists in Stripe, create new one if not
+      try {
+        await stripe.customers.retrieve(customerId);
+      } catch (error: any) {
+        if (error.code === 'resource_missing') {
+          const customer = await stripe.customers.create({
+            metadata: {
+              clerkUserId: userId,
+            },
+          });
+          
+          customerId = customer.id;
+          userCredits.stripeCustomerId = customerId;
+          await userCredits.save();
+        } else {
+          throw error;
+        }
+      }
     }
 
     // Calculate service fee (2.9% + $0.30)
