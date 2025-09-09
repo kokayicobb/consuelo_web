@@ -72,7 +72,6 @@ import {
 } from "@heroicons/react/24/outline";
 import ApolloSearchComponent from "./app-views/apollo-search-component";
 import dynamic from "next/dynamic";
-import ModelGenerationContent from "@/components/Unified Commerce Dashboard/tabs/apps/app-views/model-generation-content";
 
 import PhoneCallComponent from "../../../on-call-coaching";
 import EmailComposer from "../inbox/email/email-composer";
@@ -378,9 +377,7 @@ export default function AppsPage() {
       return <LeadGenerationSearch />;
     }
 
-    if (selectedApp.id === "content-creator") {
-      return <ModelGenerationContent />;
-    }
+  
 
     if (selectedApp.id === "social-monitor") {
       return (

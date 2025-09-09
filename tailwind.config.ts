@@ -82,11 +82,22 @@ const config: Config = {
   				'100%': {
   					transform: 'translateX(100%)'
   				}
+  			},
+  			'spin-orbit': {
+  				'0%': {
+  					transform: 'rotate(0deg) translateX(var(--radius)) rotate(0deg)',
+  					offset: '0%'
+  				},
+  				'100%': {
+  					transform: 'rotate(360deg) translateX(var(--radius)) rotate(-360deg)',
+  					offset: '100%'
+  				}
   			}
   		},
   		animation: {
   			'very-subtle-pulse': 'subtle-pulse 12s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-  			shimmer: 'shimmer 1.5s ease-in-out infinite'
+  			shimmer: 'shimmer 1.5s ease-in-out infinite',
+  			'spin-orbit': 'spin-orbit 2s linear infinite'
   		},
   		borderRadius: {
   			lg: 'var(--radius)',

@@ -1,0 +1,44 @@
+[
+  {
+    "_type": "faq",
+    "question": "What's the difference between Mercury and Zara?",
+    "answer": "Mercury is our AI coaching agent that analyzes your phone calls and provides real-time feedback to improve your sales performance at $0.01/minute. Zara is our voice roleplay agent that lets you practice sales scenarios in realistic conversations at $0.15/minute. Both work seamlessly with your existing CRM and phone systems.",
+    "category": "general",
+    "order": 1
+  },
+  {
+    "_type": "faq",
+    "question": "How does Mercury AI coaching work during calls?",
+    "answer": "Mercury listens to your live sales calls through Twilio integration and provides contextual coaching tips in real-time. It analyzes conversation flow, identifies missed opportunities, and suggests better responses. Mercury learns from each call to provide increasingly personalized coaching that fits your sales style.",
+    "category": "mercury",
+    "order": 2
+  },
+  {
+    "_type": "faq",
+    "question": "Can I practice different sales scenarios with Zara?",
+    "answer": "Absolutely! Zara offers advanced sales scenario simulations and custom roleplay scenarios. You can practice objection handling, discovery calls, closing techniques, and industry-specific situations. Zara adapts to different personality types and provides realistic pushback to help you prepare for real-world sales conversations.",
+    "category": "zara",
+    "order": 3
+  },
+  {
+    "_type": "faq",
+    "question": "What CRM integrations are supported?",
+    "answer": "Both Mercury and Zara integrate seamlessly with major CRM platforms including Salesforce, HubSpot, GoHighLevel, Pipedrive, and more. This allows for automatic call logging, contact sync, and performance tracking directly within your existing sales workflow.",
+    "category": "technical",
+    "order": 4
+  },
+  {
+    "_type": "faq",
+    "question": "How does the 14-day free trial work?",
+    "answer": "Your free trial includes $5 of initial usage for Mercury coaching and Zara roleplay sessions. Mercury starts with 5 hours minimum monthly usage, and Zara starts with 1 hour minimum. You can explore both platforms, test integrations, and see real results before committing to a paid plan.",
+    "category": "pricing",
+    "order": 5
+  },
+  {
+    "_type": "faq",
+    "question": "What kind of analytics and insights do I get?",
+    "answer": "Both Mercury and Zara provide comprehensive performance tracking including call duration analysis, conversation quality scores, improvement trends, and detailed post-call analytics. You'll see which techniques work best, track your progress over time, and get actionable insights to close more deals.",
+    "category": "general",
+    "order": 6
+  }
+]

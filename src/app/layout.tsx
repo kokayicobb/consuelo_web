@@ -1,5 +1,5 @@
 // app/layout.tsx
-import { metadata } from './metadata'
+import { metadata, viewport } from './metadata'
 import "../styles/index.css";
 import "../styles/prism-vsc-dark-plus.css";
 import ClientLayout from './clientLayout';
@@ -25,14 +25,6 @@ export default function RootLayout({
   return (
     <ClerkProvider>
     <html suppressHydrationWarning={true} className="!scroll-smooth" lang="en">
-      
-      <head>
-        
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-      </head>
-
       <body> 
       <PostHogProvider>
             <Toaster /> 
@@ -58,4 +50,4 @@ export default function RootLayout({
   );
 }
 
-export { metadata }
+export { metadata, viewport }
