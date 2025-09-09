@@ -12,6 +12,8 @@ import {structureTool} from 'sanity/structure'
 import {apiVersion, dataset, projectId} from './src/sanity/env'
 import {schema} from './src/sanity/schemaTypes'
 import {structure} from './src/sanity/structure'
+import {createWorkflowActions} from './src/sanity/lib/workflowActions'
+import {defaultDocumentNode} from './src/sanity/lib/previewPanes'
 
 export default defineConfig({
   name: 'consuelo',
@@ -22,9 +24,24 @@ export default defineConfig({
   // Add and edit the content schema in the './sanity/schemaTypes' folder
   schema,
   plugins: [
-    structureTool({structure}),
+    structureTool({
+      structure,
+      defaultDocumentNode,
+    }),
     // Vision is for querying with GROQ from inside the Studio
     // https://www.sanity.io/docs/the-vision-plugin
     visionTool({defaultApiVersion: apiVersion}),
   ],
+  document: {
+    actions: createWorkflowActions,
+  },
+  form: {
+    // Add preview panes for different content types
+    image: {
+      // Add custom image handling if needed
+    },
+    file: {
+      // Add custom file handling if needed  
+    }
+  },
 })
