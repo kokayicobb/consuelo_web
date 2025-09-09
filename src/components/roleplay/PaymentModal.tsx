@@ -343,6 +343,35 @@ export default function PaymentModal({
         fontFamily: '"Söhne", "Helvetica Neue", Helvetica, Arial, sans-serif',  // Your custom font
         borderRadius: '0.5rem',  // Your --radius
       },
+      rules: {
+        '.Tab': {
+          backgroundColor: 'transparent',
+        },
+        '.Tab--selected': {
+          backgroundColor: 'transparent',
+          borderColor: 'hsl(270 60% 60%)',
+        },
+        '.Tab--selected:hover': {
+          backgroundColor: 'transparent',
+        },
+        '.Input': {
+          backgroundColor: 'transparent',
+        },
+        '.Input--focus': {
+          backgroundColor: 'transparent',
+          borderColor: 'hsl(270 60% 60%)',
+        },
+        '.AccordionItem': {
+          backgroundColor: 'transparent',
+        },
+        '.AccordionItem--selected': {
+          backgroundColor: 'transparent',
+          borderColor: 'hsl(270 60% 60%)',
+        },
+        '.AccordionItem--selected:hover': {
+          backgroundColor: 'transparent',
+        },
+      }
     }
   };
 
@@ -551,7 +580,7 @@ export default function PaymentModal({
           {/* Stripe Logo - bottom middle */}
           <div className="flex justify-center pt-4 pb-2">
             <svg 
-              className="w-32 h-auto opacity-80" 
+              className="w-40 h-auto opacity-80" 
               viewBox="0 0 150 34" 
               xmlns="http://www.w3.org/2000/svg"
             >
