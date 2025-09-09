@@ -14,6 +14,8 @@ import {schema} from './src/sanity/schemaTypes'
 import {structure} from './src/sanity/structure'
 
 export default defineConfig({
+  name: 'consuelo',
+  title: 'Consuelo',
   basePath: '/studio',
   projectId,
   dataset,
