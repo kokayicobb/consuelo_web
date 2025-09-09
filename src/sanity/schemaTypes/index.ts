@@ -9,7 +9,8 @@ import {useCaseType} from './useCaseType'
 import {faqType} from './faqType'
 import {pricingPlanType} from './pricingPlanType'
 import {pricingFeatureType} from './pricingFeatureType'
+import {versionHistoryType} from './versionHistoryType'
 
 export const schema: { types: SchemaTypeDefinition[] } = {
-  types: [blockContentType, categoryType, postType, authorType, featureType, useCaseType, faqType, pricingPlanType, pricingFeatureType],
+  types: [blockContentType, categoryType, postType, authorType, featureType, useCaseType, faqType, pricingPlanType, pricingFeatureType, versionHistoryType],
 }

@@ -1,4 +1,5 @@
 import { defineField, defineType } from 'sanity'
+import { FeaturePreview } from '../lib/previewComponents'
 
 export const featureType = defineType({
   name: 'feature',
@@ -175,6 +176,56 @@ export const featureType = defineType({
       title: 'Display Order',
       type: 'number',
       validation: (Rule) => Rule.required().min(0),
+    }),
+    // Workflow fields
+    defineField({
+      name: 'workflowStatus',
+      title: 'Workflow Status',
+      type: 'string',
+      options: {
+        list: [
+          { title: '📝 Draft', value: 'draft' },
+          { title: '👀 In Review', value: 'review' },
+          { title: '✅ Approved', value: 'approved' },
+          { title: '🚀 Published', value: 'published' },
+          { title: '❌ Rejected', value: 'rejected' }
+        ],
+        layout: 'radio'
+      },
+      initialValue: 'draft',
+      validation: (Rule) => Rule.required(),
+    }),
+    defineField({
+      name: 'assignedReviewer',
+      title: 'Assigned Reviewer',
+      type: 'reference',
+      to: [{type: 'author'}],
+      description: 'Who should review this content',
+      hidden: ({ document }) => document?.workflowStatus !== 'review'
+    }),
+    defineField({
+      name: 'reviewNotes',
+      title: 'Review Notes',
+      type: 'text',
+      description: 'Notes from reviewer or feedback for author',
+      rows: 3,
+      hidden: ({ document }) => !['review', 'approved', 'rejected'].includes(document?.workflowStatus)
+    }),
+    defineField({
+      name: 'workflowHistory',
+      title: 'Workflow History',
+      type: 'array',
+      of: [{
+        type: 'object',
+        fields: [
+          { name: 'status', title: 'Status', type: 'string' },
+          { name: 'timestamp', title: 'Timestamp', type: 'datetime' },
+          { name: 'user', title: 'User', type: 'string' },
+          { name: 'notes', title: 'Notes', type: 'text', rows: 2 }
+        ]
+      }],
+      readOnly: true,
+      description: 'Automatically tracked workflow changes'
     }),
     // Rich content fields for detailed feature pages
     defineField({
@@ -369,8 +420,13 @@ export const featureType = defineType({
   preview: {
     select: {
       title: 'title',
-      subtitle: 'description',
-      media: 'image',
+      description: 'description',
+      image: 'image',
+      gradientFrom: 'gradientFrom',
+      gradientTo: 'gradientTo',
+      workflowStatus: 'workflowStatus',
+      order: 'order',
     },
+    component: FeaturePreview,
   },
 })
