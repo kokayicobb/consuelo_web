@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 
 export interface IUserCredits extends mongoose.Document {
   clerkUserId: string; // Clerk user ID
@@ -23,4 +23,4 @@ const UserCreditsSchema = new mongoose.Schema<IUserCredits>({
   timestamps: true,
 });
 
-export default mongoose.models.UserCredits || mongoose.model<IUserCredits>('UserCredits', UserCreditsSchema);
+export default (mongoose.models.UserCredits as Model<IUserCredits>) || mongoose.model<IUserCredits>('UserCredits', UserCreditsSchema);
