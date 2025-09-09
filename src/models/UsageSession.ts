@@ -1,6 +1,6 @@
-import mongoose from 'mongoose';
+import { Document, model, Model, models, Schema } from 'mongoose';
 
-export interface IUsageSession extends mongoose.Document {
+export interface IUsageSession extends Document {
   clerkUserId: string;
   sessionType: 'roleplay'; // Can add more types later
   startTime: Date;
@@ -12,7 +12,7 @@ export interface IUsageSession extends mongoose.Document {
   updatedAt: Date;
 }
 
-const UsageSessionSchema = new mongoose.Schema<IUsageSession>({
+const UsageSessionSchema = new Schema<IUsageSession>({
   clerkUserId: {
     type: String,
     required: true,
@@ -43,4 +43,4 @@ const UsageSessionSchema = new mongoose.Schema<IUsageSession>({
   timestamps: true,
 });
 
-export default mongoose.models.UsageSession || mongoose.model<IUsageSession>('UsageSession', UsageSessionSchema);
+export default (models.UsageSession as Model<IUsageSession>) || model<IUsageSession>('UsageSession', UsageSessionSchema);
