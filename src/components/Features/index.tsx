@@ -50,9 +50,9 @@ export function Features({ features }: FeaturesProps) {
   // Get the hero item
   const heroItem = features.find((item) => item.isHero)
 
-  // Get all other items except the hero, sorted by order, limited to orders 1-3
+  // Get all other items except the hero, sorted by order, limited to orders 1-5
   const regularItems = features
-    .filter((item) => !item.isHero && item.order >= 1 && item.order <= 3)
+    .filter((item) => !item.isHero && item.order >= 1 && item.order <= 5)
     .sort((a, b) => a.order - b.order)
 
   // Cache optimized images for hero item
