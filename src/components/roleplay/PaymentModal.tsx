@@ -44,6 +44,14 @@ function PurchaseButton({
 
   const handlePurchase = async () => {
     if (!stripe || !elements) {
+      toast.error("Payment system not ready. Please try again.");
+      return;
+    }
+
+    // Check if PaymentElement is mounted
+    const paymentElement = elements.getElement('payment');
+    if (!paymentElement) {
+      toast.error("Payment form not ready. Please refresh and try again.");
       return;
     }
 
@@ -114,6 +122,14 @@ function CheckoutForm({
     e.preventDefault();
 
     if (!stripe || !elements) {
+      toast.error("Payment system not ready. Please try again.");
+      return;
+    }
+
+    // Check if PaymentElement is mounted
+    const paymentElement = elements.getElement('payment');
+    if (!paymentElement) {
+      toast.error("Payment form not ready. Please refresh and try again.");
       return;
     }
 
@@ -188,6 +204,14 @@ function AlternativePaymentMethods({
     e.preventDefault();
 
     if (!stripe || !elements) {
+      toast.error("Payment system not ready. Please try again.");
+      return;
+    }
+
+    // Check if PaymentElement is mounted
+    const paymentElement = elements.getElement('payment');
+    if (!paymentElement) {
+      toast.error("Payment form not ready. Please refresh and try again.");
       return;
     }
 
@@ -406,54 +430,160 @@ export default function PaymentModal({
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto space-y-6 pr-1">
-          {/* Stripe Elements Payment Form */}
-          {clientSecret && !showAlternativePayments && (
+          {/* Single Stripe Elements wrapper for the entire payment flow */}
+          {clientSecret && (
             <Elements stripe={stripePromise} options={stripeOptions}>
-              <CheckoutForm 
-                amount={numericAmount} 
-                onSuccess={handleSuccess}
-                onChangePaymentMethod={handleChangePaymentMethod}
-                amountInput={amountInput}
-                purchaseButton={null}
-              />
+              {!showAlternativePayments ? (
+                <>
+                  <CheckoutForm 
+                    amount={numericAmount} 
+                    onSuccess={handleSuccess}
+                    onChangePaymentMethod={handleChangePaymentMethod}
+                    amountInput={amountInput}
+                    purchaseButton={null}
+                  />
+                  
+                  {/* Main view content - moved inside Elements */}
+                  <div className="space-y-6">
+                    {/* Expandable Billing Options */}
+                    <div className="space-y-3">
+                      <Button 
+                        variant="ghost" 
+                        onClick={() => setShowBillingOptions(!showBillingOptions)}
+                        className="w-full justify-between text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 px-0"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Settings className="h-4 w-4" />
+                          Billing Options
+                        </div>
+                        <ChevronDown className={`h-4 w-4 transition-transform ${showBillingOptions ? 'rotate-180' : ''}`} />
+                      </Button>
+
+                      {/* Expandable billing options content */}
+                      {showBillingOptions && (
+                        <div className="space-y-4 pl-6 pr-2 py-4 border-l-2 border-gray-200 dark:border-gray-700">
+                          <div className="space-y-2">
+                            <Label htmlFor="billing-address" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                              Billing address
+                            </Label>
+                            <Input
+                              id="billing-address"
+                              type="text"
+                              value={billingAddress}
+                              onChange={(e) => setBillingAddress(e.target.value)}
+                              placeholder="Enter billing address"
+                              className="h-10"
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="tax-id" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                              Tax ID
+                            </Label>
+                            <Input
+                              id="tax-id"
+                              type="text"
+                              value={taxId}
+                              onChange={(e) => setTaxId(e.target.value)}
+                              placeholder="Enter Tax ID (optional)"
+                              className="h-10"
+                            />
+                          </div>
+                          
+                          <div className="flex items-center justify-between px-3 py-2">
+                            <span className="text-sm text-gray-600 dark:text-gray-400">Send me invoices</span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setShowInvoices(!showInvoices)}
+                              className={`h-5 w-9 rounded-full p-0.5 ml-2 ${
+                                showInvoices ? 'bg-indigo-500' : 'bg-gray-300'
+                              }`}
+                            >
+                              <div
+                                className={`h-3 w-3 rounded-full bg-white transition-transform ${
+                                  showInvoices ? 'translate-x-3' : 'translate-x-0'
+                                }`}
+                              />
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Pricing Breakdown */}
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Service fees</span>
+                        <span className="font-medium text-gray-900 dark:text-gray-100">${serviceFee.toFixed(2)}</span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Sales taxes</span>
+                        <span className="text-gray-500 dark:text-gray-500">N/A</span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between text-lg font-bold pt-2 border-t border-gray-200 dark:border-gray-700">
+                        <span className="text-gray-900 dark:text-gray-100">Total due</span>
+                        <span className="text-gray-900 dark:text-gray-100">${total.toFixed(2)}</span>
+                      </div>
+                    </div>
+
+                    {/* Purchase Button - now inside Elements */}
+                    <PurchaseButton amount={numericAmount} onSuccess={handleSuccess} />
+
+                    {/* One-time payment toggle */}
+                    <div className="flex items-center justify-between pt-4">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">Use one-time payment methods</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setUseOneTimePayment(!useOneTimePayment)}
+                        className={`h-5 w-9 rounded-full p-0.5 ${
+                          useOneTimePayment ? 'bg-indigo-500' : 'bg-gray-300'
+                        }`}
+                      >
+                        <div
+                          className={`h-3 w-3 rounded-full bg-white transition-transform ${
+                            useOneTimePayment ? 'translate-x-3' : 'translate-x-0'
+                          }`}
+                        />
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <AlternativePaymentMethods
+                    amount={numericAmount}
+                    onBack={handleBackToMain}
+                    onSuccess={handleSuccess}
+                    amountInput={amountInput}
+                  />
+                  
+                  {/* Pricing Breakdown for alternative payments */}
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Service fees</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-100">${serviceFee.toFixed(2)}</span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Sales taxes</span>
+                      <span className="text-gray-500 dark:text-gray-500">N/A</span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between text-lg font-bold pt-2 border-t border-gray-200 dark:border-gray-700">
+                      <span className="text-gray-900 dark:text-gray-100">Total due</span>
+                      <span className="text-gray-900 dark:text-gray-100">${total.toFixed(2)}</span>
+                    </div>
+                  </div>
+
+                  {/* Purchase Button for alternative payments */}
+                  <PurchaseButton amount={numericAmount} onSuccess={handleSuccess} />
+                </>
+              )}
             </Elements>
-          )}
-
-          {/* Alternative Payment Methods View */}
-          {clientSecret && showAlternativePayments && (
-            <>
-              <Elements stripe={stripePromise} options={stripeOptions}>
-                <AlternativePaymentMethods
-                  amount={numericAmount}
-                  onBack={handleBackToMain}
-                  onSuccess={handleSuccess}
-                  amountInput={amountInput}
-                />
-              </Elements>
-              
-              {/* Pricing Breakdown for alternative payments */}
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Service fees</span>
-                  <span className="font-medium text-gray-900 dark:text-gray-100">${serviceFee.toFixed(2)}</span>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Sales taxes</span>
-                  <span className="text-gray-500 dark:text-gray-500">N/A</span>
-                </div>
-                
-                <div className="flex items-center justify-between text-lg font-bold pt-2 border-t border-gray-200 dark:border-gray-700">
-                  <span className="text-gray-900 dark:text-gray-100">Total due</span>
-                  <span className="text-gray-900 dark:text-gray-100">${total.toFixed(2)}</span>
-                </div>
-              </div>
-
-              {/* Purchase Button for alternative payments */}
-              <Elements stripe={stripePromise} options={stripeOptions}>
-                <PurchaseButton amount={numericAmount} onSuccess={handleSuccess} />
-              </Elements>
-            </>
           )}
 
           {/* Loading state */}
@@ -461,120 +591,6 @@ export default function PaymentModal({
             <div className="flex items-center justify-center py-8">
               <div className="text-gray-500 dark:text-gray-400">Setting up payment...</div>
             </div>
-          )}
-
-          {/* Expandable Billing Options - only show on main view */}
-          {!showAlternativePayments && (
-            <>
-              <div className="space-y-3">
-                <Button 
-                  variant="ghost" 
-                  onClick={() => setShowBillingOptions(!showBillingOptions)}
-                  className="w-full justify-between text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 px-0"
-                >
-                  <div className="flex items-center gap-2">
-                    <Settings className="h-4 w-4" />
-                    Billing Options
-                  </div>
-                  <ChevronDown className={`h-4 w-4 transition-transform ${showBillingOptions ? 'rotate-180' : ''}`} />
-                </Button>
-
-                {/* Expandable billing options content - now as form fields */}
-                {showBillingOptions && (
-                  <div className="space-y-4 pl-6 pr-2 py-4 border-l-2 border-gray-200 dark:border-gray-700">
-                    <div className="space-y-2">
-                      <Label htmlFor="billing-address" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Billing address
-                      </Label>
-                      <Input
-                        id="billing-address"
-                        type="text"
-                        value={billingAddress}
-                        onChange={(e) => setBillingAddress(e.target.value)}
-                        placeholder="Enter billing address"
-                        className="h-10"
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="tax-id" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Tax ID
-                      </Label>
-                      <Input
-                        id="tax-id"
-                        type="text"
-                        value={taxId}
-                        onChange={(e) => setTaxId(e.target.value)}
-                        placeholder="Enter Tax ID (optional)"
-                        className="h-10"
-                      />
-                    </div>
-                    
-                    <div className="flex items-center justify-between px-3 py-2">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">Send me invoices</span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setShowInvoices(!showInvoices)}
-                        className={`h-5 w-9 rounded-full p-0.5 ml-2 ${
-                          showInvoices ? 'bg-indigo-500' : 'bg-gray-300'
-                        }`}
-                      >
-                        <div
-                          className={`h-3 w-3 rounded-full bg-white transition-transform ${
-                            showInvoices ? 'translate-x-3' : 'translate-x-0'
-                          }`}
-                        />
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Pricing Breakdown */}
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Service fees</span>
-                  <span className="font-medium text-gray-900 dark:text-gray-100">${serviceFee.toFixed(2)}</span>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Sales taxes</span>
-                  <span className="text-gray-500 dark:text-gray-500">N/A</span>
-                </div>
-                
-                <div className="flex items-center justify-between text-lg font-bold pt-2 border-t border-gray-200 dark:border-gray-700">
-                  <span className="text-gray-900 dark:text-gray-100">Total due</span>
-                  <span className="text-gray-900 dark:text-gray-100">${total.toFixed(2)}</span>
-                </div>
-              </div>
-
-              {/* Purchase Button - moved below total */}
-              {clientSecret && (
-                <Elements stripe={stripePromise} options={stripeOptions}>
-                  <PurchaseButton amount={numericAmount} onSuccess={handleSuccess} />
-                </Elements>
-              )}
-
-              {/* One-time payment toggle */}
-              <div className="flex items-center justify-between pt-4">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Use one-time payment methods</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setUseOneTimePayment(!useOneTimePayment)}
-                  className={`h-5 w-9 rounded-full p-0.5 ${
-                    useOneTimePayment ? 'bg-indigo-500' : 'bg-gray-300'
-                  }`}
-                >
-                  <div
-                    className={`h-3 w-3 rounded-full bg-white transition-transform ${
-                      useOneTimePayment ? 'translate-x-3' : 'translate-x-0'
-                    }`}
-                  />
-                </Button>
-              </div>
-            </>
           )}
 
           {/* Stripe Logo - bottom middle */}
