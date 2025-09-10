@@ -209,7 +209,7 @@ export const featureType = defineType({
       type: 'text',
       description: 'Notes from reviewer or feedback for author',
       rows: 3,
-      hidden: ({ document }) => !['review', 'approved', 'rejected'].includes(document?.workflowStatus)
+      hidden: ({ document }) => !['review', 'approved', 'rejected'].includes(document?.workflowStatus as string)
     }),
     defineField({
       name: 'workflowHistory',
@@ -427,6 +427,28 @@ export const featureType = defineType({
       workflowStatus: 'workflowStatus',
       order: 'order',
     },
-    component: FeaturePreview,
+    prepare(selection) {
+      const { title, description, image, gradientFrom, gradientTo, workflowStatus, order } = selection
+      
+      const statusLabels = {
+        draft: '📝 Draft',
+        review: '👀 In Review',
+        approved: '✅ Approved',
+        published: '🚀 Published',
+        rejected: '❌ Rejected'
+      }
+      
+      const sectionType = order >= 1 && order <= 5 ? '🎯 Core' : 
+                         order >= 6 && order <= 11 ? '📖 Story' : 
+                         '🔧 Other'
+      
+      const status = statusLabels[workflowStatus] || statusLabels.draft
+      
+      return {
+        title: `${order ? `#${order}` : ''} ${title || 'Untitled Feature'}`,
+        subtitle: `${sectionType} • ${status} • ${description || 'No description'}`,
+        media: image
+      }
+    }
   },
 })

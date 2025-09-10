@@ -1,11 +1,10 @@
 'use client'
 
 import React from 'react'
-import { PreviewProps } from 'sanity'
 
 // Custom preview component for features
-export function FeaturePreview(props: PreviewProps) {
-  const { title, description, image, gradientFrom, gradientTo, workflowStatus, order } = props.value || {}
+export function FeaturePreview(props: any) {
+  const { title, description, image, gradientFrom, gradientTo, workflowStatus, order } = props
 
   const statusColors = {
     draft: 'bg-gray-100 text-gray-800',
