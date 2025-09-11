@@ -28,6 +28,8 @@ import LiquidOrbButton from "@/components/roleplay/LiquidOrbButton";
 import RoleplaySettings from "@/components/roleplay/settings";
 import CreditsDisplay from "@/components/roleplay/CreditsDisplay";
 import ThemeToggler from "@/components/Header/ThemeToggler";
+import RoleplayCommandPalette from "@/components/roleplay/roleplay-command-palette";
+import { Scenario, Character, RoleplaySession } from "@/components/roleplay/types";
 
 interface Message {
   role: "user" | "assistant";
@@ -99,11 +101,16 @@ export default function RoleplayPage() {
 
   // Modal states
   const [isTranscriptOpen, setIsTranscriptOpen] = useState(false);
+  const [showCommandPalette, setShowCommandPalette] = useState(false);
   
   // Usage tracking states
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [userCredits, setUserCredits] = useState(0);
   const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
+  
+  // Theme state for command palette
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
   const endCall = useCallback(async () => {
     setIsCallActive(false);
     setIsSessionActive(false);
@@ -164,6 +171,27 @@ export default function RoleplayPage() {
       endCall();
     };
   }, [endCall]);
+
+  // Keyboard shortcuts for command palette
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      const isInputField = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.contentEditable === 'true';
+      
+      if (!isInputField) {
+        if (e.key === '/' && !showCommandPalette) {
+          e.preventDefault();
+          setShowCommandPalette(true);
+        } else if (e.key === 'Escape' && showCommandPalette) {
+          e.preventDefault();
+          setShowCommandPalette(false);
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [showCommandPalette]);
 
   // Fetch available voices on component mount
   useEffect(() => {
@@ -613,6 +641,33 @@ export default function RoleplayPage() {
     }
   };
 
+  // Command palette handlers
+  const handleStartSession = (scenario: Scenario, character?: Character) => {
+    setScenario(scenario.llmPrompt);
+    setShowCommandPalette(false);
+    toast.success(`Started session: ${scenario.title}`);
+    // Automatically start the call after selecting scenario
+    setTimeout(() => {
+      startCall();
+    }, 500);
+  };
+
+  const handleResumeSession = (session: RoleplaySession) => {
+    // This would need to be implemented to restore session state
+    setShowCommandPalette(false);
+    toast.success('Resume session functionality to be implemented');
+  };
+
+  const handleThemeChange = (newTheme: 'light' | 'dark') => {
+    setTheme(newTheme);
+    // You could also integrate with your existing theme system here
+  };
+
+  const handleVoiceToggle = (enabled: boolean) => {
+    setVoiceEnabled(enabled);
+    setIsMuted(!enabled);
+  };
+
   return (
     <div className="h-screen bg-transparent flex flex-col overflow-hidden">
       {/* Header with logo, centered status, and user controls */}
@@ -992,6 +1047,19 @@ export default function RoleplayPage() {
           </div>
         </div>
       )}
+
+      {/* Command Palette */}
+      <RoleplayCommandPalette
+        isOpen={showCommandPalette}
+        onClose={() => setShowCommandPalette(false)}
+        onStartSession={handleStartSession}
+        onResumeSession={handleResumeSession}
+        currentUser="anonymous" // You may want to get this from Clerk user
+        theme={theme}
+        onThemeChange={handleThemeChange}
+        voiceEnabled={voiceEnabled}
+        onVoiceToggle={handleVoiceToggle}
+      />
     </div>
   );
 }

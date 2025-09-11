@@ -64,7 +64,25 @@ export async function POST(request: Request) {
       
       case 'payment_intent.succeeded': {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        console.log('Payment succeeded:', paymentIntent.id);
+        
+        const clerkUserId = paymentIntent.metadata?.clerkUserId;
+        const creditAmount = parseFloat(paymentIntent.metadata?.creditAmount || '0');
+        
+        if (clerkUserId && creditAmount > 0) {
+          // Update user credits
+          const userCredits = await UserCredits.findOne({ clerkUserId });
+          
+          if (userCredits) {
+            userCredits.credits += creditAmount;
+            await userCredits.save();
+            
+            console.log(`Added $${creditAmount} credits to user ${clerkUserId}. New balance: $${userCredits.credits}`);
+          } else {
+            console.error(`User credits record not found for Clerk user ${clerkUserId}`);
+          }
+        } else {
+          console.error('Missing required metadata in payment intent:', paymentIntent.id);
+        }
         break;
       }
       
