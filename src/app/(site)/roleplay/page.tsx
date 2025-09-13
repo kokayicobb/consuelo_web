@@ -25,7 +25,6 @@ import {
 import { UserButton, SignIn, useUser } from "@clerk/nextjs";
 import Image from "next/image";
 import LiquidOrbButton from "@/components/roleplay/LiquidOrbButton";
-import RoleplaySettings from "@/components/roleplay/settings";
 import CreditsDisplay from "@/components/roleplay/CreditsDisplay";
 import ThemeToggler from "@/components/Header/ThemeToggler";
 import RoleplayCommandPalette from "@/components/roleplay/roleplay-command-palette";
@@ -55,7 +54,7 @@ interface Voice {
 }
 
 export default function RoleplayPage() {
-  const { isSignedIn, isLoaded } = useUser();
+  const { isSignedIn, isLoaded, user } = useUser();
 
   useEffect(() => {
     // Set custom attributes on the document body to hide both header and footer
@@ -68,7 +67,8 @@ export default function RoleplayPage() {
       document.body.removeAttribute("data-hide-footer");
     };
   }, []);
-  const [scenario, setScenario] = useState("");
+  const [currentScenario, setCurrentScenario] = useState<Scenario | null>(null);
+  const [currentCharacter, setCurrentCharacter] = useState<Character | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentMessage, setCurrentMessage] = useState("");
   const [feedback, setFeedback] = useState<Feedback | null>(null);
@@ -97,7 +97,10 @@ export default function RoleplayPage() {
     | "speaking"
     | "listening"
   >("idle");
-  const [isPushToTalkPressed, setIsPushToTalkPressed] = useState(false);
+  const [recordingStartTime, setRecordingStartTime] = useState<number | null>(null);
+  const [isListening, setIsListening] = useState(false);
+  const [speechDetected, setSpeechDetected] = useState(false);
+  const [silenceTimer, setSilenceTimer] = useState<NodeJS.Timeout | null>(null);
 
   // Modal states
   const [isTranscriptOpen, setIsTranscriptOpen] = useState(false);
@@ -105,6 +108,7 @@ export default function RoleplayPage() {
   
   // Usage tracking states
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [currentRoleplaySessionId, setCurrentRoleplaySessionId] = useState<string | null>(null);
   const [userCredits, setUserCredits] = useState(0);
   const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
   
@@ -112,6 +116,7 @@ export default function RoleplayPage() {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const endCall = useCallback(async () => {
+    console.log("📞 endCall() triggered", new Error().stack);
     setIsCallActive(false);
     setIsSessionActive(false);
     setCallStatus("idle");
@@ -120,11 +125,33 @@ export default function RoleplayPage() {
     setCurrentTranscript("");
     isProcessingRef.current = false;
 
-    // Stop any ongoing recording
+    // Stop any ongoing recording or listening
     if (isRecording) {
-      stopRecording();
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
+        mediaRecorderRef.current.stop();
+        setIsRecording(false);
+      }
     }
-    stopCurrentAudio();
+    if (isListening) {
+      setIsListening(false);
+      setSpeechDetected(false);
+      if (silenceTimer) {
+        clearTimeout(silenceTimer);
+        setSilenceTimer(null);
+      }
+    }
+    // Stop current audio
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause();
+      currentAudioRef.current.currentTime = 0;
+      setIsPlaying(false);
+    }
+    
+    // Clean up silence timer
+    if (silenceTimer) {
+      clearTimeout(silenceTimer);
+      setSilenceTimer(null);
+    }
 
     // Clean up media streams
     if (streamRef.current) {
@@ -157,7 +184,37 @@ export default function RoleplayPage() {
     } else {
       toast.success("Call ended");
     }
-  }, [currentSessionId, isRecording]);
+
+    // End roleplay session in MongoDB
+    if (currentRoleplaySessionId) {
+      try {
+        const response = await fetch(`/api/roleplay/sessions/${currentRoleplaySessionId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            status: 'completed',
+            conversation_history: messages.map(msg => ({
+              role: msg.role,
+              text: msg.text,
+              timestamp: new Date().toISOString()
+            })),
+            end_time: new Date().toISOString()
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`Update session API error: ${response.status}`);
+        }
+
+        console.log("✅ Ended roleplay session:", currentRoleplaySessionId);
+        setCurrentRoleplaySessionId(null);
+      } catch (error) {
+        console.error("❌ Failed to end roleplay session:", error);
+      }
+    }
+  }, [currentRoleplaySessionId, messages, currentSessionId, isListening, isRecording, silenceTimer]);
   // Refs for audio functionality
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -165,12 +222,66 @@ export default function RoleplayPage() {
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
   const isProcessingRef = useRef(false);
 
-  // Cleanup on unmount
+  // Keep refs to avoid stale closures
+  const isCallActiveRef = useRef(isCallActive);
+  const currentSessionIdRef = useRef(currentSessionId);
+  const isListeningRef = useRef(isListening);
+  const callStatusRef = useRef(callStatus);
+  const isPlayingRef = useRef(isPlaying);
+  
+  useEffect(() => {
+    isCallActiveRef.current = isCallActive;
+  }, [isCallActive]);
+  
+  useEffect(() => {
+    currentSessionIdRef.current = currentSessionId;
+  }, [currentSessionId]);
+  
+  useEffect(() => {
+    isListeningRef.current = isListening;
+  }, [isListening]);
+  
+  useEffect(() => {
+    callStatusRef.current = callStatus;
+  }, [callStatus]);
+  
+  useEffect(() => {
+    isPlayingRef.current = isPlaying;
+  }, [isPlaying]);
+
+  // Cleanup on unmount - only when component actually unmounts
   useEffect(() => {
     return () => {
-      endCall();
+      // Only end call if we're still mounted and have an active call
+      if (isCallActiveRef.current) {
+        console.log("📞 Component unmounting with active call, ending call");
+        // Use a simplified cleanup that doesn't depend on state
+        const cleanup = async () => {
+          if (streamRef.current) {
+            streamRef.current.getTracks().forEach((track) => track.stop());
+            streamRef.current = null;
+          }
+          if (currentAudioRef.current) {
+            currentAudioRef.current.pause();
+          }
+          if (currentSessionIdRef.current) {
+            try {
+              await fetch("/api/usage/end-session", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ sessionId: currentSessionIdRef.current }),
+              });
+            } catch (error) {
+              console.error("Error ending session on unmount:", error);
+            }
+          }
+        };
+        cleanup();
+      }
     };
-  }, [endCall]);
+  }, []); // Empty dependency array so this only runs on mount/unmount
+
+ 
 
   // Keyboard shortcuts for command palette
   useEffect(() => {
@@ -217,8 +328,8 @@ export default function RoleplayPage() {
   }, []);
 
   const startCall = async () => {
-    if (!scenario.trim()) {
-      toast.error("Please enter a scenario first");
+    if (!currentScenario) {
+      toast.error("Please select a scenario first");
       return;
     }
 
@@ -245,6 +356,36 @@ export default function RoleplayPage() {
       setCurrentSessionId(usageData.sessionId);
       setSessionStartTime(new Date());
 
+      // Create roleplay session in MongoDB
+      try {
+        console.log("🔄 Creating roleplay session with user ID:", user?.id);
+        const response = await fetch('/api/roleplay/sessions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            scenario_id: "68c23a20303cd41e97d36baf", // life-insurance-cold-call scenario ID
+            character_id: undefined, // character_id (optional)
+            user_id: user?.id || 'anonymous'
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`Create session API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const roleplaySession = data.session;
+        console.log("✅ Created roleplay session response:", roleplaySession);
+        setCurrentRoleplaySessionId(roleplaySession.id);
+        console.log("✅ Set roleplay session ID:", roleplaySession.id);
+      } catch (error) {
+        console.error("❌ Failed to create roleplay session:", error);
+        // Continue anyway since this is just for tracking - create a fallback session
+        setCurrentRoleplaySessionId(`session_${Date.now()}`);
+      }
+
       // Request microphone permissions
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -270,6 +411,8 @@ export default function RoleplayPage() {
       setTimeout(() => {
         initiateAIGreeting();
       }, 1000);
+      
+      // Listening will start automatically when callStatus changes to user_turn
     } catch (error) {
       toast.error("Failed to connect. Please allow microphone access.");
       console.error("Error starting call:", error);
@@ -277,20 +420,92 @@ export default function RoleplayPage() {
     }
   };
 
-  const handlePushToTalkStart = () => {
-    if (!isCallActive || isPlaying || callStatus !== "user_turn") return;
+  const startContinuousRecording = useCallback(() => {
+    console.log("🎤 startContinuousRecording called");
+    console.log("🎤 streamRef.current:", !!streamRef.current);
+    console.log("🎤 isRecording:", isRecording);
+    console.log("🎤 mediaRecorderRef.current:", !!mediaRecorderRef.current);
+    console.log("🎤 mediaRecorderRef.current.state:", mediaRecorderRef.current?.state);
+    
+    if (!streamRef.current || isRecording) {
+      console.log("🎤 Exiting early - no stream or already recording");
+      return;
+    }
+    
+    // Start with speech detection
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === "inactive") {
+      audioChunksRef.current = [];
+      setRecordingStartTime(Date.now());
+      console.log("🎤 About to start MediaRecorder...");
+      mediaRecorderRef.current.start();
+      setIsRecording(true);
+      console.log("🎤 Started continuous recording");
+      
+      // Set up automatic stop after silence
+      const timer = setTimeout(() => {
+        console.log("🤫 No speech detected, continuing to listen...");
+        // Continue listening but reset the recording
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
+          mediaRecorderRef.current.stop();
+          setIsRecording(false);
+        }
+        // Don't automatically restart - let the onstop handler do it
+      }, 3000); // Wait 3 seconds for speech
+      
+      setSilenceTimer(timer);
+    } else {
+      console.log("🎤 Cannot start recording - MediaRecorder not ready or not inactive");
+    }
+  }, [isRecording]);
 
-    setIsPushToTalkPressed(true);
-    startRecording();
-  };
+  const startListening = useCallback(() => {
+    console.log("🎯 startListening called, callStatus:", callStatus, "isCallActive:", isCallActive, "isPlaying:", isPlaying, "isListening:", isListening);
+    if (!isCallActive || isPlaying || callStatus !== "user_turn" || isListening) {
+      console.log("🎯 startListening conditions not met, aborting");
+      return;
+    }
+    
+    console.log("🎯 Starting listening...");
+    setIsListening(true);
+    setSpeechDetected(false);
+    startContinuousRecording();
+  }, [isCallActive, isPlaying, callStatus, isListening, startContinuousRecording]);
 
-  const handlePushToTalkEnd = () => {
-    if (!isPushToTalkPressed) return;
-
-    setIsPushToTalkPressed(false);
+  const stopListening = useCallback(() => {
+    if (!isListening) return;
+    
+    console.log("🛑 Stopping listening...");
+    setIsListening(false);
+    setSpeechDetected(false);
+    if (silenceTimer) {
+      clearTimeout(silenceTimer);
+      setSilenceTimer(null);
+    }
     stopRecording();
-  };
+  }, [isListening, silenceTimer]);
 
+ 
+   // Auto-start listening when it becomes user's turn
+   useEffect(() => {
+    if (callStatus === "user_turn" && isCallActive && !isPlaying && !isListening) {
+      console.log("🎯 Auto-starting listening because status changed to user_turn");
+      const timer = setTimeout(() => {
+        console.log("🎯 Timer executing - checking conditions again...");
+        console.log("🎯 Current refs - callStatus:", callStatusRef.current, "isCallActive:", isCallActiveRef.current, "isPlaying:", isPlayingRef.current, "isListening:", isListeningRef.current);
+        
+        if (callStatusRef.current === "user_turn" && isCallActiveRef.current && !isPlayingRef.current && !isListeningRef.current) {
+          console.log("🎯 Conditions met, starting listening...");
+          setIsListening(true);
+          setSpeechDetected(false);
+          startContinuousRecording();
+        } else {
+          console.log("🎯 Conditions not met, aborting auto-start");
+        }
+      }, 500); // Small delay to ensure state is settled
+      
+      return () => clearTimeout(timer);
+    }
+  }, [callStatus, isCallActive, isPlaying, isListening, startContinuousRecording]);
   const initializeMediaRecorder = (stream: MediaStream) => {
     try {
       // Use webm format which is widely supported
@@ -316,11 +531,24 @@ export default function RoleplayPage() {
           });
           audioChunksRef.current = [];
 
-          // Process audio if we have any content
-          if (audioBlob.size > 1000) {
+          // Check recording duration
+          const recordingDuration = recordingStartTime ? Date.now() - recordingStartTime : 0;
+          console.log("🎤 Recording duration:", recordingDuration, "ms");
+
+          // Only process if recording was long enough and has sufficient audio data
+          if (audioBlob.size > 1000 && recordingDuration > 500) { // At least 500ms
             await processAudioChunk(audioBlob);
+          } else {
+            console.log("🎤 Recording too short or small, restarting continuous recording...");
+            // Only restart if we're still listening and it's user turn
+            setTimeout(() => {
+              if (isListening && callStatus === "user_turn" && isCallActive) {
+                startContinuousRecording();
+              }
+            }, 100);
           }
         }
+        setRecordingStartTime(null);
       };
 
       console.log("🎤 MediaRecorder initialized with mimeType:", mimeType);
@@ -335,6 +563,7 @@ export default function RoleplayPage() {
       mediaRecorderRef.current.state === "inactive"
     ) {
       audioChunksRef.current = [];
+      setRecordingStartTime(Date.now());
       mediaRecorderRef.current.start();
       setIsRecording(true);
       console.log("🎤 Started recording");
@@ -356,6 +585,12 @@ export default function RoleplayPage() {
     try {
       console.log("🎤 Processing audio chunk, size:", audioBlob.size);
 
+      // Skip very small audio chunks - likely silence or noise
+      if (audioBlob.size < 5000) {
+        console.log("🎤 Skipping small audio chunk, likely silence");
+        return;
+      }
+
       // Create FormData and append the audio file
       const formData = new FormData();
       formData.append("audio", audioBlob, "audio.webm");
@@ -371,15 +606,31 @@ export default function RoleplayPage() {
       }
 
       const data = await response.json();
+      console.log("🎤 Raw transcription response:", data);
 
-      if (data.text && data.text.trim().length > 2) {
-        console.log("🎤 Transcribed:", data.text);
-        setCurrentTranscript(data.text);
+      // Check for actual meaningful speech with stricter criteria
+      if (data.text && data.text.trim().length > 3) {
+        const transcript = data.text.trim();
+        console.log("🎤 Transcribed:", transcript);
+        
+        // Ignore common false transcriptions
+        const ignoredPhrases = ["thank you", "thanks", ".", "", " "];
+        const isIgnored = ignoredPhrases.some(phrase => 
+          transcript.toLowerCase() === phrase.toLowerCase()
+        );
+        
+        if (!isIgnored) {
+          setCurrentTranscript(transcript);
 
-        // Process the transcribed text
-        if (!isProcessingRef.current) {
-          await handleUserSpeech(data.text.trim());
+          // Process the transcribed text
+          if (!isProcessingRef.current) {
+            await handleUserSpeech(transcript);
+          }
+        } else {
+          console.log("🎤 Ignoring likely false transcription:", transcript);
         }
+      } else {
+        console.log("🎤 No meaningful speech detected, text:", data.text);
       }
     } catch (error) {
       console.error("Error processing audio chunk:", error);
@@ -446,7 +697,8 @@ export default function RoleplayPage() {
       body: JSON.stringify({
         message: userText,
         history: conversationHistory,
-        scenario: scenario,
+        scenario: currentScenario,
+        character: currentCharacter,
       }),
     });
 
@@ -558,7 +810,8 @@ export default function RoleplayPage() {
  
 
   const resetScenario = () => {
-    setScenario("");
+    setCurrentScenario(null);
+    setCurrentCharacter(null);
     setMessages([]);
     setCurrentMessage("");
     setFeedback(null);
@@ -622,7 +875,8 @@ export default function RoleplayPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           history: messages,
-          scenario: scenario,
+          scenario: currentScenario,
+          character: currentCharacter,
         }),
       });
 
@@ -643,9 +897,10 @@ export default function RoleplayPage() {
 
   // Command palette handlers
   const handleStartSession = (scenario: Scenario, character?: Character) => {
-    setScenario(scenario.llmPrompt);
+    setCurrentScenario(scenario);
+    setCurrentCharacter(character || null);
     setShowCommandPalette(false);
-    toast.success(`Started session: ${scenario.title}`);
+    toast.success(`Started session: ${scenario.title}${character ? ` with ${character.name}` : ''}`);
     // Automatically start the call after selecting scenario
     setTimeout(() => {
       startCall();
@@ -709,17 +964,9 @@ export default function RoleplayPage() {
             </Badge>
           </div>
 
-          {/* Credits and Settings - Right side, inline with status */}
+          {/* Credits and Controls - Right side, inline with status */}
           <div className="absolute right-4 sm:right-6 flex items-center gap-2 sm:gap-3">
             <CreditsDisplay onCreditsUpdate={setUserCredits} />
-            <RoleplaySettings
-              scenario={scenario}
-              setScenario={setScenario}
-              availableVoices={availableVoices}
-              selectedVoiceId={selectedVoiceId}
-              setSelectedVoiceId={setSelectedVoiceId}
-              isLoadingVoices={isLoadingVoices}
-            />
             <div className="mr-2">
               <ThemeToggler />
             </div>
@@ -754,10 +1001,10 @@ export default function RoleplayPage() {
               </>
             )}
           </Badge>
-          {isRecording && (
-            <Badge variant="destructive" className="animate-pulse text-xs px-2 py-1">
+          {isListening && (
+            <Badge variant="default" className="animate-pulse text-xs px-2 py-1 bg-blue-500">
               <Mic className="mr-1 h-3 w-3" />
-              Recording
+              Listening
             </Badge>
           )}
           {isPlaying && (
@@ -782,7 +1029,7 @@ export default function RoleplayPage() {
             </p>
           </div>
 
-          {/* Main Liquid Orb Button */}
+          {/* Main Liquid Orb Button - always show */}
           <div className="mb-12 sm:mb-16">
             <LiquidOrbButton
               size="xl"
@@ -793,26 +1040,48 @@ export default function RoleplayPage() {
             </LiquidOrbButton>
           </div>
 
-          {/* Start Call Button */}
-          <Button
-            onClick={startCall}
-            disabled={!scenario.trim()}
-            size="lg"
-            variant="default"
-            // className="text: bg-white bg-gradient-to-r from-purple-600 to-pink-600 px-12 py-6 text-lg font-semibold hover:from-purple-700 hover:to-pink-700"
-          >
-            <Phone className="mr-3 h-6 w-6" />
-            Start Voice Call
-          </Button>
+          {/* Choose Scenario Button - only show when no scenario selected */}
+          {!currentScenario && (
+            <Button
+              onClick={() => setShowCommandPalette(true)}
+              size="lg"
+              variant="default"
+              className="mb-4"
+            >
+              <Phone className="mr-3 h-6 w-6" />
+              Choose Scenario & Start Call
+            </Button>
+          )}
 
-          {!scenario.trim() && (
+          {/* Start Call Button - only show when scenario is selected */}
+          {currentScenario && (
+            <div className="text-center space-x-4 flex justify-center items-center">
+              <Button
+                onClick={startCall}
+                disabled={!currentScenario}
+                size="lg"
+                variant="default"
+              >
+                <Phone className="mr-3 h-6 w-6" />
+                Start Call: {currentScenario.title}
+              </Button>
+              <Button
+                onClick={() => setShowCommandPalette(true)}
+                size="lg"
+                variant="default"
+              >
+                Change Scenario
+              </Button>
+            </div>
+          )}
+
+          {!currentScenario && (
             <p className="mt-4 max-w-sm text-center text-sm text-muted-foreground">
-              Please set up your scenario using the settings icon in the top
-              right corner before starting a call
+              Use the button above to select a scenario and character before starting a call
             </p>
           )}
-          
-          {scenario.trim() && userCredits < 0.45 && (
+
+          {currentScenario && userCredits < 0.45 && (
             <p className="mt-4 max-w-sm text-center text-sm text-orange-600">
               ⚠️ Low credits detected. Add more credits to ensure uninterrupted sessions.
             </p>
@@ -825,7 +1094,7 @@ export default function RoleplayPage() {
           <div className="mb-8 text-center">
             {callStatus === "user_turn" ? (
               <p className="text-lg font-medium text-blue-600 dark:text-blue-400">
-                Your turn - Press and hold to speak
+                {isListening ? "Listening... speak naturally" : "Getting ready to listen..."}
               </p>
             ) : callStatus === "ai_turn" ? (
               <p className="text-lg font-medium text-purple-600 dark:text-purple-400">
@@ -851,29 +1120,26 @@ export default function RoleplayPage() {
             )}
           </div>
 
-          {/* Large Push-to-Talk Button */}
+          {/* Visual Indicator Orb */}
           <div className="mb-8">
             <LiquidOrbButton
-                onMouseDown={handlePushToTalkStart}
-                onMouseUp={handlePushToTalkEnd}
-                onMouseLeave={handlePushToTalkEnd}
-                onTouchStart={handlePushToTalkStart}
-                onTouchEnd={handlePushToTalkEnd}
-                disabled={callStatus !== "user_turn" || isPlaying}
-                isPressed={isPushToTalkPressed}
+                disabled={true}
+                isPressed={isListening || isRecording}
                 size="xl"
-                className="h-56 w-56 sm:h-72 sm:w-72"
+                className="h-56 w-56 sm:h-72 sm:w-72 cursor-default"
             >
-              <span></span>
+              <span className="text-sm font-medium">
+                {isListening ? "🎤" : isPlaying ? "🔊" : "💬"}
+              </span>
             </LiquidOrbButton>
           </div>
 
           <div className="mb-8 max-w-xs text-center text-sm text-muted-foreground">
             {callStatus === "user_turn"
-              ? "Hold the button while speaking, then release when done"
+              ? "Speak naturally - the system is listening automatically"
               : isPlaying
-                ? "Listen to the AI response"
-                : "Wait for your turn to speak"}
+                ? "Listen to Zara's response"
+                : "Natural conversation in progress"}
           </div>
 
           {/* Text Input - Full Width */}
@@ -1054,7 +1320,7 @@ export default function RoleplayPage() {
         onClose={() => setShowCommandPalette(false)}
         onStartSession={handleStartSession}
         onResumeSession={handleResumeSession}
-        currentUser="anonymous" // You may want to get this from Clerk user
+        currentUser={user?.id || "anonymous"}
         theme={theme}
         onThemeChange={handleThemeChange}
         voiceEnabled={voiceEnabled}

@@ -31,12 +31,16 @@ import {
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 // Standalone Purchase Button component
-function PurchaseButton({ 
-  amount, 
-  onSuccess 
-}: { 
-  amount: number; 
-  onSuccess: () => void; 
+function PurchaseButton({
+  amount,
+  onSuccess,
+  paymentIntentAmount,
+  isCreatingPayment
+}: {
+  amount: number;
+  onSuccess: () => void;
+  paymentIntentAmount: number;
+  isCreatingPayment: boolean;
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -52,6 +56,18 @@ function PurchaseButton({
     const paymentElement = elements.getElement('payment');
     if (!paymentElement) {
       toast.error("Payment form not ready. Please refresh and try again.");
+      return;
+    }
+
+    // Validate amount matches payment intent
+    if (amount !== paymentIntentAmount) {
+      toast.error("Amount has changed. Please wait for payment to update.");
+      return;
+    }
+
+    // Don't allow payment while creating new payment intent
+    if (isCreatingPayment) {
+      toast.error("Payment is being updated. Please try again in a moment.");
       return;
     }
 
@@ -78,10 +94,10 @@ function PurchaseButton({
     <Button
       variant="default"
       onClick={handlePurchase}
-      disabled={!stripe || isLoading}
+      disabled={!stripe || isLoading || isCreatingPayment || amount !== paymentIntentAmount}
       className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-lg"
     >
-      {isLoading ? "Processing..." : `Purchase`}
+      {isLoading ? "Processing..." : isCreatingPayment ? "Updating..." : amount !== paymentIntentAmount ? "Updating amount..." : `Purchase`}
     </Button>
   );
 }
@@ -295,6 +311,7 @@ export default function PaymentModal({
 }: PaymentModalProps) {
   const [amount, setAmount] = useState("10");
   const [clientSecret, setClientSecret] = useState<string>("");
+  const [paymentIntentAmount, setPaymentIntentAmount] = useState<number>(0);
   const [showInvoices, setShowInvoices] = useState(true);
   const [isCreatingPayment, setIsCreatingPayment] = useState(false);
   const [showAlternativePayments, setShowAlternativePayments] = useState(false);
@@ -344,6 +361,7 @@ export default function PaymentModal({
         }
 
         setClientSecret(data.clientSecret);
+        setPaymentIntentAmount(numericAmount);
       } catch (error) {
         toast.error(
           error instanceof Error ? error.message : "Payment setup failed"
@@ -530,7 +548,12 @@ export default function PaymentModal({
                     </div>
 
                     {/* Purchase Button - now inside Elements */}
-                    <PurchaseButton amount={numericAmount} onSuccess={handleSuccess} />
+                    <PurchaseButton
+                      amount={numericAmount}
+                      onSuccess={handleSuccess}
+                      paymentIntentAmount={paymentIntentAmount}
+                      isCreatingPayment={isCreatingPayment}
+                    />
 
                     {/* One-time payment toggle */}
                     <div className="flex items-center justify-between pt-4">
@@ -580,7 +603,12 @@ export default function PaymentModal({
                   </div>
 
                   {/* Purchase Button for alternative payments */}
-                  <PurchaseButton amount={numericAmount} onSuccess={handleSuccess} />
+                  <PurchaseButton
+                    amount={numericAmount}
+                    onSuccess={handleSuccess}
+                    paymentIntentAmount={paymentIntentAmount}
+                    isCreatingPayment={isCreatingPayment}
+                  />
                 </>
               )}
             </Elements>

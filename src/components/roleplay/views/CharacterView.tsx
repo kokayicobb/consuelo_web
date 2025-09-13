@@ -10,6 +10,8 @@ interface CharacterViewProps {
   onSearchChange: (value: string) => void;
   onBackClick: () => void;
   onStartSession: (scenario: Scenario, character?: Character) => void;
+  onNavigateToSession: (scenario: Scenario, character?: Character) => void;
+  onCreateCharacter: () => void;
   onClose: () => void;
 }
 
@@ -21,6 +23,8 @@ export const CharacterView: React.FC<CharacterViewProps> = ({
   onSearchChange,
   onBackClick,
   onStartSession,
+  onNavigateToSession,
+  onCreateCharacter,
   onClose
 }) => {
   return (
@@ -62,6 +66,19 @@ export const CharacterView: React.FC<CharacterViewProps> = ({
               No characters found.
             </Command.Empty>
             
+            {/* Create Character Button - moved to top */}
+            <div className="pb-4">
+              <button
+                onClick={onCreateCharacter}
+                className="w-full flex items-center justify-center px-4 py-3 bg-transparent hover:bg-white/10 rounded-lg text-white/80 hover:text-white transition-all duration-200"
+              >
+                <svg className="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Create Custom Character
+              </button>
+            </div>
+            
             <Command.Group heading="Available Characters" className="text-xs font-medium text-white/70 dark:text-gray-300 px-2 py-1.5">
               {characters.map((character) => (
                 <Command.Item
@@ -71,8 +88,7 @@ export const CharacterView: React.FC<CharacterViewProps> = ({
                     // Use the first available scenario for now
                     const scenario = scenarios[0];
                     if (scenario) {
-                      onStartSession(scenario, character);
-                      onClose();
+                      onNavigateToSession(scenario, character);
                     }
                   }}
                   className="
@@ -127,7 +143,7 @@ export const CharacterView: React.FC<CharacterViewProps> = ({
                       )}
 
                       <div className="mt-2 text-xs text-white/60 dark:text-gray-400">
-                        Click to start roleplay with this character
+                        Click to prepare roleplay with this character
                       </div>
                     </div>
                   </div>

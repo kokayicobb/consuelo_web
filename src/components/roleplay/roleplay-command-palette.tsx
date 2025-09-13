@@ -24,19 +24,13 @@ import {
   RoleplayCommandPaletteProps,
   ViewType
 } from './types';
-import {
-  fetchScenarios,
-  fetchCharacters,
-  fetchSessionHistory,
-  fetchRecentTips,
-  fetchAnalyticsSummary,
-  fetchSessionAnalytics
-} from './api';
 import { ScenarioView } from './views/ScenarioView';
 import { CharacterView } from './views/CharacterView';
 import { SessionHistoryView } from './views/SessionHistoryView';
 import { AnalyticsView } from './views/AnalyticsView';
 import { TipsView } from './views/TipsView';
+import { RoleplaySessionView } from './views/RoleplaySessionView';
+import { CharacterCreateView } from './views/CharacterCreateView';
 
 const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
   isOpen,
@@ -63,6 +57,8 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
   // Selected items for detail views
   const [selectedSession, setSelectedSession] = useState<RoleplaySession | null>(null);
   const [selectedAnalytics, setSelectedAnalytics] = useState<SessionAnalytics | null>(null);
+  const [selectedScenario, setSelectedScenario] = useState<Scenario | null>(null);
+  const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
 
   // Reset view when palette opens
   useEffect(() => {
@@ -71,6 +67,8 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
       setCurrentView('main');
       setSelectedSession(null);
       setSelectedAnalytics(null);
+      setSelectedScenario(null);
+      setSelectedCharacter(null);
     }
   }, [isOpen]);
 
@@ -95,11 +93,28 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
   const loadScenarios = async () => {
     try {
       setLoading(true);
-      const data = await fetchScenarios();
-      setScenarios(data);
+      const response = await fetch('/api/roleplay/scenarios');
+      
+      if (!response.ok) {
+        console.warn('Scenarios API not available, using mock data');
+        setScenarios([]);
+        setCurrentView('scenarios');
+        return;
+      }
+      
+      const data = await response.json();
+      // Map MongoDB scenarios to our Scenario type
+      const mappedScenarios = (data.scenarios || []).map((scenario: any) => ({
+        id: scenario._id || scenario.id || scenario.scenario_id,
+        title: scenario.title,
+        description: scenario.description,
+        llmPrompt: scenario.llmPrompt
+      }));
+      setScenarios(mappedScenarios);
       setCurrentView('scenarios');
     } catch (error) {
       console.error('Failed to load scenarios:', error);
+      setScenarios([]);
     } finally {
       setLoading(false);
     }
@@ -108,11 +123,61 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
   const loadCharacters = async () => {
     try {
       setLoading(true);
-      const data = await fetchCharacters();
-      setCharacters(data);
+
+      // Load both characters and scenarios concurrently
+      const [charactersResponse, scenariosResponse] = await Promise.all([
+        fetch('/api/roleplay/characters'),
+        fetch('/api/roleplay/scenarios')
+      ]);
+
+      // Handle characters
+      if (!charactersResponse.ok) {
+        console.warn('Characters API error:', charactersResponse.status, charactersResponse.statusText);
+        setCharacters([]);
+      } else {
+        const charactersData = await charactersResponse.json();
+        if (!charactersData.success) {
+          console.warn('Characters API returned error:', charactersData.error);
+          setCharacters([]);
+        } else {
+          // Map MongoDB characters to our Character type
+          const mappedCharacters = (charactersData.characters || []).map((char: any) => ({
+            id: char._id || char.id,
+            name: char.name,
+            role: char.role,
+            personality: char.personality,
+            background: char.background,
+            objections: char.objections || [],
+            voice_id: char.voice_id || '',
+            scenario_ids: char.scenario_ids || [],
+            created_at: char.createdAt || char.created_at || new Date().toISOString()
+          }));
+          setCharacters(mappedCharacters);
+        }
+      }
+
+      // Handle scenarios
+      if (!scenariosResponse.ok) {
+        console.warn('Scenarios API not available, using empty scenarios');
+        setScenarios([]);
+      } else {
+        const scenariosData = await scenariosResponse.json();
+        // Map MongoDB scenarios to our Scenario type
+        const mappedScenarios = (scenariosData.scenarios || []).map((scenario: any) => ({
+          id: scenario._id || scenario.id || scenario.scenario_id,
+          title: scenario.title,
+          description: scenario.description,
+          llmPrompt: scenario.llmPrompt
+        }));
+        setScenarios(mappedScenarios);
+      }
+
       setCurrentView('characters');
     } catch (error) {
       console.error('Failed to load characters:', error);
+      setCharacters([]);
+      setScenarios([]);
+      setCurrentView('characters');
     } finally {
       setLoading(false);
     }
@@ -121,11 +186,25 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
   const loadSessionHistory = async () => {
     try {
       setLoading(true);
-      const data = await fetchSessionHistory(currentUser);
-      setSessions(data);
+      const url = currentUser 
+        ? `/api/roleplay/sessions?user_id=${currentUser}`
+        : '/api/roleplay/sessions';
+      
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        console.warn('Session history API not available');
+        setSessions([]);
+        setCurrentView('sessions');
+        return;
+      }
+      
+      const data = await response.json();
+      setSessions(data.sessions || []);
       setCurrentView('sessions');
     } catch (error) {
       console.error('Failed to load session history:', error);
+      setSessions([]);
     } finally {
       setLoading(false);
     }
@@ -134,11 +213,21 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
   const loadRecentTips = async () => {
     try {
       setLoading(true);
-      const data = await fetchRecentTips();
-      setRecentTips(data);
+      const response = await fetch('/api/roleplay/tips/recent?limit=10');
+      
+      if (!response.ok) {
+        console.warn('Recent tips API not available');
+        setRecentTips([]);
+        setCurrentView('recent_tips');
+        return;
+      }
+      
+      const data = await response.json();
+      setRecentTips(data.tips || []);
       setCurrentView('recent_tips');
     } catch (error) {
       console.error('Failed to load recent tips:', error);
+      setRecentTips([]);
     } finally {
       setLoading(false);
     }
@@ -147,11 +236,25 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
   const loadAnalytics = async () => {
     try {
       setLoading(true);
-      const data = await fetchAnalyticsSummary(currentUser);
-      setAnalytics(data);
+      const url = currentUser 
+        ? `/api/roleplay/analytics/summary?user_id=${currentUser}`
+        : '/api/roleplay/analytics/summary';
+      
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        console.warn('Analytics summary API not available');
+        setAnalytics([]);
+        setCurrentView('analytics');
+        return;
+      }
+      
+      const data = await response.json();
+      setAnalytics(data.analytics || []);
       setCurrentView('analytics');
     } catch (error) {
       console.error('Failed to load analytics:', error);
+      setAnalytics([]);
     } finally {
       setLoading(false);
     }
@@ -435,6 +538,11 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
               onSearchChange={setSearch}
               onBackClick={() => setCurrentView('main')}
               onStartSession={onStartSession}
+              onNavigateToSession={(scenario) => {
+                setSelectedScenario(scenario);
+                setSelectedCharacter(undefined);
+                setCurrentView('session_setup');
+              }}
               onClose={onClose}
             />
           )}
@@ -447,6 +555,12 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
               onSearchChange={setSearch}
               onBackClick={() => setCurrentView('main')}
               onStartSession={onStartSession}
+              onNavigateToSession={(scenario, character) => {
+                setSelectedScenario(scenario);
+                setSelectedCharacter(character);
+                setCurrentView('session_setup');
+              }}
+              onCreateCharacter={() => setCurrentView('character_create')}
               onClose={onClose}
             />
           )}
@@ -480,6 +594,67 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
               loading={loading}
               onNavigateBack={() => setCurrentView('main')}
               onChangeView={setCurrentView}
+            />
+          )}
+          {currentView === 'session_setup' && selectedScenario && (
+            <RoleplaySessionView
+              scenario={selectedScenario}
+              character={selectedCharacter}
+              onBackClick={() => {
+                const previousView = selectedCharacter ? 'characters' : 'scenarios';
+                setCurrentView(previousView);
+              }}
+              onStartSession={onStartSession}
+              onClose={onClose}
+            />
+          )}
+          {currentView === 'character_create' && (
+            <CharacterCreateView
+              scenarios={scenarios}
+              onBackClick={() => setCurrentView('characters')}
+              onSaveAndStart={async (character, scenario) => {
+                try {
+                  // Save the character to the database via API
+                  const response = await fetch('/api/roleplay/characters', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(character),
+                  });
+
+                  if (!response.ok) {
+                    throw new Error('Failed to save character');
+                  }
+
+                  const data = await response.json();
+                  const savedCharacter = data.character;
+
+                  // Convert MongoDB character to our Character type
+                  const newCharacter: Character = {
+                    id: savedCharacter._id || savedCharacter.id,
+                    name: savedCharacter.name,
+                    role: savedCharacter.role,
+                    personality: savedCharacter.personality,
+                    background: savedCharacter.background,
+                    objections: savedCharacter.objections || [],
+                    voice_id: savedCharacter.voice_id || '',
+                    scenario_ids: savedCharacter.scenario_ids || [],
+                    created_at: savedCharacter.createdAt || savedCharacter.created_at || new Date().toISOString()
+                  };
+
+                  // Add to characters list for this session
+                  setCharacters(prev => [...prev, newCharacter]);
+
+                  // Start the session with the new character
+                  onStartSession(scenario, newCharacter);
+                } catch (error) {
+                  console.error('Failed to save character:', error);
+                  throw error; // Re-throw so the component can handle it
+                }
+              }}
+              onClose={onClose}
+              currentUser={currentUser}
             />
           )}
         </Command>

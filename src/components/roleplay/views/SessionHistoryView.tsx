@@ -6,11 +6,50 @@ import {
   Character,
   ViewType
 } from '../types';
-import {
-  formatSessionDuration,
-  getSessionDuration,
-  fetchSessionAnalytics
-} from '../api';
+// Utility functions
+function formatSessionDuration(seconds: number): string {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  
+  if (minutes === 0) {
+    return `${remainingSeconds}s`;
+  } else if (remainingSeconds === 0) {
+    return `${minutes}m`;
+  } else {
+    return `${minutes}m ${remainingSeconds}s`;
+  }
+}
+
+function getSessionDuration(session: RoleplaySession): number {
+  if (session.total_duration) {
+    return session.total_duration;
+  }
+  
+  if (session.end_time) {
+    const start = new Date(session.start_time).getTime();
+    const end = new Date(session.end_time).getTime();
+    return Math.floor((end - start) / 1000);
+  }
+  
+  return 0;
+}
+
+async function fetchSessionAnalytics(sessionId: string): Promise<SessionAnalytics | null> {
+  try {
+    const response = await fetch(`/api/roleplay/analytics/${sessionId}`);
+    
+    if (!response.ok) {
+      console.warn('Analytics API not available');
+      return null;
+    }
+    
+    const data = await response.json();
+    return data.analytics;
+  } catch (error) {
+    console.warn('Error fetching session analytics:', error);
+    return null;
+  }
+}
 
 interface SessionHistoryViewProps {
   sessions: RoleplaySession[];
