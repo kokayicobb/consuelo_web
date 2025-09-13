@@ -79,7 +79,7 @@ export function Header() {
           </Link>
 
           {/* Mobile menu trigger */}
-          <div className="md:hidden">
+          <div className="md:hidden -mr-2">
             <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" className="!h-8 !w-8 !p-4">
@@ -87,13 +87,41 @@ export function Header() {
                   <span className="sr-only">Toggle menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[240px] p-0 bg-transparent backdrop-blur-md border-l border-border/20 [&_button[data-sheet-close]]:text-white [&_button[data-sheet-close]_svg]:text-white">
+              <SheetContent side="right" className="w-[240px] p-0 bg-transparent backdrop-blur-md border-l border-border/20 [&_button]:!text-white [&_button_svg]:!text-white [&_button]:!opacity-100 [&_button_svg]:!opacity-100 [&_*]:!outline-none [&_*]:!ring-0 [&_*]:!border-transparent [&_*]:focus:!outline-none [&_*]:focus:!ring-0 [&_*]:focus:!border-transparent [&_*]:focus-visible:!outline-none [&_*]:focus-visible:!ring-0 [&_*]:focus-visible:!ring-offset-0" style={{"--tw-ring-shadow": "none", "--tw-ring-offset-shadow": "none", "--tw-ring-offset-width": "0px"} as React.CSSProperties}>
                 <div className="flex h-full flex-col">
                   <div className="border-b border-white/20 p-4">
                     <Link href="/" className="flex items-center">
                       <span className="text-xl font-semibold text-white">{themeConfig.branding.name}</span>
                     </Link>
                   </div>
+                  <div className="p-4 border-b border-white/20">
+                    {/* Mobile auth buttons and theme toggler */}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <SignedOut>
+                          <SignUpButton mode="modal">
+                            <button className="py-2 text-sm transition-colors hover:text-white/80 text-white">
+                              {themeConfig.buttons.auth.signUp}
+                            </button>
+                          </SignUpButton>
+                        </SignedOut>
+                        <SignedIn>
+                          <Link
+                            href="/roleplay"
+                            className="block py-2 text-sm transition-colors hover:text-white/80 text-white"
+                            onClick={() => setIsSheetOpen(false)}
+                          >
+                            {themeConfig.buttons.auth.goToApp}
+                          </Link>
+                        </SignedIn>
+                      </div>
+                      <div className="[&_button]:text-white [&_svg]:text-white">
+                        <ThemeToggler />
+                      </div>
+                    </div>
+                  </div>
+                  {/* Divider */}
+                  <div className="mx-4 my-3 h-0.5 bg-white/60"></div>
                   <nav className="flex-1 overflow-auto p-4">
                     {navItems.map((item) => (
                       <Link
@@ -105,35 +133,6 @@ export function Header() {
                         {item.name}
                       </Link>
                     ))}
-                    <div className="mt-6 border-t border-white/20 pt-6">
-                      {/* Mobile auth buttons */}
-                      <SignedOut>
-                        <SignInButton mode="modal">
-                          <button className="block w-full py-3 text-left text-sm transition-colors hover:text-white/80 text-white">
-                            {themeConfig.buttons.auth.signIn}
-                          </button>
-                        </SignInButton>
-                        <SignUpButton mode="modal">
-                          <button className="block w-full py-3 text-left text-sm transition-colors hover:text-white/80 text-white">
-                            {themeConfig.buttons.auth.signUp}
-                          </button>
-                        </SignUpButton>
-                      </SignedOut>
-                      <SignedIn>
-                        <Link
-                          href="/roleplay"
-                          className="block py-3 text-sm transition-colors hover:text-white/80 text-white"
-                          onClick={() => setIsSheetOpen(false)}
-                        >
-                          {themeConfig.buttons.auth.goToApp}
-                        </Link>
-                      </SignedIn>
-                      <div className="flex items-center justify-start">
-                        <div className="[&_button]:text-white [&_svg]:text-white">
-                          <ThemeToggler />
-                        </div>
-                      </div>
-                    </div>
                   </nav>
                 </div>
               </SheetContent>
@@ -153,11 +152,6 @@ export function Header() {
             </Button>
             
             <SignedOut>
-              <SignInButton mode="modal">
-                <Button variant="default">
-                  {themeConfig.buttons.auth.signIn}
-                </Button>
-              </SignInButton>
               <SignUpButton mode="modal">
                 <Button variant="default">
                   {themeConfig.buttons.auth.signUp}

@@ -96,10 +96,7 @@ export async function POST(request: Request) {
       },
     });
 
-    // For simplicity, we'll immediately add credits on successful intent creation
-    // In production, you'd want to use webhooks to handle this after payment confirmation
-    userCredits.credits += creditAmount;
-    await userCredits.save();
+    // Credits will be added via webhook when payment is actually successful
 
     return NextResponse.json({ 
       success: true,

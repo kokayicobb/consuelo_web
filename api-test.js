@@ -19,8 +19,12 @@ async function testFashnApi() {
       category: "tops"
     };
 
-    // Replace this with your new API key
-    const API_KEY = 'fa-u5Z4R9wIqa6R-kfW6TOb7KXllTSG1PB278ZiB';
+    // Use environment variable for API key - NEVER hardcode secrets!
+    const API_KEY = process.env.FASHN_API_KEY || process.env.NEXT_PUBLIC_VS_TOKEN;
+
+    if (!API_KEY) {
+      throw new Error('FASHN_API_KEY environment variable is required');
+    }
 
     console.log('Sending request to FASHN API...');
     const response = await fetch('https://api.fashn.ai/v1/run', {

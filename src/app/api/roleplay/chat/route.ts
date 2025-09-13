@@ -27,11 +27,12 @@ export async function POST(req: Request) {
     console.log('🤖 Chat API called');
     const body = await req.json();
     console.log('🤖 Chat request body:', body);
-    
-    const { message, history, scenario } = body;
+
+    const { message, history, scenario, character } = body;
     console.log('🤖 Message:', message, 'Type:', typeof message, 'Length:', message?.length);
     console.log('🤖 History length:', history?.length);
     console.log('🤖 Scenario:', scenario);
+    console.log('🤖 Character:', character);
 
     if (!process.env.GROQ_API_KEY) {
       console.error('❌ GROQ_API_KEY not found in environment variables');
@@ -40,11 +41,32 @@ export async function POST(req: Request) {
 
     // Build messages array for Groq
     const messages: any[] = [];
-    
-    // Add system message
-    const systemMessage = `You are a prospect for a cold call. The scenario is: ${scenario}. Your goal is to act as a realistic, challenging, or open prospect based on the scenario. Do not break character. Respond concisely as a person would in a real conversation. Keep responses under 50 words. 
 
-IMPORTANT: Only provide the exact words you would speak. Do not include any stage directions, action descriptions, or text in parentheses like "(firmly)" or "(sighs)". Just speak naturally as the character would.`;
+    // Use scenario.llmPrompt if it's a scenario object, otherwise use scenario as string
+    const scenarioPrompt = typeof scenario === 'object' && scenario?.llmPrompt
+      ? scenario.llmPrompt
+      : scenario;
+
+    // Build system message with character information if available
+    let systemMessage = `You are a prospect for a cold call. The scenario is: ${scenarioPrompt}. Your goal is to act as a realistic, challenging, or open prospect based on the scenario. Do not break character. Respond concisely as a person would in a real conversation. Keep responses under 50 words.`;
+
+    // Add character-specific information if character is provided
+    if (character) {
+      systemMessage += `\n\nCharacter Details:
+- Name: ${character.name}
+- Role: ${character.role}
+- Personality: ${character.personality}
+- Background: ${character.background}`;
+
+      if (character.objections && character.objections.length > 0) {
+        systemMessage += `\n- Common objections: ${character.objections.join(', ')}`;
+      }
+
+      systemMessage += `\n\nEmbody this character completely. Use their personality traits and background in your responses. If appropriate, use their common objections naturally in the conversation.`;
+    }
+
+    systemMessage += `\n\nIMPORTANT: Only provide the exact words you would speak. Do not include any stage directions, action descriptions, or text in parentheses like "(firmly)" or "(sighs)". Just speak naturally as the character would.`;
+
     messages.push({
       role: 'system',
       content: systemMessage
@@ -61,8 +83,8 @@ IMPORTANT: Only provide the exact words you would speak. Do not include any stag
     }
 
     // Add current user message
-    const userMessage = message.trim() === "" 
-      ? `${scenario}` // Use the scenario as the initial message
+    const userMessage = message.trim() === ""
+      ? `${scenarioPrompt}` // Use the scenario prompt as the initial message
       : message;
     
     messages.push({

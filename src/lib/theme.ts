@@ -27,7 +27,6 @@ export interface ThemeConfig {
       ariaLabel: string;
     };
     auth: {
-      signIn: string;
       signUp: string;
       goToApp: string;
     };
@@ -64,7 +63,6 @@ export const themeConfig: ThemeConfig = {
       ariaLabel: "Search",
     },
     auth: {
-      signIn: "Sign In",
       signUp: "Start free trial",
       goToApp: "Go to App",
     },
