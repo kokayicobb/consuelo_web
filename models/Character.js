@@ -38,6 +38,15 @@ const characterSchema = new mongoose.Schema({
   created_by: {
     type: String,
     default: 'system'
+  },
+  user_id: {
+    type: String,
+    default: null,
+    index: true
+  },
+  is_custom: {
+    type: Boolean,
+    default: false
   }
 }, {
   timestamps: true

@@ -9,6 +9,7 @@ interface ScenarioViewProps {
   onSearchChange: (value: string) => void;
   onBackClick: () => void;
   onStartSession: (scenario: Scenario) => void;
+  onNavigateToSession: (scenario: Scenario) => void;
   onClose: () => void;
 }
 
@@ -19,6 +20,7 @@ export const ScenarioView: React.FC<ScenarioViewProps> = ({
   onSearchChange,
   onBackClick,
   onStartSession,
+  onNavigateToSession,
   onClose
 }) => {
   return (
@@ -66,8 +68,7 @@ export const ScenarioView: React.FC<ScenarioViewProps> = ({
                   key={scenario.id}
                   value={`${scenario.title} ${scenario.description}`}
                   onSelect={() => {
-                    onStartSession(scenario);
-                    onClose();
+                    onNavigateToSession(scenario);
                   }}
                   className="
                     relative flex cursor-pointer select-none items-center rounded-md px-3 py-4 text-base outline-none 
@@ -94,7 +95,7 @@ export const ScenarioView: React.FC<ScenarioViewProps> = ({
                         {scenario.description}
                       </p>
                       <div className="mt-2 text-xs text-white/60 dark:text-gray-400">
-                        Click to start this roleplay scenario
+                        Click to prepare this roleplay scenario
                       </div>
                     </div>
                   </div>

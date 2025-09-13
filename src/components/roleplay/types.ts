@@ -135,18 +135,20 @@ export interface RoleplayCommandPaletteProps {
   onVoiceToggle: (enabled: boolean) => void;
 }
 
-export type ViewType = 
-  | 'main' 
-  | 'scenarios' 
-  | 'characters' 
-  | 'sessions' 
-  | 'analytics' 
-  | 'tips' 
+export type ViewType =
+  | 'main'
+  | 'scenarios'
+  | 'characters'
+  | 'sessions'
+  | 'analytics'
+  | 'tips'
   | 'recent_tips'
-  | 'settings' 
+  | 'settings'
   | 'shortcuts'
   | 'session_detail'
-  | 'analytics_detail';
+  | 'analytics_detail'
+  | 'session_setup'
+  | 'character_create';
 
 // Mock data for development (matches your existing scenario structure)
 export const mockScenarios: Scenario[] = [
