@@ -273,36 +273,37 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
   // Main menu render function
   const renderMainMenu = () => (
     <>
-      <div className="flex items-center border-b border-gray-200 dark:border-gray-700 px-3">
+      <div className="flex items-center border-b border-gray-200 dark:border-gray-700 px-4">
         <HugeiconsIcon
           icon={AiSearchIcon}
-          className="mr-2 h-5 w-5 shrink-0 opacity-50 text-white dark:text-gray-400"
+          className="mr-3 h-6 w-6 shrink-0 opacity-50 text-white dark:text-gray-400"
         />
         <Command.Input
           placeholder="Search roleplay tools..."
-          className="flex h-14 w-full rounded-md bg-transparent py-4 text-base outline-none placeholder:text-white/70 dark:placeholder:text-gray-400 disabled:cursor-not-allowed disabled:opacity-50 text-white dark:text-gray-100"
+          className="flex h-16 w-full rounded-md bg-transparent py-5 text-lg outline-none placeholder:text-white/70 dark:placeholder:text-gray-400 disabled:cursor-not-allowed disabled:opacity-50 text-white dark:text-gray-100"
           value={search}
           onValueChange={setSearch}
           autoFocus
         />
       </div>
-      <Command.List className="max-h-[500px] overflow-y-auto p-3">
-        <Command.Empty className="py-6 text-center text-sm text-white/70 dark:text-gray-400">
+      {/* Palette height can be edited here. Example: max-h-[500px], max-h-[700px] */}
+      <Command.List className="max-h-[700px] overflow-y-auto p-4">
+        <Command.Empty className="py-6 text-center text-base text-white/70 dark:text-gray-400">
           No menu items found.
         </Command.Empty>
         
-        <Command.Group className="text-xs font-medium text-white/70 dark:text-gray-400 px-2 py-1.5">
+        <Command.Group className="text-sm font-medium text-white/70 dark:text-gray-400 px-2 py-1.5">
           <Command.Item
             value="scenarios"
             onSelect={loadScenarios}
             className="
-              relative flex cursor-pointer select-none items-center rounded-md px-3 py-4 text-base outline-none 
+              relative flex cursor-pointer select-none items-center rounded-md px-4 py-5 text-lg outline-none 
               data-[selected=true]:bg-gray-200/30 data-[selected=true]:dark:bg-gray-600 data-[selected=true]:text-white data-[selected=true]:dark:text-gray-100
               hover:bg-gray-200/30 hover:dark:bg-gray-600
             "
           >
-            <div className="flex items-center space-x-3">
-              <HugeiconsIcon icon={AiFileIcon} className="h-5 w-5 mr-1" />
+            <div className="flex items-center space-x-4">
+              <HugeiconsIcon icon={AiFileIcon} className="h-6 w-6 mr-2" />
               <span className="font-medium text-white dark:text-gray-300">Scenarios</span>
             </div>
           </Command.Item>
@@ -311,13 +312,13 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
             value="characters"
             onSelect={loadCharacters}
             className="
-              relative flex cursor-pointer select-none items-center rounded-md px-3 py-4 text-base outline-none 
+              relative flex cursor-pointer select-none items-center rounded-md px-4 py-5 text-lg outline-none 
               data-[selected=true]:bg-gray-200/30 data-[selected=true]:dark:bg-gray-600 data-[selected=true]:text-white data-[selected=true]:dark:text-gray-100
               hover:bg-gray-200/30 hover:dark:bg-gray-600
             "
           >
-            <div className="flex items-center space-x-3">
-              <HugeiconsIcon icon={AiUserIcon} className="h-5 w-5 mr-1" />
+            <div className="flex items-center space-x-4">
+              <HugeiconsIcon icon={AiUserIcon} className="h-6 w-6 mr-2" />
               <span className="font-medium text-white dark:text-gray-300">Characters</span>
             </div>
           </Command.Item>
@@ -326,13 +327,13 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
             value="session history"
             onSelect={loadSessionHistory}
             className="
-              relative flex cursor-pointer select-none items-center rounded-md px-3 py-4 text-base outline-none 
+              relative flex cursor-pointer select-none items-center rounded-md px-4 py-5 text-lg outline-none 
               data-[selected=true]:bg-gray-200/30 data-[selected=true]:dark:bg-gray-600 data-[selected=true]:text-white data-[selected=true]:dark:text-gray-100
               hover:bg-gray-200/30 hover:dark:bg-gray-600
             "
           >
-            <div className="flex items-center space-x-3">
-              <HugeiconsIcon icon={AlarmClockIcon} className="h-5 w-5 mr-1" />
+            <div className="flex items-center space-x-4">
+              <HugeiconsIcon icon={AlarmClockIcon} className="h-6 w-6 mr-2" />
               <span className="font-medium text-white dark:text-gray-300">Session History</span>
             </div>
           </Command.Item>
@@ -341,13 +342,13 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
             value="performance analytics"
             onSelect={loadAnalytics}
             className="
-              relative flex cursor-pointer select-none items-center rounded-md px-3 py-4 text-base outline-none 
+              relative flex cursor-pointer select-none items-center rounded-md px-4 py-5 text-lg outline-none 
               data-[selected=true]:bg-gray-200/30 data-[selected=true]:dark:bg-gray-600 data-[selected=true]:text-white data-[selected=true]:dark:text-gray-100
               hover:bg-gray-200/30 hover:dark:bg-gray-600
             "
           >
-            <div className="flex items-center space-x-3">
-              <HugeiconsIcon icon={AnalyticsUpIcon} className="h-5 w-5 mr-1" />
+            <div className="flex items-center space-x-4">
+              <HugeiconsIcon icon={AnalyticsUpIcon} className="h-6 w-6 mr-2" />
               <span className="font-medium text-white dark:text-gray-300">Performance Analytics</span>
             </div>
           </Command.Item>
@@ -356,13 +357,13 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
             value="recent tips"
             onSelect={loadRecentTips}
             className="
-              relative flex cursor-pointer select-none items-center rounded-md px-3 py-4 text-base outline-none 
+              relative flex cursor-pointer select-none items-center rounded-md px-4 py-5 text-lg outline-none 
               data-[selected=true]:bg-gray-200/30 data-[selected=true]:dark:bg-gray-600 data-[selected=true]:text-white data-[selected=true]:dark:text-gray-100
               hover:bg-gray-200/30 hover:dark:bg-gray-600
             "
           >
-            <div className="flex items-center space-x-3">
-              <HugeiconsIcon icon={BulbIcon} className="h-5 w-5 mr-1" />
+            <div className="flex items-center space-x-4">
+              <HugeiconsIcon icon={BulbIcon} className="h-6 w-6 mr-2" />
               <span className="font-medium text-white dark:text-gray-300">Recent Tips</span>
             </div>
           </Command.Item>
@@ -371,13 +372,13 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
             value="keyboard shortcuts"
             onSelect={() => setCurrentView('shortcuts')}
             className="
-              relative flex cursor-pointer select-none items-center rounded-md px-3 py-4 text-base outline-none 
+              relative flex cursor-pointer select-none items-center rounded-md px-4 py-5 text-lg outline-none 
               data-[selected=true]:bg-gray-200/30 data-[selected=true]:dark:bg-gray-600 data-[selected=true]:text-white data-[selected=true]:dark:text-gray-100
               hover:bg-gray-200/30 hover:dark:bg-gray-600
             "
           >
-            <div className="flex items-center space-x-3">
-              <HugeiconsIcon icon={KeyboardIcon} className="h-5 w-5 mr-1" />
+            <div className="flex items-center space-x-4">
+              <HugeiconsIcon icon={KeyboardIcon} className="h-6 w-6 mr-2" />
               <span className="font-medium text-white dark:text-gray-300">Keyboard Shortcuts</span>
             </div>
           </Command.Item>
@@ -386,13 +387,13 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
             value="settings"
             onSelect={() => setCurrentView('settings')}
             className="
-              relative flex cursor-pointer select-none items-center rounded-md px-3 py-4 text-base outline-none 
+              relative flex cursor-pointer select-none items-center rounded-md px-4 py-5 text-lg outline-none 
               data-[selected=true]:bg-gray-200/30 data-[selected=true]:dark:bg-gray-600 data-[selected=true]:text-white data-[selected=true]:dark:text-gray-100
               hover:bg-gray-200/30 hover:dark:bg-gray-600
             "
           >
-            <div className="flex items-center space-x-3">
-              <HugeiconsIcon icon={SettingsIcon} className="h-5 w-5 mr-1" />
+            <div className="flex items-center space-x-4">
+              <HugeiconsIcon icon={SettingsIcon} className="h-6 w-6 mr-2" />
               <span className="font-medium text-white dark:text-gray-300">Settings</span>
             </div>
           </Command.Item>
@@ -404,33 +405,34 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
   // Shortcuts view
   const renderShortcuts = () => (
     <>
-      <div className="flex items-center border-b border-gray-200 dark:border-gray-700 px-3">
+      <div className="flex items-center border-b border-gray-200 dark:border-gray-700 px-4">
         <button
           onClick={() => setCurrentView('main')}
           className="mr-2 p-1 hover:bg-gray-200/30 dark:hover:bg-gray-600 rounded text-white dark:text-gray-300"
         >
-          <HugeiconsIcon icon={ArrowLeftDoubleIcon} className="h-5 w-5" />
+          <HugeiconsIcon icon={ArrowLeftDoubleIcon} className="h-6 w-6" />
         </button>
-        <div className="flex h-14 w-full items-center py-4 text-base font-medium text-white dark:text-gray-100">
+        <div className="flex h-16 w-full items-center py-5 text-lg font-medium text-white dark:text-gray-100">
           Keyboard Shortcuts
         </div>
       </div>
-      <Command.List className="max-h-[500px] overflow-y-auto p-3">
-        <Command.Group heading="Shortcuts" className="text-xs font-medium text-white/70 dark:text-gray-400 px-2 py-1.5">
-          <Command.Item className="relative flex cursor-pointer select-none justify-between items-center rounded-md px-3 py-3 text-base outline-none text-white dark:text-gray-100">
+      {/* Palette height can be edited here. Example: max-h-[500px], max-h-[700px] */}
+      <Command.List className="max-h-[700px] overflow-y-auto p-4">
+        <Command.Group heading="Shortcuts" className="text-sm font-medium text-white/70 dark:text-gray-400 px-2 py-1.5">
+          <Command.Item className="relative flex cursor-pointer select-none justify-between items-center rounded-md px-4 py-4 text-lg outline-none text-white dark:text-gray-100">
             <span>Open command palette</span>
-            <kbd className="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 rounded text-sm text-gray-900 dark:text-gray-100">/</kbd>
+            <kbd className="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 rounded text-base text-gray-900 dark:text-gray-100">/</kbd>
           </Command.Item>
-          <Command.Item className="relative flex cursor-pointer select-none justify-between items-center rounded-md px-3 py-3 text-base outline-none text-white dark:text-gray-100">
+          <Command.Item className="relative flex cursor-pointer select-none justify-between items-center rounded-md px-4 py-4 text-lg outline-none text-white dark:text-gray-100">
             <span>Close command palette</span>
-            <kbd className="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 rounded text-sm text-gray-900 dark:text-gray-100">Esc</kbd>
+            <kbd className="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 rounded text-base text-gray-900 dark:text-gray-100">Esc</kbd>
           </Command.Item>
-          <Command.Item className="relative flex cursor-pointer select-none justify-between items-center rounded-md px-3 py-3 text-base outline-none text-white dark:text-gray-100">
+          <Command.Item className="relative flex cursor-pointer select-none justify-between items-center rounded-md px-4 py-4 text-lg outline-none text-white dark:text-gray-100">
             <span>Navigate and select</span>
             <div className="flex space-x-1">
-              <kbd className="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 rounded text-sm text-gray-900 dark:text-gray-100">↑↓</kbd>
-              <span className="text-xs text-white/70 dark:text-gray-400">+</span>
-              <kbd className="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 rounded text-sm text-gray-900 dark:text-gray-100">Enter</kbd>
+              <kbd className="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 rounded text-base text-gray-900 dark:text-gray-100">↑↓</kbd>
+              <span className="text-sm text-white/70 dark:text-gray-400">+</span>
+              <kbd className="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 rounded text-base text-gray-900 dark:text-gray-100">Enter</kbd>
             </div>
           </Command.Item>
         </Command.Group>
@@ -441,27 +443,28 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
   // Settings view
   const renderSettings = () => (
     <>
-      <div className="flex items-center border-b border-gray-200 dark:border-gray-700 px-3">
+      <div className="flex items-center border-b border-gray-200 dark:border-gray-700 px-4">
         <button
           onClick={() => setCurrentView('main')}
           className="mr-2 p-1 hover:bg-gray-200/30 dark:hover:bg-gray-600 rounded text-white dark:text-gray-300"
         >
-          <HugeiconsIcon icon={ArrowLeftDoubleIcon} className="h-5 w-5" />
+          <HugeiconsIcon icon={ArrowLeftDoubleIcon} className="h-6 w-6" />
         </button>
-        <div className="flex h-14 w-full items-center py-4 text-base font-medium text-white dark:text-gray-100">
+        <div className="flex h-16 w-full items-center py-5 text-lg font-medium text-white dark:text-gray-100">
           Settings
         </div>
       </div>
-      <div className="max-h-[500px] overflow-y-auto p-5">
-        <div className="space-y-6">
+      {/* Palette height can be edited here. Example: max-h-[500px], max-h-[700px] */}
+      <div className="max-h-[700px] overflow-y-auto p-6">
+        <div className="space-y-8">
           {/* Voice Toggle */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <HugeiconsIcon icon={AiMicIcon} className="h-5 w-5 text-white/70 dark:text-gray-400" />
+              <div className="flex items-center space-x-3">
+                <HugeiconsIcon icon={AiMicIcon} className="h-6 w-6 text-white/70 dark:text-gray-400" />
                 <div className="flex flex-col">
-                  <span className="font-medium text-white dark:text-gray-100">Voice Mode</span>
-                  <span className="text-xs text-white/70 dark:text-gray-400">
+                  <span className="font-medium text-lg text-white dark:text-gray-100">Voice Mode</span>
+                  <span className="text-sm text-white/70 dark:text-gray-400">
                     {voiceEnabled ? 'Voice enabled' : 'Voice disabled'}
                   </span>
                 </div>
@@ -469,14 +472,14 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
               <button
                 onClick={() => onVoiceToggle(!voiceEnabled)}
                 className={`
-                  relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent 
+                  relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent 
                   transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
                   ${voiceEnabled ? 'bg-blue-600' : 'bg-gray-200'}
                 `}
               >
                 <span
                   className={`
-                    pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 
+                    pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 
                     transition duration-200 ease-in-out
                     ${voiceEnabled ? 'translate-x-5' : 'translate-x-0'}
                   `}
@@ -486,30 +489,30 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
           </div>
 
           {/* Theme Toggle */}
-          <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+          <div className="border-t border-gray-200 dark:border-gray-700 pt-8">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3">
                 {theme === 'light' ? (
-                  <HugeiconsIcon icon={SunIcon} className="h-5 w-5 text-yellow-500" />
+                  <HugeiconsIcon icon={SunIcon} className="h-6 w-6 text-yellow-500" />
                 ) : (
-                  <HugeiconsIcon icon={MoonIcon} className="h-5 w-5 text-white/70 dark:text-gray-400" />
+                  <HugeiconsIcon icon={MoonIcon} className="h-6 w-6 text-white/70 dark:text-gray-400" />
                 )}
                 <div className="flex flex-col">
-                  <span className="font-medium text-white dark:text-gray-100">Theme</span>
-                  <span className="text-xs text-white/70 dark:text-gray-400 capitalize">{theme} mode</span>
+                  <span className="font-medium text-lg text-white dark:text-gray-100">Theme</span>
+                  <span className="text-sm text-white/70 dark:text-gray-400 capitalize">{theme} mode</span>
                 </div>
               </div>
               <button
                 onClick={toggleTheme}
                 className={`
-                  relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent 
+                  relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent 
                   transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
                   ${theme === 'dark' ? 'bg-blue-600' : 'bg-gray-200'}
                 `}
               >
                 <span
                   className={`
-                    pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 
+                    pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 
                     transition duration-200 ease-in-out
                     ${theme === 'dark' ? 'translate-x-5' : 'translate-x-0'}
                   `}
@@ -525,7 +528,8 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
   // Main render - view routing will be implemented in other files
   return isOpen ? (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-start justify-center pt-[15vh]" onClick={handleBackdropClick}>
-      <div className="bg-white/20 dark:bg-gray-900/20 backdrop-blur-xl rounded-lg shadow-2xl border border-white/20 dark:border-gray-700/50 w-full max-w-2xl mx-4 overflow-hidden">
+      {/* Palette width can be edited here. Example: max-w-2xl, max-w-3xl, max-w-4xl */}
+      <div className="bg-white/20 dark:bg-gray-900/20 backdrop-blur-xl rounded-lg shadow-2xl border border-white/20 dark:border-gray-700/50 w-full max-w-4xl mx-4 overflow-hidden">
         <Command className="w-full text-white dark:text-gray-100">
           {currentView === 'main' && renderMainMenu()}
           {currentView === 'shortcuts' && renderShortcuts()}
@@ -662,5 +666,6 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
     </div>
   ) : null;
 };
+
 
 export default RoleplayCommandPalette;

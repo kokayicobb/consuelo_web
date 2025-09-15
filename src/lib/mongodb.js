@@ -1,61 +1,84 @@
 const mongoose = require('mongoose');
 
 let isConnected = false;
+let connectionPromise = null;
 
 async function connectDB() {
-  if (isConnected) {
-    console.log('✅ Using existing MongoDB connection');
+  const mongoUri = process.env.MONGODB_URI;
+
+  if (!mongoUri) {
+    throw new Error('MONGODB_URI environment variable is not defined');
+  }
+
+  // If already connected and healthy, return immediately
+  if (isConnected && mongoose.connection.readyState === 1) {
     return;
   }
 
-  try {
-    const mongoUri = process.env.MONGODB_URI;
-    
-    if (!mongoUri) {
-      throw new Error('MONGODB_URI environment variable is not defined');
-    }
-
-    const options = {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      bufferCommands: false,
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 45000,
-      family: 4, // Use IPv4
-      maxPoolSize: 10,
-      minPoolSize: 5,
-      maxIdleTimeMS: 30000,
-      retryWrites: true,
-      retryReads: true
-    };
-
-    console.log('🔗 Connecting to MongoDB...');
-    await mongoose.connect(mongoUri, options);
-    
-    isConnected = true;
-    console.log('✅ Connected to MongoDB successfully');
-    
-    // Connection event listeners
-    mongoose.connection.on('error', (error) => {
-      console.error('❌ MongoDB connection error:', error);
-      isConnected = false;
-    });
-
-    mongoose.connection.on('disconnected', () => {
-      console.log('⚠️ MongoDB disconnected');
-      isConnected = false;
-    });
-
-    mongoose.connection.on('reconnected', () => {
-      console.log('🔄 MongoDB reconnected');
-      isConnected = true;
-    });
-
-  } catch (error) {
-    console.error('❌ Failed to connect to MongoDB:', error);
-    isConnected = false;
-    throw error;
+  // If connection is already in progress, wait for it
+  if (connectionPromise) {
+    return connectionPromise;
   }
+
+  // Start new connection
+  connectionPromise = (async () => {
+    try {
+      // Only close if we have a connection that's not already closed
+      if (mongoose.connection.readyState !== 0) {
+        console.log('🔄 Closing existing MongoDB connection...');
+        await mongoose.connection.close();
+        isConnected = false;
+      }
+
+      const options = {
+        bufferCommands: false,
+        serverSelectionTimeoutMS: 10000,
+        socketTimeoutMS: 45000,
+        family: 4,
+        maxPoolSize: 10,
+        minPoolSize: 2,
+        maxIdleTimeMS: 30000,
+        retryWrites: true,
+        retryReads: true
+      };
+
+      console.log('🔗 Connecting to MongoDB...');
+      await mongoose.connect(mongoUri, options);
+
+      isConnected = true;
+      console.log('✅ Connected to MongoDB successfully');
+
+      // Set up connection event listeners only once
+      if (!mongoose.connection.listeners('error').length) {
+        mongoose.connection.on('error', (error) => {
+          console.error('❌ MongoDB connection error:', error);
+          isConnected = false;
+          connectionPromise = null;
+        });
+
+        mongoose.connection.on('disconnected', () => {
+          console.log('⚠️ MongoDB disconnected');
+          isConnected = false;
+          connectionPromise = null;
+        });
+
+        mongoose.connection.on('reconnected', () => {
+          console.log('🔄 MongoDB reconnected');
+          isConnected = true;
+        });
+      }
+
+    } catch (error) {
+      console.error('❌ Failed to connect to MongoDB:', error);
+      isConnected = false;
+      connectionPromise = null;
+      throw error;
+    } finally {
+      connectionPromise = null;
+    }
+  })();
+
+  return connectionPromise;
 }
 
 // Graceful shutdown

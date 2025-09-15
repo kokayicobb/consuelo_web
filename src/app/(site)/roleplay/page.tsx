@@ -1031,13 +1031,13 @@ export default function RoleplayPage() {
 
           {/* Main Liquid Orb Button - always show */}
           <div className="mb-12 sm:mb-16">
-            <LiquidOrbButton
+            {/* <LiquidOrbButton
               size="xl"
               className="h-48 w-48 sm:h-64 sm:w-64"
               disabled={false}
             >
               <span></span>
-            </LiquidOrbButton>
+            </LiquidOrbButton> */}
           </div>
 
           {/* Choose Scenario Button - only show when no scenario selected */}
