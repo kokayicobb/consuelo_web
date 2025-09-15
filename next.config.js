@@ -104,7 +104,7 @@ const nextConfig = {
           // Content Security Policy
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' *.stripe.com *.googletagmanager.com *.google-analytics.com *.clerk.accounts.dev *.posthog.com us-assets.i.posthog.com va.vercel-scripts.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src 'self' fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' *.stripe.com *.supabase.co *.sanity.io *.fashn.ai *.groq.com *.clerk.accounts.dev *.posthog.com us-assets.i.posthog.com va.vercel-scripts.com wss: https:; frame-src 'self' *.stripe.com; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self';"
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' *.stripe.com *.googletagmanager.com *.google-analytics.com *.clerk.accounts.dev *.clerk.consuelohq.com *.posthog.com us-assets.i.posthog.com va.vercel-scripts.com *.vercel-scripts.com consuelohq.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src 'self' fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' *.stripe.com *.supabase.co *.sanity.io *.fashn.ai *.groq.com *.clerk.accounts.dev *.posthog.com us-assets.i.posthog.com va.vercel-scripts.com wss: https:; frame-src 'self' *.stripe.com; media-src 'self' *.sanity.io blob:; object-src 'none'; base-uri 'self'; form-action 'self';"
           },
           // Prevent clickjacking
           { key: 'X-Frame-Options', value: 'DENY' },
