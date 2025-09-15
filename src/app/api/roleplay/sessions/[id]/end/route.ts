@@ -24,7 +24,7 @@ export async function POST(
     }
     
     const endTime = new Date();
-    const totalDuration = session.start_time ? Math.round((endTime - session.start_time) / 1000) : 0;
+    const totalDuration = session.start_time ? Math.round((endTime.getTime() - session.start_time.getTime()) / 1000) : 0;
     
     const updatedSession = await RoleplaySession.findByIdAndUpdate(
       id,

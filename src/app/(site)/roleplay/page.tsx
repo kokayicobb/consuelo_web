@@ -684,13 +684,31 @@ export default function RoleplayPage() {
           }
         } else {
           console.log("🎤 Ignoring likely false transcription:", transcript);
+          // Restart continuous recording since speech was ignored
+          setTimeout(() => {
+            if (isListening && callStatus === "user_turn" && isCallActive) {
+              startContinuousRecording();
+            }
+          }, 100);
         }
       } else {
         console.log("🎤 No meaningful speech detected, text:", data.text);
+        // Restart continuous recording since no meaningful speech was detected
+        setTimeout(() => {
+          if (isListening && callStatus === "user_turn" && isCallActive) {
+            startContinuousRecording();
+          }
+        }, 100);
       }
     } catch (error) {
       console.error("Error processing audio chunk:", error);
       setCallStatus("user_turn");
+      // Restart continuous recording on error if still in listening state
+      setTimeout(() => {
+        if (isListening && callStatus === "user_turn" && isCallActive) {
+          startContinuousRecording();
+        }
+      }, 100);
     }
   };
  
