@@ -23,8 +23,8 @@ async function connectDB() {
   // Start new connection
   connectionPromise = (async () => {
     try {
-      // Only close if we have a connection that's not already closed
-      if (mongoose.connection.readyState !== 0) {
+      // Only close if we have a connection that's in a bad state (not disconnected and not connected)
+      if (mongoose.connection.readyState === 2 || mongoose.connection.readyState === 3) {
         console.log('🔄 Closing existing MongoDB connection...');
         await mongoose.connection.close();
         isConnected = false;

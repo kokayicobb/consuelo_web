@@ -386,15 +386,30 @@ export default function RoleplayPage() {
         setCurrentRoleplaySessionId(`session_${Date.now()}`);
       }
 
-      // Request microphone permissions
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-        },
-      });
-      streamRef.current = stream;
+      // Request microphone permissions with better error handling
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+          },
+        });
+        streamRef.current = stream;
+      } catch (micError) {
+        console.error("Microphone access error:", micError);
+        if (micError.name === "NotAllowedError") {
+          toast.error("Microphone access denied. Please allow microphone access in your browser settings and try again.");
+        } else if (micError.name === "NotFoundError") {
+          toast.error("No microphone found. Please connect a microphone and try again.");
+        } else if (micError.name === "NotSupportedError") {
+          toast.error("Microphone access not supported on this browser.");
+        } else {
+          toast.error("Failed to access microphone. Please check your browser settings and try again.");
+        }
+        setCallStatus("idle");
+        return;
+      }
 
       // Initialize media recorder
       initializeMediaRecorder(stream);

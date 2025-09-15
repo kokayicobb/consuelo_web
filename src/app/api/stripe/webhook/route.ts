@@ -3,6 +3,7 @@ import { headers } from 'next/headers';
 import Stripe from 'stripe';
 import dbConnect from '@/lib/mongodb';
 import UserCredits from '@/models/UserCredits';
+import Payment from '@/models/Payment';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-08-27.basil' as any,
@@ -64,18 +65,31 @@ export async function POST(request: Request) {
       
       case 'payment_intent.succeeded': {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        
+
         const clerkUserId = paymentIntent.metadata?.clerkUserId;
         const creditAmount = parseFloat(paymentIntent.metadata?.creditAmount || '0');
-        
+
         if (clerkUserId && creditAmount > 0) {
+          // Update payment record
+          const payment = await Payment.findOne({ stripePaymentIntentId: paymentIntent.id });
+
+          if (payment) {
+            payment.status = 'succeeded';
+            payment.creditsAdded = true;
+            await payment.save();
+
+            console.log(`Updated payment record for payment intent ${paymentIntent.id}`);
+          } else {
+            console.error(`Payment record not found for payment intent ${paymentIntent.id}`);
+          }
+
           // Update user credits
           const userCredits = await UserCredits.findOne({ clerkUserId });
-          
+
           if (userCredits) {
             userCredits.credits += creditAmount;
             await userCredits.save();
-            
+
             console.log(`Added $${creditAmount} credits to user ${clerkUserId}. New balance: $${userCredits.credits}`);
           } else {
             console.error(`User credits record not found for Clerk user ${clerkUserId}`);

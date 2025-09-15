@@ -3,6 +3,7 @@ import { auth } from '@clerk/nextjs/server';
 import Stripe from 'stripe';
 import dbConnect from '@/lib/mongodb';
 import UserCredits from '@/models/UserCredits';
+import Payment from '@/models/Payment';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-08-27.basil' as any,
@@ -95,6 +96,24 @@ export async function POST(request: Request) {
         totalAmount: totalAmount.toString(),
       },
     });
+
+    // Create payment record for tracking
+    const payment = new Payment({
+      clerkUserId: userId,
+      stripePaymentIntentId: paymentIntent.id,
+      stripeCustomerId: customerId,
+      amount: creditAmount,
+      serviceFee: serviceFee,
+      totalAmount: totalAmount,
+      status: 'pending',
+      creditsAdded: false,
+      metadata: {
+        description: `$${creditAmount} Roleplay Credits (${minutes} minutes)`,
+        minutes: minutes,
+      },
+    });
+
+    await payment.save();
 
     // Credits will be added via webhook when payment is actually successful
 

@@ -95,7 +95,7 @@ function PurchaseButton({
       variant="default"
       onClick={handlePurchase}
       disabled={!stripe || isLoading || isCreatingPayment || amount !== paymentIntentAmount}
-      className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-lg"
+      className="w-full bg-indigo-600 hover:bg-indigo-700 text-white hover:text-white font-medium py-3 rounded-lg"
     >
       {isLoading ? "Processing..." : isCreatingPayment ? "Updating..." : amount !== paymentIntentAmount ? "Updating amount..." : `Purchase`}
     </Button>
@@ -188,7 +188,7 @@ function CheckoutForm({
         <Button
           onClick={handleSubmit}
           disabled={!stripe || isLoading}
-          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-lg"
+          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white hover:text-white font-medium py-3 rounded-lg"
         >
           {isLoading ? "Processing..." : `Purchase`}
         </Button>

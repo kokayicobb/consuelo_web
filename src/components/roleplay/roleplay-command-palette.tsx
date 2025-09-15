@@ -273,7 +273,17 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
   // Main menu render function
   const renderMainMenu = () => (
     <>
-      <div className="flex items-center border-b border-gray-200 dark:border-gray-700 px-4">
+      <div className="
+        flex items-center
+        border-b border-white/20 dark:border-gray-400/25
+        bg-gradient-to-r from-white/5 to-transparent
+        dark:from-gray-700/10 dark:to-transparent
+        px-4
+        relative
+        after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[1px]
+        after:bg-gradient-to-r after:from-transparent after:via-white/40 after:to-transparent
+        after:dark:via-gray-300/30
+      ">
         <HugeiconsIcon
           icon={AiSearchIcon}
           className="mr-3 h-6 w-6 shrink-0 opacity-50 text-white dark:text-gray-400"
@@ -297,9 +307,13 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
             value="scenarios"
             onSelect={loadScenarios}
             className="
-              relative flex cursor-pointer select-none items-center rounded-md px-4 py-5 text-lg outline-none 
-              data-[selected=true]:bg-gray-200/30 data-[selected=true]:dark:bg-gray-600 data-[selected=true]:text-white data-[selected=true]:dark:text-gray-100
-              hover:bg-gray-200/30 hover:dark:bg-gray-600
+              relative flex cursor-pointer select-none items-center rounded-xl px-4 py-5 text-lg outline-none
+              data-[selected=true]:bg-gradient-to-r data-[selected=true]:from-white/20 data-[selected=true]:via-white/15 data-[selected=true]:to-white/8
+              data-[selected=true]:dark:from-gray-600/25 data-[selected=true]:dark:via-gray-700/20 data-[selected=true]:dark:to-gray-800/15
+              data-[selected=true]:shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_4px_12px_rgba(0,0,0,0.15)]
+              data-[selected=true]:border data-[selected=true]:border-white/25 data-[selected=true]:dark:border-gray-400/25
+              data-[selected=true]:text-white data-[selected=true]:dark:text-gray-100
+              data-[selected=true]:backdrop-blur-sm
             "
           >
             <div className="flex items-center space-x-4">
@@ -312,9 +326,13 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
             value="characters"
             onSelect={loadCharacters}
             className="
-              relative flex cursor-pointer select-none items-center rounded-md px-4 py-5 text-lg outline-none 
-              data-[selected=true]:bg-gray-200/30 data-[selected=true]:dark:bg-gray-600 data-[selected=true]:text-white data-[selected=true]:dark:text-gray-100
-              hover:bg-gray-200/30 hover:dark:bg-gray-600
+              relative flex cursor-pointer select-none items-center rounded-xl px-4 py-5 text-lg outline-none
+              data-[selected=true]:bg-gradient-to-r data-[selected=true]:from-white/20 data-[selected=true]:via-white/15 data-[selected=true]:to-white/8
+              data-[selected=true]:dark:from-gray-600/25 data-[selected=true]:dark:via-gray-700/20 data-[selected=true]:dark:to-gray-800/15
+              data-[selected=true]:shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_4px_12px_rgba(0,0,0,0.15)]
+              data-[selected=true]:border data-[selected=true]:border-white/25 data-[selected=true]:dark:border-gray-400/25
+              data-[selected=true]:text-white data-[selected=true]:dark:text-gray-100
+              data-[selected=true]:backdrop-blur-sm
             "
           >
             <div className="flex items-center space-x-4">
@@ -327,9 +345,13 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
             value="session history"
             onSelect={loadSessionHistory}
             className="
-              relative flex cursor-pointer select-none items-center rounded-md px-4 py-5 text-lg outline-none 
-              data-[selected=true]:bg-gray-200/30 data-[selected=true]:dark:bg-gray-600 data-[selected=true]:text-white data-[selected=true]:dark:text-gray-100
-              hover:bg-gray-200/30 hover:dark:bg-gray-600
+              relative flex cursor-pointer select-none items-center rounded-xl px-4 py-5 text-lg outline-none
+              data-[selected=true]:bg-gradient-to-r data-[selected=true]:from-white/20 data-[selected=true]:via-white/15 data-[selected=true]:to-white/8
+              data-[selected=true]:dark:from-gray-600/25 data-[selected=true]:dark:via-gray-700/20 data-[selected=true]:dark:to-gray-800/15
+              data-[selected=true]:shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_4px_12px_rgba(0,0,0,0.15)]
+              data-[selected=true]:border data-[selected=true]:border-white/25 data-[selected=true]:dark:border-gray-400/25
+              data-[selected=true]:text-white data-[selected=true]:dark:text-gray-100
+              data-[selected=true]:backdrop-blur-sm
             "
           >
             <div className="flex items-center space-x-4">
@@ -342,9 +364,13 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
             value="performance analytics"
             onSelect={loadAnalytics}
             className="
-              relative flex cursor-pointer select-none items-center rounded-md px-4 py-5 text-lg outline-none 
-              data-[selected=true]:bg-gray-200/30 data-[selected=true]:dark:bg-gray-600 data-[selected=true]:text-white data-[selected=true]:dark:text-gray-100
-              hover:bg-gray-200/30 hover:dark:bg-gray-600
+              relative flex cursor-pointer select-none items-center rounded-xl px-4 py-5 text-lg outline-none
+              data-[selected=true]:bg-gradient-to-r data-[selected=true]:from-white/20 data-[selected=true]:via-white/15 data-[selected=true]:to-white/8
+              data-[selected=true]:dark:from-gray-600/25 data-[selected=true]:dark:via-gray-700/20 data-[selected=true]:dark:to-gray-800/15
+              data-[selected=true]:shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_4px_12px_rgba(0,0,0,0.15)]
+              data-[selected=true]:border data-[selected=true]:border-white/25 data-[selected=true]:dark:border-gray-400/25
+              data-[selected=true]:text-white data-[selected=true]:dark:text-gray-100
+              data-[selected=true]:backdrop-blur-sm
             "
           >
             <div className="flex items-center space-x-4">
@@ -357,9 +383,13 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
             value="recent tips"
             onSelect={loadRecentTips}
             className="
-              relative flex cursor-pointer select-none items-center rounded-md px-4 py-5 text-lg outline-none 
-              data-[selected=true]:bg-gray-200/30 data-[selected=true]:dark:bg-gray-600 data-[selected=true]:text-white data-[selected=true]:dark:text-gray-100
-              hover:bg-gray-200/30 hover:dark:bg-gray-600
+              relative flex cursor-pointer select-none items-center rounded-xl px-4 py-5 text-lg outline-none
+              data-[selected=true]:bg-gradient-to-r data-[selected=true]:from-white/20 data-[selected=true]:via-white/15 data-[selected=true]:to-white/8
+              data-[selected=true]:dark:from-gray-600/25 data-[selected=true]:dark:via-gray-700/20 data-[selected=true]:dark:to-gray-800/15
+              data-[selected=true]:shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_4px_12px_rgba(0,0,0,0.15)]
+              data-[selected=true]:border data-[selected=true]:border-white/25 data-[selected=true]:dark:border-gray-400/25
+              data-[selected=true]:text-white data-[selected=true]:dark:text-gray-100
+              data-[selected=true]:backdrop-blur-sm
             "
           >
             <div className="flex items-center space-x-4">
@@ -372,9 +402,13 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
             value="keyboard shortcuts"
             onSelect={() => setCurrentView('shortcuts')}
             className="
-              relative flex cursor-pointer select-none items-center rounded-md px-4 py-5 text-lg outline-none 
-              data-[selected=true]:bg-gray-200/30 data-[selected=true]:dark:bg-gray-600 data-[selected=true]:text-white data-[selected=true]:dark:text-gray-100
-              hover:bg-gray-200/30 hover:dark:bg-gray-600
+              relative flex cursor-pointer select-none items-center rounded-xl px-4 py-5 text-lg outline-none
+              data-[selected=true]:bg-gradient-to-r data-[selected=true]:from-white/20 data-[selected=true]:via-white/15 data-[selected=true]:to-white/8
+              data-[selected=true]:dark:from-gray-600/25 data-[selected=true]:dark:via-gray-700/20 data-[selected=true]:dark:to-gray-800/15
+              data-[selected=true]:shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_4px_12px_rgba(0,0,0,0.15)]
+              data-[selected=true]:border data-[selected=true]:border-white/25 data-[selected=true]:dark:border-gray-400/25
+              data-[selected=true]:text-white data-[selected=true]:dark:text-gray-100
+              data-[selected=true]:backdrop-blur-sm
             "
           >
             <div className="flex items-center space-x-4">
@@ -387,9 +421,13 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
             value="settings"
             onSelect={() => setCurrentView('settings')}
             className="
-              relative flex cursor-pointer select-none items-center rounded-md px-4 py-5 text-lg outline-none 
-              data-[selected=true]:bg-gray-200/30 data-[selected=true]:dark:bg-gray-600 data-[selected=true]:text-white data-[selected=true]:dark:text-gray-100
-              hover:bg-gray-200/30 hover:dark:bg-gray-600
+              relative flex cursor-pointer select-none items-center rounded-xl px-4 py-5 text-lg outline-none
+              data-[selected=true]:bg-gradient-to-r data-[selected=true]:from-white/20 data-[selected=true]:via-white/15 data-[selected=true]:to-white/8
+              data-[selected=true]:dark:from-gray-600/25 data-[selected=true]:dark:via-gray-700/20 data-[selected=true]:dark:to-gray-800/15
+              data-[selected=true]:shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_4px_12px_rgba(0,0,0,0.15)]
+              data-[selected=true]:border data-[selected=true]:border-white/25 data-[selected=true]:dark:border-gray-400/25
+              data-[selected=true]:text-white data-[selected=true]:dark:text-gray-100
+              data-[selected=true]:backdrop-blur-sm
             "
           >
             <div className="flex items-center space-x-4">
@@ -408,7 +446,16 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
       <div className="flex items-center border-b border-gray-200 dark:border-gray-700 px-4">
         <button
           onClick={() => setCurrentView('main')}
-          className="mr-2 p-1 hover:bg-gray-200/30 dark:hover:bg-gray-600 rounded text-white dark:text-gray-300"
+          className="
+            mr-2 p-2
+            hover:bg-gradient-to-br hover:from-white/20 hover:to-white/10
+            dark:hover:from-gray-600/25 dark:hover:to-gray-700/15
+            rounded-lg
+            text-white dark:text-gray-300
+            transition-all duration-100 ease-[cubic-bezier(0.34,1.56,0.64,1)]
+            hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_2px_6px_rgba(0,0,0,0.1)]
+            hover:border hover:border-white/20 hover:dark:border-gray-400/20
+          "
         >
           <HugeiconsIcon icon={ArrowLeftDoubleIcon} className="h-6 w-6" />
         </button>
@@ -446,7 +493,16 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
       <div className="flex items-center border-b border-gray-200 dark:border-gray-700 px-4">
         <button
           onClick={() => setCurrentView('main')}
-          className="mr-2 p-1 hover:bg-gray-200/30 dark:hover:bg-gray-600 rounded text-white dark:text-gray-300"
+          className="
+            mr-2 p-2
+            hover:bg-gradient-to-br hover:from-white/20 hover:to-white/10
+            dark:hover:from-gray-600/25 dark:hover:to-gray-700/15
+            rounded-lg
+            text-white dark:text-gray-300
+            transition-all duration-100 ease-[cubic-bezier(0.34,1.56,0.64,1)]
+            hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_2px_6px_rgba(0,0,0,0.1)]
+            hover:border hover:border-white/20 hover:dark:border-gray-400/20
+          "
         >
           <HugeiconsIcon icon={ArrowLeftDoubleIcon} className="h-6 w-6" />
         </button>
@@ -472,15 +528,21 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
               <button
                 onClick={() => onVoiceToggle(!voiceEnabled)}
                 className={`
-                  relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent 
-                  transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-                  ${voiceEnabled ? 'bg-blue-600' : 'bg-gray-200'}
+                  relative inline-flex h-8 w-14 flex-shrink-0 cursor-pointer rounded-full
+                  border-2 border-white/30 dark:border-gray-400/30
+                  transition-all duration-150 ease-[cubic-bezier(0.34,1.56,0.64,1)]
+                  focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:ring-offset-2 focus:ring-offset-transparent
+                  shadow-[inset_0_2px_4px_rgba(0,0,0,0.1),0_2px_8px_rgba(0,0,0,0.1)]
+                  ${voiceEnabled ?
+                    'bg-gradient-to-r from-blue-500 to-blue-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_4px_12px_rgba(59,130,246,0.3)]' :
+                    'bg-gradient-to-r from-white/20 to-white/10 dark:from-gray-600/30 dark:to-gray-700/20'
+                  }
                 `}
               >
                 <span
                   className={`
-                    pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 
-                    transition duration-200 ease-in-out
+                    pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0
+                    transition duration-100 ease-[cubic-bezier(0.34,1.56,0.64,1)]
                     ${voiceEnabled ? 'translate-x-5' : 'translate-x-0'}
                   `}
                 />
@@ -505,9 +567,15 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
               <button
                 onClick={toggleTheme}
                 className={`
-                  relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent 
-                  transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-                  ${theme === 'dark' ? 'bg-blue-600' : 'bg-gray-200'}
+                  relative inline-flex h-8 w-14 flex-shrink-0 cursor-pointer rounded-full
+                  border-2 border-white/30 dark:border-gray-400/30
+                  transition-all duration-300 ease-out
+                  focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:ring-offset-2 focus:ring-offset-transparent
+                  shadow-[inset_0_2px_4px_rgba(0,0,0,0.1),0_2px_8px_rgba(0,0,0,0.1)]
+                  ${theme === 'dark' ?
+                    'bg-gradient-to-r from-blue-500 to-blue-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_4px_12px_rgba(59,130,246,0.3)]' :
+                    'bg-gradient-to-r from-white/20 to-white/10 dark:from-gray-600/30 dark:to-gray-700/20'
+                  }
                 `}
               >
                 <span
@@ -527,9 +595,46 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
 
   // Main render - view routing will be implemented in other files
   return isOpen ? (
-    <div className="fixed inset-0 z-50 bg-black/60 flex items-start justify-center pt-[15vh]" onClick={handleBackdropClick}>
+    <>
+      <style jsx>{`
+        @keyframes gooey-pulse {
+          0%, 100% {
+            backdrop-filter: blur(40px) saturate(150%);
+            transform: scale(1);
+          }
+          50% {
+            backdrop-filter: blur(42px) saturate(160%);
+            transform: scale(1.001);
+          }
+        }
+
+        .gooey-container {
+          animation: gooey-pulse 4s ease-in-out infinite;
+        }
+      `}</style>
+      <div className="fixed inset-0 z-50 bg-black/60 flex items-start justify-center pt-[15vh]" onClick={handleBackdropClick}>
       {/* Palette width can be edited here. Example: max-w-2xl, max-w-3xl, max-w-4xl */}
-      <div className="bg-white/20 dark:bg-gray-900/20 backdrop-blur-xl rounded-lg shadow-2xl border border-white/20 dark:border-gray-700/50 w-full max-w-4xl mx-4 overflow-hidden">
+      {/* Palette glassmorphism thickness can be edited here. backdrop-blur-xl, backdrop-blur-2xl, etc. */}
+      {/* Palette glassmorphism opacity can be edited here. bg-white/10, bg-white/15, bg-white/20 etc. */}
+      <div className={`
+        relative
+        bg-gradient-to-br from-white/12 via-white/8 to-white/4
+        dark:from-gray-900/15 dark:via-gray-800/10 dark:to-gray-900/5
+        backdrop-blur-[40px] backdrop-saturate-150
+        rounded-2xl
+        shadow-[0_8px_32px_rgba(0,0,0,0.3),0_2px_16px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.2)]
+        border border-transparent
+        before:absolute before:inset-0 before:rounded-2xl before:pointer-events-none
+        before:bg-gradient-to-br before:from-white/20 before:via-transparent before:to-transparent
+        before:border before:border-white/30 before:dark:border-gray-400/30
+        after:absolute after:inset-[1px] after:rounded-2xl after:pointer-events-none
+        after:bg-gradient-to-br after:from-transparent after:via-white/5 after:to-white/10
+        after:dark:from-transparent after:dark:via-gray-700/5 after:dark:to-gray-600/10
+        w-full max-w-4xl mx-4 overflow-hidden
+        transition-all duration-150 ease-[cubic-bezier(0.34,1.56,0.64,1)]
+        hover:shadow-[0_12px_48px_rgba(0,0,0,0.4),0_4px_24px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.25)]
+        gooey-container
+      `}>
         <Command className="w-full text-white dark:text-gray-100">
           {currentView === 'main' && renderMainMenu()}
           {currentView === 'shortcuts' && renderShortcuts()}
@@ -664,6 +769,7 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
         </Command>
       </div>
     </div>
+    </>
   ) : null;
 };
 
