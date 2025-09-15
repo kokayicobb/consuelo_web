@@ -491,7 +491,7 @@ useEffect(() => {
         <div className="flex-1 overflow-y-auto space-y-6 pr-1">
           {/* Single Stripe Elements wrapper for the entire payment flow */}
           {clientSecret && (
-            <Elements stripe={stripePromise} options={stripeOptions}>
+            <Elements key={clientSecret} stripe={stripePromise} options={stripeOptions}>
               {!showAlternativePayments ? (
                 <>
                   <CheckoutForm 

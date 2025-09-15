@@ -51,9 +51,10 @@ export async function POST(request: Request) {
       await Promise.race([
         dbConnect(),
         new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Database connection timeout')), 10000)
+          setTimeout(() => reject(new Error('Database connection timeout')), 5000)
         )
       ]);
+      console.log('✅ Database connected successfully');
     } catch (error) {
       console.error('❌ Database connection failed:', error);
       return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
@@ -73,17 +74,8 @@ export async function POST(request: Request) {
         console.log(`📋 Session metadata:`, { clerkUserId, creditAmount });
 
         if (clerkUserId && creditAmount > 0) {
-          // Update user credits
-          const userCredits = await UserCredits.findOne({ clerkUserId });
-
-          if (userCredits) {
-            userCredits.credits += creditAmount;
-            await userCredits.save();
-
-            console.log(`✅ Added $${creditAmount} credits to user ${clerkUserId}. New balance: $${userCredits.credits}`);
-          } else {
-            console.error(`❌ User credits record not found for Clerk user ${clerkUserId}`);
-          }
+          // TEMPORARILY DISABLED FOR TESTING
+          console.log(`⚠️ Would add $${creditAmount} credits to user ${clerkUserId} (DB operations disabled)`);
         }
         break;
       }

@@ -48,9 +48,35 @@ export async function POST(request: Request) {
 
     // Update payment status based on Stripe status
     const previousStatus = payment.status;
+    let manuallyProcessed = false;
+
     switch (paymentIntent.status) {
       case 'succeeded':
         payment.status = 'succeeded';
+
+        // If payment succeeded but credits weren't added, add them now
+        if (!payment.creditsAdded) {
+          console.log(`🔧 Payment succeeded but credits not added. Processing manually...`);
+
+          const creditAmount = parseFloat(paymentIntent.metadata?.creditAmount || '0');
+
+          if (creditAmount > 0) {
+            // Update user credits
+            const userCredits = await UserCredits.findOne({ clerkUserId: userId });
+
+            if (userCredits) {
+              userCredits.credits += creditAmount;
+              await userCredits.save();
+
+              payment.creditsAdded = true;
+              manuallyProcessed = true;
+
+              console.log(`✅ Manually added $${creditAmount} credits to user ${userId}. New balance: $${userCredits.credits}`);
+            } else {
+              console.error(`❌ User credits record not found for user ${userId}`);
+            }
+          }
+        }
         break;
       case 'processing':
         payment.status = 'processing';
@@ -84,6 +110,7 @@ export async function POST(request: Request) {
         amount: payment.amount,
         creditsAdded: creditsAdded,
         statusChanged: previousStatus !== payment.status,
+        manuallyProcessed: manuallyProcessed,
       }
     });
 
