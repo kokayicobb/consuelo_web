@@ -111,9 +111,8 @@ const nextConfig = {
           // Referrer Policy
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           // HSTS (only for HTTPS)
-          { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
-          // Permissions Policy
-          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' }
+          { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' }
+          // No Permissions Policy - allow all browser features including Topics API for marketing
         ]
       },
       {
