@@ -260,10 +260,6 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
     }
   };
 
-  const toggleTheme = () => {
-    onThemeChange(theme === 'light' ? 'dark' : 'light');
-  };
-
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
       onClose();
@@ -399,25 +395,6 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
           </Command.Item>
 
           <Command.Item
-            value="keyboard shortcuts"
-            onSelect={() => setCurrentView('shortcuts')}
-            className="
-              relative flex cursor-pointer select-none items-center rounded-xl px-4 py-5 text-lg outline-none
-              data-[selected=true]:bg-gradient-to-r data-[selected=true]:from-white/20 data-[selected=true]:via-white/15 data-[selected=true]:to-white/8
-              data-[selected=true]:dark:from-gray-600/25 data-[selected=true]:dark:via-gray-700/20 data-[selected=true]:dark:to-gray-800/15
-              data-[selected=true]:shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_4px_12px_rgba(0,0,0,0.15)]
-              data-[selected=true]:border data-[selected=true]:border-white/25 data-[selected=true]:dark:border-gray-400/25
-              data-[selected=true]:text-white data-[selected=true]:dark:text-gray-100
-              data-[selected=true]:backdrop-blur-sm
-            "
-          >
-            <div className="flex items-center space-x-4">
-              <HugeiconsIcon icon={KeyboardIcon} className="h-6 w-6 mr-2" />
-              <span className="font-medium text-white dark:text-gray-300">Keyboard Shortcuts</span>
-            </div>
-          </Command.Item>
-
-          <Command.Item
             value="settings"
             onSelect={() => setCurrentView('settings')}
             className="
@@ -433,53 +410,6 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
             <div className="flex items-center space-x-4">
               <HugeiconsIcon icon={SettingsIcon} className="h-6 w-6 mr-2" />
               <span className="font-medium text-white dark:text-gray-300">Settings</span>
-            </div>
-          </Command.Item>
-        </Command.Group>
-      </Command.List>
-    </>
-  );
-
-  // Shortcuts view
-  const renderShortcuts = () => (
-    <>
-      <div className="flex items-center border-b border-gray-200 dark:border-gray-700 px-4">
-        <button
-          onClick={() => setCurrentView('main')}
-          className="
-            mr-2 p-2
-            hover:bg-gradient-to-br hover:from-white/20 hover:to-white/10
-            dark:hover:from-gray-600/25 dark:hover:to-gray-700/15
-            rounded-lg
-            text-white dark:text-gray-300
-            transition-all duration-100 ease-[cubic-bezier(0.34,1.56,0.64,1)]
-            hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_2px_6px_rgba(0,0,0,0.1)]
-            hover:border hover:border-white/20 hover:dark:border-gray-400/20
-          "
-        >
-          <HugeiconsIcon icon={ArrowLeftDoubleIcon} className="h-6 w-6" />
-        </button>
-        <div className="flex h-16 w-full items-center py-5 text-lg font-medium text-white dark:text-gray-100">
-          Keyboard Shortcuts
-        </div>
-      </div>
-      {/* Palette height can be edited here. Example: max-h-[500px], max-h-[700px] */}
-      <Command.List className="max-h-[700px] overflow-y-auto p-4">
-        <Command.Group heading="Shortcuts" className="text-sm font-medium text-white/70 dark:text-gray-400 px-2 py-1.5">
-          <Command.Item className="relative flex cursor-pointer select-none justify-between items-center rounded-md px-4 py-4 text-lg outline-none text-white dark:text-gray-100">
-            <span>Open command palette</span>
-            <kbd className="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 rounded text-base text-gray-900 dark:text-gray-100">/</kbd>
-          </Command.Item>
-          <Command.Item className="relative flex cursor-pointer select-none justify-between items-center rounded-md px-4 py-4 text-lg outline-none text-white dark:text-gray-100">
-            <span>Close command palette</span>
-            <kbd className="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 rounded text-base text-gray-900 dark:text-gray-100">Esc</kbd>
-          </Command.Item>
-          <Command.Item className="relative flex cursor-pointer select-none justify-between items-center rounded-md px-4 py-4 text-lg outline-none text-white dark:text-gray-100">
-            <span>Navigate and select</span>
-            <div className="flex space-x-1">
-              <kbd className="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 rounded text-base text-gray-900 dark:text-gray-100">↑↓</kbd>
-              <span className="text-sm text-white/70 dark:text-gray-400">+</span>
-              <kbd className="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 rounded text-base text-gray-900 dark:text-gray-100">Enter</kbd>
             </div>
           </Command.Item>
         </Command.Group>
@@ -513,8 +443,36 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
       {/* Palette height can be edited here. Example: max-h-[500px], max-h-[700px] */}
       <div className="max-h-[700px] overflow-y-auto p-6">
         <div className="space-y-8">
-          {/* Voice Toggle */}
+
+          {/* Keyboard Shortcuts */}
           <div className="space-y-3">
+            <div className="flex items-center space-x-3">
+                <HugeiconsIcon icon={KeyboardIcon} className="h-6 w-6 text-white/70 dark:text-gray-400" />
+                <h2 className="font-medium text-lg text-white dark:text-gray-100">Keyboard Shortcuts</h2>
+            </div>
+            <div className="space-y-2 pl-9">
+                <div className="flex justify-between items-center text-white dark:text-gray-100">
+                    <span>Open command palette</span>
+                    <kbd className="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 rounded text-base text-gray-900 dark:text-gray-100">/</kbd>
+                </div>
+                <div className="flex justify-between items-center text-white dark:text-gray-100">
+                    <span>Close command palette</span>
+                    <kbd className="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 rounded text-base text-gray-900 dark:text-gray-100">Esc</kbd>
+                </div>
+                <div className="flex justify-between items-center text-white dark:text-gray-100">
+                    <span>Navigate and select</span>
+                    <div className="flex space-x-1 items-center">
+                    <kbd className="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 rounded text-base text-gray-900 dark:text-gray-100">↑↓</kbd>
+                    <span className="text-sm text-white/70 dark:text-gray-400">+</span>
+                    <kbd className="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 rounded text-base text-gray-900 dark:text-gray-100">Enter</kbd>
+                    </div>
+                </div>
+            </div>
+          </div>
+
+
+          {/* Voice Toggle */}
+          <div className="border-t border-gray-200 dark:border-gray-700 pt-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <HugeiconsIcon icon={AiMicIcon} className="h-6 w-6 text-white/70 dark:text-gray-400" />
@@ -564,28 +522,28 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
                   <span className="text-sm text-white/70 dark:text-gray-400 capitalize">{theme} mode</span>
                 </div>
               </div>
-              <button
-                onClick={toggleTheme}
-                className={`
-                  relative inline-flex h-8 w-14 flex-shrink-0 cursor-pointer rounded-full
-                  border-2 border-white/30 dark:border-gray-400/30
-                  transition-all duration-300 ease-out
-                  focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:ring-offset-2 focus:ring-offset-transparent
-                  shadow-[inset_0_2px_4px_rgba(0,0,0,0.1),0_2px_8px_rgba(0,0,0,0.1)]
-                  ${theme === 'dark' ?
-                    'bg-gradient-to-r from-blue-500 to-blue-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_4px_12px_rgba(59,130,246,0.3)]' :
-                    'bg-gradient-to-r from-white/20 to-white/10 dark:from-gray-600/30 dark:to-gray-700/20'
-                  }
-                `}
-              >
-                <span
-                  className={`
-                    pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 
-                    transition duration-200 ease-in-out
-                    ${theme === 'dark' ? 'translate-x-5' : 'translate-x-0'}
-                  `}
-                />
-              </button>
+              <div className="flex items-center rounded-full bg-gradient-to-r from-white/20 to-white/10 dark:from-gray-600/30 dark:to-gray-700/20 p-1 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]">
+                  <button
+                      onClick={() => onThemeChange('light')}
+                      className={`px-4 py-2 text-sm font-medium rounded-full transition-all duration-200 ease-in-out ${
+                      theme === 'light'
+                          ? 'bg-white/80 text-gray-800 shadow-md'
+                          : 'text-white/70 hover:bg-white/10'
+                      }`}
+                  >
+                      Light
+                  </button>
+                  <button
+                      onClick={() => onThemeChange('dark')}
+                      className={`px-4 py-2 text-sm font-medium rounded-full transition-all duration-200 ease-in-out ${
+                      theme === 'dark'
+                          ? 'bg-gray-800/80 text-white shadow-md'
+                          : 'text-white/70 hover:bg-white/10'
+                      }`}
+                  >
+                      Dark
+                  </button>
+              </div>
             </div>
           </div>
         </div>
@@ -618,8 +576,8 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
       {/* Palette glassmorphism opacity can be edited here. bg-white/10, bg-white/15, bg-white/20 etc. */}
       <div className={`
         relative
-        bg-gradient-to-br from-white/12 via-white/8 to-white/4
-        dark:from-gray-900/15 dark:via-gray-800/10 dark:to-gray-900/5
+        bg-gradient-to-br from-white/6 via-white/4 to-white/2
+        dark:from-gray-900/8 dark:via-gray-800/5 dark:to-gray-900/3
         backdrop-blur-[40px] backdrop-saturate-150
         rounded-2xl
         shadow-[0_8px_32px_rgba(0,0,0,0.3),0_2px_16px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.2)]
@@ -637,7 +595,6 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
       `}>
         <Command className="w-full text-white dark:text-gray-100">
           {currentView === 'main' && renderMainMenu()}
-          {currentView === 'shortcuts' && renderShortcuts()}
           {currentView === 'settings' && renderSettings()}
           {currentView === 'scenarios' && (
             <ScenarioView
