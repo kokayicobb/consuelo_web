@@ -36,20 +36,22 @@ export default function RippleSphere() {
   const breathingPhaseRef = useRef<number>(0)
 
   useEffect(() => {
-    console.log("[RippleSphere] Component mounted, mountRef:", mountRef.current)
     if (!mountRef.current) return
 
-    // Scene setup with a more sophisticated background
+    // Scene setup with transparent background
     const scene = new THREE.Scene()
-    scene.background = new THREE.Color(0x0f0f23)
+    scene.background = null
     sceneRef.current = scene
 
     // Add subtle ambient lighting
     const ambientLight = new THREE.AmbientLight(0x404040, 0.3)
     scene.add(ambientLight)
 
-    // Add a point light for depth
-    const pointLight = new THREE.PointLight(0x6366f1, 0.5, 100)
+    // Bright lighting to make specs visible - gold for light, white for dark
+    const isLightMode = document.documentElement.classList.contains('light') ||
+                       !document.documentElement.classList.contains('dark')
+    const lightColor = isLightMode ? 0xffd700 : 0xffffff // Bright gold or white
+    const pointLight = new THREE.PointLight(lightColor, 1.0, 100) // Brighter intensity
     pointLight.position.set(10, 10, 10)
     scene.add(pointLight)
 
@@ -77,7 +79,7 @@ export default function RippleSphere() {
     // Add canvas to DOM and log its properties
     const canvas = renderer.domElement
 
-    // Ensure canvas is properly styled for rendering
+    // Ensure canvas is properly styled for rendering - KEEPING ALL FORCED CANVAS SETUP
     canvas.style.display = 'block'
     canvas.style.width = '100%'
     canvas.style.height = '100%'
@@ -89,19 +91,10 @@ export default function RippleSphere() {
     mountRef.current.appendChild(canvas)
     rendererRef.current = renderer
 
-    console.log("[RippleSphere] Canvas added to DOM:", {
-      width: canvas.width,
-      height: canvas.height,
-      style: canvas.style.cssText,
-      parent: mountRef.current
-    })
-
-    // Create the enhanced hollow sphere
-    console.log("[RippleSphere] Creating hollow sphere...")
+    // CHANGED: Now using mathematical pattern for particle placement
     createEnhancedHollowSphere()
-    console.log("[RippleSphere] Created", particlesRef.current.length, "particles")
 
-    // Event listeners for precise interaction
+    // Event listeners for precise interaction - KEEPING ALL INTERACTION CODE INTACT
     const handleInteraction = (clientX: number, clientY: number) => {
       if (!cameraRef.current || !mountRef.current) return
 
@@ -126,6 +119,11 @@ export default function RippleSphere() {
       if (intersects.length > 0) {
         const intersectionPoint = intersects[0].point
         createRippleEffect(intersectionPoint)
+      } else {
+        // Force create a ripple at sphere surface if no intersection found
+        const direction = new THREE.Vector3(mouseRef.current.x, mouseRef.current.y, 0.5).normalize()
+        const spherePoint = direction.multiplyScalar(7) // sphere radius
+        createRippleEffect(spherePoint)
       }
     }
 
@@ -159,16 +157,201 @@ export default function RippleSphere() {
     canvas.addEventListener("touchstart", handleTouchStart, { passive: false })
     window.addEventListener("resize", handleResize)
 
+    // Function definitions need to be inside useEffect
+    function createEnhancedHollowSphere() {
+      const particles: Particle[] = []
+      
+      // CHANGED: Using golden ratio spiral for denser, more aesthetic distribution
+      const numParticles = 3500  // Increased for denser coverage
+      const sphereRadius = 7
+      
+      // CHANGED: Even smaller particles for cleaner look with more density
+      const geometry = new THREE.SphereGeometry(0.015, 6, 6)
+
+      // Golden ratio for optimal spacing
+      const goldenRatio = (1 + Math.sqrt(5)) / 2
+      const goldenAngle = 2 * Math.PI / (goldenRatio * goldenRatio)
+
+      // Create particles using Fibonacci sphere distribution
+      for (let i = 0; i < numParticles; i++) {
+        // CHANGED: Using golden ratio spiral distribution
+        const t = i / numParticles
+        const inclination = Math.acos(1 - 2 * t)
+        const azimuth = i * goldenAngle
+        
+        // Convert spherical to Cartesian coordinates
+        const x = Math.sin(inclination) * Math.cos(azimuth)
+        const y = Math.sin(inclination) * Math.sin(azimuth)
+        const z = Math.cos(inclination)
+        
+        const position = new THREE.Vector3(
+          x * sphereRadius,
+          y * sphereRadius,
+          z * sphereRadius
+        )
+
+        // Shiny specs - bright golden for light mode, bright white for dark mode
+        const baseColor = isLightMode ? 0xffd700 : 0xffffff // Bright gold or white
+        const emissiveColor = isLightMode ? 0xffdf00 : 0xffffff // Bright emissive colors
+
+        const material = new THREE.MeshPhongMaterial({
+          color: new THREE.Color(baseColor),
+          transparent: true,
+          opacity: 1.0, // Full opacity for maximum visibility
+          shininess: 300, // Much shinier
+          emissive: emissiveColor,
+          emissiveIntensity: 0.3, // Much brighter emissive
+          specular: 0xffffff, // White specular highlights
+        })
+
+        const mesh = new THREE.Mesh(geometry, material)
+        mesh.position.copy(position)
+        mesh.castShadow = true
+
+        const particle: Particle = {
+          mesh,
+          position: position.clone(),
+          velocity: new THREE.Vector3(0, 0, 0),
+          originalPosition: position.clone(),
+          ripplePhase: 0,
+          rippleAmplitude: 0,
+        }
+
+        particles.push(particle)
+
+        if (sceneRef.current) {
+          sceneRef.current.add(mesh)
+        }
+      }
+
+      particlesRef.current = particles
+    }
+
+    function createRippleEffect(center: THREE.Vector3) {
+      const currentTime = Date.now()
+
+      if (currentTime - lastInteractionRef.current < 50) return
+      lastInteractionRef.current = currentTime
+
+      const ripple: RippleEffect = {
+        center: center.clone(),
+        radius: 0,
+        maxRadius: 8,
+        strength: 2.5,
+        startTime: currentTime,
+        duration: 3000,
+      }
+
+      rippleEffectsRef.current.push(ripple)
+
+      // Clean up old ripples
+      rippleEffectsRef.current = rippleEffectsRef.current.filter((r) => currentTime - r.startTime < r.duration)
+    }
+
+    function animate() {
+      animationIdRef.current = requestAnimationFrame(animate)
+
+      if (!sceneRef.current || !cameraRef.current || !rendererRef.current) {
+        return
+      }
+
+      // CHANGED: Slower, subtler breathing effect
+      breathingPhaseRef.current += 0.01 // Reduced from 0.02
+      const breathingScale = 1 + Math.sin(breathingPhaseRef.current) * 0.03 // Reduced from 0.1
+
+      // Update particles with ripple physics
+      updateParticlesWithRipples(breathingScale)
+
+      // CHANGED: Rotation around Y-axis (vertical axis) for proper clockwise spin
+      const time = Date.now() * 0.00005 // Much slower rotation speed (reduced from 0.0002)
+      const radius = 18
+      const angle = time
+      
+      // Rotate camera around Y-axis (vertical) for clockwise rotation when viewed from above
+      cameraRef.current.position.x = Math.cos(angle) * radius
+      cameraRef.current.position.y = 0  // Keep camera at same height
+      cameraRef.current.position.z = Math.sin(angle) * radius
+      cameraRef.current.lookAt(0, 0, 0)
+
+      rendererRef.current.render(sceneRef.current, cameraRef.current)
+
+      // KEEPING: Force canvas repaint to ensure visual updates
+      rendererRef.current.domElement.style.transform = `translateZ(${Math.sin(Date.now() * 0.001) * 0.01}px)`
+    }
+
+    function updateParticlesWithRipples(breathingScale: number) {
+      const currentTime = Date.now()
+
+      particlesRef.current.forEach((particle) => {
+        particle.rippleAmplitude = 0
+        let isAffected = false
+
+        rippleEffectsRef.current.forEach((ripple) => {
+          const elapsed = currentTime - ripple.startTime
+          const progress = elapsed / ripple.duration
+
+          if (progress <= 1) {
+            const distance = particle.originalPosition.distanceTo(ripple.center)
+            const waveRadius = ripple.maxRadius * progress
+            const waveFront = Math.abs(distance - waveRadius)
+
+            if (waveFront < 1.5) {
+              const intensity = (1 - waveFront / 1.5) * (1 - progress) * ripple.strength
+
+              const direction = particle.originalPosition.clone().sub(ripple.center)
+              if (direction.length() > 0) {
+                direction.normalize()
+
+                const displacement = direction.multiplyScalar(intensity * 0.5)
+                particle.velocity.add(displacement)
+
+                particle.rippleAmplitude = Math.max(particle.rippleAmplitude, intensity)
+                isAffected = true
+              }
+            }
+          }
+        })
+
+        const restoreForce = particle.originalPosition.clone().sub(particle.position)
+        restoreForce.multiplyScalar(0.08)
+        particle.velocity.add(restoreForce)
+
+        particle.velocity.multiplyScalar(0.85)
+
+        const breathingOffset = particle.originalPosition.clone().multiplyScalar(breathingScale - 1)
+
+        particle.position.copy(particle.originalPosition).add(breathingOffset)
+        particle.position.add(particle.velocity)
+        particle.mesh.position.copy(particle.position)
+
+        const material = particle.mesh.material as THREE.MeshPhongMaterial
+        if (isAffected && particle.rippleAmplitude > 0.1) {
+          // Bright ripple effect - even brighter when touched
+          const intensity = Math.min(particle.rippleAmplitude, 1)
+          const rippleColor = isLightMode ?
+            new THREE.Color(0xffff00) : // Bright yellow-gold for light mode ripples
+            new THREE.Color(0xffffff)   // Pure white for dark mode ripples
+
+          material.color.lerp(rippleColor, intensity * 0.7)
+          material.emissive.lerp(rippleColor, intensity * 0.5)
+        } else {
+          // Return to bright base colors
+          const baseColor = isLightMode ? new THREE.Color(0xffd700) : new THREE.Color(0xffffff)
+          const baseEmissive = isLightMode ? new THREE.Color(0xffdf00) : new THREE.Color(0xffffff)
+          material.color.lerp(baseColor, 0.05)
+          material.emissive.lerp(baseEmissive, 0.05)
+        }
+      })
+
+      // Clean up finished ripples
+      rippleEffectsRef.current = rippleEffectsRef.current.filter(
+        (ripple) => currentTime - ripple.startTime < ripple.duration,
+      )
+    }
+
     // Start animation loop
     if (sceneRef.current && cameraRef.current && rendererRef.current) {
-      console.log("[RippleSphere] Starting animation loop")
       animate()
-    } else {
-      console.error("[RippleSphere] Cannot start animation - missing refs:", {
-        scene: !!sceneRef.current,
-        camera: !!cameraRef.current,
-        renderer: !!rendererRef.current
-      })
     }
 
     return () => {
@@ -193,186 +376,8 @@ export default function RippleSphere() {
     }
   }, [])
 
-  const createEnhancedHollowSphere = () => {
-    const particles: Particle[] = []
-    const numParticles = 3000 // More particles for denser effect
-    const sphereRadius = 7
-    const innerRadius = 5.5 // Tighter hollow center
-    const shellThickness = sphereRadius - innerRadius
-
-    // Enhanced particle geometry with subtle glow
-    const geometry = new THREE.SphereGeometry(0.025, 8, 8)
-
-    for (let i = 0; i < numParticles; i++) {
-      // Fibonacci sphere distribution for perfect uniformity
-      const goldenAngle = Math.PI * (3 - Math.sqrt(5))
-      const theta = goldenAngle * i
-      const y = 1 - (i / (numParticles - 1)) * 2
-      const radiusAtY = Math.sqrt(1 - y * y)
-
-      const x = Math.cos(theta) * radiusAtY
-      const z = Math.sin(theta) * radiusAtY
-
-      const shellPosition = Math.pow(Math.random(), 0.3) // Bias toward outer edge
-      const radius = innerRadius + shellPosition * shellThickness
-
-      const position = new THREE.Vector3(x * radius, y * radius, z * radius)
-
-      const material = new THREE.MeshPhongMaterial({
-        color: 0xc084fc, // Light purple
-        transparent: true,
-        opacity: 0.8,
-        shininess: 100,
-        emissive: 0x8b5cf6, // Purple emissive
-        emissiveIntensity: 0.1,
-      })
-
-      const mesh = new THREE.Mesh(geometry, material)
-      mesh.position.copy(position)
-      mesh.castShadow = true
-
-      const particle: Particle = {
-        mesh,
-        position: position.clone(),
-        velocity: new THREE.Vector3(0, 0, 0),
-        originalPosition: position.clone(),
-        ripplePhase: 0,
-        rippleAmplitude: 0,
-      }
-
-      particles.push(particle)
-
-      if (sceneRef.current) {
-        sceneRef.current.add(mesh)
-      }
-    }
-
-    particlesRef.current = particles
-  }
-
-  const createRippleEffect = (center: THREE.Vector3) => {
-    const currentTime = Date.now()
-
-    if (currentTime - lastInteractionRef.current < 50) return
-    lastInteractionRef.current = currentTime
-
-    console.log("[v0] Ripple created at:", center)
-
-    const ripple: RippleEffect = {
-      center: center.clone(),
-      radius: 0,
-      maxRadius: 6, // Increased ripple radius for more visible effect
-      strength: 1.5, // Increased strength for more noticeable dispersion
-      startTime: currentTime,
-      duration: 2000, // Slightly longer duration for better visibility
-    }
-
-    rippleEffectsRef.current.push(ripple)
-
-    // Clean up old ripples
-    rippleEffectsRef.current = rippleEffectsRef.current.filter((r) => currentTime - r.startTime < r.duration)
-  }
-
-  const animate = () => {
-    animationIdRef.current = requestAnimationFrame(animate)
-
-    if (!sceneRef.current || !cameraRef.current || !rendererRef.current) {
-      console.error("[RippleSphere] Animation stopped - missing refs")
-      return
-    }
-
-    // Update breathing effect for AI assistant feel (make it more noticeable)
-    breathingPhaseRef.current += 0.02
-    const breathingScale = 1 + Math.sin(breathingPhaseRef.current) * 0.1  // Increased from 0.02 to 0.1
-
-    // Update particles with ripple physics
-    updateParticlesWithRipples(breathingScale)
-
-    // More noticeable camera rotation for dynamic feel
-    const time = Date.now() * 0.001  // Increased from 0.0003 to 0.001
-    cameraRef.current.position.x = Math.cos(time) * 18
-    cameraRef.current.position.z = Math.sin(time) * 18
-    cameraRef.current.lookAt(0, 0, 0)
-
-    rendererRef.current.render(sceneRef.current, cameraRef.current)
-
-    // Force canvas repaint to ensure visual updates
-    rendererRef.current.domElement.style.transform = `translateZ(${Math.sin(Date.now() * 0.001) * 0.01}px)`
-
-    // Log every 60 frames to see if animation is running
-    if (animationIdRef.current % 60 === 0) {
-      console.log("[RippleSphere] Animation frame:", animationIdRef.current, "breathing:", breathingScale.toFixed(3), "camera pos:", cameraRef.current.position.x.toFixed(2))
-    }
-  }
-
-  const updateParticlesWithRipples = (breathingScale: number) => {
-    const currentTime = Date.now()
-
-    particlesRef.current.forEach((particle) => {
-      particle.rippleAmplitude = 0
-      let isAffected = false
-
-      rippleEffectsRef.current.forEach((ripple) => {
-        const elapsed = currentTime - ripple.startTime
-        const progress = elapsed / ripple.duration
-
-        if (progress <= 1) {
-          const distance = particle.originalPosition.distanceTo(ripple.center)
-          const waveRadius = ripple.maxRadius * progress
-          const waveFront = Math.abs(distance - waveRadius)
-
-          if (waveFront < 1.2) {
-            const intensity = (1 - waveFront / 1.2) * (1 - progress) * ripple.strength
-
-            const direction = particle.originalPosition.clone().sub(ripple.center)
-            if (direction.length() > 0) {
-              direction.normalize()
-
-              const displacement = direction.multiplyScalar(intensity * 0.3)
-              particle.velocity.add(displacement)
-
-              particle.rippleAmplitude = Math.max(particle.rippleAmplitude, intensity)
-              isAffected = true
-            }
-          }
-        }
-      })
-
-      const restoreForce = particle.originalPosition.clone().sub(particle.position)
-      restoreForce.multiplyScalar(0.08) // Gentle spring constant
-      particle.velocity.add(restoreForce)
-
-      particle.velocity.multiplyScalar(0.85)
-
-      const breathingOffset = particle.originalPosition.clone().multiplyScalar(breathingScale - 1)
-
-      particle.position.copy(particle.originalPosition).add(breathingOffset)
-      particle.position.add(particle.velocity)
-      particle.mesh.position.copy(particle.position)
-
-      const material = particle.mesh.material as THREE.MeshPhongMaterial
-      if (isAffected && particle.rippleAmplitude > 0.1) {
-        const redIntensity = Math.min(particle.rippleAmplitude, 1)
-        material.color.setRGB(
-          0.75 + redIntensity * 0.25, // Light purple to red transition
-          0.52 - redIntensity * 0.52, // Reduce green
-          0.99 - redIntensity * 0.99, // Reduce blue
-        )
-        material.emissive.setRGB(redIntensity * 0.4, 0, (1 - redIntensity) * 0.35)
-      } else {
-        material.color.lerp(new THREE.Color(0xc084fc), 0.05)
-        material.emissive.lerp(new THREE.Color(0x8b5cf6), 0.05)
-      }
-    })
-
-    // Clean up finished ripples
-    rippleEffectsRef.current = rippleEffectsRef.current.filter(
-      (ripple) => currentTime - ripple.startTime < ripple.duration,
-    )
-  }
-
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 select-none">
+    <div className="relative w-full h-screen overflow-hidden bg-transparent select-none">
       <div ref={mountRef} className="w-full h-full relative" />
 
       {/* Elegant AI Assistant UI */}

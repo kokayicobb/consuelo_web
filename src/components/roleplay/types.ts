@@ -2,6 +2,7 @@
 
 export interface Scenario {
   id: string;
+  _id?: string; // MongoDB ObjectId
   title: string;
   description: string;
   llmPrompt: string; // For AI prospect behavior

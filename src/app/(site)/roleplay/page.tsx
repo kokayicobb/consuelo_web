@@ -235,7 +235,7 @@ export default function RoleplayPage() {
         console.error("❌ Failed to end roleplay session:", error);
       }
     }
-  }, [currentRoleplaySessionId, messages, currentSessionId, isListening, isRecording, silenceTimer]);
+  }, [currentRoleplaySessionId, messages, currentSessionId, isListening, isRecording, silenceTimer, currentCharacter?.name, currentScenario?._id, currentScenario?.title, sessionStartTime, trackAction]);
   // Refs for audio functionality
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
