@@ -5,12 +5,12 @@ const SessionAnalytics = require('../../../../../../models/SessionAnalytics');
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { session_id: string } }
+  { params }: { params: Promise<{ session_id: string }> }
 ) {
   try {
     await connectDB();
-    
-    const { session_id } = params;
+
+    const { session_id } = await params;
     
     const analytics = await SessionAnalytics.findOne({ session_id })
       .populate('scenario_id', 'scenario_id title description');

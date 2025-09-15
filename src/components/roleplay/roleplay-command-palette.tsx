@@ -304,12 +304,12 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
             onSelect={loadScenarios}
             className="
               relative flex cursor-pointer select-none items-center rounded-xl px-4 py-5 text-lg outline-none
-              data-[selected=true]:bg-gradient-to-r data-[selected=true]:from-white/20 data-[selected=true]:via-white/15 data-[selected=true]:to-white/8
-              data-[selected=true]:dark:from-gray-600/25 data-[selected=true]:dark:via-gray-700/20 data-[selected=true]:dark:to-gray-800/15
-              data-[selected=true]:shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_4px_12px_rgba(0,0,0,0.15)]
-              data-[selected=true]:border data-[selected=true]:border-white/25 data-[selected=true]:dark:border-gray-400/25
+              data-[selected=true]:bg-gradient-to-r data-[selected=true]:from-white/15 data-[selected=true]:via-white/10 data-[selected=true]:to-white/5
+              data-[selected=true]:dark:from-gray-600/20 data-[selected=true]:dark:via-gray-700/15 data-[selected=true]:dark:to-gray-800/10
+              data-[selected=true]:shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_6px_20px_rgba(0,0,0,0.2)]
+              data-[selected=true]:border data-[selected=true]:border-white/30 data-[selected=true]:dark:border-gray-400/30
               data-[selected=true]:text-white data-[selected=true]:dark:text-gray-100
-              data-[selected=true]:backdrop-blur-sm
+              data-[selected=true]:backdrop-blur-md
             "
           >
             <div className="flex items-center space-x-4">
@@ -323,12 +323,12 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
             onSelect={loadCharacters}
             className="
               relative flex cursor-pointer select-none items-center rounded-xl px-4 py-5 text-lg outline-none
-              data-[selected=true]:bg-gradient-to-r data-[selected=true]:from-white/20 data-[selected=true]:via-white/15 data-[selected=true]:to-white/8
-              data-[selected=true]:dark:from-gray-600/25 data-[selected=true]:dark:via-gray-700/20 data-[selected=true]:dark:to-gray-800/15
-              data-[selected=true]:shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_4px_12px_rgba(0,0,0,0.15)]
-              data-[selected=true]:border data-[selected=true]:border-white/25 data-[selected=true]:dark:border-gray-400/25
+              data-[selected=true]:bg-gradient-to-r data-[selected=true]:from-white/15 data-[selected=true]:via-white/10 data-[selected=true]:to-white/5
+              data-[selected=true]:dark:from-gray-600/20 data-[selected=true]:dark:via-gray-700/15 data-[selected=true]:dark:to-gray-800/10
+              data-[selected=true]:shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_6px_20px_rgba(0,0,0,0.2)]
+              data-[selected=true]:border data-[selected=true]:border-white/30 data-[selected=true]:dark:border-gray-400/30
               data-[selected=true]:text-white data-[selected=true]:dark:text-gray-100
-              data-[selected=true]:backdrop-blur-sm
+              data-[selected=true]:backdrop-blur-md
             "
           >
             <div className="flex items-center space-x-4">
@@ -342,12 +342,12 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
             onSelect={loadSessionHistory}
             className="
               relative flex cursor-pointer select-none items-center rounded-xl px-4 py-5 text-lg outline-none
-              data-[selected=true]:bg-gradient-to-r data-[selected=true]:from-white/20 data-[selected=true]:via-white/15 data-[selected=true]:to-white/8
-              data-[selected=true]:dark:from-gray-600/25 data-[selected=true]:dark:via-gray-700/20 data-[selected=true]:dark:to-gray-800/15
-              data-[selected=true]:shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_4px_12px_rgba(0,0,0,0.15)]
-              data-[selected=true]:border data-[selected=true]:border-white/25 data-[selected=true]:dark:border-gray-400/25
+              data-[selected=true]:bg-gradient-to-r data-[selected=true]:from-white/15 data-[selected=true]:via-white/10 data-[selected=true]:to-white/5
+              data-[selected=true]:dark:from-gray-600/20 data-[selected=true]:dark:via-gray-700/15 data-[selected=true]:dark:to-gray-800/10
+              data-[selected=true]:shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_6px_20px_rgba(0,0,0,0.2)]
+              data-[selected=true]:border data-[selected=true]:border-white/30 data-[selected=true]:dark:border-gray-400/30
               data-[selected=true]:text-white data-[selected=true]:dark:text-gray-100
-              data-[selected=true]:backdrop-blur-sm
+              data-[selected=true]:backdrop-blur-md
             "
           >
             <div className="flex items-center space-x-4">
@@ -361,12 +361,12 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
             onSelect={loadAnalytics}
             className="
               relative flex cursor-pointer select-none items-center rounded-xl px-4 py-5 text-lg outline-none
-              data-[selected=true]:bg-gradient-to-r data-[selected=true]:from-white/20 data-[selected=true]:via-white/15 data-[selected=true]:to-white/8
-              data-[selected=true]:dark:from-gray-600/25 data-[selected=true]:dark:via-gray-700/20 data-[selected=true]:dark:to-gray-800/15
-              data-[selected=true]:shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_4px_12px_rgba(0,0,0,0.15)]
-              data-[selected=true]:border data-[selected=true]:border-white/25 data-[selected=true]:dark:border-gray-400/25
+              data-[selected=true]:bg-gradient-to-r data-[selected=true]:from-white/15 data-[selected=true]:via-white/10 data-[selected=true]:to-white/5
+              data-[selected=true]:dark:from-gray-600/20 data-[selected=true]:dark:via-gray-700/15 data-[selected=true]:dark:to-gray-800/10
+              data-[selected=true]:shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_6px_20px_rgba(0,0,0,0.2)]
+              data-[selected=true]:border data-[selected=true]:border-white/30 data-[selected=true]:dark:border-gray-400/30
               data-[selected=true]:text-white data-[selected=true]:dark:text-gray-100
-              data-[selected=true]:backdrop-blur-sm
+              data-[selected=true]:backdrop-blur-md
             "
           >
             <div className="flex items-center space-x-4">
@@ -380,12 +380,12 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
             onSelect={loadRecentTips}
             className="
               relative flex cursor-pointer select-none items-center rounded-xl px-4 py-5 text-lg outline-none
-              data-[selected=true]:bg-gradient-to-r data-[selected=true]:from-white/20 data-[selected=true]:via-white/15 data-[selected=true]:to-white/8
-              data-[selected=true]:dark:from-gray-600/25 data-[selected=true]:dark:via-gray-700/20 data-[selected=true]:dark:to-gray-800/15
-              data-[selected=true]:shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_4px_12px_rgba(0,0,0,0.15)]
-              data-[selected=true]:border data-[selected=true]:border-white/25 data-[selected=true]:dark:border-gray-400/25
+              data-[selected=true]:bg-gradient-to-r data-[selected=true]:from-white/15 data-[selected=true]:via-white/10 data-[selected=true]:to-white/5
+              data-[selected=true]:dark:from-gray-600/20 data-[selected=true]:dark:via-gray-700/15 data-[selected=true]:dark:to-gray-800/10
+              data-[selected=true]:shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_6px_20px_rgba(0,0,0,0.2)]
+              data-[selected=true]:border data-[selected=true]:border-white/30 data-[selected=true]:dark:border-gray-400/30
               data-[selected=true]:text-white data-[selected=true]:dark:text-gray-100
-              data-[selected=true]:backdrop-blur-sm
+              data-[selected=true]:backdrop-blur-md
             "
           >
             <div className="flex items-center space-x-4">
@@ -399,12 +399,12 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
             onSelect={() => setCurrentView('settings')}
             className="
               relative flex cursor-pointer select-none items-center rounded-xl px-4 py-5 text-lg outline-none
-              data-[selected=true]:bg-gradient-to-r data-[selected=true]:from-white/20 data-[selected=true]:via-white/15 data-[selected=true]:to-white/8
-              data-[selected=true]:dark:from-gray-600/25 data-[selected=true]:dark:via-gray-700/20 data-[selected=true]:dark:to-gray-800/15
-              data-[selected=true]:shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_4px_12px_rgba(0,0,0,0.15)]
-              data-[selected=true]:border data-[selected=true]:border-white/25 data-[selected=true]:dark:border-gray-400/25
+              data-[selected=true]:bg-gradient-to-r data-[selected=true]:from-white/15 data-[selected=true]:via-white/10 data-[selected=true]:to-white/5
+              data-[selected=true]:dark:from-gray-600/20 data-[selected=true]:dark:via-gray-700/15 data-[selected=true]:dark:to-gray-800/10
+              data-[selected=true]:shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_6px_20px_rgba(0,0,0,0.2)]
+              data-[selected=true]:border data-[selected=true]:border-white/30 data-[selected=true]:dark:border-gray-400/30
               data-[selected=true]:text-white data-[selected=true]:dark:text-gray-100
-              data-[selected=true]:backdrop-blur-sm
+              data-[selected=true]:backdrop-blur-md
             "
           >
             <div className="flex items-center space-x-4">
@@ -576,9 +576,9 @@ const RoleplayCommandPalette: React.FC<RoleplayCommandPaletteProps> = ({
       {/* Palette glassmorphism opacity can be edited here. bg-white/10, bg-white/15, bg-white/20 etc. */}
       <div className={`
         relative
-        bg-gradient-to-br from-white/6 via-white/4 to-white/2
-        dark:from-gray-900/8 dark:via-gray-800/5 dark:to-gray-900/3
-        backdrop-blur-[40px] backdrop-saturate-150
+        bg-gradient-to-br from-white/3 via-white/2 to-white/1
+        dark:from-gray-900/4 dark:via-gray-800/3 dark:to-gray-900/2
+        backdrop-blur-[50px] backdrop-saturate-200
         rounded-2xl
         shadow-[0_8px_32px_rgba(0,0,0,0.3),0_2px_16px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.2)]
         border border-transparent
