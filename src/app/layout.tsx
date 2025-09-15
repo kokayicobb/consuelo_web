@@ -6,6 +6,7 @@ import ClientLayout from './clientLayout';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import Analytics from '@/components/Analytics'
 import { PostHogProvider } from './providers'
+import { UserIdentificationProvider } from './user-identification'
 
 import { Toaster } from '@/components/ui/sonner';
 import {
@@ -27,7 +28,8 @@ export default function RootLayout({
     <html suppressHydrationWarning={true} className="!scroll-smooth" lang="en">
       <body> 
       <PostHogProvider>
-            <Toaster /> 
+        <UserIdentificationProvider>
+            <Toaster />
             {/* <SignedOut>
               <SignInButton />
               <SignUpButton>
@@ -42,6 +44,7 @@ export default function RootLayout({
             <ClientLayout>{children}</ClientLayout>
             <Analytics />
             <SpeedInsights />
+        </UserIdentificationProvider>
             </PostHogProvider>
         
       </body>

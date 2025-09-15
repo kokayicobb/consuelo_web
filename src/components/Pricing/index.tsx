@@ -4,6 +4,7 @@ import { FeatureCard } from "./feature-card";
 import { Tab } from "../ui/pricing-tab";
 import { client } from "@/sanity/lib/client";
 import { PRICING_PLANS_QUERY } from "@/sanity/lib/queries";
+import { PricingTracker } from "./pricing-tracker";
 
 interface PricingFeature {
   _id: string;
@@ -33,6 +34,7 @@ export default async function Pricing() {
 
   return (
     <div className="container flex flex-col items-center justify-center">
+      <PricingTracker plans={pricingTiers} />
       <h2 className="mb-8 text-center text-5xl font-bold">
         Start training.<br />
         Close more deals.

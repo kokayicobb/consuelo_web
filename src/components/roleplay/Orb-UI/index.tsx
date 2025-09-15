@@ -36,6 +36,7 @@ export default function RippleSphere() {
   const breathingPhaseRef = useRef<number>(0)
 
   useEffect(() => {
+    console.log("[RippleSphere] Component mounted, mountRef:", mountRef.current)
     if (!mountRef.current) return
 
     // Scene setup with a more sophisticated background
@@ -52,8 +53,13 @@ export default function RippleSphere() {
     pointLight.position.set(10, 10, 10)
     scene.add(pointLight)
 
+    // Get container dimensions
+    const containerRect = mountRef.current.getBoundingClientRect()
+    const containerWidth = containerRect.width || window.innerWidth
+    const containerHeight = containerRect.height || window.innerHeight
+
     // Camera setup
-    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000)
+    const camera = new THREE.PerspectiveCamera(60, containerWidth / containerHeight, 0.1, 1000)
     camera.position.set(0, 0, 18)
     cameraRef.current = camera
 
@@ -63,15 +69,27 @@ export default function RippleSphere() {
       alpha: true,
       powerPreference: "high-performance",
     })
-    renderer.setSize(window.innerWidth, window.innerHeight)
+    renderer.setSize(containerWidth, containerHeight)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     renderer.shadowMap.enabled = true
     renderer.shadowMap.type = THREE.PCFSoftShadowMap
-    mountRef.current.appendChild(renderer.domElement)
+
+    // Add canvas to DOM and log its properties
+    const canvas = renderer.domElement
+    mountRef.current.appendChild(canvas)
     rendererRef.current = renderer
 
+    console.log("[RippleSphere] Canvas added to DOM:", {
+      width: canvas.width,
+      height: canvas.height,
+      style: canvas.style.cssText,
+      parent: mountRef.current
+    })
+
     // Create the enhanced hollow sphere
+    console.log("[RippleSphere] Creating hollow sphere...")
     createEnhancedHollowSphere()
+    console.log("[RippleSphere] Created", particlesRef.current.length, "particles")
 
     // Event listeners for precise interaction
     const handleInteraction = (clientX: number, clientY: number) => {
@@ -117,13 +135,21 @@ export default function RippleSphere() {
     }
 
     // Add event listeners
-    const canvas = renderer.domElement
     canvas.addEventListener("mousedown", handleMouseDown)
     canvas.addEventListener("touchstart", handleTouchStart, { passive: false })
     window.addEventListener("resize", handleResize)
 
     // Start animation loop
-    animate()
+    if (sceneRef.current && cameraRef.current && rendererRef.current) {
+      console.log("[RippleSphere] Starting animation loop")
+      animate()
+    } else {
+      console.error("[RippleSphere] Cannot start animation - missing refs:", {
+        scene: !!sceneRef.current,
+        camera: !!cameraRef.current,
+        renderer: !!rendererRef.current
+      })
+    }
 
     return () => {
       // Cleanup
@@ -230,22 +256,30 @@ export default function RippleSphere() {
   const animate = () => {
     animationIdRef.current = requestAnimationFrame(animate)
 
-    if (!sceneRef.current || !cameraRef.current || !rendererRef.current) return
+    if (!sceneRef.current || !cameraRef.current || !rendererRef.current) {
+      console.error("[RippleSphere] Animation stopped - missing refs")
+      return
+    }
 
-    // Update breathing effect for AI assistant feel
-    breathingPhaseRef.current += 0.01
-    const breathingScale = 1 + Math.sin(breathingPhaseRef.current) * 0.02
+    // Update breathing effect for AI assistant feel (make it more noticeable)
+    breathingPhaseRef.current += 0.02
+    const breathingScale = 1 + Math.sin(breathingPhaseRef.current) * 0.1  // Increased from 0.02 to 0.1
 
     // Update particles with ripple physics
     updateParticlesWithRipples(breathingScale)
 
-    // Gentle camera rotation for dynamic feel
-    const time = Date.now() * 0.0003
+    // More noticeable camera rotation for dynamic feel
+    const time = Date.now() * 0.001  // Increased from 0.0003 to 0.001
     cameraRef.current.position.x = Math.cos(time) * 18
     cameraRef.current.position.z = Math.sin(time) * 18
     cameraRef.current.lookAt(0, 0, 0)
 
     rendererRef.current.render(sceneRef.current, cameraRef.current)
+
+    // Log every 60 frames to see if animation is running
+    if (animationIdRef.current % 60 === 0) {
+      console.log("[RippleSphere] Animation frame:", animationIdRef.current, "breathing:", breathingScale.toFixed(3), "camera pos:", cameraRef.current.position.x.toFixed(2))
+    }
   }
 
   const updateParticlesWithRipples = (breathingScale: number) => {
@@ -315,7 +349,7 @@ export default function RippleSphere() {
   }
 
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 touch-none select-none">
+    <div className="relative w-full h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 select-none">
       <div ref={mountRef} className="w-full h-full" />
 
       {/* Elegant AI Assistant UI */}

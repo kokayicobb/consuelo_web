@@ -12,6 +12,7 @@ import UseCases from "@/components/UseCases";
 import { client } from "@/sanity/lib/client";
 import { type SanityDocument } from "next-sanity"
 import JsonLd, { consueloOrganizationSchema, consueloWebApplicationSchema } from "@/components/JsonLd";
+import { LandingPageTracker } from "@/components/analytics/landing-page-tracker";
 
 // Type definitions
 interface Feature {
@@ -95,6 +96,7 @@ export default async function Home() {
 
   return (
     <main>
+      <LandingPageTracker features={features} useCases={useCases} />
       <JsonLd data={consueloOrganizationSchema} />
       <JsonLd data={consueloWebApplicationSchema} />
       <ScrollUp />

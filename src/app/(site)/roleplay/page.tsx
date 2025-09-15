@@ -29,6 +29,7 @@ import CreditsDisplay from "@/components/roleplay/CreditsDisplay";
 import ThemeToggler from "@/components/Header/ThemeToggler";
 import RoleplayCommandPalette from "@/components/roleplay/roleplay-command-palette";
 import { Scenario, Character, RoleplaySession } from "@/components/roleplay/types";
+import { usePostHogIdentify } from "@/hooks/usePostHogIdentify";
 
 interface Message {
   role: "user" | "assistant";
@@ -55,18 +56,26 @@ interface Voice {
 
 export default function RoleplayPage() {
   const { isSignedIn, isLoaded, user } = useUser();
+  const { trackAction } = usePostHogIdentify();
 
   useEffect(() => {
     // Set custom attributes on the document body to hide both header and footer
     document.body.setAttribute("data-hide-header", "true");
     document.body.setAttribute("data-hide-footer", "true");
 
+    // Track roleplay page access for user segmentation
+    trackAction('roleplay_page_accessed', {
+      is_returning_user: localStorage.getItem('previous_roleplay_visit') === 'true',
+      access_time: new Date().toISOString(),
+    });
+    localStorage.setItem('previous_roleplay_visit', 'true');
+
     // Clean up when component unmounts
     return () => {
       document.body.removeAttribute("data-hide-header");
       document.body.removeAttribute("data-hide-footer");
     };
-  }, []);
+  }, [trackAction]);
   const [currentScenario, setCurrentScenario] = useState<Scenario | null>(null);
   const [currentCharacter, setCurrentCharacter] = useState<Character | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -117,6 +126,18 @@ export default function RoleplayPage() {
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const endCall = useCallback(async () => {
     console.log("📞 endCall() triggered", new Error().stack);
+
+    // Track call end for session analysis
+    trackAction('call_ended', {
+      session_duration: sessionStartTime ? Math.floor((Date.now() - sessionStartTime.getTime()) / 1000) : 0,
+      messages_exchanged: messages.length,
+      scenario_id: currentScenario?._id,
+      scenario_title: currentScenario?.title,
+      character_name: currentCharacter?.name,
+      end_reason: 'user_initiated',
+      call_end_time: new Date().toISOString(),
+    });
+
     setIsCallActive(false);
     setIsSessionActive(false);
     setCallStatus("idle");
@@ -330,8 +351,18 @@ export default function RoleplayPage() {
   const startCall = async () => {
     if (!currentScenario) {
       toast.error("Please select a scenario first");
+      trackAction('call_start_failed', { reason: 'no_scenario_selected' });
       return;
     }
+
+    // Track call initiation for conversion analysis
+    trackAction('call_start_attempted', {
+      scenario_id: currentScenario._id,
+      scenario_title: currentScenario.title,
+      character_selected: !!currentCharacter,
+      character_name: currentCharacter?.name,
+      user_credits: userCredits,
+    });
   
     // Check if we're running on HTTPS (required for microphone access)
     if (typeof window !== 'undefined' && window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
@@ -445,13 +476,22 @@ export default function RoleplayPage() {
   
       // Initialize media recorder
       initializeMediaRecorder(streamRef.current!);
-  
+
       setIsSessionActive(true);
       setIsCallActive(true);
       setMessages([]);
       setFeedback(null);
       setCallStatus("active");
-  
+
+      // Track successful call start for conversion funnel
+      trackAction('call_started', {
+        scenario_id: currentScenario._id,
+        scenario_title: currentScenario.title,
+        character_name: currentCharacter?.name,
+        session_id: usageData.sessionId,
+        call_start_time: new Date().toISOString(),
+      });
+
       toast.success("Call connected! AI will greet you shortly.");
   
       // Start the call with AI greeting
@@ -675,8 +715,17 @@ export default function RoleplayPage() {
   
   const handleUserSpeech = async (transcript: string) => {
     if (transcript.length < 3 || isProcessingRef.current) return;
-  
+
     console.log("🤖 Processing user speech:", transcript);
+
+    // Track voice interaction for feature preference analysis
+    trackAction('voice_message_sent', {
+      transcript_length: transcript.length,
+      words_count: transcript.split(' ').length,
+      interaction_number: messages.length + 1,
+      session_id: currentSessionId,
+    });
+
     isProcessingRef.current = true;
     setCallStatus("ai_turn");
     setCurrentTranscript("");
@@ -874,6 +923,13 @@ export default function RoleplayPage() {
   };
 
   const toggleMute = () => {
+    // Track mute/unmute behavior for user experience analysis
+    trackAction(!isMuted ? 'audio_muted' : 'audio_unmuted', {
+      session_id: currentSessionId,
+      call_active: isCallActive,
+      messages_count: messages.length,
+    });
+
     setIsMuted(!isMuted);
     if (currentAudioRef.current) {
       currentAudioRef.current.muted = !isMuted;
@@ -890,6 +946,14 @@ export default function RoleplayPage() {
 
   const sendTextMessage = async () => {
     if (!currentMessage.trim() || isLoading) return;
+
+    // Track text interaction for feature preference analysis
+    trackAction('text_message_sent', {
+      message_length: currentMessage.trim().length,
+      words_count: currentMessage.trim().split(' ').length,
+      interaction_number: messages.length + 1,
+      session_id: currentSessionId,
+    });
 
     const userMessage: Message = { role: "user", text: currentMessage };
     const updatedMessages = [...messages, userMessage];
@@ -916,8 +980,17 @@ export default function RoleplayPage() {
   const getFeedback = async () => {
     if (messages.length === 0) {
       toast.error("No conversation to analyze");
+      trackAction('feedback_request_failed', { reason: 'no_conversation' });
       return;
     }
+
+    // Track feedback request for engagement analysis
+    trackAction('feedback_requested', {
+      conversation_length: messages.length,
+      session_id: currentSessionId,
+      scenario_id: currentScenario?._id,
+      request_time: new Date().toISOString(),
+    });
 
     setIsLoading(true);
     try {
@@ -937,6 +1010,15 @@ export default function RoleplayPage() {
 
       const feedbackData = await response.json();
       setFeedback(feedbackData);
+
+      // Track successful feedback generation
+      trackAction('feedback_generated', {
+        conversation_length: messages.length,
+        session_id: currentSessionId,
+        scenario_id: currentScenario?._id,
+        feedback_categories: Object.keys(feedbackData),
+      });
+
       toast.success("Feedback generated successfully!");
     } catch (error) {
       toast.error("Failed to generate feedback");
@@ -948,6 +1030,15 @@ export default function RoleplayPage() {
 
   // Command palette handlers
   const handleStartSession = (scenario: Scenario, character?: Character) => {
+    // Track scenario selection for user preference analysis
+    trackAction('scenario_selected', {
+      scenario_id: scenario._id,
+      scenario_title: scenario.title,
+      character_selected: !!character,
+      character_name: character?.name,
+      selection_method: 'command_palette',
+    });
+
     setCurrentScenario(scenario);
     setCurrentCharacter(character || null);
     setShowCommandPalette(false);
@@ -1094,7 +1185,10 @@ export default function RoleplayPage() {
           {/* Choose Scenario Button - only show when no scenario selected */}
           {!currentScenario && (
             <Button
-              onClick={() => setShowCommandPalette(true)}
+              onClick={() => {
+                trackAction('command_palette_opened', { source: 'choose_scenario_button' });
+                setShowCommandPalette(true);
+              }}
               size="lg"
               variant="default"
               className="mb-4"
