@@ -18,6 +18,7 @@ const isPublicRoute = createRouteMatcher([
   "/api/cached-video",
   "/api/test",
   "/api/tts",
+  "/api/stripe/webhook",
 ])
 
 export default clerkMiddleware(async (auth, req) => {

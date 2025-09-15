@@ -31,12 +31,16 @@ import {
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 // Standalone Purchase Button component
-function PurchaseButton({ 
-  amount, 
-  onSuccess 
-}: { 
-  amount: number; 
-  onSuccess: () => void; 
+function PurchaseButton({
+  amount,
+  onSuccess,
+  paymentIntentAmount,
+  isCreatingPayment
+}: {
+  amount: number;
+  onSuccess: () => void;
+  paymentIntentAmount: number;
+  isCreatingPayment: boolean;
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -52,6 +56,18 @@ function PurchaseButton({
     const paymentElement = elements.getElement('payment');
     if (!paymentElement) {
       toast.error("Payment form not ready. Please refresh and try again.");
+      return;
+    }
+
+    // Validate amount matches payment intent
+    if (amount !== paymentIntentAmount) {
+      toast.error("Amount has changed. Please wait for payment to update.");
+      return;
+    }
+
+    // Don't allow payment while creating new payment intent
+    if (isCreatingPayment) {
+      toast.error("Payment is being updated. Please try again in a moment.");
       return;
     }
 
@@ -78,10 +94,10 @@ function PurchaseButton({
     <Button
       variant="default"
       onClick={handlePurchase}
-      disabled={!stripe || isLoading}
-      className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-lg"
+      disabled={!stripe || isLoading || isCreatingPayment || amount !== paymentIntentAmount}
+      className="w-full bg-indigo-600 hover:bg-indigo-700 text-white hover:text-white font-medium py-3 rounded-lg"
     >
-      {isLoading ? "Processing..." : `Purchase`}
+      {isLoading ? "Processing..." : isCreatingPayment ? "Updating..." : amount !== paymentIntentAmount ? "Updating amount..." : `Purchase`}
     </Button>
   );
 }
@@ -172,7 +188,7 @@ function CheckoutForm({
         <Button
           onClick={handleSubmit}
           disabled={!stripe || isLoading}
-          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-lg"
+          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white hover:text-white font-medium py-3 rounded-lg"
         >
           {isLoading ? "Processing..." : `Purchase`}
         </Button>
@@ -295,6 +311,7 @@ export default function PaymentModal({
 }: PaymentModalProps) {
   const [amount, setAmount] = useState("10");
   const [clientSecret, setClientSecret] = useState<string>("");
+  const [paymentIntentAmount, setPaymentIntentAmount] = useState<number>(0);
   const [showInvoices, setShowInvoices] = useState(true);
   const [isCreatingPayment, setIsCreatingPayment] = useState(false);
   const [showAlternativePayments, setShowAlternativePayments] = useState(false);
@@ -321,42 +338,84 @@ export default function PaymentModal({
   const handleBackToMain = () => {
     setShowAlternativePayments(false);
   };
+// Create payment intent when amount changes (with debouncing)
+useEffect(() => {
+  // Skip if amount is invalid or modal is closed
+  if (numericAmount <= 0 || !isOpen) {
+    return;
+  }
 
-  // Create payment intent when amount changes
-  useEffect(() => {
-    const createPaymentIntent = async () => {
-      if (numericAmount <= 0) {
-        return;
+  // Skip if we already have a payment intent for this exact amount
+  if (paymentIntentAmount === numericAmount && clientSecret) {
+    return;
+  }
+
+  // Debounce the payment intent creation to avoid rapid API calls
+  const timeoutId = setTimeout(async () => {
+    setIsCreatingPayment(true);
+    
+    try {
+      // Create new payment intent (just like initial load)
+      const response = await fetch("/api/stripe/create-payment-intent", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ 
+          amount: numericAmount,
+        }),
+      });
+
+      // Check if response is OK
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Payment setup failed (${response.status})`);
       }
 
-      setIsCreatingPayment(true);
-      try {
-        const response = await fetch("/api/stripe/create-payment-intent", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ amount: numericAmount }),
-        });
+      // Parse the JSON response
+      const data = await response.json();
 
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || "Failed to create payment");
-        }
-
-        setClientSecret(data.clientSecret);
-      } catch (error) {
-        toast.error(
-          error instanceof Error ? error.message : "Payment setup failed"
-        );
-      } finally {
-        setIsCreatingPayment(false);
+      // Validate response data
+      if (!data.clientSecret) {
+        throw new Error("Invalid payment response from server");
       }
-    };
 
-    if (numericAmount > 0 && isOpen) {
-      createPaymentIntent();
+      // Update state with new payment intent (just like initial load)
+      setClientSecret(data.clientSecret);
+      setPaymentIntentAmount(numericAmount);
+      
+    } catch (error) {
+      console.error('Payment intent creation error:', error);
+      
+      // Show user-friendly error message
+      toast.error(
+        error instanceof Error 
+          ? error.message 
+          : "Unable to setup payment. Please try again."
+      );
+      
+      // Reset state on error
+      setClientSecret(null);
+      setPaymentIntentAmount(0);
+    } finally {
+      setIsCreatingPayment(false);
     }
-  }, [numericAmount, isOpen]);
+  }, 500); // 500ms debounce to let user finish typing
+
+  // Cleanup - just clear the timeout
+  return () => {
+    clearTimeout(timeoutId);
+  };
+}, [numericAmount, isOpen]);
+
+// Clean up when modal closes
+useEffect(() => {
+  if (!isOpen) {
+    setClientSecret(null);
+    setPaymentIntentAmount(0);
+    setIsCreatingPayment(false);
+  }
+}, [isOpen]);
 
   const stripeOptions: StripeElementsOptions = {
     clientSecret,
@@ -432,7 +491,7 @@ export default function PaymentModal({
         <div className="flex-1 overflow-y-auto space-y-6 pr-1">
           {/* Single Stripe Elements wrapper for the entire payment flow */}
           {clientSecret && (
-            <Elements stripe={stripePromise} options={stripeOptions}>
+            <Elements key={clientSecret} stripe={stripePromise} options={stripeOptions}>
               {!showAlternativePayments ? (
                 <>
                   <CheckoutForm 
@@ -530,7 +589,12 @@ export default function PaymentModal({
                     </div>
 
                     {/* Purchase Button - now inside Elements */}
-                    <PurchaseButton amount={numericAmount} onSuccess={handleSuccess} />
+                    <PurchaseButton
+                      amount={numericAmount}
+                      onSuccess={handleSuccess}
+                      paymentIntentAmount={paymentIntentAmount}
+                      isCreatingPayment={isCreatingPayment}
+                    />
 
                     {/* One-time payment toggle */}
                     <div className="flex items-center justify-between pt-4">
@@ -580,7 +644,12 @@ export default function PaymentModal({
                   </div>
 
                   {/* Purchase Button for alternative payments */}
-                  <PurchaseButton amount={numericAmount} onSuccess={handleSuccess} />
+                  <PurchaseButton
+                    amount={numericAmount}
+                    onSuccess={handleSuccess}
+                    paymentIntentAmount={paymentIntentAmount}
+                    isCreatingPayment={isCreatingPayment}
+                  />
                 </>
               )}
             </Elements>

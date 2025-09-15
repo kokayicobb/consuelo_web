@@ -25,9 +25,10 @@ import {
 import { UserButton, SignIn, useUser } from "@clerk/nextjs";
 import Image from "next/image";
 import LiquidOrbButton from "@/components/roleplay/LiquidOrbButton";
-import RoleplaySettings from "@/components/roleplay/settings";
 import CreditsDisplay from "@/components/roleplay/CreditsDisplay";
 import ThemeToggler from "@/components/Header/ThemeToggler";
+import RoleplayCommandPalette from "@/components/roleplay/roleplay-command-palette";
+import { Scenario, Character, RoleplaySession } from "@/components/roleplay/types";
 
 interface Message {
   role: "user" | "assistant";
@@ -53,7 +54,7 @@ interface Voice {
 }
 
 export default function RoleplayPage() {
-  const { isSignedIn, isLoaded } = useUser();
+  const { isSignedIn, isLoaded, user } = useUser();
 
   useEffect(() => {
     // Set custom attributes on the document body to hide both header and footer
@@ -66,7 +67,8 @@ export default function RoleplayPage() {
       document.body.removeAttribute("data-hide-footer");
     };
   }, []);
-  const [scenario, setScenario] = useState("");
+  const [currentScenario, setCurrentScenario] = useState<Scenario | null>(null);
+  const [currentCharacter, setCurrentCharacter] = useState<Character | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentMessage, setCurrentMessage] = useState("");
   const [feedback, setFeedback] = useState<Feedback | null>(null);
@@ -95,16 +97,26 @@ export default function RoleplayPage() {
     | "speaking"
     | "listening"
   >("idle");
-  const [isPushToTalkPressed, setIsPushToTalkPressed] = useState(false);
+  const [recordingStartTime, setRecordingStartTime] = useState<number | null>(null);
+  const [isListening, setIsListening] = useState(false);
+  const [speechDetected, setSpeechDetected] = useState(false);
+  const [silenceTimer, setSilenceTimer] = useState<NodeJS.Timeout | null>(null);
 
   // Modal states
   const [isTranscriptOpen, setIsTranscriptOpen] = useState(false);
+  const [showCommandPalette, setShowCommandPalette] = useState(false);
   
   // Usage tracking states
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [currentRoleplaySessionId, setCurrentRoleplaySessionId] = useState<string | null>(null);
   const [userCredits, setUserCredits] = useState(0);
   const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
+  
+  // Theme state for command palette
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
   const endCall = useCallback(async () => {
+    console.log("📞 endCall() triggered", new Error().stack);
     setIsCallActive(false);
     setIsSessionActive(false);
     setCallStatus("idle");
@@ -113,11 +125,33 @@ export default function RoleplayPage() {
     setCurrentTranscript("");
     isProcessingRef.current = false;
 
-    // Stop any ongoing recording
+    // Stop any ongoing recording or listening
     if (isRecording) {
-      stopRecording();
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
+        mediaRecorderRef.current.stop();
+        setIsRecording(false);
+      }
     }
-    stopCurrentAudio();
+    if (isListening) {
+      setIsListening(false);
+      setSpeechDetected(false);
+      if (silenceTimer) {
+        clearTimeout(silenceTimer);
+        setSilenceTimer(null);
+      }
+    }
+    // Stop current audio
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause();
+      currentAudioRef.current.currentTime = 0;
+      setIsPlaying(false);
+    }
+    
+    // Clean up silence timer
+    if (silenceTimer) {
+      clearTimeout(silenceTimer);
+      setSilenceTimer(null);
+    }
 
     // Clean up media streams
     if (streamRef.current) {
@@ -150,7 +184,37 @@ export default function RoleplayPage() {
     } else {
       toast.success("Call ended");
     }
-  }, [currentSessionId, isRecording]);
+
+    // End roleplay session in MongoDB
+    if (currentRoleplaySessionId) {
+      try {
+        const response = await fetch(`/api/roleplay/sessions/${currentRoleplaySessionId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            status: 'completed',
+            conversation_history: messages.map(msg => ({
+              role: msg.role,
+              text: msg.text,
+              timestamp: new Date().toISOString()
+            })),
+            end_time: new Date().toISOString()
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`Update session API error: ${response.status}`);
+        }
+
+        console.log("✅ Ended roleplay session:", currentRoleplaySessionId);
+        setCurrentRoleplaySessionId(null);
+      } catch (error) {
+        console.error("❌ Failed to end roleplay session:", error);
+      }
+    }
+  }, [currentRoleplaySessionId, messages, currentSessionId, isListening, isRecording, silenceTimer]);
   // Refs for audio functionality
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -158,12 +222,87 @@ export default function RoleplayPage() {
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
   const isProcessingRef = useRef(false);
 
-  // Cleanup on unmount
+  // Keep refs to avoid stale closures
+  const isCallActiveRef = useRef(isCallActive);
+  const currentSessionIdRef = useRef(currentSessionId);
+  const isListeningRef = useRef(isListening);
+  const callStatusRef = useRef(callStatus);
+  const isPlayingRef = useRef(isPlaying);
+  
+  useEffect(() => {
+    isCallActiveRef.current = isCallActive;
+  }, [isCallActive]);
+  
+  useEffect(() => {
+    currentSessionIdRef.current = currentSessionId;
+  }, [currentSessionId]);
+  
+  useEffect(() => {
+    isListeningRef.current = isListening;
+  }, [isListening]);
+  
+  useEffect(() => {
+    callStatusRef.current = callStatus;
+  }, [callStatus]);
+  
+  useEffect(() => {
+    isPlayingRef.current = isPlaying;
+  }, [isPlaying]);
+
+  // Cleanup on unmount - only when component actually unmounts
   useEffect(() => {
     return () => {
-      endCall();
+      // Only end call if we're still mounted and have an active call
+      if (isCallActiveRef.current) {
+        console.log("📞 Component unmounting with active call, ending call");
+        // Use a simplified cleanup that doesn't depend on state
+        const cleanup = async () => {
+          if (streamRef.current) {
+            streamRef.current.getTracks().forEach((track) => track.stop());
+            streamRef.current = null;
+          }
+          if (currentAudioRef.current) {
+            currentAudioRef.current.pause();
+          }
+          if (currentSessionIdRef.current) {
+            try {
+              await fetch("/api/usage/end-session", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ sessionId: currentSessionIdRef.current }),
+              });
+            } catch (error) {
+              console.error("Error ending session on unmount:", error);
+            }
+          }
+        };
+        cleanup();
+      }
     };
-  }, [endCall]);
+  }, []); // Empty dependency array so this only runs on mount/unmount
+
+ 
+
+  // Keyboard shortcuts for command palette
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      const isInputField = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.contentEditable === 'true';
+      
+      if (!isInputField) {
+        if (e.key === '/' && !showCommandPalette) {
+          e.preventDefault();
+          setShowCommandPalette(true);
+        } else if (e.key === 'Escape' && showCommandPalette) {
+          e.preventDefault();
+          setShowCommandPalette(false);
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [showCommandPalette]);
 
   // Fetch available voices on component mount
   useEffect(() => {
@@ -189,19 +328,32 @@ export default function RoleplayPage() {
   }, []);
 
   const startCall = async () => {
-    if (!scenario.trim()) {
-      toast.error("Please enter a scenario first");
+    if (!currentScenario) {
+      toast.error("Please select a scenario first");
       return;
     }
-
+  
+    // Check if we're running on HTTPS (required for microphone access)
+    if (typeof window !== 'undefined' && window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
+      toast.error("Microphone access requires HTTPS. Please use a secure connection.");
+      return;
+    }
+  
+    // Check if MediaDevices API is available
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      toast.error("Your browser doesn't support microphone access. Please use a modern browser like Chrome, Firefox, or Safari.");
+      return;
+    }
+  
     setCallStatus("connecting");
-
+    console.log("🔄 Starting call - setting status to connecting");
+  
     try {
       // Start usage session and check credits
       const usageResponse = await fetch("/api/usage/start-session", {
         method: "POST",
       });
-
+  
       if (!usageResponse.ok) {
         const errorData = await usageResponse.json();
         if (usageResponse.status === 402) {
@@ -212,175 +364,353 @@ export default function RoleplayPage() {
         setCallStatus("idle");
         return;
       }
-
+  
       const usageData = await usageResponse.json();
       setCurrentSessionId(usageData.sessionId);
       setSessionStartTime(new Date());
-
+  
+      // Create roleplay session in MongoDB
+      try {
+        console.log("🔄 Creating roleplay session with user ID:", user?.id);
+        const response = await fetch('/api/roleplay/sessions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            scenario_id: "68c23a20303cd41e97d36baf",
+            character_id: undefined,
+            user_id: user?.id || 'anonymous'
+          })
+        });
+  
+        if (!response.ok) {
+          throw new Error(`Create session API error: ${response.status}`);
+        }
+  
+        const data = await response.json();
+        const roleplaySession = data.session;
+        console.log("✅ Created roleplay session:", roleplaySession);
+        setCurrentRoleplaySessionId(roleplaySession.id || roleplaySession._id);
+      } catch (error) {
+        console.error("❌ Failed to create roleplay session:", error);
+        setCurrentRoleplaySessionId(`session_${Date.now()}`);
+      }
+  
+      // Check microphone permission
+      let permissionState = 'prompt';
+      try {
+        const permission = await navigator.permissions.query({ name: 'microphone' as PermissionName });
+        permissionState = permission.state;
+        console.log("🎤 Current microphone permission state:", permissionState);
+      } catch (e) {
+        console.log("🎤 Permissions API not available, proceeding with getUserMedia");
+      }
+  
+      if (permissionState === 'denied') {
+        toast.error("Microphone access was previously denied. Please click the 🔒 lock icon in your browser's address bar and allow microphone access, then try again.");
+        setCallStatus("idle");
+        return;
+      }
+  
       // Request microphone permissions
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-        },
-      });
-      streamRef.current = stream;
-
+      try {
+        console.log("🎤 Requesting microphone access...");
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+          },
+        });
+        streamRef.current = stream;
+        console.log("🎤 Microphone access granted successfully");
+      } catch (micError: any) {
+        console.error("Microphone access error:", micError);
+        
+        if (micError.name === "NotAllowedError") {
+          toast.error("Microphone access denied. Please allow microphone access and try again.");
+        } else if (micError.name === "NotFoundError") {
+          toast.error("No microphone found. Please connect a microphone and try again.");
+        } else if (micError.name === "NotSupportedError") {
+          toast.error("Microphone access not supported on this browser.");
+        } else if (micError.name === "NotReadableError") {
+          toast.error("Microphone is being used by another application.");
+        } else {
+          toast.error(`Failed to access microphone: ${micError.message || 'Unknown error'}`);
+        }
+        setCallStatus("idle");
+        return;
+      }
+  
       // Initialize media recorder
-      initializeMediaRecorder(stream);
-
+      initializeMediaRecorder(streamRef.current!);
+  
       setIsSessionActive(true);
       setIsCallActive(true);
       setMessages([]);
       setFeedback(null);
       setCallStatus("active");
-
-      toast.success("Call connected! Start speaking naturally.");
-
+  
+      toast.success("Call connected! AI will greet you shortly.");
+  
       // Start the call with AI greeting
       setTimeout(() => {
         initiateAIGreeting();
       }, 1000);
+      
     } catch (error) {
-      toast.error("Failed to connect. Please allow microphone access.");
-      console.error("Error starting call:", error);
+      console.error("❌ Error starting call:", error);
+      toast.error("Failed to connect. Please check console for details.");
       setCallStatus("idle");
     }
   };
-
-  const handlePushToTalkStart = () => {
-    if (!isCallActive || isPlaying || callStatus !== "user_turn") return;
-
-    setIsPushToTalkPressed(true);
-    startRecording();
-  };
-
-  const handlePushToTalkEnd = () => {
-    if (!isPushToTalkPressed) return;
-
-    setIsPushToTalkPressed(false);
-    stopRecording();
-  };
-
+  
   const initializeMediaRecorder = (stream: MediaStream) => {
     try {
-      // Use webm format which is widely supported
       const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
         ? "audio/webm;codecs=opus"
         : "audio/webm";
-
+  
       mediaRecorderRef.current = new MediaRecorder(stream, {
         mimeType: mimeType,
         audioBitsPerSecond: 128000,
       });
-
+  
       mediaRecorderRef.current.ondataavailable = (event) => {
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data);
         }
       };
-
+  
       mediaRecorderRef.current.onstop = async () => {
         if (audioChunksRef.current.length > 0 && !isProcessingRef.current) {
           const audioBlob = new Blob(audioChunksRef.current, {
             type: "audio/webm",
           });
+          
+          const recordingDuration = recordingStartTime ? Date.now() - recordingStartTime : 0;
+          console.log("🎤 Recording stopped. Duration:", recordingDuration, "ms, Size:", audioBlob.size);
+          
+          // Reset for next recording
           audioChunksRef.current = [];
-
-          // Process audio if we have any content
-          if (audioBlob.size > 1000) {
+          setRecordingStartTime(null);
+  
+          // Process if we have meaningful audio (at least 500ms and 1KB)
+          if (audioBlob.size > 1000 && recordingDuration > 500) {
             await processAudioChunk(audioBlob);
+          } else {
+            console.log("🎤 Recording too short, discarding and restarting...");
+            // If we're still in user_turn and listening, restart recording
+            if (callStatusRef.current === "user_turn" && isListeningRef.current && isCallActiveRef.current) {
+              setTimeout(() => startContinuousRecording(), 100);
+            }
           }
         }
       };
-
+  
       console.log("🎤 MediaRecorder initialized with mimeType:", mimeType);
     } catch (error) {
       console.error("Error initializing MediaRecorder:", error);
     }
   };
-
-  const startRecording = () => {
-    if (
-      mediaRecorderRef.current &&
-      mediaRecorderRef.current.state === "inactive"
-    ) {
+  
+  const startContinuousRecording = useCallback(() => {
+    console.log("🎤 Starting continuous recording...");
+    console.log("🎤 Current state - isRecording:", isRecording, "mediaRecorder state:", mediaRecorderRef.current?.state);
+    
+    if (!streamRef.current || !mediaRecorderRef.current) {
+      console.log("🎤 No stream or recorder available");
+      return;
+    }
+    
+    if (mediaRecorderRef.current.state === "recording") {
+      console.log("🎤 Already recording, skipping");
+      return;
+    }
+    
+    if (mediaRecorderRef.current.state === "inactive") {
       audioChunksRef.current = [];
+      setRecordingStartTime(Date.now());
       mediaRecorderRef.current.start();
       setIsRecording(true);
-      console.log("🎤 Started recording");
+      console.log("🎤 Recording started successfully");
+      
+      // Set up silence detection with VAD (Voice Activity Detection) simulation
+      // Give user time to start speaking (2 seconds initial wait)
+      const initialWaitTimer = setTimeout(() => {
+        // After initial wait, implement continuous silence detection
+        setSilenceTimer(setTimeout(() => {
+          console.log("🔇 Silence detected after waiting, processing recording...");
+          if (mediaRecorderRef.current?.state === "recording") {
+            mediaRecorderRef.current.stop();
+            setIsRecording(false);
+          }
+        }, 2000)); // Additional 2 seconds of silence after initial wait
+      }, 2000); // Initial 2 second wait before checking for silence
+      
+      setSilenceTimer(initialWaitTimer);
     }
-  };
-
-  const stopRecording = () => {
-    if (
-      mediaRecorderRef.current &&
-      mediaRecorderRef.current.state === "recording"
-    ) {
+  }, [isRecording]);
+  
+  const startListening = useCallback(() => {
+    console.log("🎯 Starting listening mode...");
+    if (!isCallActive || callStatus !== "user_turn") {
+      console.log("🎯 Not the right time to listen");
+      return;
+    }
+    
+    setIsListening(true);
+    setSpeechDetected(false);
+    // Small delay to ensure state is settled
+    setTimeout(() => {
+      startContinuousRecording();
+    }, 100);
+  }, [isCallActive, callStatus, startContinuousRecording]);
+  
+  const stopListening = useCallback(() => {
+    console.log("🛑 Stopping listening mode...");
+    setIsListening(false);
+    setSpeechDetected(false);
+    
+    // Clear any timers
+    if (silenceTimer) {
+      clearTimeout(silenceTimer);
+      setSilenceTimer(null);
+    }
+    
+    // Stop recording if active
+    if (mediaRecorderRef.current?.state === "recording") {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
-      console.log("🎤 Stopped recording");
     }
-  };
-
+  }, [silenceTimer]);
+  
+  // Auto-start listening when it's user's turn
+  useEffect(() => {
+    console.log("📍 Turn state changed - callStatus:", callStatus, "isPlaying:", isPlaying, "isListening:", isListening);
+    
+    if (callStatus === "user_turn" && isCallActive && !isPlaying && !isListening) {
+      console.log("🎯 It's user's turn, starting listening after delay...");
+      
+      // Give a small delay for audio to fully stop and state to settle
+      const timer = setTimeout(() => {
+        if (callStatusRef.current === "user_turn" && isCallActiveRef.current && !isPlayingRef.current) {
+          startListening();
+        }
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [callStatus, isCallActive, isPlaying, isListening, startListening]);
+  
   const processAudioChunk = async (audioBlob: Blob) => {
     try {
       console.log("🎤 Processing audio chunk, size:", audioBlob.size);
-
-      // Create FormData and append the audio file
+  
+      // Skip very small chunks
+      if (audioBlob.size < 5000) {
+        console.log("🎤 Audio too small, likely just noise");
+        // Restart listening if still user's turn
+        if (callStatusRef.current === "user_turn" && isListeningRef.current) {
+          setTimeout(() => startContinuousRecording(), 100);
+        }
+        return;
+      }
+  
       const formData = new FormData();
       formData.append("audio", audioBlob, "audio.webm");
-
-      // Send to Groq Whisper API
+  
       const response = await fetch("/api/roleplay/transcribe", {
         method: "POST",
         body: formData,
       });
-
+  
       if (!response.ok) {
         throw new Error("Transcription failed");
       }
-
+  
       const data = await response.json();
-
+      console.log("🎤 Transcription result:", data.text);
+  
+      // Check for meaningful speech
       if (data.text && data.text.trim().length > 2) {
-        console.log("🎤 Transcribed:", data.text);
-        setCurrentTranscript(data.text);
-
-        // Process the transcribed text
-        if (!isProcessingRef.current) {
-          await handleUserSpeech(data.text.trim());
+        const transcript = data.text.trim();
+        
+        // Filter out common false positives
+        const ignoredPhrases = ["thank you", "thanks", ".", "", " ", "you", "the"];
+        const isIgnored = ignoredPhrases.some(phrase => 
+          transcript.toLowerCase() === phrase.toLowerCase()
+        );
+        
+        if (!isIgnored && transcript.length > 2) {
+          console.log("💬 User said:", transcript);
+          setCurrentTranscript(transcript);
+          
+          // Stop listening and process the speech
+          stopListening();
+          await handleUserSpeech(transcript);
+        } else {
+          console.log("🎤 Ignoring non-meaningful transcription:", transcript);
+          // Continue listening
+          if (callStatusRef.current === "user_turn" && isListeningRef.current) {
+            setTimeout(() => startContinuousRecording(), 100);
+          }
+        }
+      } else {
+        console.log("🎤 No speech detected in audio");
+        // Continue listening
+        if (callStatusRef.current === "user_turn" && isListeningRef.current) {
+          setTimeout(() => startContinuousRecording(), 100);
         }
       }
     } catch (error) {
-      console.error("Error processing audio chunk:", error);
-      setCallStatus("user_turn");
+      console.error("Error processing audio:", error);
+      // Try to continue listening on error
+      if (callStatusRef.current === "user_turn" && isListeningRef.current) {
+        setTimeout(() => startContinuousRecording(), 500);
+      }
     }
   };
- 
+  
   const handleUserSpeech = async (transcript: string) => {
     if (transcript.length < 3 || isProcessingRef.current) return;
-
+  
+    console.log("🤖 Processing user speech:", transcript);
     isProcessingRef.current = true;
     setCallStatus("ai_turn");
-
-    console.log("🔍 DEBUG: Current messages before adding user message:", messages);
-    console.log("🔍 DEBUG: Messages length:", messages.length);
-    
     setCurrentTranscript("");
-
+  
     // Add user message to conversation
     const userMessage: Message = { role: "user", text: transcript };
     const updatedMessages = [...messages, userMessage];
-    console.log("🔍 DEBUG: Updated messages with user message:", updatedMessages);
-    
     setMessages(updatedMessages);
     
-    // Call API with the updated messages
+    console.log("📝 Conversation so far:", updatedMessages);
+    
+    // Get AI response
     await getAIResponseAndUpdateMessages(transcript, updatedMessages);
+    
+    // After AI responds, it will set callStatus back to "user_turn"
+    // which will trigger the listening effect above
+    isProcessingRef.current = false;
   };
-
+  
+  // Manual push-to-talk fallback (optional)
+  const handlePushToTalk = () => {
+    if (callStatus !== "user_turn" || !isCallActive) return;
+    
+    if (!isRecording) {
+      console.log("🎤 Manual recording started (push-to-talk)");
+      startContinuousRecording();
+    } else {
+      console.log("🎤 Manual recording stopped (push-to-talk)");
+      if (mediaRecorderRef.current?.state === "recording") {
+        mediaRecorderRef.current.stop();
+        setIsRecording(false);
+      }
+    }
+  };
   const getAIResponseAndUpdateMessages = async (transcript: string, currentMessages: Message[]) => {
     try {
       // Get AI response with the full conversation history
@@ -418,7 +748,8 @@ export default function RoleplayPage() {
       body: JSON.stringify({
         message: userText,
         history: conversationHistory,
-        scenario: scenario,
+        scenario: currentScenario,
+        character: currentCharacter,
       }),
     });
 
@@ -530,7 +861,8 @@ export default function RoleplayPage() {
  
 
   const resetScenario = () => {
-    setScenario("");
+    setCurrentScenario(null);
+    setCurrentCharacter(null);
     setMessages([]);
     setCurrentMessage("");
     setFeedback(null);
@@ -594,7 +926,8 @@ export default function RoleplayPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           history: messages,
-          scenario: scenario,
+          scenario: currentScenario,
+          character: currentCharacter,
         }),
       });
 
@@ -611,6 +944,34 @@ export default function RoleplayPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Command palette handlers
+  const handleStartSession = (scenario: Scenario, character?: Character) => {
+    setCurrentScenario(scenario);
+    setCurrentCharacter(character || null);
+    setShowCommandPalette(false);
+    toast.success(`Started session: ${scenario.title}${character ? ` with ${character.name}` : ''}`);
+    // Automatically start the call after selecting scenario
+    setTimeout(() => {
+      startCall();
+    }, 500);
+  };
+
+  const handleResumeSession = (session: RoleplaySession) => {
+    // This would need to be implemented to restore session state
+    setShowCommandPalette(false);
+    toast.success('Resume session functionality to be implemented');
+  };
+
+  const handleThemeChange = (newTheme: 'light' | 'dark') => {
+    setTheme(newTheme);
+    // You could also integrate with your existing theme system here
+  };
+
+  const handleVoiceToggle = (enabled: boolean) => {
+    setVoiceEnabled(enabled);
+    setIsMuted(!enabled);
   };
 
   return (
@@ -654,17 +1015,9 @@ export default function RoleplayPage() {
             </Badge>
           </div>
 
-          {/* Credits and Settings - Right side, inline with status */}
+          {/* Credits and Controls - Right side, inline with status */}
           <div className="absolute right-4 sm:right-6 flex items-center gap-2 sm:gap-3">
             <CreditsDisplay onCreditsUpdate={setUserCredits} />
-            <RoleplaySettings
-              scenario={scenario}
-              setScenario={setScenario}
-              availableVoices={availableVoices}
-              selectedVoiceId={selectedVoiceId}
-              setSelectedVoiceId={setSelectedVoiceId}
-              isLoadingVoices={isLoadingVoices}
-            />
             <div className="mr-2">
               <ThemeToggler />
             </div>
@@ -699,10 +1052,10 @@ export default function RoleplayPage() {
               </>
             )}
           </Badge>
-          {isRecording && (
-            <Badge variant="destructive" className="animate-pulse text-xs px-2 py-1">
+          {isListening && (
+            <Badge variant="default" className="animate-pulse text-xs px-2 py-1 bg-blue-500">
               <Mic className="mr-1 h-3 w-3" />
-              Recording
+              Listening
             </Badge>
           )}
           {isPlaying && (
@@ -727,37 +1080,59 @@ export default function RoleplayPage() {
             </p>
           </div>
 
-          {/* Main Liquid Orb Button */}
+          {/* Main Liquid Orb Button - always show */}
           <div className="mb-12 sm:mb-16">
-            <LiquidOrbButton
+            {/* <LiquidOrbButton
               size="xl"
               className="h-48 w-48 sm:h-64 sm:w-64"
               disabled={false}
             >
               <span></span>
-            </LiquidOrbButton>
+            </LiquidOrbButton> */}
           </div>
 
-          {/* Start Call Button */}
-          <Button
-            onClick={startCall}
-            disabled={!scenario.trim()}
-            size="lg"
-            variant="default"
-            // className="text: bg-white bg-gradient-to-r from-purple-600 to-pink-600 px-12 py-6 text-lg font-semibold hover:from-purple-700 hover:to-pink-700"
-          >
-            <Phone className="mr-3 h-6 w-6" />
-            Start Voice Call
-          </Button>
+          {/* Choose Scenario Button - only show when no scenario selected */}
+          {!currentScenario && (
+            <Button
+              onClick={() => setShowCommandPalette(true)}
+              size="lg"
+              variant="default"
+              className="mb-4"
+            >
+              <Phone className="mr-3 h-6 w-6" />
+              Choose Scenario & Start Call
+            </Button>
+          )}
 
-          {!scenario.trim() && (
+          {/* Start Call Button - only show when scenario is selected */}
+          {currentScenario && (
+            <div className="text-center space-x-4 flex justify-center items-center">
+              <Button
+                onClick={startCall}
+                disabled={!currentScenario}
+                size="lg"
+                variant="default"
+              >
+                <Phone className="mr-3 h-6 w-6" />
+                Start Call: {currentScenario.title}
+              </Button>
+              <Button
+                onClick={() => setShowCommandPalette(true)}
+                size="lg"
+                variant="default"
+              >
+                Change Scenario
+              </Button>
+            </div>
+          )}
+
+          {!currentScenario && (
             <p className="mt-4 max-w-sm text-center text-sm text-muted-foreground">
-              Please set up your scenario using the settings icon in the top
-              right corner before starting a call
+              Use the button above to select a scenario and character before starting a call
             </p>
           )}
-          
-          {scenario.trim() && userCredits < 0.45 && (
+
+          {currentScenario && userCredits < 0.45 && (
             <p className="mt-4 max-w-sm text-center text-sm text-orange-600">
               ⚠️ Low credits detected. Add more credits to ensure uninterrupted sessions.
             </p>
@@ -770,7 +1145,7 @@ export default function RoleplayPage() {
           <div className="mb-8 text-center">
             {callStatus === "user_turn" ? (
               <p className="text-lg font-medium text-blue-600 dark:text-blue-400">
-                Your turn - Press and hold to speak
+                {isListening ? "Listening... speak naturally" : "Getting ready to listen..."}
               </p>
             ) : callStatus === "ai_turn" ? (
               <p className="text-lg font-medium text-purple-600 dark:text-purple-400">
@@ -796,29 +1171,26 @@ export default function RoleplayPage() {
             )}
           </div>
 
-          {/* Large Push-to-Talk Button */}
+          {/* Visual Indicator Orb */}
           <div className="mb-8">
             <LiquidOrbButton
-                onMouseDown={handlePushToTalkStart}
-                onMouseUp={handlePushToTalkEnd}
-                onMouseLeave={handlePushToTalkEnd}
-                onTouchStart={handlePushToTalkStart}
-                onTouchEnd={handlePushToTalkEnd}
-                disabled={callStatus !== "user_turn" || isPlaying}
-                isPressed={isPushToTalkPressed}
+                disabled={true}
+                isPressed={isListening || isRecording}
                 size="xl"
-                className="h-56 w-56 sm:h-72 sm:w-72"
+                className="h-56 w-56 sm:h-72 sm:w-72 cursor-default"
             >
-              <span></span>
+              <span className="text-sm font-medium">
+                {isListening ? "🎤" : isPlaying ? "🔊" : "💬"}
+              </span>
             </LiquidOrbButton>
           </div>
 
           <div className="mb-8 max-w-xs text-center text-sm text-muted-foreground">
             {callStatus === "user_turn"
-              ? "Hold the button while speaking, then release when done"
+              ? "Speak naturally - the system is listening automatically"
               : isPlaying
-                ? "Listen to the AI response"
-                : "Wait for your turn to speak"}
+                ? "Listen to Zara's response"
+                : "Natural conversation in progress"}
           </div>
 
           {/* Text Input - Full Width */}
@@ -992,6 +1364,19 @@ export default function RoleplayPage() {
           </div>
         </div>
       )}
+
+      {/* Command Palette */}
+      <RoleplayCommandPalette
+        isOpen={showCommandPalette}
+        onClose={() => setShowCommandPalette(false)}
+        onStartSession={handleStartSession}
+        onResumeSession={handleResumeSession}
+        currentUser={user?.id || "anonymous"}
+        theme={theme}
+        onThemeChange={handleThemeChange}
+        voiceEnabled={voiceEnabled}
+        onVoiceToggle={handleVoiceToggle}
+      />
     </div>
   );
 }
