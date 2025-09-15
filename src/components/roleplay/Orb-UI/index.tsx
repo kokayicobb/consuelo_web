@@ -76,6 +76,16 @@ export default function RippleSphere() {
 
     // Add canvas to DOM and log its properties
     const canvas = renderer.domElement
+
+    // Ensure canvas is properly styled for rendering
+    canvas.style.display = 'block'
+    canvas.style.width = '100%'
+    canvas.style.height = '100%'
+    canvas.style.position = 'absolute'
+    canvas.style.top = '0'
+    canvas.style.left = '0'
+    canvas.style.zIndex = '1'
+
     mountRef.current.appendChild(canvas)
     rendererRef.current = renderer
 
@@ -93,11 +103,16 @@ export default function RippleSphere() {
 
     // Event listeners for precise interaction
     const handleInteraction = (clientX: number, clientY: number) => {
-      if (!cameraRef.current) return
+      if (!cameraRef.current || !mountRef.current) return
+
+      // Get container bounds for proper coordinate conversion
+      const rect = mountRef.current.getBoundingClientRect()
+      const x = clientX - rect.left
+      const y = clientY - rect.top
 
       // Convert screen coordinates to normalized device coordinates
-      mouseRef.current.x = (clientX / window.innerWidth) * 2 - 1
-      mouseRef.current.y = -(clientY / window.innerHeight) * 2 + 1
+      mouseRef.current.x = (x / rect.width) * 2 - 1
+      mouseRef.current.y = -(y / rect.height) * 2 + 1
 
       // Use raycasting to find the exact 3D intersection point
       raycasterRef.current.setFromCamera(mouseRef.current, cameraRef.current)
@@ -128,10 +143,15 @@ export default function RippleSphere() {
     }
 
     const handleResize = () => {
-      if (!cameraRef.current || !rendererRef.current) return
-      cameraRef.current.aspect = window.innerWidth / window.innerHeight
+      if (!cameraRef.current || !rendererRef.current || !mountRef.current) return
+
+      const containerRect = mountRef.current.getBoundingClientRect()
+      const containerWidth = containerRect.width || window.innerWidth
+      const containerHeight = containerRect.height || window.innerHeight
+
+      cameraRef.current.aspect = containerWidth / containerHeight
       cameraRef.current.updateProjectionMatrix()
-      rendererRef.current.setSize(window.innerWidth, window.innerHeight)
+      rendererRef.current.setSize(containerWidth, containerHeight)
     }
 
     // Add event listeners
@@ -276,6 +296,9 @@ export default function RippleSphere() {
 
     rendererRef.current.render(sceneRef.current, cameraRef.current)
 
+    // Force canvas repaint to ensure visual updates
+    rendererRef.current.domElement.style.transform = `translateZ(${Math.sin(Date.now() * 0.001) * 0.01}px)`
+
     // Log every 60 frames to see if animation is running
     if (animationIdRef.current % 60 === 0) {
       console.log("[RippleSphere] Animation frame:", animationIdRef.current, "breathing:", breathingScale.toFixed(3), "camera pos:", cameraRef.current.position.x.toFixed(2))
@@ -350,7 +373,7 @@ export default function RippleSphere() {
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 select-none">
-      <div ref={mountRef} className="w-full h-full" />
+      <div ref={mountRef} className="w-full h-full relative" />
 
       {/* Elegant AI Assistant UI */}
       <div className="absolute top-8 left-8 text-white z-10 pointer-events-none">
