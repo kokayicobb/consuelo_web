@@ -31,7 +31,7 @@ export const CharacterCreateView: React.FC<CharacterCreateViewProps> = ({
   });
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: string, value: string | string[]) => {
     setFormData(prev => ({
       ...prev,
       [field]: value

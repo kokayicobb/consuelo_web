@@ -332,27 +332,28 @@ export default function RoleplayPage() {
       toast.error("Please select a scenario first");
       return;
     }
-
+  
     // Check if we're running on HTTPS (required for microphone access)
     if (typeof window !== 'undefined' && window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
       toast.error("Microphone access requires HTTPS. Please use a secure connection.");
       return;
     }
-
+  
     // Check if MediaDevices API is available
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       toast.error("Your browser doesn't support microphone access. Please use a modern browser like Chrome, Firefox, or Safari.");
       return;
     }
-
+  
     setCallStatus("connecting");
-
+    console.log("🔄 Starting call - setting status to connecting");
+  
     try {
       // Start usage session and check credits
       const usageResponse = await fetch("/api/usage/start-session", {
         method: "POST",
       });
-
+  
       if (!usageResponse.ok) {
         const errorData = await usageResponse.json();
         if (usageResponse.status === 402) {
@@ -363,11 +364,11 @@ export default function RoleplayPage() {
         setCallStatus("idle");
         return;
       }
-
+  
       const usageData = await usageResponse.json();
       setCurrentSessionId(usageData.sessionId);
       setSessionStartTime(new Date());
-
+  
       // Create roleplay session in MongoDB
       try {
         console.log("🔄 Creating roleplay session with user ID:", user?.id);
@@ -377,28 +378,26 @@ export default function RoleplayPage() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            scenario_id: "68c23a20303cd41e97d36baf", // life-insurance-cold-call scenario ID
-            character_id: undefined, // character_id (optional)
+            scenario_id: "68c23a20303cd41e97d36baf",
+            character_id: undefined,
             user_id: user?.id || 'anonymous'
           })
         });
-
+  
         if (!response.ok) {
           throw new Error(`Create session API error: ${response.status}`);
         }
-
+  
         const data = await response.json();
         const roleplaySession = data.session;
-        console.log("✅ Created roleplay session response:", roleplaySession);
-        setCurrentRoleplaySessionId(roleplaySession.id);
-        console.log("✅ Set roleplay session ID:", roleplaySession.id);
+        console.log("✅ Created roleplay session:", roleplaySession);
+        setCurrentRoleplaySessionId(roleplaySession.id || roleplaySession._id);
       } catch (error) {
         console.error("❌ Failed to create roleplay session:", error);
-        // Continue anyway since this is just for tracking - create a fallback session
         setCurrentRoleplaySessionId(`session_${Date.now()}`);
       }
-
-      // Check if we have permission first
+  
+      // Check microphone permission
       let permissionState = 'prompt';
       try {
         const permission = await navigator.permissions.query({ name: 'microphone' as PermissionName });
@@ -407,22 +406,16 @@ export default function RoleplayPage() {
       } catch (e) {
         console.log("🎤 Permissions API not available, proceeding with getUserMedia");
       }
-
-      // If permission was denied, show instructions
+  
       if (permissionState === 'denied') {
         toast.error("Microphone access was previously denied. Please click the 🔒 lock icon in your browser's address bar and allow microphone access, then try again.");
         setCallStatus("idle");
         return;
       }
-
-      // Request microphone permissions with better error handling
+  
+      // Request microphone permissions
       try {
         console.log("🎤 Requesting microphone access...");
-        console.log("🎤 Current URL:", window.location.href);
-        console.log("🎤 Protocol:", window.location.protocol);
-        console.log("🎤 Navigator.mediaDevices available:", !!navigator.mediaDevices);
-        console.log("🎤 getUserMedia available:", !!navigator.mediaDevices?.getUserMedia);
-
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: {
             echoCancellation: true,
@@ -434,306 +427,290 @@ export default function RoleplayPage() {
         console.log("🎤 Microphone access granted successfully");
       } catch (micError: any) {
         console.error("Microphone access error:", micError);
-        console.error("Error name:", micError.name);
-        console.error("Error message:", micError.message);
-
+        
         if (micError.name === "NotAllowedError") {
-          toast.error("Microphone access denied. Please click the 🔒 lock icon in your browser's address bar, allow microphone access, and try again.");
+          toast.error("Microphone access denied. Please allow microphone access and try again.");
         } else if (micError.name === "NotFoundError") {
           toast.error("No microphone found. Please connect a microphone and try again.");
         } else if (micError.name === "NotSupportedError") {
-          toast.error("Microphone access not supported on this browser. Please use Chrome, Firefox, or Safari.");
+          toast.error("Microphone access not supported on this browser.");
         } else if (micError.name === "NotReadableError") {
-          toast.error("Microphone is being used by another application. Please close other apps and try again.");
+          toast.error("Microphone is being used by another application.");
         } else {
-          toast.error(`Failed to access microphone: ${micError.message || 'Unknown error'}. Please check your browser settings and try again.`);
+          toast.error(`Failed to access microphone: ${micError.message || 'Unknown error'}`);
         }
         setCallStatus("idle");
         return;
       }
-
+  
       // Initialize media recorder
       initializeMediaRecorder(streamRef.current!);
-
+  
       setIsSessionActive(true);
       setIsCallActive(true);
       setMessages([]);
       setFeedback(null);
       setCallStatus("active");
-
-      toast.success("Call connected! Start speaking naturally.");
-
+  
+      toast.success("Call connected! AI will greet you shortly.");
+  
       // Start the call with AI greeting
       setTimeout(() => {
         initiateAIGreeting();
       }, 1000);
       
-      // Listening will start automatically when callStatus changes to user_turn
     } catch (error) {
-      toast.error("Failed to connect. Please allow microphone access.");
-      console.error("Error starting call:", error);
+      console.error("❌ Error starting call:", error);
+      toast.error("Failed to connect. Please check console for details.");
       setCallStatus("idle");
     }
   };
-
-  const startContinuousRecording = useCallback(() => {
-    console.log("🎤 startContinuousRecording called");
-    console.log("🎤 streamRef.current:", !!streamRef.current);
-    console.log("🎤 isRecording:", isRecording);
-    console.log("🎤 mediaRecorderRef.current:", !!mediaRecorderRef.current);
-    console.log("🎤 mediaRecorderRef.current.state:", mediaRecorderRef.current?.state);
-    
-    if (!streamRef.current || isRecording) {
-      console.log("🎤 Exiting early - no stream or already recording");
-      return;
-    }
-    
-    // Start with speech detection
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state === "inactive") {
-      audioChunksRef.current = [];
-      setRecordingStartTime(Date.now());
-      console.log("🎤 About to start MediaRecorder...");
-      mediaRecorderRef.current.start();
-      setIsRecording(true);
-      console.log("🎤 Started continuous recording");
-      
-      // Set up automatic stop after silence
-      const timer = setTimeout(() => {
-        console.log("🤫 No speech detected, continuing to listen...");
-        // Continue listening but reset the recording
-        if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
-          mediaRecorderRef.current.stop();
-          setIsRecording(false);
-        }
-        // Don't automatically restart - let the onstop handler do it
-      }, 3000); // Wait 3 seconds for speech
-      
-      setSilenceTimer(timer);
-    } else {
-      console.log("🎤 Cannot start recording - MediaRecorder not ready or not inactive");
-    }
-  }, [isRecording]);
-
-  const startListening = useCallback(() => {
-    console.log("🎯 startListening called, callStatus:", callStatus, "isCallActive:", isCallActive, "isPlaying:", isPlaying, "isListening:", isListening);
-    if (!isCallActive || isPlaying || callStatus !== "user_turn" || isListening) {
-      console.log("🎯 startListening conditions not met, aborting");
-      return;
-    }
-    
-    console.log("🎯 Starting listening...");
-    setIsListening(true);
-    setSpeechDetected(false);
-    startContinuousRecording();
-  }, [isCallActive, isPlaying, callStatus, isListening, startContinuousRecording]);
-
-  const stopListening = useCallback(() => {
-    if (!isListening) return;
-    
-    console.log("🛑 Stopping listening...");
-    setIsListening(false);
-    setSpeechDetected(false);
-    if (silenceTimer) {
-      clearTimeout(silenceTimer);
-      setSilenceTimer(null);
-    }
-    stopRecording();
-  }, [isListening, silenceTimer]);
-
- 
-   // Auto-start listening when it becomes user's turn
-   useEffect(() => {
-    if (callStatus === "user_turn" && isCallActive && !isPlaying && !isListening) {
-      console.log("🎯 Auto-starting listening because status changed to user_turn");
-      const timer = setTimeout(() => {
-        console.log("🎯 Timer executing - checking conditions again...");
-        console.log("🎯 Current refs - callStatus:", callStatusRef.current, "isCallActive:", isCallActiveRef.current, "isPlaying:", isPlayingRef.current, "isListening:", isListeningRef.current);
-        
-        if (callStatusRef.current === "user_turn" && isCallActiveRef.current && !isPlayingRef.current && !isListeningRef.current) {
-          console.log("🎯 Conditions met, starting listening...");
-          setIsListening(true);
-          setSpeechDetected(false);
-          startContinuousRecording();
-        } else {
-          console.log("🎯 Conditions not met, aborting auto-start");
-        }
-      }, 500); // Small delay to ensure state is settled
-      
-      return () => clearTimeout(timer);
-    }
-  }, [callStatus, isCallActive, isPlaying, isListening, startContinuousRecording]);
+  
   const initializeMediaRecorder = (stream: MediaStream) => {
     try {
-      // Use webm format which is widely supported
       const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
         ? "audio/webm;codecs=opus"
         : "audio/webm";
-
+  
       mediaRecorderRef.current = new MediaRecorder(stream, {
         mimeType: mimeType,
         audioBitsPerSecond: 128000,
       });
-
+  
       mediaRecorderRef.current.ondataavailable = (event) => {
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data);
         }
       };
-
+  
       mediaRecorderRef.current.onstop = async () => {
         if (audioChunksRef.current.length > 0 && !isProcessingRef.current) {
           const audioBlob = new Blob(audioChunksRef.current, {
             type: "audio/webm",
           });
-          audioChunksRef.current = [];
-
-          // Check recording duration
+          
           const recordingDuration = recordingStartTime ? Date.now() - recordingStartTime : 0;
-          console.log("🎤 Recording duration:", recordingDuration, "ms");
-
-          // Only process if recording was long enough and has sufficient audio data
-          if (audioBlob.size > 1000 && recordingDuration > 500) { // At least 500ms
+          console.log("🎤 Recording stopped. Duration:", recordingDuration, "ms, Size:", audioBlob.size);
+          
+          // Reset for next recording
+          audioChunksRef.current = [];
+          setRecordingStartTime(null);
+  
+          // Process if we have meaningful audio (at least 500ms and 1KB)
+          if (audioBlob.size > 1000 && recordingDuration > 500) {
             await processAudioChunk(audioBlob);
           } else {
-            console.log("🎤 Recording too short or small, restarting continuous recording...");
-            // Only restart if we're still listening and it's user turn
-            setTimeout(() => {
-              if (isListening && callStatus === "user_turn" && isCallActive) {
-                startContinuousRecording();
-              }
-            }, 100);
+            console.log("🎤 Recording too short, discarding and restarting...");
+            // If we're still in user_turn and listening, restart recording
+            if (callStatusRef.current === "user_turn" && isListeningRef.current && isCallActiveRef.current) {
+              setTimeout(() => startContinuousRecording(), 100);
+            }
           }
         }
-        setRecordingStartTime(null);
       };
-
+  
       console.log("🎤 MediaRecorder initialized with mimeType:", mimeType);
     } catch (error) {
       console.error("Error initializing MediaRecorder:", error);
     }
   };
-
-  const startRecording = () => {
-    if (
-      mediaRecorderRef.current &&
-      mediaRecorderRef.current.state === "inactive"
-    ) {
+  
+  const startContinuousRecording = useCallback(() => {
+    console.log("🎤 Starting continuous recording...");
+    console.log("🎤 Current state - isRecording:", isRecording, "mediaRecorder state:", mediaRecorderRef.current?.state);
+    
+    if (!streamRef.current || !mediaRecorderRef.current) {
+      console.log("🎤 No stream or recorder available");
+      return;
+    }
+    
+    if (mediaRecorderRef.current.state === "recording") {
+      console.log("🎤 Already recording, skipping");
+      return;
+    }
+    
+    if (mediaRecorderRef.current.state === "inactive") {
       audioChunksRef.current = [];
       setRecordingStartTime(Date.now());
       mediaRecorderRef.current.start();
       setIsRecording(true);
-      console.log("🎤 Started recording");
+      console.log("🎤 Recording started successfully");
+      
+      // Set up silence detection with VAD (Voice Activity Detection) simulation
+      // Give user time to start speaking (2 seconds initial wait)
+      const initialWaitTimer = setTimeout(() => {
+        // After initial wait, implement continuous silence detection
+        setSilenceTimer(setTimeout(() => {
+          console.log("🔇 Silence detected after waiting, processing recording...");
+          if (mediaRecorderRef.current?.state === "recording") {
+            mediaRecorderRef.current.stop();
+            setIsRecording(false);
+          }
+        }, 2000)); // Additional 2 seconds of silence after initial wait
+      }, 2000); // Initial 2 second wait before checking for silence
+      
+      setSilenceTimer(initialWaitTimer);
     }
-  };
-
-  const stopRecording = () => {
-    if (
-      mediaRecorderRef.current &&
-      mediaRecorderRef.current.state === "recording"
-    ) {
+  }, [isRecording]);
+  
+  const startListening = useCallback(() => {
+    console.log("🎯 Starting listening mode...");
+    if (!isCallActive || callStatus !== "user_turn") {
+      console.log("🎯 Not the right time to listen");
+      return;
+    }
+    
+    setIsListening(true);
+    setSpeechDetected(false);
+    // Small delay to ensure state is settled
+    setTimeout(() => {
+      startContinuousRecording();
+    }, 100);
+  }, [isCallActive, callStatus, startContinuousRecording]);
+  
+  const stopListening = useCallback(() => {
+    console.log("🛑 Stopping listening mode...");
+    setIsListening(false);
+    setSpeechDetected(false);
+    
+    // Clear any timers
+    if (silenceTimer) {
+      clearTimeout(silenceTimer);
+      setSilenceTimer(null);
+    }
+    
+    // Stop recording if active
+    if (mediaRecorderRef.current?.state === "recording") {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
-      console.log("🎤 Stopped recording");
     }
-  };
-
+  }, [silenceTimer]);
+  
+  // Auto-start listening when it's user's turn
+  useEffect(() => {
+    console.log("📍 Turn state changed - callStatus:", callStatus, "isPlaying:", isPlaying, "isListening:", isListening);
+    
+    if (callStatus === "user_turn" && isCallActive && !isPlaying && !isListening) {
+      console.log("🎯 It's user's turn, starting listening after delay...");
+      
+      // Give a small delay for audio to fully stop and state to settle
+      const timer = setTimeout(() => {
+        if (callStatusRef.current === "user_turn" && isCallActiveRef.current && !isPlayingRef.current) {
+          startListening();
+        }
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [callStatus, isCallActive, isPlaying, isListening, startListening]);
+  
   const processAudioChunk = async (audioBlob: Blob) => {
     try {
       console.log("🎤 Processing audio chunk, size:", audioBlob.size);
-
-      // Skip very small audio chunks - likely silence or noise
+  
+      // Skip very small chunks
       if (audioBlob.size < 5000) {
-        console.log("🎤 Skipping small audio chunk, likely silence");
+        console.log("🎤 Audio too small, likely just noise");
+        // Restart listening if still user's turn
+        if (callStatusRef.current === "user_turn" && isListeningRef.current) {
+          setTimeout(() => startContinuousRecording(), 100);
+        }
         return;
       }
-
-      // Create FormData and append the audio file
+  
       const formData = new FormData();
       formData.append("audio", audioBlob, "audio.webm");
-
-      // Send to Groq Whisper API
+  
       const response = await fetch("/api/roleplay/transcribe", {
         method: "POST",
         body: formData,
       });
-
+  
       if (!response.ok) {
         throw new Error("Transcription failed");
       }
-
+  
       const data = await response.json();
-      console.log("🎤 Raw transcription response:", data);
-
-      // Check for actual meaningful speech with stricter criteria
-      if (data.text && data.text.trim().length > 3) {
+      console.log("🎤 Transcription result:", data.text);
+  
+      // Check for meaningful speech
+      if (data.text && data.text.trim().length > 2) {
         const transcript = data.text.trim();
-        console.log("🎤 Transcribed:", transcript);
         
-        // Ignore common false transcriptions
-        const ignoredPhrases = ["thank you", "thanks", ".", "", " "];
+        // Filter out common false positives
+        const ignoredPhrases = ["thank you", "thanks", ".", "", " ", "you", "the"];
         const isIgnored = ignoredPhrases.some(phrase => 
           transcript.toLowerCase() === phrase.toLowerCase()
         );
         
-        if (!isIgnored) {
+        if (!isIgnored && transcript.length > 2) {
+          console.log("💬 User said:", transcript);
           setCurrentTranscript(transcript);
-
-          // Process the transcribed text
-          if (!isProcessingRef.current) {
-            await handleUserSpeech(transcript);
-          }
+          
+          // Stop listening and process the speech
+          stopListening();
+          await handleUserSpeech(transcript);
         } else {
-          console.log("🎤 Ignoring likely false transcription:", transcript);
-          // Restart continuous recording since speech was ignored
-          setTimeout(() => {
-            if (isListening && callStatus === "user_turn" && isCallActive) {
-              startContinuousRecording();
-            }
-          }, 100);
+          console.log("🎤 Ignoring non-meaningful transcription:", transcript);
+          // Continue listening
+          if (callStatusRef.current === "user_turn" && isListeningRef.current) {
+            setTimeout(() => startContinuousRecording(), 100);
+          }
         }
       } else {
-        console.log("🎤 No meaningful speech detected, text:", data.text);
-        // Restart continuous recording since no meaningful speech was detected
-        setTimeout(() => {
-          if (isListening && callStatus === "user_turn" && isCallActive) {
-            startContinuousRecording();
-          }
-        }, 100);
+        console.log("🎤 No speech detected in audio");
+        // Continue listening
+        if (callStatusRef.current === "user_turn" && isListeningRef.current) {
+          setTimeout(() => startContinuousRecording(), 100);
+        }
       }
     } catch (error) {
-      console.error("Error processing audio chunk:", error);
-      setCallStatus("user_turn");
-      // Restart continuous recording on error if still in listening state
-      setTimeout(() => {
-        if (isListening && callStatus === "user_turn" && isCallActive) {
-          startContinuousRecording();
-        }
-      }, 100);
+      console.error("Error processing audio:", error);
+      // Try to continue listening on error
+      if (callStatusRef.current === "user_turn" && isListeningRef.current) {
+        setTimeout(() => startContinuousRecording(), 500);
+      }
     }
   };
- 
+  
   const handleUserSpeech = async (transcript: string) => {
     if (transcript.length < 3 || isProcessingRef.current) return;
-
+  
+    console.log("🤖 Processing user speech:", transcript);
     isProcessingRef.current = true;
     setCallStatus("ai_turn");
-
-    console.log("🔍 DEBUG: Current messages before adding user message:", messages);
-    console.log("🔍 DEBUG: Messages length:", messages.length);
-    
     setCurrentTranscript("");
-
+  
     // Add user message to conversation
     const userMessage: Message = { role: "user", text: transcript };
     const updatedMessages = [...messages, userMessage];
-    console.log("🔍 DEBUG: Updated messages with user message:", updatedMessages);
-    
     setMessages(updatedMessages);
     
-    // Call API with the updated messages
+    console.log("📝 Conversation so far:", updatedMessages);
+    
+    // Get AI response
     await getAIResponseAndUpdateMessages(transcript, updatedMessages);
+    
+    // After AI responds, it will set callStatus back to "user_turn"
+    // which will trigger the listening effect above
+    isProcessingRef.current = false;
   };
-
+  
+  // Manual push-to-talk fallback (optional)
+  const handlePushToTalk = () => {
+    if (callStatus !== "user_turn" || !isCallActive) return;
+    
+    if (!isRecording) {
+      console.log("🎤 Manual recording started (push-to-talk)");
+      startContinuousRecording();
+    } else {
+      console.log("🎤 Manual recording stopped (push-to-talk)");
+      if (mediaRecorderRef.current?.state === "recording") {
+        mediaRecorderRef.current.stop();
+        setIsRecording(false);
+      }
+    }
+  };
   const getAIResponseAndUpdateMessages = async (transcript: string, currentMessages: Message[]) => {
     try {
       // Get AI response with the full conversation history
