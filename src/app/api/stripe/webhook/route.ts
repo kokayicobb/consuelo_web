@@ -46,7 +46,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Webhook signature verification failed' }, { status: 400 });
     }
 
-    await dbConnect();
+    // Connect to database with timeout
+    try {
+      await Promise.race([
+        dbConnect(),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Database connection timeout')), 10000)
+        )
+      ]);
+    } catch (error) {
+      console.error('❌ Database connection failed:', error);
+      return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
+    }
 
     // Handle the event
     console.log(`🎯 Processing event: ${event.type}`);

@@ -79,6 +79,16 @@ const nextConfig = {
   
   // Disable trailing slash redirects
   trailingSlash: false,
+
+  // Proxy calls to microservice
+  async rewrites() {
+    return [
+      {
+        source: '/calls/:path*',
+        destination: 'https://calls.consuelohq.com/:path*',
+      },
+    ];
+  },
   
   // Security and CORS headers
   async headers() {
