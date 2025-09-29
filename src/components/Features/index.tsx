@@ -134,7 +134,7 @@ export function Features({ features }: FeaturesProps) {
   return (
     <section
       id="features"
-      className="bg-transparent pt-0 sm:pt-0 md:pt-8 pb-8 sm:pb-12"
+      className="bg-transparent pt-0 sm:pt-0 md:pt-4 lg:pt-8 pb-8 sm:pb-12"
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <BentoGrid>

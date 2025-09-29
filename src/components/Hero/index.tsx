@@ -35,7 +35,7 @@ export function WavyBackgroundDemo() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="mb-4 sm:mb-6 md:mb-12 text-center"
+          className="mb-4 sm:mb-6 md:mb-6 lg:mb-12 text-center"
         >
           <h1 className="mb-6 md:mb-8 text-3xl md:text-6xl font-medium text-foreground leading-tight">
             <div className="text-center">Train agents how to</div>
