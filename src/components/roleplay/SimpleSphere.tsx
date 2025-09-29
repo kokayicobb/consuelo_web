@@ -20,7 +20,31 @@ interface RippleEffect {
   duration: number
 }
 
-export default function RippleSphere() {
+interface SimpleSphereProps {
+  onMouseDown?: () => void
+  onMouseUp?: () => void
+  onMouseLeave?: () => void
+  onTouchStart?: () => void
+  onTouchEnd?: () => void
+  onClick?: () => void
+  disabled?: boolean
+  isPressed?: boolean
+  className?: string
+  size?: "sm" | "md" | "lg" | "xl"
+}
+
+export default function SimpleSphere({
+  onMouseDown,
+  onMouseUp,
+  onMouseLeave,
+  onTouchStart,
+  onTouchEnd,
+  onClick,
+  disabled = false,
+  isPressed = false,
+  className = "",
+  size = "lg",
+}: SimpleSphereProps) {
   const mountRef = useRef<HTMLDivElement>(null)
   const sceneRef = useRef<THREE.Scene>()
   const rendererRef = useRef<THREE.WebGLRenderer>()
@@ -32,8 +56,15 @@ export default function RippleSphere() {
   const rippleEffectsRef = useRef<RippleEffect[]>([])
   const lastInteractionRef = useRef<number>(0)
 
-  // AI Assistant breathing effect
+  // Breathing effect
   const breathingPhaseRef = useRef<number>(0)
+
+  const sizeMap = {
+    sm: { width: 96, height: 96 },    // w-24 h-24
+    md: { width: 128, height: 128 },  // w-32 h-32
+    lg: { width: 160, height: 160 },  // w-40 h-40
+    xl: { width: 192, height: 192 },  // w-48 h-48
+  }
 
   useEffect(() => {
     if (!mountRef.current) return
@@ -48,17 +79,16 @@ export default function RippleSphere() {
     scene.add(ambientLight)
 
     // Bright lighting to make specs visible - bright light purple for both modes
-    const isLightMode = document.documentElement.classList.contains('light') ||
-                       !document.documentElement.classList.contains('dark')
     const lightColor = 0xda70d6 // Bright light purple (orchid)
-    const pointLight = new THREE.PointLight(lightColor, 1.0, 100) // Brighter intensity
+    const pointLight = new THREE.PointLight(lightColor, 1.0, 100)
     pointLight.position.set(10, 10, 10)
     scene.add(pointLight)
 
-    // Get container dimensions
-    const containerRect = mountRef.current.getBoundingClientRect()
-    const containerWidth = containerRect.width || window.innerWidth
-    const containerHeight = containerRect.height || window.innerHeight
+    // Get container dimensions - use actual element size if available, fallback to size map
+    const rect = mountRef.current.getBoundingClientRect()
+    const containerSize = sizeMap[size]
+    const containerWidth = rect.width || containerSize.width
+    const containerHeight = rect.height || containerSize.height
 
     // Camera setup
     const camera = new THREE.PerspectiveCamera(60, containerWidth / containerHeight, 0.1, 1000)
@@ -76,10 +106,8 @@ export default function RippleSphere() {
     renderer.shadowMap.enabled = true
     renderer.shadowMap.type = THREE.PCFSoftShadowMap
 
-    // Add canvas to DOM and log its properties
+    // Add canvas to DOM
     const canvas = renderer.domElement
-
-    // Ensure canvas is properly styled for rendering - KEEPING ALL FORCED CANVAS SETUP
     canvas.style.display = 'block'
     canvas.style.width = '100%'
     canvas.style.height = '100%'
@@ -88,13 +116,15 @@ export default function RippleSphere() {
     canvas.style.left = '0'
     canvas.style.zIndex = '1'
 
-    mountRef.current.appendChild(canvas)
+    if (mountRef.current) {
+      mountRef.current.appendChild(canvas)
+    }
     rendererRef.current = renderer
 
-    // CHANGED: Now using mathematical pattern for particle placement
+    // Create the enhanced hollow sphere
     createEnhancedHollowSphere()
 
-    // Event listeners for precise interaction - KEEPING ALL INTERACTION CODE INTACT
+    // Event listeners for interaction
     const handleInteraction = (clientX: number, clientY: number) => {
       if (!cameraRef.current || !mountRef.current) return
 
@@ -128,24 +158,49 @@ export default function RippleSphere() {
     }
 
     const handleMouseDown = (event: MouseEvent) => {
+      if (disabled) return
       event.preventDefault()
       handleInteraction(event.clientX, event.clientY)
+      onMouseDown?.()
+    }
+
+    const handleMouseUp = (event: MouseEvent) => {
+      if (disabled) return
+      onMouseUp?.()
+    }
+
+    const handleMouseLeave = (event: MouseEvent) => {
+      if (disabled) return
+      onMouseLeave?.()
     }
 
     const handleTouchStart = (event: TouchEvent) => {
+      if (disabled) return
       event.preventDefault()
       if (event.touches.length > 0) {
         const touch = event.touches[0]
         handleInteraction(touch.clientX, touch.clientY)
       }
+      onTouchStart?.()
+    }
+
+    const handleTouchEnd = (event: TouchEvent) => {
+      if (disabled) return
+      onTouchEnd?.()
+    }
+
+    const handleClick = (event: MouseEvent) => {
+      if (disabled) return
+      onClick?.()
     }
 
     const handleResize = () => {
       if (!cameraRef.current || !rendererRef.current || !mountRef.current) return
 
-      const containerRect = mountRef.current.getBoundingClientRect()
-      const containerWidth = containerRect.width || window.innerWidth
-      const containerHeight = containerRect.height || window.innerHeight
+      const rect = mountRef.current.getBoundingClientRect()
+      const containerSize = sizeMap[size]
+      const containerWidth = rect.width || containerSize.width
+      const containerHeight = rect.height || containerSize.height
 
       cameraRef.current.aspect = containerWidth / containerHeight
       cameraRef.current.updateProjectionMatrix()
@@ -154,18 +209,21 @@ export default function RippleSphere() {
 
     // Add event listeners
     canvas.addEventListener("mousedown", handleMouseDown)
+    canvas.addEventListener("mouseup", handleMouseUp)
+    canvas.addEventListener("mouseleave", handleMouseLeave)
     canvas.addEventListener("touchstart", handleTouchStart, { passive: false })
+    canvas.addEventListener("touchend", handleTouchEnd)
+    canvas.addEventListener("click", handleClick)
     window.addEventListener("resize", handleResize)
 
-    // Function definitions need to be inside useEffect
     function createEnhancedHollowSphere() {
       const particles: Particle[] = []
-      
-      // CHANGED: Using golden ratio spiral for denser, more aesthetic distribution
+
+      // Using golden ratio spiral for denser, more aesthetic distribution
       const numParticles = 3500  // Increased for denser coverage
       const sphereRadius = 7
-      
-      // CHANGED: Even smaller particles for cleaner look with more density
+
+      // Even smaller particles for cleaner look with more density
       const geometry = new THREE.SphereGeometry(0.015, 6, 6)
 
       // Golden ratio for optimal spacing
@@ -174,16 +232,16 @@ export default function RippleSphere() {
 
       // Create particles using Fibonacci sphere distribution
       for (let i = 0; i < numParticles; i++) {
-        // CHANGED: Using golden ratio spiral distribution
+        // Using golden ratio spiral distribution
         const t = i / numParticles
         const inclination = Math.acos(1 - 2 * t)
         const azimuth = i * goldenAngle
-        
+
         // Convert spherical to Cartesian coordinates
         const x = Math.sin(inclination) * Math.cos(azimuth)
         const y = Math.sin(inclination) * Math.sin(azimuth)
         const z = Math.cos(inclination)
-        
+
         const position = new THREE.Vector3(
           x * sphereRadius,
           y * sphereRadius,
@@ -255,18 +313,18 @@ export default function RippleSphere() {
         return
       }
 
-      // CHANGED: Slower, subtler breathing effect
-      breathingPhaseRef.current += 0.01 // Reduced from 0.02
-      const breathingScale = 1 + Math.sin(breathingPhaseRef.current) * 0.03 // Reduced from 0.1
+      // Slower, subtler breathing effect
+      breathingPhaseRef.current += 0.01
+      const breathingScale = 1 + Math.sin(breathingPhaseRef.current) * 0.03
 
       // Update particles with ripple physics
       updateParticlesWithRipples(breathingScale)
 
-      // CHANGED: Rotation around Y-axis (vertical axis) for proper clockwise spin
-      const time = Date.now() * 0.00005 // Much slower rotation speed (reduced from 0.0002)
+      // Rotation around Y-axis (vertical axis) for proper clockwise spin
+      const time = Date.now() * 0.00005 // Much slower rotation speed
       const radius = 18
       const angle = time
-      
+
       // Rotate camera around Y-axis (vertical) for clockwise rotation when viewed from above
       cameraRef.current.position.x = Math.cos(angle) * radius
       cameraRef.current.position.y = 0  // Keep camera at same height
@@ -275,7 +333,7 @@ export default function RippleSphere() {
 
       rendererRef.current.render(sceneRef.current, cameraRef.current)
 
-      // KEEPING: Force canvas repaint to ensure visual updates
+      // Force canvas repaint to ensure visual updates
       rendererRef.current.domElement.style.transform = `translateZ(${Math.sin(Date.now() * 0.001) * 0.01}px)`
     }
 
@@ -355,7 +413,11 @@ export default function RippleSphere() {
     return () => {
       // Cleanup
       canvas.removeEventListener("mousedown", handleMouseDown)
+      canvas.removeEventListener("mouseup", handleMouseUp)
+      canvas.removeEventListener("mouseleave", handleMouseLeave)
       canvas.removeEventListener("touchstart", handleTouchStart)
+      canvas.removeEventListener("touchend", handleTouchEnd)
+      canvas.removeEventListener("click", handleClick)
       window.removeEventListener("resize", handleResize)
 
       if (animationIdRef.current) {
@@ -372,44 +434,30 @@ export default function RippleSphere() {
         }
       })
     }
-  }, [])
+  }, [size, onMouseDown, onMouseUp, onMouseLeave, onTouchStart, onTouchEnd, onClick, disabled])
+
+  const sizeClasses = {
+    sm: "w-24 h-24",
+    md: "w-32 h-32",
+    lg: "w-40 h-40",
+    xl: "w-48 h-48",
+  }
 
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-transparent select-none">
+    <div
+      className={`
+        relative
+        ${sizeClasses[size]}
+        rounded-full
+        transition-transform
+        duration-300
+        ease-out
+        ${isPressed ? "scale-95" : "hover:scale-105"}
+        ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}
+        ${className}
+      `}
+    >
       <div ref={mountRef} className="w-full h-full relative" />
-
-      {/* Elegant AI Assistant UI */}
-      <div className="absolute top-8 left-8 text-white z-10 pointer-events-none">
-        <div className="bg-black/20 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
-          <h1 className="text-3xl font-light mb-2 text-purple-100">AI Assistant</h1>
-          <p className="text-sm opacity-80 text-purple-200">Touch to create ripples</p>
-          <div className="mt-3 flex items-center space-x-2">
-            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-            <span className="text-xs text-green-300">Active</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Subtle interaction hint */}
-      <div className="absolute bottom-8 right-8 text-white/60 text-sm z-10 pointer-events-none">
-        <div className="text-right">
-          <p className="mb-1">Tap anywhere to interact</p>
-          <p className="text-xs">Experience the gentle ripple effect</p>
-        </div>
-      </div>
-
-      {/* Ambient particles overlay for extra magic */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-1 h-1 bg-purple-400/30 rounded-full animate-pulse"></div>
-        <div
-          className="absolute top-3/4 right-1/3 w-1 h-1 bg-purple-300/20 rounded-full animate-pulse"
-          style={{ animationDelay: "1s" }}
-        ></div>
-        <div
-          className="absolute bottom-1/4 left-2/3 w-1 h-1 bg-purple-500/25 rounded-full animate-pulse"
-          style={{ animationDelay: "2s" }}
-        ></div>
-      </div>
     </div>
   )
 }

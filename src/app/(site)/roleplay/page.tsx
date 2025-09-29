@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { UserButton, SignIn, useUser } from "@clerk/nextjs";
 import Image from "next/image";
-import LiquidOrbButton from "@/components/roleplay/LiquidOrbButton";
+import SimpleSphere from "@/components/roleplay/SimpleSphere";
 import CreditsDisplay from "@/components/roleplay/CreditsDisplay";
 import ThemeToggler from "@/components/Header/ThemeToggler";
 import RoleplayCommandPalette from "@/components/roleplay/roleplay-command-palette";
@@ -1171,15 +1171,13 @@ export default function RoleplayPage() {
             </p>
           </div>
 
-          {/* Main Liquid Orb Button - always show */}
+          {/* Main 3D Sphere - always show */}
           <div className="mb-12 sm:mb-16">
-            {/* <LiquidOrbButton
+            <SimpleSphere
               size="xl"
-              className="h-48 w-48 sm:h-64 sm:w-64"
+              className="h-[336px] w-[336px] sm:h-[448px] sm:w-[448px]"
               disabled={false}
-            >
-              <span></span>
-            </LiquidOrbButton> */}
+            />
           </div>
 
           {/* Choose Scenario Button - only show when no scenario selected */}
@@ -1267,16 +1265,12 @@ export default function RoleplayPage() {
 
           {/* Visual Indicator Orb */}
           <div className="mb-8">
-            <LiquidOrbButton
+            <SimpleSphere
                 disabled={true}
                 isPressed={isListening || isRecording}
                 size="xl"
                 className="h-56 w-56 sm:h-72 sm:w-72 cursor-default"
-            >
-              <span className="text-sm font-medium">
-                {isListening ? "🎤" : isPlaying ? "🔊" : "💬"}
-              </span>
-            </LiquidOrbButton>
+            />
           </div>
 
           <div className="mb-8 max-w-xs text-center text-sm text-muted-foreground">
