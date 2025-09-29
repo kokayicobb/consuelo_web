@@ -115,12 +115,14 @@ export async function generateStaticParams() {
   ]
 }
 
+const options = { next: { revalidate: process.env.NODE_ENV === 'development' ? 0 : 30 } };
+
 export default async function FeaturePage({ params }: Props) {
   const resolvedParams = await params
   const [feature, useCase, allFeatures] = await Promise.all([
-    client.fetch<SanityDocument>(FEATURE_QUERY, resolvedParams),
-    client.fetch<SanityDocument>(USE_CASE_QUERY, resolvedParams),
-    client.fetch<SanityDocument[]>(ALL_FEATURES_QUERY),
+    client.fetch<SanityDocument>(FEATURE_QUERY, resolvedParams, options),
+    client.fetch<SanityDocument>(USE_CASE_QUERY, resolvedParams, options),
+    client.fetch<SanityDocument[]>(ALL_FEATURES_QUERY, {}, options),
   ])
 
   if (!feature && !useCase) {
