@@ -79,7 +79,7 @@ export function WavyBackgroundDemo() {
               Sales Roleplay
             </a>
             <a
-              href="/analytics"
+              href="/mercury"
               className="rounded-full border border-border bg-transparent px-3 md:px-4 py-1.5 md:py-2 text-xs md:text-sm text-foreground transition-colors hover:bg-card/10"
             >
               Call Analytics
