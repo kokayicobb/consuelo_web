@@ -4,7 +4,6 @@ const scenarioSchema = new mongoose.Schema({
   scenario_id: {
     type: String,
     required: true,
-    unique: true,
     trim: true
   },
   title: {
@@ -32,7 +31,7 @@ const scenarioSchema = new mongoose.Schema({
   timestamps: true
 });
 
-scenarioSchema.index({ scenario_id: 1 });
+scenarioSchema.index({ scenario_id: 1 }, { unique: true });
 scenarioSchema.index({ is_active: 1 });
 scenarioSchema.index({ title: 'text', description: 'text' });
 

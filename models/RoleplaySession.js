@@ -33,8 +33,7 @@ const metadataSchema = new mongoose.Schema({
 const roleplaySessionSchema = new mongoose.Schema({
   session_id: {
     type: String,
-    required: true,
-    unique: true
+    required: true
   },
   scenario_id: {
     type: mongoose.Schema.Types.ObjectId,
@@ -81,7 +80,7 @@ const roleplaySessionSchema = new mongoose.Schema({
 });
 
 roleplaySessionSchema.index({ user_id: 1, createdAt: -1 });
-roleplaySessionSchema.index({ session_id: 1 });
+roleplaySessionSchema.index({ session_id: 1 }, { unique: true });
 roleplaySessionSchema.index({ status: 1 });
 roleplaySessionSchema.index({ scenario_id: 1 });
 

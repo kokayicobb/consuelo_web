@@ -5,6 +5,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  colorScheme: 'light dark',
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#ffffff' },
     { media: '(prefers-color-scheme: dark)', color: '#000000' }
@@ -126,7 +127,6 @@ export const metadata: Metadata = {
   category: 'technology',
   classification: 'business',
   referrer: 'origin-when-cross-origin',
-  colorScheme: 'light dark',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
