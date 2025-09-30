@@ -11,8 +11,7 @@ import { PostHogProvider as PHProvider } from 'posthog-js/react'
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY as string, {
-      api_host: 'https://consuelohq.com/ingest',
-      ui_host: 'https://us.posthog.com',
+      api_host: 'https://us.posthog.com',
       person_profiles: 'always', // creates profiles for both identified and anonymous users
 
       // Enhanced session recording for UX insights

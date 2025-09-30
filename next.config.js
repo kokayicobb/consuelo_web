@@ -87,10 +87,6 @@ const nextConfig = {
         source: '/calls/:path*',
         destination: 'https://calls.consuelohq.com/:path*',
       },
-      {
-        source: '/ingest/:path*',
-        destination: 'https://us.i.posthog.com/:path*',
-      },
     ];
   },
   
