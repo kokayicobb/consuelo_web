@@ -49,8 +49,8 @@ export function Header() {
 
   return (
     <>
-      {/* Top header bar - always fully transparent */}
-      <header className="fixed left-0 right-0 top-0 z-50 bg-transparent transition-all duration-300">
+      {/* Top header bar - uses theme background */}
+      <header className="fixed left-0 right-0 top-0 z-50 bg-background transition-all duration-300">
         <div className="flex h-16 items-center justify-between px-8">
           {/* Animated Logo */}
           <Link href="/" className="flex items-center space-x-2">

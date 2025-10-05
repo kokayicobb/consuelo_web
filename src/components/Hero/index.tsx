@@ -38,7 +38,7 @@ export function WavyBackgroundDemo() {
           className="mb-4 sm:mb-6 md:mb-6 lg:mb-12 text-center"
         >
           <h1 className="mb-6 md:mb-8 text-3xl md:text-6xl font-medium text-foreground leading-tight">
-            <div className="text-center">Train agents how to</div>
+            <div className="text-center">Teach agents how to</div>
             <div className="text-center">close how you close.</div>
           </h1>
 
