@@ -1430,7 +1430,7 @@ export default function RoleplayPage() {
             Employees
           </a>
           <div className="h-2.5 w-px bg-slate-400"></div>
-          <a href="https://calls.consuelohq.com/" className="underline transition-colors">
+          <a href="https://consuelohq.com/calls" className="underline transition-colors">
             Calls
           </a>
         </div>
