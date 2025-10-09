@@ -109,14 +109,14 @@ const Stories: React.FC<StoriesProps> = ({ features }) => {
     // Apply device-specific adjustments for optimal scroll feel
     switch (deviceType) {
       case 'mobile':
-        // Mobile: reduce translation
-        return Math.max(basePercent * .59, 140)
+        // Mobile needs much more translation to show all cards
+        return Math.max(basePercent * 2.5, 280)
       case 'tablet':
         // Tablet gets moderate translation
-        return Math.max(basePercent * 1.1, 130)
+        return Math.max(basePercent * 1.8, 180)
       case 'desktop':
-        // Desktop: increase translation to ensure all cards are visible
-        return Math.max(basePercent * 1.7, 120)
+        // Desktop: standard translation
+        return Math.max(basePercent * 1.2, 100)
       default:
         return basePercent
     }
