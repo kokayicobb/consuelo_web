@@ -16,5 +16,5 @@
    // I am adjusting this path based on your error message.
    "deno.enablePaths": [
      "src/lib/supabase/functions"
-   ]
+  ]
 }

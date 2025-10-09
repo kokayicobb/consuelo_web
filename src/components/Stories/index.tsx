@@ -5,7 +5,7 @@ import { motion, useTransform, useScroll } from "framer-motion"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { urlFor, getVideoUrl } from "@/sanity/lib/image"
+import { getVideoUrl } from "@/sanity/lib/image"
 import { useOptimizedImage } from "@/hooks/use-cached-image"
 
 interface Feature {
@@ -34,6 +34,14 @@ interface StoriesProps {
   features: Feature[]
 }
 
+type DeviceType = 'mobile' | 'tablet' | 'desktop'
+
+const getDeviceType = (width: number): DeviceType => {
+  if (width < 768) return 'mobile'
+  if (width < 1024) return 'tablet'
+  return 'desktop'
+}
+
 const Stories: React.FC<StoriesProps> = ({ features }) => {
   const router = useRouter()
   const targetRef = React.useRef<HTMLDivElement>(null)
@@ -49,59 +57,102 @@ const Stories: React.FC<StoriesProps> = ({ features }) => {
 
   // Calculate transform to show all cards - ensure the last card is fully visible
   const numCards = scrollFeatures.length
-  
-  // Responsive scroll distance - much more distance for mobile
-  const [isMobile, setIsMobile] = React.useState(false)
-  
+
+  // Responsive scroll distance - track device type instead of just mobile
+  // SSR-safe: Use fallback values that work on server-side rendering
+  const [deviceType, setDeviceType] = React.useState<DeviceType>('desktop')
+  const [viewportWidth, setViewportWidth] = React.useState<number>(
+    typeof window !== 'undefined' ? window.innerWidth : 1920 // SSR-safe fallback
+  )
+
   React.useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768)
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
-  
-  // More aggressive translation for mobile to ensure all cards are visible
-  const translatePercent = isMobile 
-    ? Math.max(195, numCards * 82) // Tiny bump more
-    : Math.max(95, numCards * 25) // Original desktop behavior
-  
-  // Use smooth easing curve for more fluid scroll movement
-  const x = useTransform(
-    scrollYProgress, 
-    [0, 1], 
-    ["0%", `-${Math.min(translatePercent, isMobile ? 385 : 130)}%`],
-    {
-      ease: (t: number) => {
-        // Custom easing function for smoother acceleration/deceleration
-        return t < 0.5 
-          ? 4 * t * t * t 
-          : 1 - Math.pow(-2 * t + 2, 3) / 2
-      }
+    // Only runs on client-side after hydration
+    const updateResponsive = () => {
+      setDeviceType(getDeviceType(window.innerWidth))
+      setViewportWidth(window.innerWidth)
     }
+
+    // Initial update on mount
+    updateResponsive()
+
+    // Debounced resize handler with 150ms delay
+    let timeoutId: NodeJS.Timeout
+    const debouncedUpdateResponsive = () => {
+      clearTimeout(timeoutId)
+      timeoutId = setTimeout(updateResponsive, 150)
+    }
+
+    window.addEventListener('resize', debouncedUpdateResponsive)
+    return () => {
+      clearTimeout(timeoutId)
+      window.removeEventListener('resize', debouncedUpdateResponsive)
+    }
+  }, [])
+
+  // Calculate scroll distance based on actual card dimensions
+  const cardWidth = 400 // Each card is 400px wide
+  const gapWidth = 32 // gap-8 = 32px
+  const padding = 200 // Extra padding to ensure "View All" card is comfortably visible
+
+  // Total width = all feature cards + "View All" card + gaps between them
+  const totalCardsWidth = (numCards + 1) * cardWidth + numCards * gapWidth
+
+  // Calculate how much we need to translate to show the last card
+  // Different calculations for each device type to optimize scroll feel
+  // SSR-safe: Calculations work correctly with fallback viewport width
+  const calculateTranslatePercent = (): number => {
+    // Ensure viewport width is valid (prevents division by zero)
+    const safeViewportWidth = viewportWidth > 0 ? viewportWidth : 1920
+    const translateDistance = totalCardsWidth - safeViewportWidth + padding
+    const basePercent = (translateDistance / safeViewportWidth) * 100
+
+    // Apply device-specific adjustments for optimal scroll feel
+    switch (deviceType) {
+      case 'mobile':
+        // Mobile: reduce translation
+        return Math.max(basePercent * .59, 140)
+      case 'tablet':
+        // Tablet gets moderate translation
+        return Math.max(basePercent * 1.1, 130)
+      case 'desktop':
+        // Desktop: increase translation to ensure all cards are visible
+        return Math.max(basePercent * 1.7, 120)
+      default:
+        return basePercent
+    }
+  }
+
+  const translatePercent = calculateTranslatePercent()
+
+  // Use Framer Motion's default linear interpolation for smooth, predictable motion
+  const x = useTransform(
+    scrollYProgress,
+    [0, 1],
+    ["0%", `-${translatePercent}%`]
   )
 
   return (
     <div id="stories" className="mx-auto max-w-7xl px-8 py-24">
       <div className="mb-8 flex items-center justify-between relative z-20">
         <h2 className="text-2xl font-bold">Stories</h2>
-        <button 
+        <button
           onClick={(e) => {
             e.preventDefault()
             e.stopPropagation()
             console.log('Button clicked!')
             router.push('/stories')
-          }} 
+          }}
           className="text-sm hover:underline relative z-50"
           style={{ pointerEvents: 'auto' }}
         >
           View All
         </button>
       </div>
-      
+
       <section
         ref={targetRef}
         className="relative w-full -mt-20"
-        style={{ height: `${Math.max(400, scrollFeatures.length * (isMobile ? 120 : 80))}vh` }}
+        style={{ height: `${Math.max(300, scrollFeatures.length * (deviceType === 'mobile' ? 150 : deviceType === 'tablet' ? 120 : 100))}vh` }}
       >
         <div className="sticky top-0 flex h-screen items-start overflow-hidden pt-32">
           <motion.div
@@ -114,7 +165,7 @@ const Stories: React.FC<StoriesProps> = ({ features }) => {
                 feature={feature}
               />
             ))}
-            
+
             {/* View All Stories Card */}
             <div className="flex-shrink-0 w-[400px] h-[600px] rounded-lg bg-transparent flex flex-col items-center justify-center text-white group cursor-pointer">
               <Link href="/stories" className="flex flex-col items-center justify-center h-full w-full text-center p-8">
@@ -129,18 +180,18 @@ const Stories: React.FC<StoriesProps> = ({ features }) => {
                 </div>
                 <h3 className="text-2xl font-semibold mb-4 text-foreground">View all stories</h3>
                 <div className="transition-transform group-hover:translate-x-2 text-foreground">
-                  <svg 
-                    width="24" 
-                    height="24" 
-                    viewBox="0 0 24 24" 
-                    fill="none" 
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
                     xmlns="http://www.w3.org/2000/svg"
                   >
-                    <path 
-                      d="M5 12H19M19 12L12 5M19 12L12 19" 
-                      stroke="currentColor" 
-                      strokeWidth="2" 
-                      strokeLinecap="round" 
+                    <path
+                      d="M5 12H19M19 12L12 5M19 12L12 19"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
                       strokeLinejoin="round"
                     />
                   </svg>
@@ -167,7 +218,7 @@ const FeatureCard: React.FC<{ feature: Feature }> = ({ feature }) => {
 
   const getFeatureVideoUrl = () => {
     if (!feature.video) return null
-    
+
     switch (feature.video.videoType) {
       case 'youtube':
         if (feature.video.url) {
@@ -183,7 +234,7 @@ const FeatureCard: React.FC<{ feature: Feature }> = ({ feature }) => {
         break
       case 'loom':
         if (feature.video.url) {
-          return feature.video.url.includes('/embed/') 
+          return feature.video.url.includes('/embed/')
             ? `${feature.video.url}?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true&autoplay=${feature.video.autoplay ? 'true' : 'false'}`
             : `https://www.loom.com/embed/${feature.video.url.match(/loom\.com\/share\/([a-zA-Z0-9]+)/)?.[1]}?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true&autoplay=${feature.video.autoplay ? 'true' : 'false'}`
         }
@@ -207,7 +258,7 @@ const FeatureCard: React.FC<{ feature: Feature }> = ({ feature }) => {
         {videoUrl ? (
           // Video with proper sizing
           feature.video?.videoType === 'upload' || feature.video?.videoType === 'url' ? (
-            <video 
+            <video
               src={videoUrl}
               autoPlay={true}
               loop={feature.video?.loop !== false}
@@ -222,9 +273,9 @@ const FeatureCard: React.FC<{ feature: Feature }> = ({ feature }) => {
               src={videoUrl}
               className="rounded-lg w-[400px] h-[600px] scale-125"
               style={{
-                pointerEvents: 'none'
+                pointerEvents: 'none',
+                border: 0
               }}
-              frameBorder="0"
               allowFullScreen
               allow="autoplay; encrypted-media"
               loading="lazy"
