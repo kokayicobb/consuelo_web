@@ -59,21 +59,30 @@ const Stories: React.FC<StoriesProps> = ({ features }) => {
   const numCards = scrollFeatures.length
 
   // Responsive scroll distance - track device type instead of just mobile
-  // SSR-safe: Use fallback values that work on server-side rendering
-  const [deviceType, setDeviceType] = React.useState<DeviceType>('desktop')
-  const [viewportWidth, setViewportWidth] = React.useState<number>(
-    typeof window !== 'undefined' ? window.innerWidth : 1920 // SSR-safe fallback
-  )
+  // SSR-safe: Initialize with actual window values immediately to prevent jank
+  const getInitialDeviceType = (): DeviceType => {
+    if (typeof window === 'undefined') return 'desktop'
+    return getDeviceType(window.innerWidth)
+  }
+
+  const getInitialViewportWidth = (): number => {
+    if (typeof window === 'undefined') return 1920
+    return window.innerWidth
+  }
+
+  const [deviceType, setDeviceType] = React.useState<DeviceType>(getInitialDeviceType)
+  const [viewportWidth, setViewportWidth] = React.useState<number>(getInitialViewportWidth)
+  const [isInitialized, setIsInitialized] = React.useState(false)
 
   React.useEffect(() => {
+    // Mark as initialized to prevent layout shift
+    setIsInitialized(true)
+
     // Only runs on client-side after hydration
     const updateResponsive = () => {
       setDeviceType(getDeviceType(window.innerWidth))
       setViewportWidth(window.innerWidth)
     }
-
-    // Initial update on mount
-    updateResponsive()
 
     // Debounced resize handler with 150ms delay
     let timeoutId: NodeJS.Timeout
@@ -109,11 +118,11 @@ const Stories: React.FC<StoriesProps> = ({ features }) => {
     // Apply device-specific adjustments for optimal scroll feel
     switch (deviceType) {
       case 'mobile':
-        // Mobile needs much more translation to show all cards
-        return Math.max(basePercent * 2.5, 280)
+        // Mobile: 175% translation for smooth scrolling
+        return Math.max(basePercent * 1.75, 175)
       case 'tablet':
         // Tablet gets moderate translation
-        return Math.max(basePercent * 1.8, 180)
+        return Math.max(basePercent * 1.5, 150)
       case 'desktop':
         // Desktop: standard translation
         return Math.max(basePercent * 1.2, 100)
