@@ -119,7 +119,7 @@ const Stories: React.FC<StoriesProps> = ({ features }) => {
     switch (deviceType) {
       case 'mobile':
         // Mobile: 175% translation for smooth scrolling
-        return Math.max(basePercent * 1.75, 175)
+        return Math.max(basePercent * 1.6, 175)
       case 'tablet':
         // Tablet gets moderate translation
         return Math.max(basePercent * 1.5, 150)
@@ -165,7 +165,7 @@ const Stories: React.FC<StoriesProps> = ({ features }) => {
       >
         <div className="sticky top-0 flex h-screen items-start overflow-hidden pt-32">
           <motion.div
-            style={{ x }}
+            style={{ x, willChange: 'transform' }}
             className="flex gap-8"
           >
             {scrollFeatures.map((feature) => (
@@ -262,7 +262,7 @@ const FeatureCard: React.FC<{ feature: Feature }> = ({ feature }) => {
   const imageUrl = getImageUrl()
 
   return (
-    <div className="group relative overflow-hidden rounded-lg flex-shrink-0">
+    <div className="group relative overflow-hidden rounded-lg flex-shrink-0" style={{ transform: 'translateZ(0)', willChange: 'transform', contain: 'layout style paint' }}>
       <Link href={`/${(feature.slug?.current || 'test-slug').replace(/^.*\//, '').trim()}`}>
         {videoUrl ? (
           // Video with proper sizing
@@ -297,6 +297,8 @@ const FeatureCard: React.FC<{ feature: Feature }> = ({ feature }) => {
             height={600}
             className="w-[400px] h-[600px] object-cover rounded-lg scale-125"
             alt={feature.title}
+            loading="lazy"
+            quality={85}
           />
         ) : (
           <div className={`h-[600px] w-[400px] bg-gradient-to-br ${feature.gradientFrom} ${feature.gradientTo} rounded-lg`} />
